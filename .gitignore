@@ -1,0 +1,76 @@
+
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Logs ---
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Node / Package managers ---
+node_modules/
+**/node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.yarn-cache/
+.pnp.*
+.pnpm-debug.log*
+
+# --- Build outputs ---
+dist/
+build/
+out/
+.next/
+.vercel/
+.netlify/
+.coverage/
+*.tsbuildinfo
+
+# --- Vite / bundler cache ---
+.vite/
+**/.vite/
+.eslintcache
+
+# --- Astro ---
+.astro/
+**/.astro/
+# Astro build output is usually dist/, already ignored
+
+# --- Cloudflare / Wrangler / D1 ---
+.wrangler/
+**/.wrangler/
+.dev.vars
+.dev.vars.*
+# D1 local sqlite files (wrangler creates these depending on version)
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.sqlite-journal
+
+# --- Env files ---
+.env
+.env.*
+!.env.example
+
+# --- Secrets / keys ---
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# --- Temp ---
+tmp/
+temp/
+.cache/

@@ -1,0 +1,21 @@
+{
+  "name": "kikaku-os-api",
+  "version": "0.1.0",
+  "private": true,
+  "module": "esnext",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "build": "wrangler build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "hono": "^4.5.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240614.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.1",
+    "wrangler": "^4.59.1"
+  }
+}

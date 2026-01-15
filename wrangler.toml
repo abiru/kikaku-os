@@ -1,0 +1,18 @@
+name = "kikaku-os-api"
+main = "apps/api/src/index.ts"
+compatibility_date = "2026-01-01"
+
+triggers = { crons = ["0 16 * * *"] }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ledkikaku-os"
+database_id = "DUMMY_REPLACE"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "ledkikaku-artifacts"
+
+[vars]
+ADMIN_API_KEY = "CHANGE_ME"
+DEV_MODE = "true"
