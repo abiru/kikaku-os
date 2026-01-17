@@ -16,3 +16,4 @@ bucket_name = "ledkikaku-artifacts"
 [vars]
 ADMIN_API_KEY = "CHANGE_ME"
 DEV_MODE = "true"
+STOREFRONT_BASE_URL = "http://localhost:4321"

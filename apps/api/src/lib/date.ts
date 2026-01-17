@@ -4,3 +4,14 @@ export const ensureDate = (value: string) => {
   if (!dateRegex.test(value)) return null;
   return value;
 };
+
+export const jstDateStringFromMs = (nowMs = Date.now()) => {
+  const jstNow = new Date(nowMs + 9 * 60 * 60 * 1000);
+  return jstNow.toISOString().slice(0, 10);
+};
+
+export const jstYesterdayStringFromMs = (nowMs = Date.now()) => {
+  const jstNow = new Date(nowMs + 9 * 60 * 60 * 1000);
+  jstNow.setUTCDate(jstNow.getUTCDate() - 1);
+  return jstNow.toISOString().slice(0, 10);
+};

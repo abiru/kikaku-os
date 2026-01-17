@@ -1,12 +1,13 @@
 # Led Kikaku OS v1
 
-脱Shopify運用OSの最小実装。Cloudflare Workers + Hono API と Refine + Tailwind 管理画面で日次締め・証跡・仕訳ドラフト・Inbox を提供します。
+脱Shopify運用OSの最小実装。Cloudflare Workers + Hono API と React + Tailwind 管理画面で日次締め・証跡・仕訳ドラフト・Inbox を提供します。
 
 ## スタック
 - Cloudflare Workers + Hono (TypeScript)
 - Cloudflare D1 (SQLite)
 - Cloudflare R2
-- Admin: React + Refine + Tailwind (Vite)
+- Admin: React + Tailwind (Vite)
+- Storefront: Astro
 
 ## ローカル開発
 依存は pnpm を推奨します。
@@ -15,13 +16,16 @@
 - 環境変数: `ADMIN_API_KEY` を wrangler.toml に設定
 - API: http://localhost:8787
 - Admin: http://localhost:5173
-- CORS origin: http://localhost:5173 / http://127.0.0.1:5173 を許可（必要に応じて追加）
+- Storefront: http://localhost:4321
+- CORS origin: http://localhost:5173 / http://127.0.0.1:5173 / http://localhost:4321 / http://127.0.0.1:4321
 - ローカルseed: `DEV_MODE=true` のときのみ `/dev/seed` が有効
 
 ### API
 ```bash
 pnpm install --prefix apps/api
-pnpm -C apps/api dev
+# .dev.vars.example を .dev.vars にコピーして編集（APIキー等）
+cp apps/api/.dev.vars.example apps/api/.dev.vars
+pnpm -C apps/api dev -- --port 8787
 
 # 初回スキーマ適用 (ローカル D1)
 wrangler d1 migrations apply ledkikaku-os --local
@@ -32,6 +36,14 @@ wrangler d1 migrations apply ledkikaku-os --local
 pnpm install --prefix apps/admin
 pnpm -C apps/admin dev
 ```
+
+### Storefront
+```bash
+pnpm install --prefix apps/storefront
+cp apps/storefront/.env.example apps/storefront/.env
+pnpm -C apps/storefront dev
+```
+環境変数: `PUBLIC_API_BASE`（デフォルトは http://localhost:8787）
 
 Adminの起動確認（キャッシュが残る場合）:
 ```bash
@@ -51,6 +63,8 @@ pnpm -C apps/admin dev
 * GET /inventory/low?limit=
 * POST /inventory/thresholds
 * POST /dev/seed (DEV_MODE=trueのみ)
+* POST /checkout/session
+* GET /store/products / GET /store/products/:id
 
 ## Seed API
 
@@ -87,3 +101,25 @@ curl "http://localhost:8787/ledger-entries?date=2026-01-13" \
 curl -v "http://localhost:8787/r2?key=daily-close/2026-01-13/report.html" \
   -H "x-admin-key: CHANGE_ME"
 ```
+
+## Storefront checkout（ローカル）
+
+Stripe CLI で Webhook を転送:
+```bash
+stripe listen --forward-to http://localhost:8787/webhooks/stripe
+```
+
+Checkout Session 作成（例）:
+```bash
+curl -X POST http://localhost:8787/checkout/session \
+  -H "content-type: application/json" \
+  -d '{"variantId":1,"quantity":1,"email":"test@example.com"}'
+```
+
+## Daily Close Cron（ローカル）
+```bash
+# wrangler dev を起動後、scheduled を手動トリガー
+curl "http://localhost:8787/cdn-cgi/handler/scheduled"
+```
+
+異常検知（warning/critical）の場合、Cron 実行時に Inbox へ自動起票されます。

@@ -1,0 +1,67 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8787';
+---
+
+<Layout title="Products">
+	<section class="bg-white py-10">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="flex flex-wrap items-end justify-between gap-4">
+				<div>
+					<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">Products</h1>
+					<p class="mt-2 text-sm text-zinc-500">Minimal checkout demo powered by Stripe.</p>
+				</div>
+				<div class="rounded-full border border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+					Live catalog
+				</div>
+			</div>
+			<div id="product-list" data-api-base={apiBase} class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+		</div>
+	</section>
+
+	<script>
+		const container = document.getElementById('product-list');
+		const apiBase = container?.dataset.apiBase || 'http://localhost:8787';
+
+		const renderEmpty = () => {
+			container.innerHTML = '<p class="text-sm text-zinc-500">No products found.</p>';
+		};
+
+		const renderProducts = (products) => {
+			if (!Array.isArray(products) || products.length === 0) {
+				renderEmpty();
+				return;
+			}
+			container.innerHTML = '';
+			products.forEach((product) => {
+				const variant = product.variants?.[0];
+				const price = variant?.price;
+				const card = document.createElement('div');
+				card.className = 'rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md';
+				card.innerHTML = `
+					<div class="h-40 rounded-t-2xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200"></div>
+					<div class="p-6">
+						<h2 class="text-lg font-semibold text-zinc-900">${product.title}</h2>
+						<p class="mt-2 text-sm text-zinc-500">${product.description || ''}</p>
+						<p class="mt-4 text-base font-semibold text-zinc-900">
+							${price ? `${price.amount} ${price.currency}` : 'Price not set'}
+						</p>
+						<div class="mt-6 flex items-center justify-between">
+							<a href="/products/${product.id}" class="text-sm font-semibold text-zinc-900 transition hover:text-zinc-700">
+								View details →
+							</a>
+							<span class="text-xs text-zinc-400">Variant ${variant?.id ?? '-'}</span>
+						</div>
+					</div>
+				`;
+				container.appendChild(card);
+			});
+		};
+
+		fetch(`${apiBase}/store/products`)
+			.then((res) => res.json())
+			.then((data) => renderProducts(data.products || []))
+			.catch(() => renderEmpty());
+	</script>
+</Layout>

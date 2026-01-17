@@ -1,0 +1,130 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8787';
+const { id } = Astro.params;
+export const prerender = false;
+
+let product: any = null;
+try {
+	const res = await fetch(`${apiBase}/store/products/${id}`);
+	if (res.ok) {
+		const data = await res.json();
+		product = data.product ?? null;
+	}
+} catch {
+	product = null;
+}
+---
+
+<Layout title="Product Detail">
+	<section class="bg-white py-10">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<a href="/products" class="text-sm font-semibold text-zinc-500 transition hover:text-zinc-900">
+				← Back to products
+			</a>
+			{product ? (
+				<section
+					id="product-detail"
+					data-api-base={apiBase}
+					data-variant-id={product?.variants?.[0]?.id ?? ''}
+					class="mt-8 grid gap-10 lg:grid-cols-2"
+				>
+					<div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 shadow-sm">
+						<div class="aspect-[4/3] w-full rounded-xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200"></div>
+						<div class="mt-6 space-y-2 text-sm text-zinc-500">
+							<p>Variant ID: {product.variants?.[0]?.id ?? '-'}</p>
+							<p>SKU: {product.variants?.[0]?.sku ?? '—'}</p>
+						</div>
+					</div>
+					<div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+						<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">{product.title}</h1>
+						<p class="mt-4 text-base text-zinc-600">{product.description ?? ''}</p>
+						<div class="mt-6 text-2xl font-semibold text-zinc-900">
+							{product.variants?.[0]?.price
+								? `${product.variants[0].price.amount} ${product.variants[0].price.currency}`
+								: 'Price not set'}
+						</div>
+						<div class="mt-8 grid gap-4">
+							<label class="grid gap-2 text-sm font-medium text-zinc-700">
+								Email (optional)
+								<input
+									id="email-input"
+									type="email"
+									placeholder="you@example.com"
+									class="rounded-xl border border-zinc-200 px-4 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none"
+								/>
+							</label>
+							<label class="grid gap-2 text-sm font-medium text-zinc-700">
+								Quantity
+								<input
+									id="qty-input"
+									type="number"
+									min="1"
+									max="99"
+									value="1"
+									class="rounded-xl border border-zinc-200 px-4 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none"
+								/>
+							</label>
+							<button
+								id="buy-button"
+								class="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+							>
+								Buy with Stripe
+							</button>
+							<p id="buy-error" class="text-sm text-red-500"></p>
+						</div>
+					</div>
+				</section>
+			) : (
+				<section class="mt-8 rounded-2xl border border-zinc-200 bg-white p-8 text-center shadow-sm">
+					<p class="text-lg font-semibold text-zinc-900">Not found</p>
+					<p class="mt-2 text-sm text-zinc-500">This product does not exist or has been removed.</p>
+					<a
+						href="/products"
+						class="mt-6 inline-flex rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+					>
+						Back to products
+					</a>
+				</section>
+			)}
+		</div>
+	</section>
+
+	<script>
+		const detail = document.getElementById('product-detail');
+		const apiBase = detail?.dataset.apiBase || 'http://localhost:8787';
+		const variantId = detail?.dataset.variantId ? Number(detail.dataset.variantId) : null;
+		const buyButton = document.getElementById('buy-button');
+		const emailInput = document.getElementById('email-input');
+		const qtyInput = document.getElementById('qty-input');
+		const errorEl = document.getElementById('buy-error');
+
+		if (buyButton && variantId) {
+			buyButton.addEventListener('click', async () => {
+				if (!errorEl) return;
+				errorEl.textContent = '';
+				const quantity = Number(qtyInput?.value || 1);
+				const email = emailInput?.value?.trim();
+				try {
+					const res = await fetch(`${apiBase}/checkout/session`, {
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						body: JSON.stringify({
+							variantId,
+							quantity,
+							email: email || undefined
+						})
+					});
+					const data = await res.json();
+					if (!res.ok || !data.ok) {
+						throw new Error(data.message || 'Failed to start checkout');
+					}
+					window.location.href = data.url;
+				} catch (err) {
+					errorEl.textContent = err?.message || 'Checkout failed';
+				}
+			});
+		}
+	</script>
+</Layout>

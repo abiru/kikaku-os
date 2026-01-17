@@ -6,14 +6,33 @@ const inbox = new Hono<Env>();
 
 inbox.get('/inbox', async (c) => {
   const status = c.req.query('status') || 'open';
+  const kind = c.req.query('kind');
+  const date = c.req.query('date');
   const severity = c.req.query('severity');
   const requested = Number(c.req.query('limit') || 100);
   const limit = Math.min(Math.max(requested, 1), 200);
   try {
-    const base = `SELECT id, title, body, severity, status, created_at FROM inbox_items WHERE status=?`;
-    const sql = severity ? `${base} AND severity=? ORDER BY created_at DESC LIMIT ?` : `${base} ORDER BY created_at DESC LIMIT ?`;
+    const where: string[] = ['status=?'];
+    const params: unknown[] = [status];
+    if (kind) {
+      where.push('kind=?');
+      params.push(kind);
+    }
+    if (date) {
+      where.push('date=?');
+      params.push(date);
+    }
+    if (severity) {
+      where.push('severity=?');
+      params.push(severity);
+    }
+    const sql = `SELECT id, title, body, severity, status, kind, date, created_at
+      FROM inbox_items
+      WHERE ${where.join(' AND ')}
+      ORDER BY created_at DESC
+      LIMIT ?`;
     const stmt = c.env.DB.prepare(sql);
-    const res = severity ? await stmt.bind(status, severity, limit).all() : await stmt.bind(status, limit).all();
+    const res = await stmt.bind(...params, limit).all();
     return jsonOk(c, { items: res.results || [] });
   } catch (err) {
     console.error(err);

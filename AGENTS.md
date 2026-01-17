@@ -1,29 +1,34 @@
 # AGENTS
 
-## Dependency alignment
-- Refine v5 + @refinedev/kbar v2 + @refinedev/react-router v2 + TanStack Query v5 must stay in sync.
-- Do not reintroduce @refinedev/react-router-v6 or react-router-dom.
+## Repo invariants
+- Monorepo layout must stay: `apps/admin`, `apps/api`, `apps/storefront`, `migrations`.
+- Package manager is pnpm; do not replace with npm/yarn.
+- Keep React Router v7 imports from `react-router` in Admin.
 
-## Package management
+## Secrets policy
+- Never commit secrets or API keys to tracked files.
+- Use `.dev.vars` for Wrangler dev and `.env` for app configs; only `.env.example`/`.dev.vars.example` are tracked.
+
+## Dependency workflow
 - Keep npm globally updated: `npm i -g npm@latest`.
-- Project installs and lockfiles are managed with pnpm only.
-- After dependency changes, run `pnpm -C apps/admin install` and `pnpm -C apps/api install` to refresh lockfiles.
+- Install/update via pnpm and commit lockfile changes as needed.
+- Avoid unnecessary dependency churn.
+
+## Migrations
+- Add new migrations under `migrations/` with incremental numbering.
+- Verify local D1 with `pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local`.
 
 ## Testing rules
 - Always add or update tests with changes.
 - Run and pass:
   - `pnpm -C apps/admin test`
   - `pnpm -C apps/api test`
-
-## Change workflow
-- Update code and dependencies together.
-- Refresh lockfiles with pnpm.
-- Validate Admin startup after cache cleanup when needed.
+  - `pnpm -C apps/storefront build` (or tests if added)
 
 ## Post-change checklist
 - `pnpm -C apps/admin install`
-- `rm -rf apps/admin/node_modules/.vite`
 - `pnpm -C apps/admin test`
-- `pnpm -C apps/admin dev`
 - `pnpm -C apps/api install`
 - `pnpm -C apps/api test`
+- `pnpm -C apps/storefront install`
+- `pnpm -C apps/storefront build`

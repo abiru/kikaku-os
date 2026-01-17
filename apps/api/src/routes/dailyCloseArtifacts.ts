@@ -27,7 +27,7 @@ dailyCloseArtifacts.post('/daily-close/:date/artifacts', async (c) => {
 
     await putJson(c.env.R2, reportKey, report);
     await putJson(c.env.R2, evidenceKey, evidence);
-    await putText(c.env.R2, htmlKey, html, 'text/html');
+    await putText(c.env.R2, htmlKey, html, 'text/html; charset=utf-8');
 
     await upsertDocument(c.env, 'daily_close', date, reportKey, 'application/json');
     await upsertDocument(c.env, 'daily_close', date, evidenceKey, 'application/json');

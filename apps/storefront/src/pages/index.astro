@@ -1,0 +1,54 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Led Kikaku Store">
+	<section class="bg-white py-12">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+				<div class="space-y-6">
+					<p class="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">
+						Stripe Checkout Demo
+					</p>
+					<h1 class="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl">
+						Led Kikaku Storefront
+					</h1>
+					<p class="text-lg text-zinc-600">
+						Minimal product catalog with a safe Stripe Checkout flow and webhook-driven order updates.
+					</p>
+					<div class="flex flex-wrap gap-3">
+						<a
+							href="/products"
+							class="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+						>
+							Browse Products
+						</a>
+						<a
+							href="/products"
+							class="rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+						>
+							View Pricing
+						</a>
+					</div>
+				</div>
+				<div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-8 shadow-sm">
+					<div class="flex flex-col gap-4">
+						<div class="h-40 rounded-xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200" />
+						<div class="space-y-2">
+							<p class="text-sm font-semibold text-zinc-500">Order Flow</p>
+							<p class="text-base text-zinc-700">
+								Create order → Stripe Checkout → Webhook marks paid → Daily Close reflects totals.
+							</p>
+						</div>
+						<a
+							href="/products"
+							class="text-sm font-semibold text-zinc-900 transition hover:text-zinc-700"
+						>
+							Go to products →
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
