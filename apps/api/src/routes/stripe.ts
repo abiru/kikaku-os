@@ -18,6 +18,24 @@ const normalizeOrderId = (value: unknown) => {
 const extractOrderId = (metadata: any) =>
   normalizeOrderId(metadata?.orderId ?? metadata?.order_id);
 
+const recordStripeEvent = async (env: Env['Bindings'], event: StripeEvent) => {
+  try {
+    await env.DB.prepare(
+      `INSERT INTO events (type, payload, stripe_event_id, created_at)
+       VALUES ('stripe_webhook', ?, ?, datetime('now'))`
+    ).bind(
+      JSON.stringify({ id: event.id, type: event.type }),
+      event.id
+    ).run();
+    return { inserted: true, duplicate: false };
+  } catch (err: any) {
+    if (String(err?.message || '').includes('UNIQUE constraint failed')) {
+      return { inserted: false, duplicate: true };
+    }
+    throw err;
+  }
+};
+
 const insertPayment = async (env: Env['Bindings'], payload: {
   orderId: number | null;
   amount: number;
@@ -71,8 +89,8 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
     await env.DB.prepare(
       `UPDATE orders
        SET status='paid',
-           provider_checkout_session_id=?,
-           provider_payment_intent_id=COALESCE(?, provider_payment_intent_id),
+           provider_checkout_session_id=COALESCE(provider_checkout_session_id, ?),
+           provider_payment_intent_id=COALESCE(provider_payment_intent_id, ?),
            paid_at=COALESCE(paid_at, datetime('now')),
            updated_at=datetime('now')
        WHERE id=?`
@@ -128,7 +146,7 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
       await env.DB.prepare(
         `UPDATE orders
          SET status='paid',
-             provider_payment_intent_id=?,
+             provider_payment_intent_id=COALESCE(provider_payment_intent_id, ?),
              paid_at=COALESCE(paid_at, datetime('now')),
              updated_at=datetime('now')
          WHERE id=?`
@@ -147,22 +165,49 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
     return { received: true, ignored: true };
   }
 
-  if (type === 'charge.refunded' || type === 'refund.succeeded') {
-    const refundId = dataObject.object === 'refund'
-      ? dataObject.id
-      : dataObject.refunds?.data?.[0]?.id || dataObject.id;
-    const amount = dataObject.amount || 0;
-    const currency = (dataObject.currency || 'jpy').toUpperCase();
-    const paymentIntentId = dataObject.payment_intent || dataObject.payment_intent_id;
+  if (type === 'charge.refunded' || type === 'refund.updated' || type === 'refund.succeeded') {
+    const refunds = type === 'charge.refunded'
+      ? Array.isArray(dataObject.refunds?.data)
+        ? dataObject.refunds.data
+        : []
+      : dataObject?.id
+        ? [dataObject]
+        : [];
+    let sawDuplicate = false;
 
-    const existingRefund = await env.DB.prepare(
-      `SELECT id FROM refunds WHERE provider_refund_id=?`
-    ).bind(refundId).first<{ id: number }>();
+    for (const refund of refunds) {
+      const refundId = refund?.id;
+      if (!refundId) continue;
+      const amount = refund?.amount || dataObject?.amount_refunded || dataObject?.amount || 0;
+      const currency = ((refund?.currency || dataObject?.currency || 'jpy') as string).toUpperCase();
+      const paymentIntentId = refund?.payment_intent || refund?.payment_intent_id || dataObject?.payment_intent || dataObject?.payment_intent_id;
+      const metadata = refund?.metadata ?? dataObject?.metadata;
+      const metadataOrderId = extractOrderId(metadata);
 
-    if (!existingRefund) {
-      const paymentRow = paymentIntentId
-        ? await env.DB.prepare(`SELECT id FROM payments WHERE provider_payment_id=?`).bind(paymentIntentId).first<{ id: number }>()
+      const existingRefund = await env.DB.prepare(
+        `SELECT id FROM refunds WHERE provider_refund_id=?`
+      ).bind(refundId).first<{ id: number }>();
+
+      if (existingRefund?.id) {
+        sawDuplicate = true;
+        continue;
+      }
+
+      const paymentByIntent = paymentIntentId
+        ? await env.DB.prepare(
+          `SELECT id, order_id FROM payments WHERE provider_payment_id=?`
+        ).bind(paymentIntentId).first<{ id: number; order_id: number | null }>()
         : null;
+
+      const paymentRow = paymentByIntent?.id
+        ? paymentByIntent
+        : metadataOrderId
+          ? await env.DB.prepare(
+            `SELECT id, order_id FROM payments WHERE order_id=? ORDER BY id DESC LIMIT 1`
+          ).bind(metadataOrderId).first<{ id: number; order_id: number | null }>()
+          : null;
+
+      const resolvedOrderId = metadataOrderId ?? paymentRow?.order_id ?? null;
 
       try {
         await env.DB.prepare(
@@ -177,11 +222,26 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
         ).run();
       } catch (err: any) {
         if (String(err?.message || '').includes('UNIQUE constraint failed')) {
-          return { received: true, duplicate: true };
+          sawDuplicate = true;
+          continue;
         }
         throw err;
       }
+
+      if (resolvedOrderId) {
+        const orderRow = await env.DB.prepare(
+          `SELECT id, total_net, status FROM orders WHERE id=?`
+        ).bind(resolvedOrderId).first<{ id: number; total_net: number; status: string }>();
+
+        if (orderRow?.id && orderRow.status === 'paid' && amount >= (orderRow.total_net || 0)) {
+          await env.DB.prepare(
+            `UPDATE orders SET status='refunded', updated_at=datetime('now') WHERE id=?`
+          ).bind(orderRow.id).run();
+        }
+      }
     }
+
+    return { received: true, duplicate: sawDuplicate };
   }
 
   return { received: true };
@@ -204,15 +264,17 @@ const handleWebhook = async (c: Context<Env>) => {
   } catch {
     return jsonError(c, 'Invalid payload', 400);
   }
+  if (!event?.id || typeof event.id !== 'string') {
+    return jsonError(c, 'Invalid payload', 400);
+  }
 
   try {
-    const type = event.type as string;
+    const recorded = await recordStripeEvent(c.env, event);
+    if (recorded.duplicate) {
+      return jsonOk(c, { received: true, duplicate: true });
+    }
+
     const result = await handleStripeEvent(c.env, event);
-
-    await c.env.DB.prepare(
-      `INSERT INTO events (type, payload, created_at) VALUES ('stripe_webhook', ?, datetime('now'))`
-    ).bind(JSON.stringify({ id: event.id, type })).run();
-
     return jsonOk(c, result);
   } catch (err) {
     console.error(err);

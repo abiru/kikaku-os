@@ -3,20 +3,64 @@ import { Hono } from 'hono';
 import stripe, { handleStripeEvent } from './stripe';
 import { computeStripeSignature } from '../lib/stripe';
 
-const createMockDb = (options?: { duplicatePayment?: boolean }) => {
+type MockDbOptions = {
+  duplicatePayment?: boolean;
+  duplicateRefund?: boolean;
+  existingPayments?: Array<{ providerPaymentId: string; id?: number; orderId?: number | null }>;
+  orderStatus?: string;
+  orderTotal?: number;
+};
+
+const createMockDb = (options?: MockDbOptions) => {
   const calls: { sql: string; bind: unknown[] }[] = [];
   const fulfillments = new Map<number, number>();
+  const payments = new Map<string, { id: number; order_id: number | null }>();
+  const refunds = new Set<string>();
+  const events = new Set<string>();
   let fulfillmentId = 0;
+  let paymentId = 1000;
+  const orderStatus = options?.orderStatus ?? 'paid';
+  const orderTotal = options?.orderTotal ?? 2500;
+
+  for (const payment of options?.existingPayments ?? []) {
+    const id = payment.id ?? ++paymentId;
+    payments.set(payment.providerPaymentId, { id, order_id: payment.orderId ?? null });
+  }
+
+  const findPaymentByOrderId = (orderId: number) => {
+    for (const payment of payments.values()) {
+      if (payment.order_id === orderId) return payment;
+    }
+    return null;
+  };
+
   return {
     calls,
     prepare: (sql: string) => ({
       bind: (...args: unknown[]) => ({
         first: async () => {
-          if (sql.includes('SELECT id FROM orders')) {
-            return { id: 123 };
+          if (sql.includes('SELECT id, total_net, status FROM orders')) {
+            const id = Number(args[0]);
+            return Number.isFinite(id) ? { id, total_net: orderTotal, status: orderStatus } : null;
           }
-          if (sql.includes('SELECT id FROM payments')) {
-            return null;
+          if (sql.includes('SELECT id FROM orders')) {
+            const id = Number(args[0]);
+            return Number.isFinite(id) ? { id } : null;
+          }
+          if (sql.includes('SELECT id, order_id FROM payments WHERE provider_payment_id')) {
+            const payment = payments.get(String(args[0]));
+            return payment ? { id: payment.id, order_id: payment.order_id } : null;
+          }
+          if (sql.includes('SELECT id, order_id FROM payments WHERE order_id')) {
+            const payment = findPaymentByOrderId(Number(args[0]));
+            return payment ? { id: payment.id, order_id: payment.order_id } : null;
+          }
+          if (sql.includes('SELECT id FROM payments WHERE provider_payment_id')) {
+            const payment = payments.get(String(args[0]));
+            return payment ? { id: payment.id } : null;
+          }
+          if (sql.includes('SELECT id FROM refunds')) {
+            return refunds.has(String(args[0])) ? { id: 1 } : null;
           }
           if (sql.includes('SELECT id FROM fulfillments')) {
             const orderId = Number(args[0]);
@@ -27,8 +71,30 @@ const createMockDb = (options?: { duplicatePayment?: boolean }) => {
         },
         run: async () => {
           calls.push({ sql, bind: args });
+          if (sql.includes('INSERT INTO events')) {
+            const eventId = String(args[1]);
+            if (events.has(eventId)) {
+              throw new Error('UNIQUE constraint failed: events.stripe_event_id');
+            }
+            events.add(eventId);
+          }
           if (sql.includes('INSERT INTO payments') && options?.duplicatePayment) {
             throw new Error('UNIQUE constraint failed: payments.provider_payment_id');
+          }
+          if (sql.includes('INSERT INTO payments')) {
+            const providerPaymentId = String(args[3]);
+            if (payments.has(providerPaymentId)) {
+              throw new Error('UNIQUE constraint failed: payments.provider_payment_id');
+            }
+            paymentId += 1;
+            payments.set(providerPaymentId, { id: paymentId, order_id: Number(args[0]) || null });
+          }
+          if (sql.includes('INSERT INTO refunds')) {
+            const refundId = String(args[4]);
+            if (options?.duplicateRefund || refunds.has(refundId)) {
+              throw new Error('UNIQUE constraint failed: refunds.provider_refund_id');
+            }
+            refunds.add(refundId);
           }
           if (sql.includes('INSERT INTO fulfillments')) {
             const orderId = Number(args[0]);
@@ -141,6 +207,36 @@ describe('Stripe webhook handling', () => {
     const orderInsert = mockDb.calls.find((call) => call.sql.includes('INSERT INTO orders'));
     expect(orderInsert).toBeUndefined();
   });
+
+  it('handles refund.updated and inserts refund', async () => {
+    const mockDb = createMockDb({
+      existingPayments: [{ providerPaymentId: 'pi_refund_123', orderId: 123 }]
+    });
+    const event = {
+      id: 'evt_refund',
+      type: 'refund.updated',
+      data: {
+        object: {
+          id: 're_123',
+          amount: 2500,
+          currency: 'jpy',
+          payment_intent: 'pi_refund_123',
+          metadata: { orderId: '123' }
+        }
+      }
+    };
+
+    const result = await handleStripeEvent({ DB: mockDb } as any, event as any);
+
+    expect(result.received).toBe(true);
+    const refundInsert = mockDb.calls.find((call) => call.sql.includes('INSERT INTO refunds'));
+    expect(refundInsert?.bind[3]).toBe('re_123');
+    expect(refundInsert?.bind[1]).toBe(2500);
+    const statusUpdate = mockDb.calls.find((call) =>
+      call.sql.includes("UPDATE orders SET status='refunded'")
+    );
+    expect(statusUpdate).toBeDefined();
+  });
 });
 
 describe('Stripe webhook route', () => {
@@ -219,5 +315,121 @@ describe('Stripe webhook route', () => {
     expect(updateCall?.bind[0]).toBe('cs_test_123');
     expect(updateCall?.bind[1]).toBe('pi_test_123');
     expect(updateCall?.bind[2]).toBe(123);
+    const eventInsert = db.calls.find((call) => call.sql.includes('INSERT INTO events'));
+    expect(eventInsert?.bind[1]).toBe('evt_123');
+    const paymentInsert = db.calls.find((call) => call.sql.includes('INSERT INTO payments'));
+    expect(paymentInsert).toBeDefined();
+  });
+
+  it('treats duplicate checkout events as already processed', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const payload = JSON.stringify({
+      id: 'evt_idem_checkout',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_idem',
+          payment_intent: 'pi_test_idem',
+          amount_total: 2500,
+          currency: 'jpy',
+          metadata: { orderId: '123' }
+        }
+      }
+    });
+
+    const secret = 'whsec_test';
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const sig = await computeStripeSignature(payload, secret, timestamp);
+    const header = `t=${timestamp},v1=${sig}`;
+    const db = createMockDb();
+
+    const first = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const second = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const firstJson = await first.json();
+    const secondJson = await second.json();
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(firstJson.ok).toBe(true);
+    expect(secondJson.ok).toBe(true);
+    expect(secondJson.duplicate).toBe(true);
+    const paymentInserts = db.calls.filter((call) => call.sql.includes('INSERT INTO payments'));
+    expect(paymentInserts).toHaveLength(1);
+  });
+
+  it('accepts refund.updated and is idempotent', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const payload = JSON.stringify({
+      id: 'evt_refund_route',
+      type: 'refund.updated',
+      data: {
+        object: {
+          id: 're_route_123',
+          amount: 2500,
+          currency: 'jpy',
+          payment_intent: 'pi_refund_route',
+          metadata: { orderId: '123' }
+        }
+      }
+    });
+
+    const secret = 'whsec_test';
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const sig = await computeStripeSignature(payload, secret, timestamp);
+    const header = `t=${timestamp},v1=${sig}`;
+    const db = createMockDb({
+      existingPayments: [{ providerPaymentId: 'pi_refund_route', orderId: 123 }]
+    });
+
+    const first = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const second = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const firstJson = await first.json();
+    const secondJson = await second.json();
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(firstJson.ok).toBe(true);
+    expect(secondJson.ok).toBe(true);
+    expect(secondJson.duplicate).toBe(true);
+    const refundInserts = db.calls.filter((call) => call.sql.includes('INSERT INTO refunds'));
+    expect(refundInserts).toHaveLength(1);
   });
 });
