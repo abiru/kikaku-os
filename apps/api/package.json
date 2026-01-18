@@ -5,7 +5,7 @@
   "module": "esnext",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --local",
+    "dev": "wrangler dev --local --config ../../wrangler.toml --port ${PORT:-8787}",
     "build": "wrangler build",
     "test": "vitest run"
   },
