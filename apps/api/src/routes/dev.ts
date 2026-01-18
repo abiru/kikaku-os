@@ -214,6 +214,13 @@ dev.post('/provision-stripe-prices', async (c) => {
      ORDER BY pr.id ASC`
   ).all<StripeProvisionRow>();
 
+  const missingMappingRes = await c.env.DB.prepare(
+    `SELECT v.id as variant_id
+     FROM variants v
+     LEFT JOIN prices pr ON pr.variant_id = v.id
+     WHERE pr.id IS NULL`
+  ).all<{ variant_id: number }>();
+
   const updated: Array<{
     variant_id: number;
     price_id: number;
@@ -282,7 +289,10 @@ dev.post('/provision-stripe-prices', async (c) => {
     });
   }
 
-  return jsonOk(c, { updated });
+  return jsonOk(c, {
+    updated,
+    skipped_missing_mapping: missingMappingRes.results?.length ?? 0
+  });
 });
 
 export default dev;

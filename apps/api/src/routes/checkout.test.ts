@@ -2,9 +2,13 @@ import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
 import checkout from './checkout';
 
-const createMockDb = (steps: string[], variantOverride?: Partial<Record<string, unknown>>) => {
+const createMockDb = (
+  steps: string[],
+  variantOverride?: Partial<Record<string, unknown>> | null,
+  variantExists = true
+) => {
   const calls: { sql: string; bind: unknown[] }[] = [];
-  const variantRow = {
+  const baseVariantRow = {
     variant_id: 10,
     variant_title: 'Standard',
     product_id: 1,
@@ -13,15 +17,19 @@ const createMockDb = (steps: string[], variantOverride?: Partial<Record<string, 
     amount: 1200,
     currency: 'jpy',
     provider_price_id: 'price_test_123',
-    ...variantOverride
   };
+  const variantRow = variantOverride === null ? null : { ...baseVariantRow, ...variantOverride };
+  const variantId = (variantRow?.variant_id ?? baseVariantRow.variant_id) as number;
   return {
     calls,
     prepare: (sql: string) => ({
       bind: (...args: unknown[]) => ({
         first: async () => {
-          if (sql.includes('FROM variants')) {
+          if (sql.includes('FROM variants v')) {
             return variantRow;
+          }
+          if (sql.includes('FROM variants WHERE')) {
+            return variantExists ? { id: variantId } : null;
           }
           if (sql.includes('FROM customers')) {
             return null;
@@ -152,6 +160,8 @@ describe('POST /checkout/session', () => {
     const json = await res.json();
     expect(res.status).toBe(400);
     expect(json.ok).toBe(false);
+    expect(json.error?.code).toBe('STRIPE_PRICE_NOT_CONFIGURED');
+    expect(json.error?.message).toBe('Stripe price not configured for this variant');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -208,7 +218,39 @@ describe('POST /checkout/session', () => {
 
     const json = await res.json();
     expect(res.status).toBe(500);
-    expect(json.message).toMatch('Stripe secret key looks like a publishable key');
+    expect(json.message).toContain('publishable key');
+    expect(json.error?.code).toBe('STRIPE_SECRET_KEY_INVALID');
+    expect(json.error?.message).toContain('publishable key');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects unknown variant', async () => {
+    const app = new Hono();
+    app.route('/', checkout);
+
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const env = {
+      DB: createMockDb([], null, false),
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STOREFRONT_BASE_URL: 'http://localhost:4321'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/checkout/session',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ variantId: 999, quantity: 1 })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(404);
+    expect(json.error?.code).toBe('VARIANT_NOT_FOUND');
+    expect(json.error?.message).toBe('Variant not found');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

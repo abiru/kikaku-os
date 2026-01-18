@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
 
@@ -26,12 +27,18 @@ const isValidEmail = (value: string) => {
   return value.includes('@');
 };
 
+const jsonErrorWithCode = (c: Context, code: string, message: string, status = 500) => {
+  console.error(message);
+  return c.json({ ok: false, message, error: { code, message } }, status);
+};
+
 checkout.post('/checkout/session', async (c) => {
   const stripeKey = c.env.STRIPE_SECRET_KEY;
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
   if (stripeKey.startsWith('pk_')) {
-    return jsonError(
+    return jsonErrorWithCode(
       c,
+      'STRIPE_SECRET_KEY_INVALID',
       'Stripe secret key looks like a publishable key (pk*). Use STRIPE_SECRET_KEY with an sk* value.',
       500
     );
@@ -75,9 +82,29 @@ checkout.post('/checkout/session', async (c) => {
      LIMIT 1`
   ).bind(variantId).first<VariantPriceRow>();
 
-  if (!variantRow) return jsonError(c, 'Variant not found', 404);
-  if (!variantRow.provider_price_id) {
-    return jsonError(c, 'Stripe price not configured for this variant', 400);
+  if (!variantRow) {
+    const variantExists = await c.env.DB.prepare(
+      `SELECT id FROM variants WHERE id=?`
+    ).bind(variantId).first<{ id: number }>();
+    if (!variantExists) {
+      return jsonErrorWithCode(c, 'VARIANT_NOT_FOUND', 'Variant not found', 404);
+    }
+    return jsonErrorWithCode(
+      c,
+      'STRIPE_PRICE_NOT_CONFIGURED',
+      'Stripe price not configured for this variant',
+      400
+    );
+  }
+
+  const providerPriceId = variantRow.provider_price_id?.trim();
+  if (!providerPriceId) {
+    return jsonErrorWithCode(
+      c,
+      'STRIPE_PRICE_NOT_CONFIGURED',
+      'Stripe price not configured for this variant',
+      400
+    );
   }
 
   let customerId: number | null = null;
@@ -135,7 +162,7 @@ checkout.post('/checkout/session', async (c) => {
   params.set('mode', 'payment');
   params.set('success_url', successUrl);
   params.set('cancel_url', cancelUrl);
-  params.set('line_items[0][price]', variantRow.provider_price_id);
+  params.set('line_items[0][price]', providerPriceId);
   params.set('line_items[0][quantity]', String(quantity));
   params.set('metadata[order_id]', String(orderId));
   params.set('payment_intent_data[metadata][order_id]', String(orderId));
