@@ -1,0 +1,40 @@
+=== Codex Context (short) ===
+2026-01-18T15:25:24+09:00
+
+## Repo
+branch: main
+head:   8edc87d
+
+## Status
+## main...origin/main [ahead 5]
+ M apps/admin/package.json
+?? codex-runs/20260118-152518__api__rename_stripe_env_var_and_guardrails/
+
+## Changed files (HEAD..WT)
+apps/admin/package.json
+
+## Diff stats (HEAD..WT)
+ apps/admin/package.json | 1 +
+ 1 file changed, 1 insertion(+)
+
+## Recent commits
+8edc87d codex-run: api: verify warn leftover
+5d3560f codex-run: api: verify prompts not staged
+29419dc codex-run: api: verify docs autoscope
+bf0c775 codex-run: api: verify readme autoscope
+fe6875c codex-run: api: rename stripe env keys add guardrails
+475a7d2 chore: remove verification codex run from main
+4d2ab3d Merge branch 'verify/no-commit-clean'
+4ad2507 infra: make codex-run compatible with macOS bash 3.2
+42534cb infra: make codex-run compatible with macOS bash 3.2
+6dc4717 codex-run: api: verify only codex runs
+303e125 chore: update codex prompt
+11f22f1 codex-run: api: rename stripe env keys and add guards
+a72e372 api: rename stripe env keys and add guards
+abe3aaf codex-run: storefront: fetch products from store api
+8aaecaa codex-run: infra: debug bundle missing
+ef7a7bf codex-run: infra: add work commit flags and scope mapping
+8cf6417 chore: update codex prompt
+83c8bec infra: auto commit work and codex runs
+23f4331 codex-run: api: add dev endpoint for stripe prices
+8257970 api: add dev endpoint for stripe prices
