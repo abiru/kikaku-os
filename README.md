@@ -33,8 +33,6 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 Note: If the API shows up on 8788 (or smoke/dev seems odd), it usually means double-boot: another dev server is already listening on 8787.
 Check: `lsof -nP -iTCP:8787 -sTCP:LISTEN` then `kill <PID>`.
 
-Stripe: `STRIPE_SECRET_KEY`(sk*) はルートの `.dev.vars` に設定（`apps/api/.dev.vars.example` は参照用）。`STRIPE_WEBHOOK_SECRET`(whsec*) もルートの `.dev.vars` に設定（Webhook ルートのみ必要）。API は `STRIPE_SECRET_KEY` が未設定/`pk*` の場合 500 を返す。Storefront は現状 publishable key 不要だが、必要になった場合は `apps/storefront/.env` の `PUBLIC_STRIPE_PUBLISHABLE_KEY`(pk*) を使う（pk* は Storefront 用、sk* は API 用）。Checkout で `STRIPE_PRICE_NOT_CONFIGURED` が返る場合は dev で `/dev/provision-stripe-prices` を実行し、variant に `provider_price_id` があることを確認。
-
 ### Admin
 ```bash
 pnpm install --prefix apps/admin
