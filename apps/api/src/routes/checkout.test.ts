@@ -65,7 +65,7 @@ describe('POST /checkout/session', () => {
 
     const env = {
       DB: createMockDb(steps),
-      STRIPE_API_KEY: 'sk_test_123',
+      STRIPE_SECRET_KEY: 'sk_test_123',
       STOREFRONT_BASE_URL: 'http://localhost:4321'
     } as any;
 
@@ -105,7 +105,7 @@ describe('POST /checkout/session', () => {
 
     const env = {
       DB: createMockDb(steps),
-      STRIPE_API_KEY: 'sk_test_123',
+      STRIPE_SECRET_KEY: 'sk_test_123',
       STOREFRONT_BASE_URL: 'http://localhost:4321'
     } as any;
 
@@ -135,7 +135,7 @@ describe('POST /checkout/session', () => {
 
     const env = {
       DB: createMockDb(steps, { provider_price_id: null }),
-      STRIPE_API_KEY: 'sk_test_123',
+      STRIPE_SECRET_KEY: 'sk_test_123',
       STOREFRONT_BASE_URL: 'http://localhost:4321'
     } as any;
 
@@ -152,6 +152,63 @@ describe('POST /checkout/session', () => {
     const json = await res.json();
     expect(res.status).toBe(400);
     expect(json.ok).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects missing stripe secret key', async () => {
+    const app = new Hono();
+    app.route('/', checkout);
+
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const env = {
+      DB: createMockDb([]),
+      STOREFRONT_BASE_URL: 'http://localhost:4321'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/checkout/session',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ variantId: 10, quantity: 1 })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(500);
+    expect(json.message).toBe('Stripe API key not configured');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects publishable key in stripe secret key', async () => {
+    const app = new Hono();
+    app.route('/', checkout);
+
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const env = {
+      DB: createMockDb([]),
+      STRIPE_SECRET_KEY: 'pk_test_123',
+      STOREFRONT_BASE_URL: 'http://localhost:4321'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/checkout/session',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ variantId: 10, quantity: 1 })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(500);
+    expect(json.message).toMatch('Stripe secret key looks like a publishable key');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

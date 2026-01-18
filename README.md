@@ -28,8 +28,9 @@ cp apps/api/.dev.vars.example apps/api/.dev.vars
 pnpm -C apps/api dev -- --port 8787
 
 # 初回スキーマ適用 (ローカル D1)
-wrangler d1 migrations apply ledkikaku-os --local
+pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 ```
+Stripe: `STRIPE_SECRET_KEY`(sk*) は `apps/api/.dev.vars` に設定。publishable key (pk*) は Storefront 側の env（使う場合のみ）へ。
 
 ### Admin
 ```bash

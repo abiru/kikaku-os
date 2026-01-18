@@ -190,8 +190,15 @@ dev.post('/seed', async (c) => {
 dev.post('/provision-stripe-prices', async (c) => {
   if (c.env.DEV_MODE !== 'true') return jsonError(c, 'Not found', 404);
 
-  const stripeKey = c.env.STRIPE_API_KEY;
+  const stripeKey = c.env.STRIPE_SECRET_KEY;
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
+  if (stripeKey.startsWith('pk_')) {
+    return jsonError(
+      c,
+      'Stripe secret key looks like a publishable key (pk*). Use STRIPE_SECRET_KEY with an sk* value.',
+      500
+    );
+  }
 
   const rowsRes = await c.env.DB.prepare(
     `SELECT v.id as variant_id,

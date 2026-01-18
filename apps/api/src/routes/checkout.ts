@@ -27,8 +27,15 @@ const isValidEmail = (value: string) => {
 };
 
 checkout.post('/checkout/session', async (c) => {
-  const stripeKey = c.env.STRIPE_API_KEY;
+  const stripeKey = c.env.STRIPE_SECRET_KEY;
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
+  if (stripeKey.startsWith('pk_')) {
+    return jsonError(
+      c,
+      'Stripe secret key looks like a publishable key (pk*). Use STRIPE_SECRET_KEY with an sk* value.',
+      500
+    );
+  }
 
   let body: any;
   try {
