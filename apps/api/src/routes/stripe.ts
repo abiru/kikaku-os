@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
 import { verifyStripeSignature } from '../lib/stripe';
@@ -8,6 +8,15 @@ type StripeEvent = {
   type: string;
   data?: { object?: any };
 };
+
+const normalizeOrderId = (value: unknown) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+};
+
+const extractOrderId = (metadata: any) =>
+  normalizeOrderId(metadata?.orderId ?? metadata?.order_id);
 
 const insertPayment = async (env: Env['Bindings'], payload: {
   orderId: number | null;
@@ -41,13 +50,13 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
   const dataObject = event.data?.object || {};
 
   if (type === 'checkout.session.completed') {
-    const orderId = Number(dataObject.metadata?.order_id);
+    const orderId = extractOrderId(dataObject.metadata);
     const sessionId = dataObject.id;
     const paymentIntentId = dataObject.payment_intent;
     const amount = dataObject.amount_total || dataObject.amount_subtotal || 0;
     const currency = (dataObject.currency || 'jpy').toUpperCase();
 
-    if (!orderId || !paymentIntentId) {
+    if (!orderId) {
       return { received: true, ignored: true };
     }
 
@@ -63,27 +72,31 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
       `UPDATE orders
        SET status='paid',
            provider_checkout_session_id=?,
-           provider_payment_intent_id=?,
+           provider_payment_intent_id=COALESCE(?, provider_payment_intent_id),
+           paid_at=COALESCE(paid_at, datetime('now')),
            updated_at=datetime('now')
        WHERE id=?`
-    ).bind(sessionId, paymentIntentId, orderId).run();
+    ).bind(sessionId, paymentIntentId ?? null, orderId).run();
 
-    const paymentResult = await insertPayment(env, {
-      orderId,
-      amount,
-      currency,
-      providerPaymentId: paymentIntentId,
-      eventId: event.id
-    });
+    let paymentResult: { inserted: boolean; duplicate: boolean } | null = null;
+    if (paymentIntentId) {
+      paymentResult = await insertPayment(env, {
+        orderId,
+        amount,
+        currency,
+        providerPaymentId: paymentIntentId,
+        eventId: event.id
+      });
+    }
 
-    return { received: true, duplicate: paymentResult.duplicate };
+    return { received: true, duplicate: paymentResult?.duplicate };
   }
 
   if (type === 'payment_intent.succeeded') {
     const providerPaymentId = dataObject.id;
     const amount = dataObject.amount_received || dataObject.amount || 0;
     const currency = (dataObject.currency || 'jpy').toUpperCase();
-    const orderId = Number(dataObject.metadata?.order_id);
+    const orderId = extractOrderId(dataObject.metadata);
 
     if (orderId) {
       const existingOrder = await env.DB.prepare(
@@ -98,6 +111,7 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
         `UPDATE orders
          SET status='paid',
              provider_payment_intent_id=?,
+             paid_at=COALESCE(paid_at, datetime('now')),
              updated_at=datetime('now')
          WHERE id=?`
       ).bind(providerPaymentId, orderId).run();
@@ -157,7 +171,7 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
 
 const stripe = new Hono<Env>();
 
-stripe.post('/webhooks/stripe', async (c) => {
+const handleWebhook = async (c: Context<Env>) => {
   const secret = c.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) return jsonError(c, 'Stripe webhook secret not configured', 500);
 
@@ -186,6 +200,9 @@ stripe.post('/webhooks/stripe', async (c) => {
     console.error(err);
     return jsonError(c, 'Failed to process webhook');
   }
-});
+};
+
+stripe.post('/webhooks/stripe', handleWebhook);
+stripe.post('/stripe/webhook', handleWebhook);
 
 export default stripe;

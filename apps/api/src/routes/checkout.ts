@@ -164,7 +164,9 @@ checkout.post('/checkout/session', async (c) => {
   params.set('cancel_url', cancelUrl);
   params.set('line_items[0][price]', providerPriceId);
   params.set('line_items[0][quantity]', String(quantity));
+  params.set('metadata[orderId]', String(orderId));
   params.set('metadata[order_id]', String(orderId));
+  params.set('payment_intent_data[metadata][orderId]', String(orderId));
   params.set('payment_intent_data[metadata][order_id]', String(orderId));
   if (email) params.set('customer_email', email);
 

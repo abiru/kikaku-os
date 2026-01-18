@@ -97,7 +97,9 @@ describe('POST /checkout/session', () => {
     const params = new URLSearchParams(body);
     expect(params.get('line_items[0][price]')).toBe('price_test_123');
     expect(params.get('line_items[0][quantity]')).toBe('2');
+    expect(params.get('metadata[orderId]')).toBe('123');
     expect(params.get('metadata[order_id]')).toBe('123');
+    expect(params.get('payment_intent_data[metadata][orderId]')).toBe('123');
     expect(params.get('payment_intent_data[metadata][order_id]')).toBe('123');
     expect(steps.indexOf('insert-order')).toBeGreaterThan(-1);
     expect(steps.indexOf('insert-order')).toBeLessThan(steps.indexOf('stripe-fetch'));
