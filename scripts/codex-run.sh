@@ -347,7 +347,12 @@ if [[ "$DO_WORK_COMMIT" -eq 1 ]]; then
   AREA="${TITLE%%:*}"
   AREA="$(echo "$AREA" | tr -d ' ' | tr '[:upper:]' '[:lower:]')"
 
-  mapfile -t SCOPES < <(compute_scopes "$AREA")
+  SCOPES=()
+  # NOTE: macOS /bin/bash (3.2) doesn't have mapfile/readarray
+  while IFS= read -r s; do
+    [[ -n "$s" ]] || continue
+    SCOPES+=("$s")
+  done < <(compute_scopes "$AREA")
 
   if [[ "${#SCOPES[@]}" -gt 0 ]]; then
     stage_paths "${SCOPES[@]}"
