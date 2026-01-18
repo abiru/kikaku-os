@@ -25,7 +25,7 @@ DO_COMMIT=1
 DO_CLIP=1
 INCLUDE_CONTEXT=1
 OUT_BASE="codex-runs"
-CODEX_COLOR="never"
+CODEX_COLOR="always"
 
 # NEW: auto commit work changes by area in TITLE ("api:", "storefront:" etc.)
 DO_WORK_COMMIT=1
@@ -225,7 +225,7 @@ if [[ -z "${TITLE}" ]]; then
 
   set +e
   TITLE="$(
-    codex exec --color "$CODEX_COLOR" "$TITLE_PROMPT" |
+    codex exec --color never "$TITLE_PROMPT" |
       head -n 1 |
       tr -d '\r' |
       sed -E 's/  +/ /g' |
@@ -273,9 +273,8 @@ fi
 
 # --- run codex in non-interactive mode ---
 set +e
-codex exec --color "$CODEX_COLOR" "$PROMPT_CONTENT" |
-  tee "$RUN_DIR/codex-output.md" >/dev/null
-CODEX_EXIT=$?
+codex exec --color "$CODEX_COLOR" "$PROMPT_CONTENT" | tee >(perl -pe 's/\e\[[0-9;]*m//g' >"$RUN_DIR/codex-output.md")
+CODEX_EXIT=${PIPESTATUS[0]}
 set -e
 
 # --- bundle for ChatGPT paste (compact by default) ---
