@@ -1,0 +1,30 @@
+=== Codex Context (short) ===
+2026-01-18T10:56:02+09:00
+
+## Repo
+branch: main
+head:   1452b1a
+
+## Status
+## main...origin/main [ahead 8]
+ M prompts/prompt.md
+?? codex-runs/20260118-105552__api__allow_public_storefront_get_access/
+
+## Changed files (HEAD..WT)
+prompts/prompt.md
+
+## Diff stats (HEAD..WT)
+ prompts/prompt.md | 31 +++++++++++++++++++++++++------
+ 1 file changed, 25 insertions(+), 6 deletions(-)
+
+## Recent commits
+1452b1a chore: improve codex-run script and prompts
+ff7bdea storefront: avoid localhost fallback in api base
+28ae5ea codex-run: storefront: avoid localhost fallback in api base
+716ff6c storefront: revamp layout, product pages, and UI components
+f97a48b codex-run: storefront: review layout and product page changes
+c464b69 codex-run: storefront: diagnostic verification plan for storefront changes
+569f8b7 codex-run: storefront: revamp product pages and ui components
+098320e codex-run: storefront: codex-run
+fe3c267 storefront
+e8cddbe first commit
