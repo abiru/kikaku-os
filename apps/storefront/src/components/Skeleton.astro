@@ -1,0 +1,11 @@
+---
+const { lines = 3, class: className = '' } = Astro.props;
+const count = Math.max(1, Number(lines) || 1);
+const widths = ['w-full', 'w-11/12', 'w-10/12', 'w-9/12', 'w-8/12'];
+---
+
+<div class={`animate-pulse space-y-2 ${className}`}>
+	{Array.from({ length: count }).map((_, index) => (
+		<div class={`h-3 rounded-md bg-zinc-100 ${widths[index % widths.length]}`}></div>
+	))}
+</div>

@@ -1,0 +1,15 @@
+---
+const { severity = 'info', class: className = '' } = Astro.props;
+
+const variants = {
+	info: 'border-zinc-200 bg-zinc-100 text-zinc-700',
+	warn: 'border-amber-200 bg-amber-100 text-amber-900',
+	critical: 'border-red-200 bg-red-100 text-red-900'
+};
+
+const classes = `${variants[severity] ?? variants.info} ${className}`;
+---
+
+<span class={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${classes}`}>
+	<slot />
+</span>

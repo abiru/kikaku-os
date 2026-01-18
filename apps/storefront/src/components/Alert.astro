@@ -1,0 +1,35 @@
+---
+const { title = '', description = '', severity = 'info', class: className = '' } = Astro.props;
+
+const variants = {
+	info: {
+		wrap: 'border-zinc-200 bg-zinc-50',
+		title: 'text-zinc-900',
+		desc: 'text-zinc-600'
+	},
+	warn: {
+		wrap: 'border-amber-200 bg-amber-50',
+		title: 'text-amber-900',
+		desc: 'text-amber-800'
+	},
+	critical: {
+		wrap: 'border-red-200 bg-red-50',
+		title: 'text-red-900',
+		desc: 'text-red-800'
+	}
+};
+
+const style = variants[severity] ?? variants.info;
+const hasSlot = Astro.slots.has('default');
+const slotClass = title || description ? 'mt-3' : '';
+---
+
+<div role="alert" class={`rounded-2xl border px-4 py-3 ${style.wrap} ${className}`}>
+	{title ? <p class={`text-sm font-semibold ${style.title}`}>{title}</p> : null}
+	{description ? <p class={`mt-1 text-sm ${style.desc}`}>{description}</p> : null}
+	{hasSlot ? (
+		<div class={slotClass}>
+			<slot />
+		</div>
+	) : null}
+</div>

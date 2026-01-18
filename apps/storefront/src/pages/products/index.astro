@@ -1,67 +1,179 @@
 ---
+import Alert from '../../components/Alert.astro';
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import Container from '../../components/Container.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import Skeleton from '../../components/Skeleton.astro';
 import Layout from '../../layouts/Layout.astro';
+import { getApiBase } from '../../lib/api';
 
-const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8787';
+const apiBase = getApiBase();
+const skeletonCards = Array.from({ length: 9 });
 ---
 
 <Layout title="Products">
-	<section class="bg-white py-10">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	<section class="bg-white">
+		<Container>
 			<div class="flex flex-wrap items-end justify-between gap-4">
 				<div>
-					<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">Products</h1>
-					<p class="mt-2 text-sm text-zinc-500">Minimal checkout demo powered by Stripe.</p>
+					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Catalog</p>
+					<h1 class="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">Products</h1>
+					<p class="mt-2 text-sm text-zinc-500">Curated goods ready for Stripe Checkout.</p>
 				</div>
-				<div class="rounded-full border border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-					Live catalog
-				</div>
+				<Badge severity="info">Live catalog</Badge>
 			</div>
-			<div id="product-list" data-api-base={apiBase} class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
-		</div>
+
+			<div id="product-state" data-api-base={apiBase} class="mt-8 space-y-6">
+				<div id="product-skeleton" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+					{skeletonCards.map(() => (
+						<div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
+							<div class="aspect-[4/3] w-full rounded-t-2xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200"></div>
+							<div class="space-y-4 p-5">
+								<Skeleton lines={2} />
+								<div class="flex items-center justify-between">
+									<div class="h-5 w-24 rounded-md bg-zinc-100"></div>
+									<div class="h-8 w-20 rounded-full bg-zinc-100"></div>
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+
+				<div id="product-error" class="hidden">
+					<Alert
+						severity="critical"
+						title="Couldn't load products"
+						description="The catalog is unavailable right now. Please retry."
+					>
+						<div class="flex items-center gap-3">
+							<Button id="retry-products" variant="secondary" size="sm">Retry</Button>
+							<p id="product-error-message" class="text-sm text-red-800"></p>
+						</div>
+					</Alert>
+				</div>
+
+				<div id="product-empty" class="hidden">
+					<EmptyState
+						title="No products yet"
+						description="We couldn't find any items in the catalog."
+						ctaLabel="Refresh catalog"
+						ctaHref="/products"
+					/>
+				</div>
+
+				<div id="product-grid" class="hidden grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+			</div>
+		</Container>
 	</section>
 
 	<script>
-		const container = document.getElementById('product-list');
-		const apiBase = container?.dataset.apiBase || 'http://localhost:8787';
+		import { fetchJson } from '../../lib/api';
 
-		const renderEmpty = () => {
-			container.innerHTML = '<p class="text-sm text-zinc-500">No products found.</p>';
+		const state = document.getElementById('product-state');
+		const apiBase = state?.dataset.apiBase || 'http://localhost:8787';
+		const skeleton = document.getElementById('product-skeleton');
+		const errorState = document.getElementById('product-error');
+		const emptyState = document.getElementById('product-empty');
+		const grid = document.getElementById('product-grid');
+		const retryButton = document.getElementById('retry-products');
+		const errorMessage = document.getElementById('product-error-message');
+
+		const setState = (next) => {
+			const isLoading = next === 'loading';
+			const isError = next === 'error';
+			const isEmpty = next === 'empty';
+			const isLoaded = next === 'loaded';
+
+			skeleton?.classList.toggle('hidden', !isLoading);
+			errorState?.classList.toggle('hidden', !isError);
+			emptyState?.classList.toggle('hidden', !isEmpty);
+			grid?.classList.toggle('hidden', !isLoaded);
 		};
 
+		const isRecord = (value) => typeof value === 'object' && value !== null;
+		const isProduct = (value) => isRecord(value) && 'id' in value && 'title' in value;
+
 		const renderProducts = (products) => {
-			if (!Array.isArray(products) || products.length === 0) {
-				renderEmpty();
-				return;
-			}
-			container.innerHTML = '';
+			if (!grid) return;
+			grid.innerHTML = '';
+
 			products.forEach((product) => {
-				const variant = product.variants?.[0];
+				const card = document.createElement('a');
+				card.href = `/products/${product.id}`;
+				card.className =
+					'group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md';
+
+				const media = document.createElement('div');
+				media.className =
+					'aspect-[4/3] w-full bg-gradient-to-br from-zinc-100 via-white to-zinc-200';
+
+				const body = document.createElement('div');
+				body.className = 'p-5';
+
+				const title = document.createElement('h2');
+				title.className = 'text-lg font-semibold text-zinc-900 line-clamp-2';
+				title.textContent = String(product.title ?? '');
+
+				body.appendChild(title);
+
+				const description = typeof product.description === 'string' ? product.description : '';
+				if (description) {
+					const descEl = document.createElement('p');
+					descEl.className = 'mt-2 text-sm text-zinc-500 line-clamp-2';
+					descEl.textContent = description;
+					body.appendChild(descEl);
+				}
+
+				const footer = document.createElement('div');
+				footer.className = 'mt-5 flex items-center justify-between';
+
+				const variant = Array.isArray(product.variants) ? product.variants[0] : null;
 				const price = variant?.price;
-				const card = document.createElement('div');
-				card.className = 'rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md';
-				card.innerHTML = `
-					<div class="h-40 rounded-t-2xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200"></div>
-					<div class="p-6">
-						<h2 class="text-lg font-semibold text-zinc-900">${product.title}</h2>
-						<p class="mt-2 text-sm text-zinc-500">${product.description || ''}</p>
-						<p class="mt-4 text-base font-semibold text-zinc-900">
-							${price ? `${price.amount} ${price.currency}` : 'Price not set'}
-						</p>
-						<div class="mt-6 flex items-center justify-between">
-							<a href="/products/${product.id}" class="text-sm font-semibold text-zinc-900 transition hover:text-zinc-700">
-								View details →
-							</a>
-							<span class="text-xs text-zinc-400">Variant ${variant?.id ?? '-'}</span>
-						</div>
-					</div>
-				`;
-				container.appendChild(card);
+				const priceEl = document.createElement('span');
+				priceEl.className = 'text-base font-semibold text-zinc-900';
+				priceEl.textContent = price ? `${price.amount} ${price.currency}` : 'Price not set';
+
+				const cta = document.createElement('span');
+				cta.className =
+					'inline-flex items-center text-sm font-semibold text-zinc-900 transition group-hover:text-zinc-700';
+				cta.textContent = 'View';
+
+				body.appendChild(footer);
+				footer.appendChild(priceEl);
+				footer.appendChild(cta);
+
+				card.appendChild(media);
+				card.appendChild(body);
+				grid.appendChild(card);
 			});
 		};
 
-		fetch(`${apiBase}/store/products`)
-			.then((res) => res.json())
-			.then((data) => renderProducts(data.products || []))
-			.catch(() => renderEmpty());
+		const loadProducts = async () => {
+			setState('loading');
+			if (errorMessage) errorMessage.textContent = '';
+
+			try {
+				const data = await fetchJson(`${apiBase}/store/products`);
+				const products = Array.isArray(data?.products) ? data.products.filter(isProduct) : [];
+
+				if (!products.length) {
+					setState('empty');
+					return;
+				}
+
+				renderProducts(products);
+				setState('loaded');
+			} catch (error) {
+				if (errorMessage) {
+					errorMessage.textContent =
+						error instanceof Error ? error.message : 'Unable to load products.';
+				}
+				setState('error');
+			}
+		};
+
+		retryButton?.addEventListener('click', () => loadProducts());
+		loadProducts();
 	</script>
 </Layout>

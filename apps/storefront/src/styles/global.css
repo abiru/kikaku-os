@@ -12,4 +12,21 @@
   a {
     @apply text-zinc-900;
   }
+
+  input,
+  select,
+  textarea {
+    @apply rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply border-zinc-400 outline-none ring-2 ring-zinc-900/10;
+  }
+
+  button:focus-visible,
+  a:focus-visible {
+    @apply outline-none ring-2 ring-zinc-900/20 ring-offset-2;
+  }
 }

@@ -1,6 +1,8 @@
 ---
-const { title = 'Led Kikaku Store' } = Astro.props;
+import Container from '../components/Container.astro';
 import '../styles/global.css';
+
+const { title = 'Led Kikaku Store' } = Astro.props;
 ---
 
 <!doctype html>
@@ -13,24 +15,29 @@ import '../styles/global.css';
 		<title>{title}</title>
 	</head>
 	<body>
-		<div class="min-h-screen">
+		<div class="min-h-screen bg-white text-zinc-900">
 			<header class="border-b border-zinc-200 bg-white">
-				<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+				<Container class="flex h-16 items-center justify-between">
 					<a href="/" class="text-lg font-semibold tracking-tight">Led Kikaku</a>
-					<nav class="flex items-center gap-6 text-sm font-medium text-zinc-600">
+					<nav class="flex items-center gap-6 text-sm font-semibold text-zinc-600">
+						<a href="/" class="transition hover:text-zinc-900">Store</a>
 						<a href="/products" class="transition hover:text-zinc-900">Products</a>
 					</nav>
-				</div>
+				</Container>
 			</header>
 
-			<main class="flex-1">
+			<main class="flex-1 py-10 sm:py-12">
 				<slot />
 			</main>
 
 			<footer class="border-t border-zinc-200 bg-white py-8">
-				<div class="mx-auto max-w-7xl px-4 text-sm text-zinc-500 sm:px-6 lg:px-8">
-					Minimal storefront for Stripe Checkout flow.
-				</div>
+				<Container class="flex flex-col gap-2 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+					<span>(c) 2024 Led Kikaku. All rights reserved.</span>
+					<div class="flex flex-wrap gap-4">
+						<a href="/products" class="transition hover:text-zinc-700">Products</a>
+						<a href="/" class="transition hover:text-zinc-700">Store</a>
+					</div>
+				</Container>
 			</footer>
 		</div>
 	</body>

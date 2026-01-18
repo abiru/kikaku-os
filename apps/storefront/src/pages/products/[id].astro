@@ -1,130 +1,227 @@
 ---
+import Alert from '../../components/Alert.astro';
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import Container from '../../components/Container.astro';
+import EmptyState from '../../components/EmptyState.astro';
 import Layout from '../../layouts/Layout.astro';
+import { fetchJson, getApiBase } from '../../lib/api';
 
-const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8787';
+const apiBase = getApiBase();
 const { id } = Astro.params;
 export const prerender = false;
 
 let product: any = null;
+let loadState: 'ready' | 'not-found' | 'unavailable' = 'ready';
+
 try {
-	const res = await fetch(`${apiBase}/store/products/${id}`);
-	if (res.ok) {
-		const data = await res.json();
-		product = data.product ?? null;
+	const data = await fetchJson(`${apiBase}/store/products/${id}`);
+	product = data?.product ?? null;
+	if (!product) {
+		loadState = 'not-found';
 	}
-} catch {
+} catch (error) {
+	const status = typeof error === 'object' && error ? (error as { status?: number }).status : undefined;
+	loadState = status === 404 ? 'not-found' : 'unavailable';
 	product = null;
 }
+
+const variant = product?.variants?.[0] ?? null;
+const variantId = variant?.id ?? null;
+const priceLabel = variant?.price
+	? `${variant.price.amount} ${variant.price.currency}`
+	: 'Price not set';
+
+const stockValue =
+	typeof variant?.stock === 'number'
+		? variant.stock
+		: typeof variant?.inventory === 'number'
+			? variant.inventory
+			: null;
+const stockNote =
+	typeof stockValue === 'number' ? (stockValue > 0 ? `In stock: ${stockValue}` : 'Out of stock') : null;
 ---
 
 <Layout title="Product Detail">
-	<section class="bg-white py-10">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+	<section class="bg-white">
+		<Container>
 			<a href="/products" class="text-sm font-semibold text-zinc-500 transition hover:text-zinc-900">
 				← Back to products
 			</a>
-			{product ? (
+			{loadState === 'ready' && product ? (
 				<section
 					id="product-detail"
-					data-api-base={apiBase}
-					data-variant-id={product?.variants?.[0]?.id ?? ''}
-					class="mt-8 grid gap-10 lg:grid-cols-2"
+					data-variant-id={variantId ?? ''}
+					class="mt-8 grid gap-10 lg:grid-cols-[1.05fr_0.95fr]"
 				>
-					<div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-6 shadow-sm">
-						<div class="aspect-[4/3] w-full rounded-xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200"></div>
-						<div class="mt-6 space-y-2 text-sm text-zinc-500">
-							<p>Variant ID: {product.variants?.[0]?.id ?? '-'}</p>
-							<p>SKU: {product.variants?.[0]?.sku ?? '—'}</p>
+					<div class="space-y-4">
+						<div class="rounded-3xl border border-zinc-200 bg-zinc-50 p-6 shadow-sm">
+							<div class="aspect-[4/3] w-full rounded-2xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200"></div>
+						</div>
+						<div class="grid grid-cols-3 gap-3">
+							{Array.from({ length: 3 }).map(() => (
+								<div class="aspect-[4/3] rounded-2xl border border-zinc-200 bg-zinc-50"></div>
+							))}
 						</div>
 					</div>
-					<div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-						<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">{product.title}</h1>
-						<p class="mt-4 text-base text-zinc-600">{product.description ?? ''}</p>
-						<div class="mt-6 text-2xl font-semibold text-zinc-900">
-							{product.variants?.[0]?.price
-								? `${product.variants[0].price.amount} ${product.variants[0].price.currency}`
-								: 'Price not set'}
+					<div class="space-y-6">
+						<div class="space-y-3">
+							<Badge severity="info">Featured</Badge>
+							<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">{product.title}</h1>
+							<p class="text-base text-zinc-600">{product.description ?? ''}</p>
+							{stockNote ? <p class="text-sm text-zinc-500">{stockNote}</p> : null}
 						</div>
-						<div class="mt-8 grid gap-4">
-							<label class="grid gap-2 text-sm font-medium text-zinc-700">
-								Email (optional)
-								<input
-									id="email-input"
-									type="email"
-									placeholder="you@example.com"
-									class="rounded-xl border border-zinc-200 px-4 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none"
-								/>
-							</label>
-							<label class="grid gap-2 text-sm font-medium text-zinc-700">
-								Quantity
-								<input
-									id="qty-input"
-									type="number"
-									min="1"
-									max="99"
-									value="1"
-									class="rounded-xl border border-zinc-200 px-4 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none"
-								/>
-							</label>
-							<button
-								id="buy-button"
-								class="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
-							>
-								Buy with Stripe
-							</button>
-							<p id="buy-error" class="text-sm text-red-500"></p>
+						<div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+							<div class="flex items-baseline justify-between">
+								<p class="text-sm font-medium text-zinc-500">Price</p>
+								<p class="text-2xl font-semibold text-zinc-900">{priceLabel}</p>
+							</div>
+							<div class="mt-6 grid gap-4">
+								<label class="grid gap-2 text-sm font-medium text-zinc-700">
+									Quantity
+									<select id="qty-input">
+										{Array.from({ length: 10 }).map((_, index) => (
+											<option value={index + 1}>{index + 1}</option>
+										))}
+									</select>
+								</label>
+								<label class="grid gap-2 text-sm font-medium text-zinc-700">
+									Email (optional)
+									<input
+										id="email-input"
+										type="email"
+										placeholder="you@example.com"
+										autocomplete="email"
+									/>
+								</label>
+							</div>
+							{variantId ? null : (
+								<div class="mt-6">
+									<Alert
+										severity="warn"
+										title="Variant unavailable"
+										description="This product doesn't have a purchasable variant yet."
+									/>
+								</div>
+							)}
+							<div class="mt-6 grid gap-3">
+								<Button id="buy-button" size="lg" class="w-full" disabled={!variantId}>
+									<span id="buy-label">Buy now</span>
+									<span
+										id="buy-spinner"
+										class="ml-2 hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+									></span>
+								</Button>
+								<p class="text-xs text-zinc-500">
+									Secure checkout powered by Stripe. You will be redirected to a hosted checkout.
+								</p>
+							</div>
+							<div id="checkout-error" class="mt-4 hidden" aria-live="polite">
+								<Alert severity="critical" title="Checkout failed">
+									<p id="checkout-error-message" class="text-sm text-red-800"></p>
+								</Alert>
+							</div>
 						</div>
 					</div>
 				</section>
-			) : (
-				<section class="mt-8 rounded-2xl border border-zinc-200 bg-white p-8 text-center shadow-sm">
-					<p class="text-lg font-semibold text-zinc-900">Not found</p>
-					<p class="mt-2 text-sm text-zinc-500">This product does not exist or has been removed.</p>
-					<a
-						href="/products"
-						class="mt-6 inline-flex rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+			) : loadState === 'unavailable' ? (
+				<div class="mt-8">
+					<Alert
+						severity="critical"
+						title="Product unavailable"
+						description="We couldn't load this product. Please retry in a moment."
 					>
-						Back to products
-					</a>
-				</section>
+						<Button href={`/products/${id}`} variant="secondary" size="sm">
+							Retry
+						</Button>
+					</Alert>
+				</div>
+			) : (
+				<div class="mt-8">
+					<EmptyState
+						title="Product not found"
+						description="This item doesn't exist or has been removed."
+						ctaLabel="Back to Products"
+						ctaHref="/products"
+					/>
+				</div>
 			)}
-		</div>
+		</Container>
 	</section>
 
 	<script>
-		const detail = document.getElementById('product-detail');
-		const apiBase = detail?.dataset.apiBase || 'http://localhost:8787';
-		const variantId = detail?.dataset.variantId ? Number(detail.dataset.variantId) : null;
-		const buyButton = document.getElementById('buy-button');
-		const emailInput = document.getElementById('email-input');
-		const qtyInput = document.getElementById('qty-input');
-		const errorEl = document.getElementById('buy-error');
+		import { createCheckoutSession } from '../../lib/api';
 
-		if (buyButton && variantId) {
-			buyButton.addEventListener('click', async () => {
-				if (!errorEl) return;
-				errorEl.textContent = '';
-				const quantity = Number(qtyInput?.value || 1);
-				const email = emailInput?.value?.trim();
-				try {
-					const res = await fetch(`${apiBase}/checkout/session`, {
-						method: 'POST',
-						headers: { 'content-type': 'application/json' },
-						body: JSON.stringify({
+		const detail = document.getElementById('product-detail');
+		if (detail) {
+			const variantId = detail.dataset.variantId ? Number(detail.dataset.variantId) : null;
+			const buyButton = document.getElementById('buy-button');
+			const buyLabel = document.getElementById('buy-label');
+			const buySpinner = document.getElementById('buy-spinner');
+			const qtyInput = document.getElementById('qty-input');
+			const emailInput = document.getElementById('email-input');
+			const errorWrap = document.getElementById('checkout-error');
+			const errorMessage = document.getElementById('checkout-error-message');
+
+			let isSubmitting = false;
+
+			const setLoading = (loading) => {
+				if (!buyButton || !buyLabel || !buySpinner) return;
+				buyButton.disabled = loading || !variantId;
+				buyButton.setAttribute('aria-busy', loading ? 'true' : 'false');
+				buyLabel.textContent = loading ? 'Starting checkout...' : 'Buy now';
+				buySpinner.classList.toggle('hidden', !loading);
+			};
+
+			const showError = (message) => {
+				if (!errorWrap || !errorMessage) return;
+				errorMessage.textContent = message;
+				errorWrap.classList.remove('hidden');
+			};
+
+			const clearError = () => {
+				if (!errorWrap || !errorMessage) return;
+				errorMessage.textContent = '';
+				errorWrap.classList.add('hidden');
+			};
+
+			setLoading(false);
+
+			if (buyButton && variantId) {
+				buyButton.addEventListener('click', async () => {
+					if (isSubmitting) return;
+					clearError();
+
+					const quantity = Number(qtyInput?.value || 1);
+					if (!Number.isFinite(quantity) || quantity < 1 || quantity > 10) {
+						showError('Please select a quantity between 1 and 10.');
+						return;
+					}
+
+					const email = emailInput?.value?.trim();
+					if (email && !emailInput?.checkValidity()) {
+						showError('Please enter a valid email address.');
+						return;
+					}
+
+					isSubmitting = true;
+					setLoading(true);
+
+					try {
+						const session = await createCheckoutSession({
 							variantId,
 							quantity,
 							email: email || undefined
-						})
-					});
-					const data = await res.json();
-					if (!res.ok || !data.ok) {
-						throw new Error(data.message || 'Failed to start checkout');
+						});
+						window.location.href = session.url;
+					} catch (error) {
+						showError(error instanceof Error ? error.message : 'Checkout failed.');
+					} finally {
+						isSubmitting = false;
+						setLoading(false);
 					}
-					window.location.href = data.url;
-				} catch (err) {
-					errorEl.textContent = err?.message || 'Checkout failed';
-				}
-			});
+				});
+			}
 		}
 	</script>
 </Layout>
