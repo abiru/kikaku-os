@@ -1,0 +1,58 @@
+=== Codex Context (short) ===
+2026-01-18T09:16:27+09:00
+
+## Repo
+branch: main
+head:   fe3c267
+
+## Status
+## main...origin/main
+ M apps/storefront/package.json
+ M apps/storefront/pnpm-lock.yaml
+ M apps/storefront/src/layouts/Layout.astro
+ M apps/storefront/src/pages/checkout/cancel.astro
+ M apps/storefront/src/pages/checkout/success.astro
+ M apps/storefront/src/pages/index.astro
+ M apps/storefront/src/pages/products/[id].astro
+ M apps/storefront/src/pages/products/index.astro
+ M apps/storefront/src/styles/global.css
+?? apps/storefront/src/components/Alert.astro
+?? apps/storefront/src/components/Badge.astro
+?? apps/storefront/src/components/Button.astro
+?? apps/storefront/src/components/Container.astro
+?? apps/storefront/src/components/EmptyState.astro
+?? apps/storefront/src/components/Skeleton.astro
+?? apps/storefront/src/lib/
+?? apps/storefront/vitest.config.ts
+?? codex-input.txt
+?? codex-runs/
+?? git-report.txt
+?? prompts/
+?? scripts/
+
+## Changed files (HEAD..WT)
+apps/storefront/package.json
+apps/storefront/pnpm-lock.yaml
+apps/storefront/src/layouts/Layout.astro
+apps/storefront/src/pages/checkout/cancel.astro
+apps/storefront/src/pages/checkout/success.astro
+apps/storefront/src/pages/index.astro
+apps/storefront/src/pages/products/[id].astro
+apps/storefront/src/pages/products/index.astro
+apps/storefront/src/styles/global.css
+
+## Diff stats (HEAD..WT)
+ apps/storefront/package.json                     |   8 +-
+ apps/storefront/pnpm-lock.yaml                   | 731 +++++++++++++++++++++++
+ apps/storefront/src/layouts/Layout.astro         |  25 +-
+ apps/storefront/src/pages/checkout/cancel.astro  |  35 +-
+ apps/storefront/src/pages/checkout/success.astro |  17 +-
+ apps/storefront/src/pages/index.astro            |  22 +-
+ apps/storefront/src/pages/products/[id].astro    | 279 ++++++---
+ apps/storefront/src/pages/products/index.astro   | 196 ++++--
+ apps/storefront/src/styles/global.css            |  17 +
+ 9 files changed, 1148 insertions(+), 182 deletions(-)
+
+## Recent commits
+fe3c267 storefront
+e8cddbe first commit
