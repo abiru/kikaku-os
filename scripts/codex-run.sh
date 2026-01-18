@@ -123,7 +123,7 @@ compute_scopes() {
   storefront) scopes+=(apps/storefront) ;;
   api) scopes+=(apps/api) ;;
   admin) scopes+=(apps/admin) ;;
-  infra) scopes+=(infra) ;;
+  infra) scopes+=(infra scripts prompts) ;;
   docs) scopes+=(docs) ;;
   tests) scopes+=(apps) ;;
   *) scopes=() ;;
