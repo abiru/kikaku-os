@@ -1,31 +1,42 @@
 You are an implementer.
 
 Goal:
-Add a dev-only endpoint to provision missing Stripe prices for storefront variants, so checkout works without manual dashboard steps.
+Eliminate Stripe key confusion by renaming env vars and adding guardrails so pk/sk cannot be mixed up.
 
 Constraints:
 
-- Modify ONLY apps/api/src/routes/dev.ts (and optionally apps/api/src/routes/checkout.ts ONLY if absolutely required).
-- Keep admin protection as-is (dev routes are already protected by x-admin-key via middleware).
-- Use existing env: c.env.STRIPE_API_KEY, c.env.DB.
-- Output: unified diff patch + 5 verification commands.
+- Keep behavior working in local dev.
+- No secrets in repo.
+- Keep changes minimal and explicit (no refactors).
+- Output: unified diff + 8 verification commands.
 
-Behavior:
+Tasks:
 
-1. Add POST /dev/provision-stripe-prices
-2. It finds variants whose price.provider_price_id IS NULL (join variants -> prices).
-3. For each row, create Stripe Product and Stripe Price:
-   - Product name: "<product_title> - <variant_title>"
-   - Price: unit_amount = amount, currency = currency (from DB)
-   - Set metadata: variant_id, price_id (string)
-4. Update the corresponding DB price row: prices.provider_price_id = created Stripe price id.
-5. Response includes a list of updated mappings: [{variant_id, price_id, provider_price_id}]
-6. If STRIPE_API_KEY missing, return 500 with "Stripe API key not configured" (same wording ok).
+1. API side:
+   - Replace usage of c.env.STRIPE_API_KEY with c.env.STRIPE_SECRET_KEY in:
+     - apps/api/src/routes/checkout.ts
+     - apps/api/src/routes/dev.ts (provision-stripe-prices)
+   - Add validation:
+     - If STRIPE_SECRET_KEY missing -> return 500 "Stripe API key not configured" (keep message)
+     - If STRIPE*SECRET_KEY starts with "pk*" -> return 500 with clear message (still safe for users)
+2. Storefront side (only if currently needed):
+   - If any Stripe publishable key is used in storefront, rename to PUBLIC*STRIPE_PUBLISHABLE_KEY and validate it starts with "pk*".
+   - If storefront doesn’t use it, do not add new usage.
+3. Add example env files (no real keys):
+   - apps/api/.dev.vars.example (or similar, follow existing conventions)
+   - apps/storefront/.env.example (if storefront expects PUBLIC_API_BASE or similar)
+   - Root README update (very small) showing which key goes where.
+4. Ensure dev instructions still match wrangler usage.
 
-Verification commands:
+Verification commands (must be copy/paste ready):
 
-- rg -n "provision-stripe-prices" apps/api/src/routes/dev.ts
-- curl -i -X POST http://127.0.0.1:8787/dev/provision-stripe-prices -H "x-admin-key: $ADMIN_API_KEY"
-- wrangler d1 execute <DBNAME> --local --command "SELECT provider_price_id FROM prices WHERE provider_price_id IS NOT NULL LIMIT 5;"
-- curl -i -X POST http://127.0.0.1:8787/checkout/session -H "content-type: application/json" -d '{"variantId":1,"quantity":1}'
-- Confirm it returns a Stripe session url/id (or next expected error if any)
+- rg -n "STRIPE_API_KEY" apps/api apps/storefront || true
+- rg -n "STRIPE_SECRET_KEY" apps/api
+- cp apps/api/.dev.vars.example apps/api/.dev.vars && sed -n '1,80p' apps/api/.dev.vars
+- (set wrong key) STRIPE_SECRET_KEY=pk_test_xxx ... verify endpoint returns 500 with message
+- (set correct key) STRIPE_SECRET_KEY=sk_test_xxx ... verify /dev/provision-stripe-prices works with x-admin-key
+- curl checkout/session returns 200 (or expected next error if missing provider_price_id)
+- pnpm -C apps/api test (if exists)
+- pnpm -C apps/storefront build
+
+Keep output compact.
