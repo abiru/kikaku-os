@@ -1,0 +1,25 @@
+=== Codex Context (short) ===
+2026-01-18T09:57:46+09:00
+
+## Repo
+branch: main
+head:   716ff6c
+
+## Status
+## main...origin/main [ahead 5]
+?? codex-runs/20260118-095731__storefront__avoid_localhost_fallback_in_api_base/
+?? prompts/
+?? scripts/
+
+## Changed files (HEAD..WT)
+
+## Diff stats (HEAD..WT)
+
+## Recent commits
+716ff6c storefront: revamp layout, product pages, and UI components
+f97a48b codex-run: storefront: review layout and product page changes
+c464b69 codex-run: storefront: diagnostic verification plan for storefront changes
+569f8b7 codex-run: storefront: revamp product pages and ui components
+098320e codex-run: storefront: codex-run
+fe3c267 storefront
+e8cddbe first commit
