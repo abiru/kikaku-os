@@ -5,17 +5,18 @@ import Button from '../../components/Button.astro';
 import Container from '../../components/Container.astro';
 import EmptyState from '../../components/EmptyState.astro';
 import Layout from '../../layouts/Layout.astro';
-import { fetchJson, getApiBase } from '../../lib/api';
+import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
 const { id } = Astro.params;
+const encodedId = encodeURIComponent(id);
 export const prerender = false;
 
 let product: any = null;
 let loadState: 'ready' | 'not-found' | 'unavailable' = 'ready';
 
 try {
-	const data = await fetchJson(`${apiBase}/store/products/${id}`);
+	const data = await fetchJson(buildStoreUrl(`/products/${encodedId}`, apiBase));
 	product = data?.product ?? null;
 	if (!product) {
 		loadState = 'not-found';
@@ -126,15 +127,12 @@ const stockNote =
 				</section>
 			) : loadState === 'unavailable' ? (
 				<div class="mt-8">
-					<Alert
-						severity="critical"
+					<EmptyState
 						title="Product unavailable"
 						description="We couldn't load this product. Please retry in a moment."
-					>
-						<Button href={`/products/${id}`} variant="secondary" size="sm">
-							Retry
-						</Button>
-					</Alert>
+						ctaLabel="Retry"
+						ctaHref={`/products/${encodedId}`}
+					/>
 				</div>
 			) : (
 				<div class="mt-8">

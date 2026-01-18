@@ -18,6 +18,16 @@ export const getApiBase = () => {
 	throw new Error('PUBLIC_API_BASE is not set and window is unavailable');
 };
 
+export const buildStoreUrl = (path: string, base: string = getApiBase()) => {
+	const normalizedBase = base.replace(/\/+$/, '');
+	const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+	const storePath = normalizedPath === '/store' || normalizedPath.startsWith('/store/')
+		? normalizedPath
+		: `/store${normalizedPath}`;
+
+	return `${normalizedBase}${storePath}`;
+};
+
 export const fetchJson = async <T = unknown>(url: string, options: FetchOptions = {}) => {
 	const { parseJson = true, ...fetchOptions } = options;
 	const res = await fetch(url, fetchOptions);

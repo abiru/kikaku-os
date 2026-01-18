@@ -1,14 +1,10 @@
 ---
-import Alert from '../../components/Alert.astro';
 import Badge from '../../components/Badge.astro';
-import Button from '../../components/Button.astro';
 import Container from '../../components/Container.astro';
 import EmptyState from '../../components/EmptyState.astro';
 import Skeleton from '../../components/Skeleton.astro';
 import Layout from '../../layouts/Layout.astro';
-import { getApiBase } from '../../lib/api';
 
-const apiBase = getApiBase();
 const skeletonCards = Array.from({ length: 9 });
 ---
 
@@ -24,7 +20,7 @@ const skeletonCards = Array.from({ length: 9 });
 				<Badge severity="info">Live catalog</Badge>
 			</div>
 
-			<div id="product-state" data-api-base={apiBase} class="mt-8 space-y-6">
+			<div id="product-state" class="mt-8 space-y-6">
 				<div id="product-skeleton" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 					{skeletonCards.map(() => (
 						<div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
@@ -41,16 +37,12 @@ const skeletonCards = Array.from({ length: 9 });
 				</div>
 
 				<div id="product-error" class="hidden">
-					<Alert
-						severity="critical"
+					<EmptyState
 						title="Couldn't load products"
 						description="The catalog is unavailable right now. Please retry."
-					>
-						<div class="flex items-center gap-3">
-							<Button id="retry-products" variant="secondary" size="sm">Retry</Button>
-							<p id="product-error-message" class="text-sm text-red-800"></p>
-						</div>
-					</Alert>
+						ctaLabel="Retry"
+						ctaHref="/products"
+					/>
 				</div>
 
 				<div id="product-empty" class="hidden">
@@ -68,16 +60,13 @@ const skeletonCards = Array.from({ length: 9 });
 	</section>
 
 	<script>
-		import { fetchJson } from '../../lib/api';
+		import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 
-		const state = document.getElementById('product-state');
-		const apiBase = state?.dataset.apiBase || 'http://localhost:8787';
+		const apiBase = getApiBase();
 		const skeleton = document.getElementById('product-skeleton');
 		const errorState = document.getElementById('product-error');
 		const emptyState = document.getElementById('product-empty');
 		const grid = document.getElementById('product-grid');
-		const retryButton = document.getElementById('retry-products');
-		const errorMessage = document.getElementById('product-error-message');
 
 		const setState = (next) => {
 			const isLoading = next === 'loading';
@@ -151,10 +140,9 @@ const skeletonCards = Array.from({ length: 9 });
 
 		const loadProducts = async () => {
 			setState('loading');
-			if (errorMessage) errorMessage.textContent = '';
 
 			try {
-				const data = await fetchJson(`${apiBase}/store/products`);
+				const data = await fetchJson(buildStoreUrl('/products', apiBase));
 				const products = Array.isArray(data?.products) ? data.products.filter(isProduct) : [];
 
 				if (!products.length) {
@@ -165,15 +153,10 @@ const skeletonCards = Array.from({ length: 9 });
 				renderProducts(products);
 				setState('loaded');
 			} catch (error) {
-				if (errorMessage) {
-					errorMessage.textContent =
-						error instanceof Error ? error.message : 'Unable to load products.';
-				}
 				setState('error');
 			}
 		};
 
-		retryButton?.addEventListener('click', () => loadProducts());
 		loadProducts();
 	</script>
 </Layout>
