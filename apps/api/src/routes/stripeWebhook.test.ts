@@ -9,46 +9,133 @@ type MockDbOptions = {
   existingPayments?: Array<{ providerPaymentId: string; id?: number; orderId?: number | null }>;
   orderStatus?: string;
   orderTotal?: number;
+  orders?: Array<{
+    id: number;
+    status?: string;
+    total_net?: number;
+    currency?: string;
+    provider_checkout_session_id?: string | null;
+    provider_payment_intent_id?: string | null;
+    paid_at?: string | null;
+    updated_at?: string | null;
+  }>;
 };
 
 const createMockDb = (options?: MockDbOptions) => {
   const calls: { sql: string; bind: unknown[] }[] = [];
   const fulfillments = new Map<number, number>();
-  const payments = new Map<string, { id: number; order_id: number | null }>();
-  const refunds = new Set<string>();
+  const orders = new Map<number, {
+    id: number;
+    status: string;
+    total_net: number;
+    currency: string;
+    provider_checkout_session_id: string | null;
+    provider_payment_intent_id: string | null;
+    paid_at: string | null;
+    updated_at: string | null;
+  }>();
+  const payments: Array<{
+    id: number;
+    order_id: number | null;
+    provider_payment_id: string;
+    amount: number;
+    currency: string;
+  }> = [];
+  const paymentsByProviderId = new Map<string, { id: number; order_id: number | null }>();
+  const refunds: Array<{
+    id: number;
+    payment_id: number | null;
+    provider_refund_id: string;
+    amount: number;
+    currency: string;
+  }> = [];
+  const refundsByProviderId = new Map<string, { id: number }>();
   const events = new Set<string>();
   let fulfillmentId = 0;
   let paymentId = 1000;
+  let refundId = 2000;
+  let nowCounter = 0;
   const orderStatus = options?.orderStatus ?? 'paid';
   const orderTotal = options?.orderTotal ?? 2500;
 
   for (const payment of options?.existingPayments ?? []) {
     const id = payment.id ?? ++paymentId;
-    payments.set(payment.providerPaymentId, { id, order_id: payment.orderId ?? null });
+    const orderId = payment.orderId ?? null;
+    payments.push({
+      id,
+      order_id: orderId,
+      provider_payment_id: payment.providerPaymentId,
+      amount: orderTotal,
+      currency: 'JPY'
+    });
+    paymentsByProviderId.set(payment.providerPaymentId, { id, order_id: orderId });
   }
 
+  for (const order of options?.orders ?? []) {
+    orders.set(order.id, {
+      id: order.id,
+      status: order.status ?? orderStatus,
+      total_net: order.total_net ?? orderTotal,
+      currency: order.currency ?? 'JPY',
+      provider_checkout_session_id: order.provider_checkout_session_id ?? null,
+      provider_payment_intent_id: order.provider_payment_intent_id ?? null,
+      paid_at: order.paid_at ?? null,
+      updated_at: order.updated_at ?? null
+    });
+  }
+
+  const nextNow = () => {
+    nowCounter += 1;
+    return `mock-now-${nowCounter}`;
+  };
+
+  const getOrCreateOrder = (orderId: number) => {
+    const existing = orders.get(orderId);
+    if (existing) return existing;
+    const created = {
+      id: orderId,
+      status: orderStatus,
+      total_net: orderTotal,
+      currency: 'JPY',
+      provider_checkout_session_id: null,
+      provider_payment_intent_id: null,
+      paid_at: null,
+      updated_at: null
+    };
+    orders.set(orderId, created);
+    return created;
+  };
+
   const findPaymentByOrderId = (orderId: number) => {
-    for (const payment of payments.values()) {
-      if (payment.order_id === orderId) return payment;
-    }
-    return null;
+    const matches = payments.filter((payment) => payment.order_id === orderId);
+    return matches.length > 0 ? matches[matches.length - 1] : null;
   };
 
   return {
     calls,
+    state: {
+      orders,
+      payments,
+      refunds,
+      events
+    },
     prepare: (sql: string) => ({
       bind: (...args: unknown[]) => ({
         first: async () => {
           if (sql.includes('SELECT id, total_net, status FROM orders')) {
             const id = Number(args[0]);
-            return Number.isFinite(id) ? { id, total_net: orderTotal, status: orderStatus } : null;
+            if (!Number.isFinite(id)) return null;
+            const order = getOrCreateOrder(id);
+            return { id: order.id, total_net: order.total_net, status: order.status };
           }
           if (sql.includes('SELECT id FROM orders')) {
             const id = Number(args[0]);
-            return Number.isFinite(id) ? { id } : null;
+            if (!Number.isFinite(id)) return null;
+            const order = getOrCreateOrder(id);
+            return { id: order.id };
           }
           if (sql.includes('SELECT id, order_id FROM payments WHERE provider_payment_id')) {
-            const payment = payments.get(String(args[0]));
+            const payment = paymentsByProviderId.get(String(args[0]));
             return payment ? { id: payment.id, order_id: payment.order_id } : null;
           }
           if (sql.includes('SELECT id, order_id FROM payments WHERE order_id')) {
@@ -56,11 +143,12 @@ const createMockDb = (options?: MockDbOptions) => {
             return payment ? { id: payment.id, order_id: payment.order_id } : null;
           }
           if (sql.includes('SELECT id FROM payments WHERE provider_payment_id')) {
-            const payment = payments.get(String(args[0]));
+            const payment = paymentsByProviderId.get(String(args[0]));
             return payment ? { id: payment.id } : null;
           }
           if (sql.includes('SELECT id FROM refunds')) {
-            return refunds.has(String(args[0])) ? { id: 1 } : null;
+            const refund = refundsByProviderId.get(String(args[0]));
+            return refund ? { id: refund.id } : null;
           }
           if (sql.includes('SELECT id FROM fulfillments')) {
             const orderId = Number(args[0]);
@@ -78,23 +166,72 @@ const createMockDb = (options?: MockDbOptions) => {
             }
             events.add(eventId);
           }
+          if (sql.includes("UPDATE orders") && sql.includes("status='paid'")) {
+            if (sql.includes('provider_checkout_session_id')) {
+              const sessionId = args[0] as string | null;
+              const paymentIntentId = args[1] as string | null;
+              const orderId = Number(args[2]);
+              const order = getOrCreateOrder(orderId);
+              order.status = 'paid';
+              if (!order.provider_checkout_session_id && sessionId) {
+                order.provider_checkout_session_id = sessionId;
+              }
+              if (!order.provider_payment_intent_id && paymentIntentId) {
+                order.provider_payment_intent_id = paymentIntentId;
+              }
+              if (!order.paid_at) order.paid_at = nextNow();
+              order.updated_at = nextNow();
+            } else {
+              const providerPaymentId = args[0] as string | null;
+              const orderId = Number(args[1]);
+              const order = getOrCreateOrder(orderId);
+              order.status = 'paid';
+              if (!order.provider_payment_intent_id && providerPaymentId) {
+                order.provider_payment_intent_id = providerPaymentId;
+              }
+              if (!order.paid_at) order.paid_at = nextNow();
+              order.updated_at = nextNow();
+            }
+          }
+          if (sql.includes("UPDATE orders SET status='refunded'")) {
+            const orderId = Number(args[0]);
+            const order = getOrCreateOrder(orderId);
+            order.status = 'refunded';
+            order.updated_at = nextNow();
+          }
           if (sql.includes('INSERT INTO payments') && options?.duplicatePayment) {
             throw new Error('UNIQUE constraint failed: payments.provider_payment_id');
           }
           if (sql.includes('INSERT INTO payments')) {
             const providerPaymentId = String(args[3]);
-            if (payments.has(providerPaymentId)) {
+            if (paymentsByProviderId.has(providerPaymentId)) {
               throw new Error('UNIQUE constraint failed: payments.provider_payment_id');
             }
             paymentId += 1;
-            payments.set(providerPaymentId, { id: paymentId, order_id: Number(args[0]) || null });
+            const orderId = Number(args[0]) || null;
+            payments.push({
+              id: paymentId,
+              order_id: orderId,
+              provider_payment_id: providerPaymentId,
+              amount: Number(args[1]) || 0,
+              currency: String(args[2] || 'JPY')
+            });
+            paymentsByProviderId.set(providerPaymentId, { id: paymentId, order_id: orderId });
           }
           if (sql.includes('INSERT INTO refunds')) {
-            const refundId = String(args[4]);
-            if (options?.duplicateRefund || refunds.has(refundId)) {
+            const providerRefundId = String(args[4]);
+            if (options?.duplicateRefund || refundsByProviderId.has(providerRefundId)) {
               throw new Error('UNIQUE constraint failed: refunds.provider_refund_id');
             }
-            refunds.add(refundId);
+            refundId += 1;
+            refunds.push({
+              id: refundId,
+              payment_id: (args[0] as number | null) ?? null,
+              provider_refund_id: providerRefundId,
+              amount: Number(args[1]) || 0,
+              currency: String(args[2] || 'JPY')
+            });
+            refundsByProviderId.set(providerRefundId, { id: refundId });
           }
           if (sql.includes('INSERT INTO fulfillments')) {
             const orderId = Number(args[0]);
@@ -108,6 +245,12 @@ const createMockDb = (options?: MockDbOptions) => {
       })
     })
   };
+};
+
+const buildStripeSignatureHeader = async (payload: string, secret: string, timestamp?: string) => {
+  const signedAt = timestamp ?? String(Math.floor(Date.now() / 1000));
+  const sig = await computeStripeSignature(payload, secret, signedAt);
+  return `t=${signedAt},v1=${sig}`;
 };
 
 describe('Stripe webhook handling', () => {
@@ -431,5 +574,120 @@ describe('Stripe webhook route', () => {
     expect(secondJson.duplicate).toBe(true);
     const refundInserts = db.calls.filter((call) => call.sql.includes('INSERT INTO refunds'));
     expect(refundInserts).toHaveLength(1);
+  });
+
+  it('processes paid then refund events with idempotency and state updates', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const orderId = 777;
+    const secret = 'whsec_test';
+    const db = createMockDb({
+      orders: [{ id: orderId, status: 'pending', total_net: 10000, currency: 'JPY' }]
+    });
+
+    const checkoutPayload = JSON.stringify({
+      id: 'evt_paid_flow',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_paid_flow',
+          payment_intent: 'pi_paid_flow',
+          amount_total: 10000,
+          currency: 'jpy',
+          metadata: { orderId: String(orderId) }
+        }
+      }
+    });
+    const checkoutHeader = await buildStripeSignatureHeader(checkoutPayload, secret);
+
+    const paidFirst = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': checkoutHeader },
+        body: checkoutPayload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const paidFirstJson = await paidFirst.json();
+    expect(paidFirst.status).toBe(200);
+    expect(paidFirstJson.ok).toBe(true);
+    expect(db.state.events.size).toBe(1);
+    expect(db.state.payments).toHaveLength(1);
+    const paidOrder = db.state.orders.get(orderId);
+    expect(paidOrder?.status).toBe('paid');
+    expect(paidOrder?.paid_at).toBeTruthy();
+    expect(paidOrder?.provider_checkout_session_id).toBe('cs_paid_flow');
+    expect(paidOrder?.provider_payment_intent_id).toBe('pi_paid_flow');
+    const paidAt = paidOrder?.paid_at;
+
+    const paidSecond = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': checkoutHeader },
+        body: checkoutPayload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+    const paidSecondJson = await paidSecond.json();
+    expect(paidSecond.status).toBe(200);
+    expect(paidSecondJson.ok).toBe(true);
+    expect(paidSecondJson.duplicate).toBe(true);
+    expect(db.state.events.size).toBe(1);
+    expect(db.state.payments).toHaveLength(1);
+    expect(db.state.orders.get(orderId)?.paid_at).toBe(paidAt);
+
+    const refundPayload = JSON.stringify({
+      id: 'evt_refund_flow',
+      type: 'refund.updated',
+      data: {
+        object: {
+          id: 're_flow_1',
+          amount: 10000,
+          currency: 'jpy',
+          payment_intent: 'pi_paid_flow',
+          metadata: { orderId: String(orderId) }
+        }
+      }
+    });
+    const refundHeader = await buildStripeSignatureHeader(refundPayload, secret);
+
+    const refundFirst = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': refundHeader },
+        body: refundPayload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const refundFirstJson = await refundFirst.json();
+    expect(refundFirst.status).toBe(200);
+    expect(refundFirstJson.ok).toBe(true);
+    expect(db.state.refunds).toHaveLength(1);
+    const refundRow = db.state.refunds[0];
+    const paymentRow = db.state.payments[0];
+    expect(refundRow.provider_refund_id).toBe('re_flow_1');
+    expect(refundRow.payment_id).toBe(paymentRow.id);
+
+    const refundSecond = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': refundHeader },
+        body: refundPayload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+    const refundSecondJson = await refundSecond.json();
+    expect(refundSecond.status).toBe(200);
+    expect(refundSecondJson.ok).toBe(true);
+    expect(refundSecondJson.duplicate).toBe(true);
+    expect(db.state.refunds).toHaveLength(1);
+    expect(db.state.events.size).toBe(2);
   });
 });
