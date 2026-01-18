@@ -5,6 +5,8 @@ import { computeStripeSignature } from '../lib/stripe';
 
 const createMockDb = (options?: { duplicatePayment?: boolean }) => {
   const calls: { sql: string; bind: unknown[] }[] = [];
+  const fulfillments = new Map<number, number>();
+  let fulfillmentId = 0;
   return {
     calls,
     prepare: (sql: string) => ({
@@ -16,12 +18,24 @@ const createMockDb = (options?: { duplicatePayment?: boolean }) => {
           if (sql.includes('SELECT id FROM payments')) {
             return null;
           }
+          if (sql.includes('SELECT id FROM fulfillments')) {
+            const orderId = Number(args[0]);
+            const existingId = fulfillments.get(orderId);
+            return existingId ? { id: existingId } : null;
+          }
           return null;
         },
         run: async () => {
           calls.push({ sql, bind: args });
           if (sql.includes('INSERT INTO payments') && options?.duplicatePayment) {
             throw new Error('UNIQUE constraint failed: payments.provider_payment_id');
+          }
+          if (sql.includes('INSERT INTO fulfillments')) {
+            const orderId = Number(args[0]);
+            if (!fulfillments.has(orderId)) {
+              fulfillmentId += 1;
+              fulfillments.set(orderId, fulfillmentId);
+            }
           }
           return { meta: { last_row_id: 1, changes: 1 } };
         }
@@ -78,6 +92,31 @@ describe('Stripe webhook handling', () => {
     const result = await handleStripeEvent({ DB: mockDb } as any, event as any);
     expect(result.received).toBe(true);
     expect(result.duplicate).toBe(true);
+  });
+
+  it('creates a fulfillment once for repeated checkout.session.completed', async () => {
+    const mockDb = createMockDb();
+    const event = {
+      id: 'evt_fulfillment',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_fulfillment',
+          payment_intent: null,
+          amount_total: 2500,
+          currency: 'jpy',
+          metadata: { orderId: '123' }
+        }
+      }
+    };
+
+    await handleStripeEvent({ DB: mockDb } as any, event as any);
+    await handleStripeEvent({ DB: mockDb } as any, event as any);
+
+    const fulfillmentInserts = mockDb.calls.filter((call) =>
+      call.sql.includes('INSERT INTO fulfillments')
+    );
+    expect(fulfillmentInserts).toHaveLength(1);
   });
 
   it('ignores payment_intent.succeeded without orderId', async () => {

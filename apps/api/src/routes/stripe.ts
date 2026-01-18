@@ -78,6 +78,24 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
        WHERE id=?`
     ).bind(sessionId, paymentIntentId ?? null, orderId).run();
 
+    const existingFulfillment = await env.DB.prepare(
+      `SELECT id FROM fulfillments WHERE order_id=?`
+    ).bind(orderId).first<{ id: number }>();
+
+    if (!existingFulfillment?.id) {
+      await env.DB.prepare(
+        `INSERT INTO fulfillments (order_id, status, metadata, created_at, updated_at)
+         VALUES (?, 'pending', ?, datetime('now'), datetime('now'))`
+      ).bind(
+        orderId,
+        JSON.stringify({
+          stripe_session_id: sessionId,
+          stripe_payment_intent_id: paymentIntentId ?? null,
+          stripe_event_id: event.id
+        })
+      ).run();
+    }
+
     let paymentResult: { inserted: boolean; duplicate: boolean } | null = null;
     if (paymentIntentId) {
       paymentResult = await insertPayment(env, {
