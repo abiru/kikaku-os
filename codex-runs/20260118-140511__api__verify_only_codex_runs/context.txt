@@ -1,0 +1,39 @@
+=== Codex Context (short) ===
+2026-01-18T14:05:11+09:00
+
+## Repo
+branch: verify/auto-commit
+head:   a72e372
+
+## Status
+## verify/auto-commit
+?? apps/api/README.md
+?? codex-runs/20260118-123134__infra__enforce_auto-commit_flow_in_codex-run_script/
+?? codex-runs/20260118-135742__api__verify_auto_commit/
+?? codex-runs/20260118-140511__api__verify_only_codex_runs/
+
+## Changed files (HEAD..WT)
+
+## Diff stats (HEAD..WT)
+
+## Recent commits
+a72e372 api: rename stripe env keys and add guards
+abe3aaf codex-run: storefront: fetch products from store api
+8aaecaa codex-run: infra: debug bundle missing
+ef7a7bf codex-run: infra: add work commit flags and scope mapping
+8cf6417 chore: update codex prompt
+83c8bec infra: auto commit work and codex runs
+23f4331 codex-run: api: add dev endpoint for stripe prices
+8257970 api: add dev endpoint for stripe prices
+78b94ab storefront: fetch products from store api
+b614e5e infra: ensure codex-run bundle is always generated
+f2bc6eb chore: update codex prompt
+e18f285 api: allow public GET access under /store
+5156007 codex-run: api: allow public storefront get access
+1452b1a chore: improve codex-run script and prompts
+ff7bdea storefront: avoid localhost fallback in api base
+28ae5ea codex-run: storefront: avoid localhost fallback in api base
+716ff6c storefront: revamp layout, product pages, and UI components
+f97a48b codex-run: storefront: review layout and product page changes
+c464b69 codex-run: storefront: diagnostic verification plan for storefront changes
+569f8b7 codex-run: storefront: revamp product pages and ui components
