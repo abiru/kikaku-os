@@ -36,12 +36,20 @@ Shopify Premium相当以上の「マーケ自動化」「高度検索」「自�
   - /reports/daily 集計
   - /daily-close/:date/artifacts で report/evidence/html を R2 に出力
   - documents テーブルに紐付け
+- Stripe:
+  - Checkout Session 作成（/checkout/session）
+  - Webhook 受信で orders/payments/refunds を更新
+  - fulfillments の自動作成 + events 記録
 - Ledger:
   - daily close を元に ledger_entries を生成
 - Inbox:
   - open items の一覧 + approve/reject
+- Storefront:
+  - /store/products / /store/products/:id の取得
 - Dev seed:
   - DEV_MODE=true のとき /dev/seed でローカルデータ投入
+- Cron:
+  - Daily Close 生成 + 在庫しきい値の監視を scheduled handler で実行
 
 ### 2.2 完了済みの重要修正
 - ✅ Admin の Documents「開く」が 401 になる問題は解消済み
@@ -143,11 +151,11 @@ Shopify Premium相当以上の「マーケ自動化」「高度検索」「自�
 ---
 
 ## 7. 直近の Next Actions（順番固定）
-1) Stripe Webhook 取り込み（D1に実データが流れる状態にする）
-2) Astro storefront の最小導線（商品→決済→注文作成）
-3) Daily Close の Cron 化（自動化の第一歩）
-4) Inbox 自動生成ルール追加（異常検知の実用化）
-5) テスト/CI を固める（壊れない状態の固定）
+1) Stripe 実データでのE2E検証（Webhookの冪等性、orders/payments/refunds の整合）
+2) Astro storefront の最小導線（商品表示→決済→注文完了/キャンセル画面）
+3) Daily Close Cron の運用ハードニング（再実行・バックフィル・通知）
+4) Inbox 自動生成ルール追加（在庫/売上の異常検知拡張）
+5) テスト/CI を固める（Webhook/Storefrontの統合テスト追加）
 
 ---
 

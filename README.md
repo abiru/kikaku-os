@@ -13,7 +13,13 @@
 依存は pnpm を推奨します。
 
 ### 共通
-- 環境変数: `ADMIN_API_KEY` を wrangler.toml に設定
+- 環境変数: Wrangler は `.dev.vars` を参照（ローカルでのみ使用・コミットしない）
+- 最低限必要な変数:
+  - `ADMIN_API_KEY`
+  - `DEV_MODE`
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
+  - `STOREFRONT_BASE_URL`
 - API: http://localhost:8787
 - Admin: http://localhost:5173
 - Storefront: http://localhost:4321
@@ -23,8 +29,14 @@
 ### API
 ```bash
 pnpm install --prefix apps/api
-# ルートの .dev.vars.example を .dev.vars にコピー（wrangler.toml と同階層の .dev.vars が source-of-truth / apps/api/.dev.vars.example は参照用）
-cp .dev.vars.example .dev.vars
+# .dev.vars を作成（例）
+cat <<'EOF' > .dev.vars
+ADMIN_API_KEY=CHANGE_ME
+DEV_MODE=true
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+STOREFRONT_BASE_URL=http://localhost:4321
+EOF
 pnpm -C apps/api dev -- --port 8787
 
 # 初回スキーマ適用 (ローカル D1)
@@ -66,6 +78,7 @@ pnpm -C apps/admin dev
 * POST /inventory/thresholds
 * POST /dev/seed (DEV_MODE=trueのみ)
 * POST /checkout/session
+* POST /webhooks/stripe / POST /stripe/webhook
 * GET /store/products / GET /store/products/:id
 
 ## Seed API
