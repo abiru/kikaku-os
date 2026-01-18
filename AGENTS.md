@@ -20,6 +20,7 @@
 
 ## Testing rules
 - Always add or update tests with changes.
+- Documentation-only changes may skip tests, but note the omission in the final summary.
 - Run and pass:
   - `pnpm -C apps/admin test`
   - `pnpm -C apps/api test`
@@ -32,3 +33,6 @@
 - `pnpm -C apps/api test`
 - `pnpm -C apps/storefront install`
 - `pnpm -C apps/storefront build`
+
+## Documentation hygiene
+- When you change API surface area or env vars, update README.md and PLANS.md accordingly.
