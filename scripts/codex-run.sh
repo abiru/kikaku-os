@@ -280,6 +280,7 @@ set -e
 
 # --- bundle for ChatGPT paste (compact by default) ---
 BUNDLE="$RUN_DIR/bundle-for-chatgpt.md"
+mkdir -p "$(dirname "$BUNDLE")"
 {
   echo "# Codex run"
   echo "- title: $TITLE"
