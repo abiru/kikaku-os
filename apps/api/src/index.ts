@@ -46,6 +46,7 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
   if (c.req.path.startsWith('/webhooks/stripe')) return next();
   if (c.req.path.startsWith('/checkout/session')) return next();
+  if (c.req.method === 'GET' && c.req.path === '/dev/ping') return next();
   if (
     c.req.method === 'GET' &&
     (c.req.path === '/store' || c.req.path.startsWith('/store/'))

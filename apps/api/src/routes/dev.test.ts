@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
 import dev from './dev';
+import worker from '../index';
 
 type StripeProvisionRow = {
   variant_id: number;
@@ -55,6 +56,27 @@ const createMockDb = (options: {
     prepare: (sql: string) => createStatement(sql)
   };
 };
+
+describe('GET /dev/ping', () => {
+  it('returns a public ping payload without admin key', async () => {
+    const res = await worker.fetch(
+      new Request('http://localhost/dev/ping'),
+      { DEV_MODE: 'true' } as any,
+      {
+        waitUntil: () => {},
+        passThroughOnException: () => {}
+      } as any
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json<any>();
+    expect(json.ok).toBe(true);
+    expect(json.name).toBe('kikaku-os-api');
+    expect(json.dev_mode).toBe(true);
+    expect(typeof json.time).toBe('string');
+    expect(Number.isNaN(Date.parse(json.time))).toBe(false);
+  });
+});
 
 describe('POST /dev/provision-stripe-prices', () => {
   it('provisions prices with missing provider_price_id', async () => {

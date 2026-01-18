@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "wrangler dev --local --config ../../wrangler.toml --port ${PORT:-8787}",
     "build": "wrangler build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "smoke": "sh -c 'set -e; PORT=${PORT:-8787}; LOG=\"/tmp/kikaku-os-api-smoke-$PORT-$$.log\"; cleanup(){ if [ -n \"${PID:-}\" ]; then kill \"$PID\" 2>/dev/null || true; wait \"$PID\" 2>/dev/null || true; fi; }; trap cleanup EXIT INT TERM; STRIPE_SECRET_KEY=pk_test_xxx PORT=\"$PORT\" pnpm dev -- --var STRIPE_SECRET_KEY=pk_test_xxx >\"$LOG\" 2>&1 & PID=$!; PING=$(curl -sS --retry 20 --retry-delay 1 --retry-connrefused -w \"\\n%{http_code}\" \"http://127.0.0.1:$PORT/dev/ping\"); PING_STATUS=$(printf \"%s\\n\" \"$PING\" | sed -n \"\\$p\"); PING_BODY=$(printf \"%s\\n\" \"$PING\" | sed \"\\$d\"); printf \"GET /dev/ping -> %s %s\\n\" \"$PING_STATUS\" \"$PING_BODY\"; [ \"$PING_STATUS\" = \"200\" ]; printf \"%s\" \"$PING_BODY\" | grep -q \"\\\"dev_mode\\\":true\"; printf \"%s\" \"$PING_BODY\" | grep -q \"\\\"name\\\":\\\"kikaku-os-api\\\"\"; CHECKOUT=$(curl -sS -w \"\\n%{http_code}\" -H \"content-type: application/json\" -d \"{\\\"variantId\\\":1,\\\"quantity\\\":1}\" \"http://127.0.0.1:$PORT/checkout/session\"); CHECKOUT_STATUS=$(printf \"%s\\n\" \"$CHECKOUT\" | sed -n \"\\$p\"); CHECKOUT_BODY=$(printf \"%s\\n\" \"$CHECKOUT\" | sed \"\\$d\"); printf \"POST /checkout/session -> %s %s\\n\" \"$CHECKOUT_STATUS\" \"$CHECKOUT_BODY\"; [ \"$CHECKOUT_STATUS\" = \"500\" ]; printf \"%s\" \"$CHECKOUT_BODY\" | grep -q \"\\\"code\\\":\\\"STRIPE_SECRET_KEY_INVALID\\\"\"'"
   },
   "dependencies": {
     "hono": "^4.5.0"

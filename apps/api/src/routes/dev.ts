@@ -33,6 +33,14 @@ const randInt = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
+dev.get('/ping', (c) => {
+  return jsonOk(c, {
+    name: 'kikaku-os-api',
+    time: new Date().toISOString(),
+    dev_mode: c.env.DEV_MODE === 'true'
+  });
+});
+
 dev.post('/seed', async (c) => {
   if (c.env.DEV_MODE !== 'true') return jsonError(c, 'Not found', 404);
 
