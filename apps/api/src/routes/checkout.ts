@@ -33,16 +33,16 @@ const jsonErrorWithCode = (c: Context, code: string, message: string, status = 5
 };
 
 checkout.post('/checkout/session', async (c) => {
-  const stripeKey = c.env.STRIPE_SECRET_KEY;
-  if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
-  if (stripeKey.startsWith('pk_')) {
-    return jsonErrorWithCode(
-      c,
-      'STRIPE_SECRET_KEY_INVALID',
-      'Stripe secret key looks like a publishable key (pk*). Use STRIPE_SECRET_KEY with an sk* value.',
-      500
-    );
-  }
+const stripeKey = c.env.STRIPE_SECRET_KEY ?? (c.env as any).STRIPE_API_KEY;
+if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
+if (stripeKey.startsWith('pk_')) {
+  return jsonErrorWithCode(
+    c,
+    'STRIPE_SECRET_KEY_INVALID',
+    'Stripe secret key looks like a publishable key (pk*). Use STRIPE_API_KEY with an sk* value.',
+    500
+  );
+}
 
   let body: any;
   try {
