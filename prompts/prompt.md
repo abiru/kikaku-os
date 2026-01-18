@@ -1,42 +1,82 @@
 You are an implementer.
 
-Goal:
-Eliminate Stripe key confusion by renaming env vars and adding guardrails so pk/sk cannot be mixed up.
-
-Constraints:
-
-- Keep behavior working in local dev.
+HARD RULES
+- Minimal diffs. No refactors.
+- Do NOT modify files under `codex-runs/*`.
+- Do NOT modify `prompts/prompt.md`.
 - No secrets in repo.
-- Keep changes minimal and explicit (no refactors).
-- Output: unified diff + 8 verification commands.
+- Keep existing endpoints behavior unchanged.
 
-Tasks:
+GOAL
+手動でやっている Stripe webhook の動作確認（paid/refund/idempotency）を、vitest のテストで完全に再現できるようにする。
+「D1に注文を作る→署名付きWebhookを投げる→D1の状態が期待通りになる→同じevent再送で重複しない→refundも同様」
+この一連をテストだけで担保したい。
 
-1. API side:
-   - Replace usage of c.env.STRIPE_API_KEY with c.env.STRIPE_SECRET_KEY in:
-     - apps/api/src/routes/checkout.ts
-     - apps/api/src/routes/dev.ts (provision-stripe-prices)
-   - Add validation:
-     - If STRIPE_SECRET_KEY missing -> return 500 "Stripe API key not configured" (keep message)
-     - If STRIPE*SECRET_KEY starts with "pk*" -> return 500 with clear message (still safe for users)
-2. Storefront side (only if currently needed):
-   - If any Stripe publishable key is used in storefront, rename to PUBLIC*STRIPE_PUBLISHABLE_KEY and validate it starts with "pk*".
-   - If storefront doesn’t use it, do not add new usage.
-3. Add example env files (no real keys):
-   - apps/api/.dev.vars.example (or similar, follow existing conventions)
-   - apps/storefront/.env.example (if storefront expects PUBLIC_API_BASE or similar)
-   - Root README update (very small) showing which key goes where.
-4. Ensure dev instructions still match wrangler usage.
+CONTEXT
+- `POST /stripe/webhook` exists and verifies Stripe signature.
+- D1 tables: orders, payments, refunds, events (events has stripe_event_id + unique index).
+- Existing tests: `apps/api/src/routes/stripeWebhook.test.ts` already checks missing secret, invalid signature, and some handler logic.
 
-Verification commands (must be copy/paste ready):
+WHAT TO BUILD
 
-- rg -n "STRIPE_API_KEY" apps/api apps/storefront || true
-- rg -n "STRIPE_SECRET_KEY" apps/api
-- cp apps/api/.dev.vars.example apps/api/.dev.vars && sed -n '1,80p' apps/api/.dev.vars
-- (set wrong key) STRIPE_SECRET_KEY=pk_test_xxx ... verify endpoint returns 500 with message
-- (set correct key) STRIPE_SECRET_KEY=sk_test_xxx ... verify /dev/provision-stripe-prices works with x-admin-key
-- curl checkout/session returns 200 (or expected next error if missing provider_price_id)
-- pnpm -C apps/api test (if exists)
-- pnpm -C apps/storefront build
+1) Add a stateful D1 mock for Stripe webhook tests (mandatory)
+- Improve/extend the existing mock used in `stripeWebhook.test.ts` so it can hold in-memory state:
+  - orders (by id)
+  - payments (list)
+  - refunds (list)
+  - events (set of stripe_event_id for uniqueness)
+- The mock should support the SQL patterns used by `apps/api/src/routes/stripe.ts`:
+  - SELECT orders by id
+  - UPDATE orders paid fields (status, paid_at, provider ids)
+  - INSERT payments (provider_payment_id uniqueness handling if relevant)
+  - SELECT payments by provider_payment_id and/or order_id
+  - INSERT refunds with provider_refund_id uniqueness
+  - SELECT refunds by provider_refund_id
+  - INSERT events with stripe_event_id unique constraint behavior (duplicates should throw or be handled consistently with production logic)
+- Keep the mock implementation minimal and local to tests (prefer in the same test file or a small helper under `apps/api/src/routes/__tests__/` etc).
 
-Keep output compact.
+2) Add an "end-to-end style" test that replaces manual verification (mandatory)
+Add tests to `apps/api/src/routes/stripeWebhook.test.ts` (or a new file) that:
+- Seeds an order in the mock DB (id, status='pending', total_net=10000, currency='JPY', etc).
+- Sends a valid signed webhook event:
+  - `checkout.session.completed` with metadata.orderId = seeded id
+  - Should result in:
+    - orders[id].status becomes 'paid'
+    - paid_at is set
+    - provider_checkout_session_id and provider_payment_intent_id are set (first write wins; no overwrite on replays)
+    - payment row inserted for that order with provider_payment_id = payment_intent
+    - events contains stripe_event_id
+- Re-sends the exact same event id again:
+  - response JSON includes duplicate:true (or equivalent)
+  - events count remains 1
+  - payments count remains 1
+  - order remains paid, paid_at unchanged
+
+3) Add a refund test with idempotency (mandatory)
+- After the paid test, send a valid signed `refund.updated` event:
+  - object.id = provider_refund_id, payment_intent references the same provider_payment_id
+  - metadata.orderId also present
+- Assert:
+  - refunds row inserted with provider_refund_id
+  - refunds row links to the correct payment_id
+  - re-sending same refund event id does not duplicate rows (refunds count stable, events count stable)
+
+4) Reduce developer friction (optional but nice)
+- Add a tiny helper in tests to build signed Stripe-Signature header:
+  - reuse existing computeStripeSignature helper if available in repo
+  - or add a local helper in the test file
+- Avoid brittle parsing; do not rely on wrangler output.
+
+DELIVERABLES
+- Provide ONE unified diff patch (no changes to `prompts/prompt.md`, none under `codex-runs/*`).
+- Keep patch surgical.
+
+VERIFICATION COMMANDS
+After the patch, output EXACTLY 10 copy/paste commands:
+- pnpm -C apps/api test
+- rg showing the new tests
+- (optional) one command to run only stripeWebhook test file
+- git diff --stat
+- git status --short
+- (do not run) git commit -m "test: stripe webhook E2E-style idempotency (paid/refund)"
+
