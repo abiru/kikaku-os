@@ -1,5 +1,3 @@
-const DEFAULT_API_BASE = 'http://localhost:8787';
-
 type FetchOptions = RequestInit & { parseJson?: boolean };
 
 export const getApiBase = () => {
@@ -13,7 +11,11 @@ export const getApiBase = () => {
 		return envBase;
 	}
 
-	return DEFAULT_API_BASE;
+	if (typeof window !== 'undefined' && window.location?.origin) {
+		return window.location.origin;
+	}
+
+	throw new Error('PUBLIC_API_BASE is not set and window is unavailable');
 };
 
 export const fetchJson = async <T = unknown>(url: string, options: FetchOptions = {}) => {
