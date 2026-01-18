@@ -1,0 +1,43 @@
+=== Codex Context (short) ===
+2026-01-18T19:36:08+09:00
+
+## Repo
+branch: main
+head:   4bd3076
+
+## Status
+## main...origin/main [ahead 2]
+ M README.md
+ M prompts/prompt.md
+?? codex-runs/20260118-193602__docs__update_readme_and_prompt_content/
+
+## Changed files (HEAD..WT)
+README.md
+prompts/prompt.md
+
+## Diff stats (HEAD..WT)
+ README.md         |  6 ++--
+ prompts/prompt.md | 94 +++++++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 63 insertions(+), 37 deletions(-)
+
+## Recent commits
+4bd3076 codex-run: api: rename stripe env vars and guardrails
+732b375 api: rename stripe env vars and guardrails
+c13c206 api: stabilize smoke script (devvars swap + quiet curl)
+0e49b18 codex-run: api: add api smoke test and dev ping
+1d26a17 api: add api smoke test and dev ping
+d40fee5 codex-run: api: clarify local dev vars and port
+fd86786 api: clarify local dev vars and port
+6b2bb05 codex-run: api: fix d1 mock shape in dev tests
+ad37272 api: fix d1 mock shape in dev tests
+4ca6aee codex-run: api: fix stripe price provisioning and lookup
+67244da api: fix stripe price provisioning and lookup
+5598791 api: checkout session stripe error handling
+f92fade codex-run: api: checkout session stripe error handling
+b45a9b7 api: checkout session stripe error handling
+c160396 docs: clarify stripe env vars and guardrails
+4d140ae codex-run: api: rename stripe secret env and add guardrails
+2bc0550 codex-run: docs: stripe env var cleanup documentation
+53a1269 codex-run: docs: stripe env var cleanup documentation
+5142491 codex-run: api: rename stripe env var and guardrails
+8edc87d codex-run: api: verify warn leftover
