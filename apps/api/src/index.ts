@@ -46,7 +46,12 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
   if (c.req.path.startsWith('/webhooks/stripe')) return next();
   if (c.req.path.startsWith('/checkout/session')) return next();
-  if (c.req.path.startsWith('/store/products')) return next();
+  if (
+    c.req.method === 'GET' &&
+    (c.req.path === '/store' || c.req.path.startsWith('/store/'))
+  ) {
+    return next();
+  }
   const key = c.req.header('x-admin-key');
   if (!key || key !== c.env.ADMIN_API_KEY) return jsonError(c, 'Unauthorized', 401);
   await next();
