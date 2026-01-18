@@ -218,21 +218,29 @@ const createMockDb = (options?: MockDbOptions) => {
             });
             paymentsByProviderId.set(providerPaymentId, { id: paymentId, order_id: orderId });
           }
-          if (sql.includes('INSERT INTO refunds')) {
-            const providerRefundId = String(args[4]);
-            if (options?.duplicateRefund || refundsByProviderId.has(providerRefundId)) {
-              throw new Error('UNIQUE constraint failed: refunds.provider_refund_id');
-            }
-            refundId += 1;
-            refunds.push({
-              id: refundId,
-              payment_id: (args[0] as number | null) ?? null,
-              provider_refund_id: providerRefundId,
-              amount: Number(args[1]) || 0,
-              currency: String(args[2] || 'JPY')
-            });
-            refundsByProviderId.set(providerRefundId, { id: refundId });
-          }
+if (sql.includes('INSERT INTO refunds')) {
+  const paymentIdValue = typeof args[0] === 'number' ? args[0] : null;
+  const amountValue = Number(args[1]);
+  const currencyValue = String(args[2] ?? 'JPY').toUpperCase();
+  const providerRefundId = String(args[3]);      // ★ここが重要
+  const metadataValue = args[4];                 // ★ここが重要
+
+  if (options?.duplicateRefund || refundsByProviderId.has(providerRefundId)) {
+    throw new Error('UNIQUE constraint failed: refunds.provider_refund_id');
+  }
+
+  refundId += 1;
+  refunds.push({
+    id: refundId,
+    payment_id: paymentIdValue,
+    provider_refund_id: providerRefundId,
+    amount: amountValue,
+    currency: currencyValue
+  });
+  refundsByProviderId.set(providerRefundId, { id: refundId });
+
+  return { success: true };
+}
           if (sql.includes('INSERT INTO fulfillments')) {
             const orderId = Number(args[0]);
             if (!fulfillments.has(orderId)) {
