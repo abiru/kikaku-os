@@ -9,12 +9,15 @@ set -euo pipefail
 #   ./scripts/codex-run.sh -p prompts/prompt.md --no-context
 #   ./scripts/codex-run.sh -p prompts/prompt.md --bundle-full
 #   ./scripts/codex-run.sh -p prompts/prompt.md --bundle-lines 450
+#   ./scripts/codex-run.sh -p prompts/prompt.md --no-work-commit
+#   ./scripts/codex-run.sh -p prompts/prompt.md --work-scope "apps/api,apps/storefront"
 #
 # Notes:
 # - -t がない場合、codex exec で「タイトル(=履歴ラベル)」を生成
 # - codex-runs/<timestamp>__<slug>/ に保存
 # - bundle-for-chatgpt.md をclipboardへ
-# - そのrunディレクトリだけをgit commit（任意）
+# - run dir は "codex-run: <TITLE>" でcommit（任意）
+# - 本体変更は "<TITLE>" でcommit（デフォルトON / 任意）
 
 TITLE=""
 PROMPT_FILE=""
@@ -23,7 +26,10 @@ DO_CLIP=1
 INCLUDE_CONTEXT=1
 OUT_BASE="codex-runs"
 CODEX_COLOR="never"
-COMMIT_STOREFRONT=0
+
+# NEW: auto commit work changes by area in TITLE ("api:", "storefront:" etc.)
+DO_WORK_COMMIT=1
+WORK_SCOPE="" # comma-separated paths, overrides area mapping
 
 # Bundle controls (to avoid "message too long" when pasting to ChatGPT)
 BUNDLE_MODE="compact"   # compact|full
@@ -43,13 +49,18 @@ trim_lines() {
   # trim_lines <file> <max_lines>
   local f="$1"
   local max="${2:-200}"
+
+  if [[ ! -f "$f" ]]; then
+    echo "(missing: $f)"
+    return 0
+  fi
+
   local n
   n="$(wc -l <"$f" | tr -d ' ')"
   if [[ "$n" -le "$max" ]]; then
     cat "$f"
     return 0
   fi
-  # show head + tail (split)
   local head_n tail_n
   head_n=$((max * 2 / 3))
   tail_n=$((max - head_n))
@@ -58,6 +69,67 @@ trim_lines() {
   echo "... (truncated: ${f} has ${n} lines; showing head ${head_n} + tail ${tail_n})"
   echo
   tail -n "$tail_n" "$f"
+}
+
+# stage paths (ignores missing paths)
+stage_paths() {
+  local p
+  for p in "$@"; do
+    p="$(echo "$p" | sed -E 's/^ +| +$//g')"
+    [[ -n "$p" ]] || continue
+    git add -- "$p" 2>/dev/null || true
+  done
+}
+
+# commit staged changes if any (optionally scoped)
+commit_if_staged() {
+  local msg="$1"
+  shift
+  if [[ "$#" -gt 0 ]]; then
+    if git diff --cached --quiet -- "$@"; then
+      echo "OK: no staged changes (skip commit: $msg)"
+      return 0
+    fi
+    git commit -m "$msg" -- "$@"
+  else
+    if git diff --cached --quiet; then
+      echo "OK: no staged changes (skip commit: $msg)"
+      return 0
+    fi
+    git commit -m "$msg"
+  fi
+  echo "OK: committed: $msg"
+}
+
+# determine work scopes from TITLE area, unless WORK_SCOPE is set
+compute_scopes() {
+  local area="$1"
+  local -a scopes=()
+
+  if [[ -n "$WORK_SCOPE" ]]; then
+    local -a cleaned=()
+    local s
+    IFS=',' read -r -a scopes <<<"$WORK_SCOPE"
+    for s in "${scopes[@]}"; do
+      s="$(echo "$s" | sed -E 's/^ +| +$//g')"
+      [[ -n "$s" ]] || continue
+      cleaned+=("$s")
+    done
+    printf '%s\n' "${cleaned[@]}"
+    return 0
+  fi
+
+  case "$area" in
+  storefront) scopes+=(apps/storefront) ;;
+  api) scopes+=(apps/api) ;;
+  admin) scopes+=(apps/admin) ;;
+  infra) scopes+=(infra) ;;
+  docs) scopes+=(docs) ;;
+  tests) scopes+=(apps) ;;
+  *) scopes=() ;;
+  esac
+
+  printf '%s\n' "${scopes[@]}"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -74,16 +146,20 @@ while [[ $# -gt 0 ]]; do
     DO_COMMIT=0
     shift
     ;;
+  --no-work-commit)
+    DO_WORK_COMMIT=0
+    shift
+    ;;
+  --work-scope)
+    WORK_SCOPE="${2:-}"
+    shift 2
+    ;;
   --no-clip)
     DO_CLIP=0
     shift
     ;;
   --no-context)
     INCLUDE_CONTEXT=0
-    shift
-    ;;
-  --commit-storefront)
-    COMMIT_STOREFRONT=1
     shift
     ;;
   --bundle-full)
@@ -95,7 +171,7 @@ while [[ $# -gt 0 ]]; do
     shift 2
     ;;
   -h | --help)
-    sed -n '1,160p' "$0"
+    sed -n '1,200p' "$0"
     exit 0
     ;;
   *) die "Unknown arg: $1" ;;
@@ -249,6 +325,10 @@ BUNDLE="$RUN_DIR/bundle-for-chatgpt.md"
   echo
 } >"$BUNDLE"
 
+if [[ ! -f "$BUNDLE" ]]; then
+  die "bundle was not generated: $BUNDLE"
+fi
+
 # --- copy to clipboard ---
 if [[ "$DO_CLIP" -eq 1 ]]; then
   if have_cmd wl-copy; then
@@ -262,27 +342,30 @@ if [[ "$DO_CLIP" -eq 1 ]]; then
   fi
 fi
 
-# --- git commit only the run dir ---
-if [[ "$DO_COMMIT" -eq 1 ]]; then
-  git add "$RUN_DIR"
-  git commit -m "codex-run: $TITLE"
-fi
+# --- optionally commit work changes (by TITLE area) ---
+if [[ "$DO_WORK_COMMIT" -eq 1 ]]; then
+  AREA="${TITLE%%:*}"
+  AREA="$(echo "$AREA" | tr -d ' ' | tr '[:upper:]' '[:lower:]')"
 
+  mapfile -t SCOPES < <(compute_scopes "$AREA")
 
-# --- optionally commit storefront changes (separately) ---
-if [[ "$COMMIT_STOREFRONT" -eq 1 ]]; then
-  git add apps/storefront
-  if git diff --cached --quiet; then
-    echo "OK: no staged changes in apps/storefront (skip storefront commit)"
+  if [[ "${#SCOPES[@]}" -gt 0 ]]; then
+    stage_paths "${SCOPES[@]}"
+    commit_if_staged "$TITLE" "${SCOPES[@]}"
   else
-    git commit -m "$TITLE"
-    echo "OK: committed apps/storefront changes"
+    echo "OK: no scope matched for area='$AREA' (skip work commit). Use --work-scope to force."
   fi
 fi
+
+# --- git commit only the run dir ---
+if [[ "$DO_COMMIT" -eq 1 ]]; then
+  git add -- "$RUN_DIR"
+  commit_if_staged "codex-run: $TITLE" "$RUN_DIR"
+fi
+
 echo "OK: title = $TITLE"
 echo "OK: saved run to $RUN_DIR"
 if [[ "$DO_CLIP" -eq 1 ]]; then echo "OK: copied bundle to clipboard (if tool exists)"; fi
-if [[ "$DO_COMMIT" -eq 1 ]]; then echo "OK: committed run dir"; fi
 if [[ "$CODEX_EXIT" -ne 0 ]]; then
   echo "WARN: codex exec exited with code $CODEX_EXIT"
 fi
