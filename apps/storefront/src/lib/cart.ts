@@ -1,4 +1,4 @@
-import { atom, computed } from 'nanostores';
+import { atom, computed, onMount } from 'nanostores';
 
 export type CartItem = {
 	variantId: number;
@@ -14,28 +14,6 @@ type CartState = Record<string, CartItem>;
 
 const STORAGE_KEY = 'led-kikaku-cart';
 
-// Load initial state from localStorage
-const loadCart = (): CartState => {
-	if (typeof window === 'undefined') return {};
-	try {
-		const stored = localStorage.getItem(STORAGE_KEY);
-		if (!stored) return {};
-		const parsed = JSON.parse(stored);
-		// Validate parsed data
-		if (typeof parsed !== 'object' || parsed === null) return {};
-		// Filter out invalid items
-		const valid: CartState = {};
-		Object.entries(parsed).forEach(([key, item]) => {
-			if (isValidCartItem(item)) {
-				valid[key] = item as CartItem;
-			}
-		});
-		return valid;
-	} catch {
-		return {};
-	}
-};
-
 const isValidCartItem = (item: unknown): item is CartItem => {
 	if (!item || typeof item !== 'object') return false;
 	const i = item as Record<string, unknown>;
@@ -50,6 +28,26 @@ const isValidCartItem = (item: unknown): item is CartItem => {
 	);
 };
 
+// Load cart from localStorage
+const loadCart = (): CartState => {
+	if (typeof window === 'undefined') return {};
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		if (!stored) return {};
+		const parsed = JSON.parse(stored);
+		if (typeof parsed !== 'object' || parsed === null) return {};
+		const valid: CartState = {};
+		Object.entries(parsed).forEach(([key, item]) => {
+			if (isValidCartItem(item)) {
+				valid[key] = item as CartItem;
+			}
+		});
+		return valid;
+	} catch {
+		return {};
+	}
+};
+
 // Save cart to localStorage
 const saveCart = (state: CartState) => {
 	if (typeof window === 'undefined') return;
@@ -60,12 +58,23 @@ const saveCart = (state: CartState) => {
 	}
 };
 
-// Main cart store
-export const $cartItems = atom<CartState>(loadCart());
+// Main cart store - initialize empty, load on mount
+export const $cartItems = atom<CartState>({});
 
-// Subscribe to changes and save to localStorage
-$cartItems.subscribe((state) => {
-	saveCart(state);
+// Load from localStorage when the store is first used on client
+onMount($cartItems, () => {
+	// Load initial state from localStorage
+	const loaded = loadCart();
+	if (Object.keys(loaded).length > 0) {
+		$cartItems.set(loaded);
+	}
+
+	// Subscribe to changes and save to localStorage
+	const unsubscribe = $cartItems.subscribe((state) => {
+		saveCart(state);
+	});
+
+	return unsubscribe;
 });
 
 // Computed: array of cart items
