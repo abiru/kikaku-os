@@ -164,16 +164,14 @@ import Layout from '../layouts/Layout.astro';
 		}
 
 		try {
-			// For now, checkout first item only (multi-item checkout to be added)
-			const firstItem = items[0];
-			const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
-
 			const res = await fetch(`${getApiBase()}/checkout/session`, {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({
-					variantId: firstItem.variantId,
-					quantity: firstItem.quantity
+					items: items.map((item) => ({
+						variantId: item.variantId,
+						quantity: item.quantity
+					}))
 				})
 			});
 
