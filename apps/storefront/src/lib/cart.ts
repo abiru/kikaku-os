@@ -1,4 +1,4 @@
-import { atom, computed, onMount } from 'nanostores';
+import { atom, computed } from 'nanostores';
 
 export type CartItem = {
 	variantId: number;
@@ -30,7 +30,7 @@ const isValidCartItem = (item: unknown): item is CartItem => {
 
 // Load cart from localStorage
 const loadCart = (): CartState => {
-	if (typeof window === 'undefined') return {};
+	if (typeof localStorage === 'undefined') return {};
 	try {
 		const stored = localStorage.getItem(STORAGE_KEY);
 		if (!stored) return {};
@@ -50,7 +50,7 @@ const loadCart = (): CartState => {
 
 // Save cart to localStorage
 const saveCart = (state: CartState) => {
-	if (typeof window === 'undefined') return;
+	if (typeof localStorage === 'undefined') return;
 	try {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 	} catch {
@@ -58,23 +58,12 @@ const saveCart = (state: CartState) => {
 	}
 };
 
-// Main cart store - initialize empty, load on mount
-export const $cartItems = atom<CartState>({});
+// Main cart store
+export const $cartItems = atom<CartState>(loadCart());
 
-// Load from localStorage when the store is first used on client
-onMount($cartItems, () => {
-	// Load initial state from localStorage
-	const loaded = loadCart();
-	if (Object.keys(loaded).length > 0) {
-		$cartItems.set(loaded);
-	}
-
-	// Subscribe to changes and save to localStorage
-	const unsubscribe = $cartItems.subscribe((state) => {
-		saveCart(state);
-	});
-
-	return unsubscribe;
+// Save on every change
+$cartItems.listen((state) => {
+	saveCart(state);
 });
 
 // Computed: array of cart items
@@ -105,17 +94,11 @@ export const addToCart = (
 	const current = $cartItems.get();
 	const existing = current[key];
 
-	if (existing) {
-		$cartItems.set({
-			...current,
-			[key]: { ...existing, quantity: existing.quantity + quantity }
-		});
-	} else {
-		$cartItems.set({
-			...current,
-			[key]: { ...item, quantity }
-		});
-	}
+	const newState = existing
+		? { ...current, [key]: { ...existing, quantity: existing.quantity + quantity } }
+		: { ...current, [key]: { ...item, quantity } };
+
+	$cartItems.set(newState);
 };
 
 export const removeFromCart = (variantId: number) => {
@@ -126,20 +109,17 @@ export const removeFromCart = (variantId: number) => {
 };
 
 export const updateQuantity = (variantId: number, quantity: number) => {
+	if (quantity <= 0) {
+		removeFromCart(variantId);
+		return;
+	}
+
 	const key = String(variantId);
 	const current = $cartItems.get();
 	const existing = current[key];
-
 	if (!existing) return;
 
-	if (quantity <= 0) {
-		removeFromCart(variantId);
-	} else {
-		$cartItems.set({
-			...current,
-			[key]: { ...existing, quantity }
-		});
-	}
+	$cartItems.set({ ...current, [key]: { ...existing, quantity } });
 };
 
 export const clearCart = () => {

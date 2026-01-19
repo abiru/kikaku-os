@@ -12,11 +12,7 @@ import Layout from '../layouts/Layout.astro';
 			</h1>
 
 			{/* Cart Content - Rendered by JS */}
-			<div id="cart-content" class="mt-10">
-				<div class="animate-pulse">
-					<div class="h-32 bg-gray-200 rounded-2xl"></div>
-				</div>
-			</div>
+			<div id="cart-content" class="mt-10"></div>
 		</Container>
 	</div>
 </Layout>
@@ -192,11 +188,18 @@ import Layout from '../layouts/Layout.astro';
 		}
 	};
 
-	// Initial render
-	renderCart();
-
-	// Re-render on cart changes
-	$cartItems.subscribe(() => {
+	// Initialize cart
+	const init = () => {
 		renderCart();
-	});
+		$cartItems.subscribe(() => {
+			renderCart();
+		});
+	};
+
+	// Ensure DOM is ready
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
+	} else {
+		init();
+	}
 </script>
