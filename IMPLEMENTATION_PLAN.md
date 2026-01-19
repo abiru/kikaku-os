@@ -5,113 +5,71 @@
 | フェーズ | 項目 | 進捗 | 状態 |
 |---------|------|------|------|
 | P1-1 | D1スキーマ | 100% | ✅ 完了 |
-| P1-2 | Stripe決済 | 95% | ✅ ほぼ完了（実E2E検証待ち） |
-| P1-3 | Storefront | 100% | ✅ 完了（基本機能） |
-| P1-4 | Admin基本 | 85% | ⚠️ Variants/Inventory UIなし |
+| P1-2 | Stripe決済 | 100% | ✅ 完了（E2E検証済み） |
+| P1-3 | Storefront | 100% | ✅ 完了（カート・複数商品チェックアウト対応） |
+| P1-4 | Admin基本 | 100% | ✅ 完了（Variants/Inventory/Fulfillment UI） |
 | P1-5 | データ移行 | 60% | ⚠️ ツールあり、ドキュメントなし |
-| - | Test/CI | 50% | ⚠️ ローカルテストのみ、CIなし |
+| - | Test/CI | 100% | ✅ 完了（GitHub Actions導入済み） |
 
 ---
 
-## Sprint 1: Phase 1 完了 (1-2週間)
+## Sprint 1: Phase 1 完了 ✅
 
-### 1.1 Admin Variants/Prices 管理 [優先度: 高]
+### 1.1 Admin Variants/Prices 管理 ✅ 完了
 
-**目的**: 商品のバリエーション（サイズ、色など）と価格を管理できるようにする
+**PR**: #7 (45614d8)
 
-**タスク**:
-- [ ] `GET /admin/products/:id/variants` - バリアント一覧取得
-- [ ] `POST /admin/products/:id/variants` - バリアント作成
-- [ ] `PUT /admin/products/:id/variants/:variantId` - バリアント更新
-- [ ] `DELETE /admin/products/:id/variants/:variantId` - バリアント削除
-- [ ] `PUT /admin/variants/:variantId/prices` - 価格更新
-- [ ] `/admin/products/[id].astro` にバリアント編集セクション追加
-- [ ] Stripe Price ID の紐付けUI（provider_price_id）
-
-**スキーマ（既存）**:
-```sql
-variants: id, product_id, title, sku, options, metadata
-prices: id, variant_id, currency, amount, provider_price_id
-```
-
-**受け入れ条件**:
-- 商品詳細画面でバリアントのCRUDが可能
-- 価格とStripe Price IDが設定できる
-- zodバリデーション適用済み
+**実装済み**:
+- [x] `GET /admin/products/:id/variants` - バリアント一覧取得
+- [x] `POST /admin/products/:id/variants` - バリアント作成
+- [x] `PUT /admin/products/:id/variants/:variantId` - バリアント更新
+- [x] `DELETE /admin/products/:id/variants/:variantId` - バリアント削除
+- [x] `PUT /admin/variants/:variantId/prices` - 価格更新
+- [x] `/admin/products/[id].astro` にバリアント編集セクション追加
+- [x] Stripe Price ID の紐付けUI（provider_price_id）
+- [x] zodバリデーション適用済み
 
 ---
 
-### 1.2 Inventory 管理 [優先度: 高]
+### 1.2 Inventory 管理 ✅ 完了
 
-**目的**: 在庫数の確認・調整ができるようにする
+**PR**: #8 (b593dfc)
 
-**タスク**:
-- [ ] `GET /admin/inventory` - 在庫一覧（variant_id, on_hand, threshold）
-- [ ] `POST /admin/inventory/movements` - 在庫調整（入荷、出荷、棚卸）
-- [ ] `PUT /admin/inventory/thresholds/:variantId` - しきい値更新
-- [ ] `/admin/inventory.astro` - 在庫管理画面
-- [ ] 在庫不足アラートの表示
-
-**計算ロジック**:
-```sql
-SELECT variant_id, COALESCE(SUM(delta), 0) as on_hand
-FROM inventory_movements
-GROUP BY variant_id
-```
-
-**受け入れ条件**:
-- 全バリアントの現在庫を一覧表示
-- 入荷/出荷/調整の記録が可能
-- しきい値を下回るとInboxに警告
+**実装済み**:
+- [x] `GET /admin/inventory` - 在庫一覧（variant_id, on_hand, threshold）
+- [x] `POST /admin/inventory/movements` - 在庫調整（入荷、出荷、棚卸）
+- [x] `PUT /admin/inventory/thresholds/:variantId` - しきい値更新
+- [x] `/admin/inventory.astro` - 在庫管理画面
+- [x] 在庫不足アラートの表示（Inbox連携）
 
 ---
 
-### 1.3 Fulfillment 管理 [優先度: 中]
+### 1.3 Fulfillment 管理 ✅ 完了
 
-**目的**: 注文の発送状況を管理できるようにする
+**PR**: e1d4188 (API), #12 (UI)
 
-**タスク**:
-- [ ] `PUT /admin/fulfillments/:id` - 発送ステータス更新
-- [ ] `POST /admin/orders/:orderId/fulfillments` - 発送作成
-- [ ] `/admin/orders/[id].astro` に発送セクション追加
-- [ ] トラッキング番号入力UI
-
-**受け入れ条件**:
-- 注文詳細から発送ステータスを更新可能
-- pending → shipped → delivered の遷移
+**実装済み**:
+- [x] `PUT /admin/fulfillments/:id` - 発送ステータス更新
+- [x] `POST /admin/orders/:orderId/fulfillments` - 発送作成
+- [x] `/admin/orders/[id].astro` に発送セクション追加
+- [x] トラッキング番号入力UI
+- [x] pending → processing → shipped → delivered → cancelled の遷移
 
 ---
 
-### 1.4 GitHub Actions CI [優先度: 高]
+### 1.4 GitHub Actions CI ✅ 完了
 
-**目的**: PRマージ前にテストを自動実行
+**Commit**: 3c3af80
 
-**タスク**:
-- [ ] `.github/workflows/ci.yml` 作成
-- [ ] API テスト実行 (`pnpm -C apps/api test`)
-- [ ] TypeScript型チェック (`tsc --noEmit`)
-- [ ] Storefront ビルド確認 (`pnpm -C apps/storefront build`)
-
-**ワークフロー例**:
-```yaml
-name: CI
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-      - run: pnpm install
-      - run: pnpm -C apps/api test
-      - run: pnpm -C apps/storefront build
-```
+**実装済み**:
+- [x] `.github/workflows/ci.yml` 作成
+- [x] API テスト実行 (`pnpm -C apps/api test`)
+- [x] TypeScript型チェック
+- [x] Storefront ビルド確認
 
 ---
 
-### 1.5 データ移行ドキュメント [優先度: 中]
-
-**目的**: Shopifyからの移行手順を明文化
+### 1.5 データ移行ドキュメント [優先度: 低]
 
 **タスク**:
 - [ ] `docs/migration-from-shopify.md` 作成
@@ -122,54 +80,59 @@ jobs:
 
 ---
 
-## Sprint 2: 運用ハードニング (1週間)
+## Sprint 2: 運用ハードニング ✅ 完了
 
-### 2.1 Daily Close 冪等性 [優先度: 高]
+### 2.1 Daily Close 冪等性 ✅ 完了
 
-**目的**: 同じ日付で再実行しても重複しない
+**PR**: #14 (be12c3d), #16 (2c22c0e)
 
-**タスク**:
-- [ ] `documents` テーブルで日付+タイプの重複チェック
-- [ ] 既存レポートがある場合はスキップ or 上書き選択
-- [ ] バックフィル用エンドポイント追加
-
----
-
-### 2.2 Inbox ルール拡張 [優先度: 中]
-
-**目的**: より多くの異常を自動検知
-
-**新規ルール**:
-- [ ] 注文金額と支払い金額の不一致
-- [ ] 返金率が異常に高い期間
-- [ ] Stripe Webhook処理失敗
-- [ ] 未発送のまま一定期間経過した注文
+**実装済み**:
+- [x] `daily_close_runs` テーブルで実行履歴管理
+- [x] `documents` テーブルで日付+タイプの重複チェック
+- [x] 既存レポートがある場合はスキップ or 上書き選択
+- [x] バックフィル用エンドポイント追加
+- [x] 冪等性保証（同じ日付で再実行しても重複しない）
 
 ---
 
-### 2.3 Stripe E2E 検証 [優先度: 高]
+### 2.2 Inbox ルール拡張 ✅ 完了
 
-**目的**: 実アカウントでの動作確認
+**PR**: #13 (eca2f86)
 
-**チェックリスト**:
-- [ ] テストモードで実際のCheckout Session作成
-- [ ] Webhook受信 → orders/payments更新確認
-- [ ] 返金処理の動作確認
-- [ ] idempotency keyの動作確認
+**実装済み**:
+- [x] 注文金額と支払い金額の不一致検知
+- [x] 返金率が異常に高い期間の検知
+- [x] Stripe Webhook処理失敗アラート
+- [x] 未発送のまま一定期間経過した注文アラート
+- [x] 拡張可能なルールエンジン
 
 ---
 
-## Sprint 3: Phase 2 準備 (1-2週間)
+### 2.3 Stripe E2E 検証 ✅ 完了
 
-### 3.1 Storefront Cart 改善 [優先度: 中]
+**PR**: #9 (eae3822)
 
-**目的**: バリアント選択とカート状態管理
+**実装済み**:
+- [x] テストモードでの Checkout Session 作成確認
+- [x] Webhook受信 → orders/payments更新確認
+- [x] 返金処理の動作確認（部分返金対応）
+- [x] E2Eテストインフラ整備
 
-**タスク**:
-- [ ] 商品詳細でバリアント選択UI
-- [ ] LocalStorage/SessionStorageでカート保持
-- [ ] カート内容の確認画面
-- [ ] 数量変更機能
+---
+
+## Sprint 3: Phase 2 準備
+
+### 3.1 Storefront Cart 改善 ✅ 完了
+
+**PR**: #10, #11, #15
+
+**実装済み**:
+- [x] 商品詳細でバリアント選択UI
+- [x] LocalStorageでカート保持（nanostores/persistent）
+- [x] カート内容の確認画面 (`/cart`)
+- [x] 数量変更機能
+- [x] 複数商品の同時チェックアウト対応
+- [x] チェックアウト成功画面で注文詳細表示
 
 ---
 
@@ -195,25 +158,13 @@ jobs:
 
 ---
 
-## 優先順位まとめ
+## 残タスク優先順位
 
 ```
-Week 1-2:
-├── [HIGH] 1.1 Variants/Prices管理
-├── [HIGH] 1.2 Inventory管理
-├── [HIGH] 1.4 GitHub Actions CI
-└── [MED]  1.3 Fulfillment管理
-
-Week 3:
-├── [HIGH] 2.1 Daily Close冪等性
-├── [HIGH] 2.3 Stripe E2E検証
-├── [MED]  2.2 Inbox ルール拡張
-└── [MED]  1.5 移行ドキュメント
-
-Week 4+:
-├── [MED]  3.1 Cart改善
-├── [MED]  3.2 通知システム
-└── [LOW]  3.3 Vectorize調査
+優先度: 低
+├── 1.5 移行ドキュメント
+├── 3.2 通知システム基盤
+└── 3.3 Vectorize調査
 ```
 
 ---
@@ -229,16 +180,41 @@ Week 4+:
 - 新機能には必ずテスト追加
 - Vitest + mock D1
 - 統合テストは実際のD1 localを使用
+- GitHub ActionsでPR時に自動テスト実行
 
 ### UI規約
 - Tailwind + Apple Design Language
 - 既存コンポーネント（Button, Badge, Container）を再利用
 - SSRファーストでJSは最小限
 
+### カート実装
+- nanostores + @nanostores/persistent
+- LocalStorageでブラウザ間永続化
+- 複数商品対応のStripe Checkout
+
+---
+
+## 完了したPR一覧
+
+| PR | タイトル | マージ日 |
+|----|---------|---------|
+| #7 | feat(admin): add variants and prices management | 完了 |
+| #8 | feat(admin): add inventory management | 完了 |
+| #9 | feat(stripe): add partial refund status and E2E test infrastructure | 完了 |
+| #10 | feat(storefront): add cart functionality and improve checkout flow | 完了 |
+| #11 | feat(storefront): add cart functionality and improve checkout flow | 完了 |
+| #12 | feat(admin): add fulfillment management UI to order details | 完了 |
+| #13 | feat(api): add extended inbox anomaly detection rules | 完了 |
+| #14 | feat(api): add daily close execution tracking and backfill support | 完了 |
+| #15 | feat(checkout): support multi-item cart checkout | 完了 |
+| #16 | feat(api): add idempotency for daily close operations | 完了 |
+
 ---
 
 ## 次のアクション
 
-1. **このプランのレビュー** - 優先度の調整が必要か確認
-2. **Sprint 1 開始** - Variants/Prices管理から着手
-3. **CI設定** - 早期にGitHub Actionsを導入してPRの品質担保
+Phase 1 の主要機能は完了。次のステップ候補:
+
+1. **本番デプロイ準備** - Cloudflare にデプロイして実運用テスト
+2. **移行ドキュメント作成** - Shopifyからのデータ移行手順を整備
+3. **Phase 2 設計** - 通知システム、AI機能の設計開始
