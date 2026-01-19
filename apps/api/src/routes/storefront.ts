@@ -101,4 +101,68 @@ storefront.get('/products/:id', async (c) => {
   return jsonOk(c, { product: products[0] || null });
 });
 
+type OrderBySessionRow = {
+  id: number;
+  status: string;
+  total_net: number;
+  currency: string;
+  created_at: string;
+  customer_email: string | null;
+};
+
+type OrderItemRow = {
+  product_title: string;
+  variant_title: string;
+  quantity: number;
+  unit_price: number;
+};
+
+storefront.get('/orders/by-session/:sessionId', async (c) => {
+  const sessionId = c.req.param('sessionId');
+  if (!sessionId || sessionId.length < 10) {
+    return jsonOk(c, { order: null });
+  }
+
+  const order = await c.env.DB.prepare(`
+    SELECT o.id, o.status, o.total_net, o.currency, o.created_at,
+           c.email as customer_email
+    FROM orders o
+    LEFT JOIN customers c ON c.id = o.customer_id
+    WHERE o.provider_checkout_session_id = ?
+  `).bind(sessionId).first<OrderBySessionRow>();
+
+  if (!order) {
+    return jsonOk(c, { order: null });
+  }
+
+  const itemsRes = await c.env.DB.prepare(`
+    SELECT p.title as product_title,
+           v.title as variant_title,
+           oi.quantity,
+           oi.unit_price
+    FROM order_items oi
+    LEFT JOIN variants v ON v.id = oi.variant_id
+    LEFT JOIN products p ON p.id = v.product_id
+    WHERE oi.order_id = ?
+  `).bind(order.id).all<OrderItemRow>();
+
+  return jsonOk(c, {
+    order: {
+      id: order.id,
+      status: order.status,
+      total_net: order.total_net,
+      currency: order.currency,
+      created_at: order.created_at,
+      customer_email: order.customer_email,
+      items: (itemsRes.results || []).map(item => ({
+        title: item.variant_title !== 'Default'
+          ? `${item.product_title} - ${item.variant_title}`
+          : item.product_title,
+        quantity: item.quantity,
+        unit_price: item.unit_price
+      }))
+    }
+  });
+});
+
 export default storefront;
