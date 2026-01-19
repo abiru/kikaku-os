@@ -291,6 +291,153 @@ export const detectUnfulfilledOrders = async (
   return { created, kind, date };
 };
 
+/**
+ * Detect abnormal order volume spikes (fraud/promotion detection)
+ */
+export const detectOrderVolumeSpike = async (
+  env: Bindings,
+  date: string,
+  thresholdPercent: number = 200 // 200% = 3x normal triggers warning
+): Promise<AnomalyResult | null> => {
+  // Get past 7 days average order count
+  const avgRes = await env.DB.prepare(`
+    SELECT AVG(cnt) as avg_orders FROM (
+      SELECT COUNT(*) as cnt FROM orders
+      WHERE substr(created_at,1,10) BETWEEN date(?, '-7 days') AND date(?, '-1 day')
+      GROUP BY substr(created_at,1,10)
+    )
+  `).bind(date, date).first<{ avg_orders: number | null }>();
+
+  // Get today's order count
+  const todayRes = await env.DB.prepare(`
+    SELECT COUNT(*) as today_orders FROM orders
+    WHERE substr(created_at,1,10) = ?
+  `).bind(date).first<{ today_orders: number }>();
+
+  const avgOrders = avgRes?.avg_orders ?? 0;
+  const todayOrders = todayRes?.today_orders ?? 0;
+
+  // Skip if no baseline data (need at least some historical orders)
+  if (avgOrders < 1) return null;
+
+  const percentOfAvg = (todayOrders / avgOrders) * 100;
+  if (percentOfAvg <= thresholdPercent) return null;
+
+  const kind = 'order_volume_spike';
+  const created = await insertInboxItem(env, {
+    title: `Order Volume Spike: ${todayOrders} orders (${percentOfAvg.toFixed(0)}% of avg)`,
+    body: JSON.stringify({
+      date,
+      today_orders: todayOrders,
+      avg_orders_7d: avgOrders,
+      percent_of_avg: percentOfAvg,
+      threshold_percent: thresholdPercent
+    }),
+    severity: percentOfAvg > 300 ? 'critical' : 'warning',
+    kind,
+    date
+  });
+
+  return { created, kind, date };
+};
+
+/**
+ * Detect high payment failure rate
+ */
+export const detectPaymentFailureRate = async (
+  env: Bindings,
+  date: string,
+  thresholdPercent: number = 20 // 20% failure rate triggers warning
+): Promise<AnomalyResult | null> => {
+  const res = await env.DB.prepare(`
+    SELECT
+      SUM(CASE WHEN event_type = 'checkout.session.completed' THEN 1 ELSE 0 END) as completed,
+      SUM(CASE WHEN event_type = 'payment_intent.payment_failed' THEN 1 ELSE 0 END) as failed
+    FROM stripe_events
+    WHERE substr(received_at,1,10) = ?
+  `).bind(date).first<{ completed: number; failed: number }>();
+
+  const completed = res?.completed ?? 0;
+  const failed = res?.failed ?? 0;
+  const total = completed + failed;
+
+  // Skip if no payment attempts
+  if (total < 1) return null;
+
+  const failureRate = (failed / total) * 100;
+  if (failureRate <= thresholdPercent) return null;
+
+  const kind = 'payment_failure_rate';
+  const created = await insertInboxItem(env, {
+    title: `High Payment Failure Rate: ${failureRate.toFixed(1)}% on ${date}`,
+    body: JSON.stringify({
+      date,
+      completed,
+      failed,
+      failure_rate: failureRate,
+      threshold_percent: thresholdPercent
+    }),
+    severity: failureRate > 40 ? 'critical' : 'warning',
+    kind,
+    date
+  });
+
+  return { created, kind, date };
+};
+
+/**
+ * Detect AOV (Average Order Value) anomalies
+ */
+export const detectAOVAnomaly = async (
+  env: Bindings,
+  date: string,
+  deviationPercent: number = 50 // 50% deviation triggers warning
+): Promise<AnomalyResult | null> => {
+  // Get past 30 days average AOV
+  const avgRes = await env.DB.prepare(`
+    SELECT AVG(total_net) as avg_aov FROM orders
+    WHERE status IN ('paid','fulfilled','partial_refunded')
+      AND substr(created_at,1,10) BETWEEN date(?, '-30 days') AND date(?, '-1 day')
+  `).bind(date, date).first<{ avg_aov: number | null }>();
+
+  // Get today's AOV
+  const todayRes = await env.DB.prepare(`
+    SELECT AVG(total_net) as today_aov, COUNT(*) as order_count FROM orders
+    WHERE status IN ('paid','fulfilled','partial_refunded')
+      AND substr(created_at,1,10) = ?
+  `).bind(date).first<{ today_aov: number | null; order_count: number }>();
+
+  const avgAOV = avgRes?.avg_aov ?? 0;
+  const todayAOV = todayRes?.today_aov ?? 0;
+  const orderCount = todayRes?.order_count ?? 0;
+
+  // Skip if no baseline data or no orders today
+  if (avgAOV < 1 || orderCount < 1) return null;
+
+  const deviation = Math.abs((todayAOV - avgAOV) / avgAOV) * 100;
+  if (deviation <= deviationPercent) return null;
+
+  const direction = todayAOV > avgAOV ? 'higher' : 'lower';
+  const kind = 'aov_anomaly';
+  const created = await insertInboxItem(env, {
+    title: `AOV Anomaly: ¥${Math.round(todayAOV)} (${deviation.toFixed(0)}% ${direction} than avg)`,
+    body: JSON.stringify({
+      date,
+      today_aov: todayAOV,
+      avg_aov_30d: avgAOV,
+      deviation_percent: deviation,
+      direction,
+      order_count: orderCount,
+      threshold_percent: deviationPercent
+    }),
+    severity: deviation > 100 ? 'critical' : 'warning',
+    kind,
+    date
+  });
+
+  return { created, kind, date };
+};
+
 // =============================================================================
 // MAIN RUNNER
 // =============================================================================
@@ -302,6 +449,9 @@ export type AnomalyRunResult = {
   highRefundRate: AnomalyResult | null;
   webhookFailures: AnomalyResult | null;
   unfulfilledOrders: AnomalyResult | null;
+  orderVolumeSpike: AnomalyResult | null;
+  paymentFailureRate: AnomalyResult | null;
+  aovAnomaly: AnomalyResult | null;
 };
 
 /**
@@ -311,14 +461,25 @@ export const runAllAnomalyChecks = async (
   env: Bindings,
   date: string
 ): Promise<AnomalyRunResult> => {
-  const [lowStock, negativeStock, highRefundRate, webhookFailures, unfulfilledOrders] =
-    await Promise.all([
-      detectLowStock(env, date),
-      detectNegativeStock(env, date),
-      detectHighRefundRate(env, date),
-      detectWebhookFailures(env, date),
-      detectUnfulfilledOrders(env, date)
-    ]);
+  const [
+    lowStock,
+    negativeStock,
+    highRefundRate,
+    webhookFailures,
+    unfulfilledOrders,
+    orderVolumeSpike,
+    paymentFailureRate,
+    aovAnomaly
+  ] = await Promise.all([
+    detectLowStock(env, date),
+    detectNegativeStock(env, date),
+    detectHighRefundRate(env, date),
+    detectWebhookFailures(env, date),
+    detectUnfulfilledOrders(env, date),
+    detectOrderVolumeSpike(env, date),
+    detectPaymentFailureRate(env, date),
+    detectAOVAnomaly(env, date)
+  ]);
 
   return {
     date,
@@ -326,6 +487,9 @@ export const runAllAnomalyChecks = async (
     negativeStock,
     highRefundRate,
     webhookFailures,
-    unfulfilledOrders
+    unfulfilledOrders,
+    orderVolumeSpike,
+    paymentFailureRate,
+    aovAnomaly
   };
 };
