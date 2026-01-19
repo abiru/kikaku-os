@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test-api:
+    name: Test API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: apps/api/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: apps/api
+
+      - name: Run tests
+        run: pnpm test
+        working-directory: apps/api
+
+  test-storefront:
+    name: Test Storefront
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: apps/storefront/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: apps/storefront
+
+      - name: Run tests
+        run: pnpm test
+        working-directory: apps/storefront
+
+  build-api:
+    name: Build API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: apps/api/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: apps/api
+
+      - name: Build
+        run: pnpm build
+        working-directory: apps/api
+
+  build-storefront:
+    name: Build Storefront
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: apps/storefront/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: apps/storefront
+
+      - name: Build
+        run: pnpm build
+        working-directory: apps/storefront
