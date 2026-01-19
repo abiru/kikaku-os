@@ -138,14 +138,16 @@
 
 ---
 
-### 3.2 通知システム基盤 [優先度: 中]
+### 3.2 通知システム基盤 ✅ 完了
 
-**目的**: Phase 2のワークフロー自動化に向けた準備
+**Commit**: 107b2cc
 
-**タスク**:
-- [ ] 通知チャネル抽象化（email, slack, webhook）
-- [ ] `notifications` テーブル設計
-- [ ] Inbox → 通知トリガーの実装
+**実装済み**:
+- [x] Slack Webhook 通知チャネル実装
+- [x] `notifications` テーブル（送信履歴管理）
+- [x] Inbox warning/critical → Slack 通知トリガー
+- [x] 環境変数 `SLACK_WEBHOOK_URL` で設定
+- [x] テスト追加
 
 ---
 
@@ -163,9 +165,6 @@
 ## 残タスク優先順位
 
 ```
-優先度: 中
-├── 3.2 通知システム基盤
-
 優先度: 低
 └── 3.3 Vectorize調査
 ```
@@ -216,7 +215,8 @@
 
 ## 次のアクション
 
-Phase 1 完了、Sprint 2 完了。次のステップ候補:
+Phase 1 完了、Sprint 2 完了、Sprint 3 ほぼ完了。次のステップ候補:
 
 1. **本番デプロイ準備** - Cloudflare にデプロイして実運用テスト
-2. **Phase 2 設計** - 通知システム (3.2)、AI機能 (3.3) の設計開始
+2. **Vectorize 調査** - AI意味検索のためのPOC (3.3)
+3. **追加通知チャネル** - Email (Resend)、汎用 Webhook 対応
