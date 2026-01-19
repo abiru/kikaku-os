@@ -5,12 +5,13 @@ import {
   detectHighRefundRate,
   detectWebhookFailures,
   detectUnfulfilledOrders,
+  detectOrderVolumeSpike,
+  detectPaymentFailureRate,
+  detectAOVAnomaly,
   runAllAnomalyChecks
 } from './anomalyRules';
 
 const createMockDB = (mockResults: Record<string, any> = {}) => {
-  const prepareResults: Record<string, any> = {};
-
   return {
     prepare: vi.fn((sql: string) => {
       // Determine which mock result to return based on SQL content
@@ -26,6 +27,16 @@ const createMockDB = (mockResults: Record<string, any> = {}) => {
         result = mockResults.webhookFailures ?? null;
       } else if (sql.includes('julianday') && sql.includes('fulfillments')) {
         result = mockResults.unfulfilled ?? { results: [] };
+      } else if (sql.includes('AVG(cnt) as avg_orders')) {
+        result = mockResults.orderVolumeAvg ?? { avg_orders: null };
+      } else if (sql.includes('today_orders') && sql.includes('COUNT(*)')) {
+        result = mockResults.orderVolumeToday ?? { today_orders: 0 };
+      } else if (sql.includes('checkout.session.completed') && sql.includes('payment_intent.payment_failed')) {
+        result = mockResults.paymentFailure ?? { completed: 0, failed: 0 };
+      } else if (sql.includes('avg_aov') && sql.includes('-30 days')) {
+        result = mockResults.aovAvg ?? { avg_aov: null };
+      } else if (sql.includes('today_aov') && sql.includes('order_count')) {
+        result = mockResults.aovToday ?? { today_aov: null, order_count: 0 };
       } else if (sql.includes('INSERT INTO inbox_items')) {
         result = { meta: { last_row_id: 1 } };
       }
@@ -178,6 +189,131 @@ describe('Anomaly Rules', () => {
     });
   });
 
+  describe('detectOrderVolumeSpike', () => {
+    it('returns null when no historical data', async () => {
+      const db = createMockDB({
+        orderVolumeAvg: { avg_orders: null },
+        orderVolumeToday: { today_orders: 10 }
+      });
+      const result = await detectOrderVolumeSpike({ DB: db }, testDate);
+      expect(result).toBeNull();
+    });
+
+    it('returns null when volume is within threshold', async () => {
+      const db = createMockDB({
+        orderVolumeAvg: { avg_orders: 10 },
+        orderVolumeToday: { today_orders: 15 } // 150% of avg, below 200% threshold
+      });
+      const result = await detectOrderVolumeSpike({ DB: db }, testDate);
+      expect(result).toBeNull();
+    });
+
+    it('creates warning inbox item when volume exceeds 200%', async () => {
+      const db = createMockDB({
+        orderVolumeAvg: { avg_orders: 10 },
+        orderVolumeToday: { today_orders: 25 } // 250% of avg
+      });
+      const result = await detectOrderVolumeSpike({ DB: db }, testDate);
+      expect(result).not.toBeNull();
+      expect(result?.kind).toBe('order_volume_spike');
+    });
+
+    it('creates critical inbox item when volume exceeds 300%', async () => {
+      const db = createMockDB({
+        orderVolumeAvg: { avg_orders: 10 },
+        orderVolumeToday: { today_orders: 35 } // 350% of avg
+      });
+      const result = await detectOrderVolumeSpike({ DB: db }, testDate);
+      expect(result).not.toBeNull();
+      expect(result?.kind).toBe('order_volume_spike');
+    });
+  });
+
+  describe('detectPaymentFailureRate', () => {
+    it('returns null when no payment attempts', async () => {
+      const db = createMockDB({
+        paymentFailure: { completed: 0, failed: 0 }
+      });
+      const result = await detectPaymentFailureRate({ DB: db }, testDate);
+      expect(result).toBeNull();
+    });
+
+    it('returns null when failure rate is below threshold', async () => {
+      const db = createMockDB({
+        paymentFailure: { completed: 90, failed: 10 } // 10% failure
+      });
+      const result = await detectPaymentFailureRate({ DB: db }, testDate);
+      expect(result).toBeNull();
+    });
+
+    it('creates warning inbox item when failure rate exceeds 20%', async () => {
+      const db = createMockDB({
+        paymentFailure: { completed: 70, failed: 30 } // 30% failure
+      });
+      const result = await detectPaymentFailureRate({ DB: db }, testDate);
+      expect(result).not.toBeNull();
+      expect(result?.kind).toBe('payment_failure_rate');
+    });
+
+    it('creates critical inbox item when failure rate exceeds 40%', async () => {
+      const db = createMockDB({
+        paymentFailure: { completed: 50, failed: 50 } // 50% failure
+      });
+      const result = await detectPaymentFailureRate({ DB: db }, testDate);
+      expect(result).not.toBeNull();
+      expect(result?.kind).toBe('payment_failure_rate');
+    });
+  });
+
+  describe('detectAOVAnomaly', () => {
+    it('returns null when no historical data', async () => {
+      const db = createMockDB({
+        aovAvg: { avg_aov: null },
+        aovToday: { today_aov: 5000, order_count: 5 }
+      });
+      const result = await detectAOVAnomaly({ DB: db }, testDate);
+      expect(result).toBeNull();
+    });
+
+    it('returns null when no orders today', async () => {
+      const db = createMockDB({
+        aovAvg: { avg_aov: 5000 },
+        aovToday: { today_aov: null, order_count: 0 }
+      });
+      const result = await detectAOVAnomaly({ DB: db }, testDate);
+      expect(result).toBeNull();
+    });
+
+    it('returns null when AOV is within threshold', async () => {
+      const db = createMockDB({
+        aovAvg: { avg_aov: 5000 },
+        aovToday: { today_aov: 6000, order_count: 5 } // 20% higher, below 50% threshold
+      });
+      const result = await detectAOVAnomaly({ DB: db }, testDate);
+      expect(result).toBeNull();
+    });
+
+    it('creates warning inbox item when AOV deviates more than 50%', async () => {
+      const db = createMockDB({
+        aovAvg: { avg_aov: 5000 },
+        aovToday: { today_aov: 8000, order_count: 5 } // 60% higher
+      });
+      const result = await detectAOVAnomaly({ DB: db }, testDate);
+      expect(result).not.toBeNull();
+      expect(result?.kind).toBe('aov_anomaly');
+    });
+
+    it('detects lower AOV anomaly', async () => {
+      const db = createMockDB({
+        aovAvg: { avg_aov: 10000 },
+        aovToday: { today_aov: 3000, order_count: 5 } // 70% lower
+      });
+      const result = await detectAOVAnomaly({ DB: db }, testDate);
+      expect(result).not.toBeNull();
+      expect(result?.kind).toBe('aov_anomaly');
+    });
+  });
+
   describe('runAllAnomalyChecks', () => {
     it('runs all checks and returns combined results', async () => {
       const db = createMockDB({
@@ -185,7 +321,12 @@ describe('Anomaly Rules', () => {
         negativeStock: { results: [] },
         refundRate: { order_total: 10000, refund_total: 500 },
         webhookFailures: { failure_count: 0, event_ids: null, event_types: null },
-        unfulfilled: { results: [] }
+        unfulfilled: { results: [] },
+        orderVolumeAvg: { avg_orders: 10 },
+        orderVolumeToday: { today_orders: 12 },
+        paymentFailure: { completed: 100, failed: 5 },
+        aovAvg: { avg_aov: 5000 },
+        aovToday: { today_aov: 5500, order_count: 10 }
       });
 
       const result = await runAllAnomalyChecks({ DB: db }, testDate);
@@ -196,6 +337,9 @@ describe('Anomaly Rules', () => {
       expect(result.highRefundRate).toBeNull();
       expect(result.webhookFailures).toBeNull();
       expect(result.unfulfilledOrders).toBeNull();
+      expect(result.orderVolumeSpike).toBeNull();
+      expect(result.paymentFailureRate).toBeNull();
+      expect(result.aovAnomaly).toBeNull();
     });
   });
 });
