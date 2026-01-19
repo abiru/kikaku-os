@@ -1,76 +1,134 @@
-You are an implementer.
+以下をそのまま Codex / Claude Code に貼って実行してください（kikaku-os リポジトリ想定）。Refineは使いません。管理画面は Astro（storefront）で作り、Cloudflare Access で保護します。
 
-HARD RULES
+# Title
 
-* Minimal diffs. No refactors.
-* Keep existing endpoints behavior unchanged.
-* No secrets in repo.
-* Do NOT modify files under `codex-runs/*`.
-* If you update `prompts/prompt.md`, do it in a separate commit from code changes.
+admin: astro admin products list (Cloudflare Access protected) + api endpoint
 
-GOAL
-Stripe Webhook の「実運用で困るところ」をテストで潰し切る。
-特に以下を vitest でE2E風に再現し、D1（mock）状態が期待通りであることを担保する。
+# Goal
 
-* checkout.session.completed (paid 化)
-* 署名検証（Stripe-Signature）
-* event 再送の冪等性（events unique）
-* refund.updated / refund.succeeded / charge.refunded の冪等性
-* 同一 order に対する “別イベントID だけど同内容” の二重処理防止（payments/refunds の provider id unique で吸収）
+* Storefront（Astro）に `/admin/products` を追加し、products 一覧（検索・ページング）を表示できるようにする
+* API（Hono + D1）に `GET /admin/products` を追加（検索・ページング）
+* 認可は Cloudflare Access を前提（本番/ステージングは Access で /admin/* を保護）
 
-CURRENT STATE
+  * ローカル開発は既存の `x-admin-key` を継続利用（キーはSSRでのみ使用し、ブラウザに露出させない）
 
-* `apps/api/src/routes/stripeWebhook.test.ts` に stateful D1 mock と “paid→duplicate→refund→duplicate” のフローが追加済み。
-* refund INSERT の bind index は実コード（stripe.ts）に合わせること（provider_refund_id は args[3]）。
+# Non-goals
 
-WHAT TO BUILD (NEXT)
+* Refineの導入/復活はしない
+* RBAC/ユーザー管理（Clerk等）はPhase2以降
 
-1. Cover additional refund event types
+# Constraints
 
-* Add tests that send:
+* products スキーマ：id, title, description, metadata, created_at, updated_at
+* `apps/api/src/index.ts` の admin key ミドルウェア仕様：
 
-  * `refund.succeeded` (same payload shape as refund.updated)
-  * `charge.refunded` (Stripe charge object with `refunds.data[]` list)
-* Assert: refunds inserted once, events idempotent, and order status becomes 'refunded'.
+  * `x-admin-key` ヘッダを見て `ADMIN_API_KEY` と一致しないと 401
+* Astro側では `ADMIN_API_KEY` をクライアントへ絶対に渡さない（`PUBLIC_` プレフィックス禁止）
+* 既存のデザイン（Layout.astro/コンポーネント）に合わせる
 
-2. “Different event id, same provider_refund_id” idempotency
+---
 
-* Send two different Stripe events (different `event.id`) but same `data.object.id` (refund id) and same payment_intent.
-* Expect:
+## Task 0: 現状確認（実装前に読む）
 
-  * First: ok:true, duplicate:false
-  * Second: ok:true, duplicate:true OR ok:true with no new refund row (depending on current production logic)
-  * refunds count remains 1
-  * events count increments to 2 (because event.id differs) BUT data effects do not duplicate.
+* 既存の `apps/api/src/index.ts` の auth middleware と `/dev/ping` 例外を踏襲
+* Storefront が SSR 可能な構成か確認（Astroの output/server adapter の有無）
 
-3. “Different event id, same provider_payment_id” idempotency
+---
 
-* For paid flow, send two events (different event.id) with same checkout.session payment_intent and same orderId.
-* Expect payments count remains 1 and order provider ids do not change after first write.
+## Task 1: API - `GET /admin/products` を追加
 
-4. Make the mock stricter (optional but preferred)
+1. `apps/api/src/routes/adminProducts.ts` を新規作成し、Hono router を export
 
-* Avoid auto-creating orders on SELECT in the mock (no `getOrCreateOrder` on SELECT).
-* Instead: require explicit seeding via options.orders; if missing, SELECT returns null.
-* Update only the new tests accordingly so behavior remains accurate.
+* ルート：`GET /products`（index.ts で `/admin` 配下に mount する）
+* Query:
 
-DELIVERABLES
+  * `page` default 1
+  * `perPage` default 20, max 100
+  * `q`（title/description 部分一致）
+* SQL:
 
-* ONE unified diff patch.
-* No changes to `codex-runs/*`.
-* If you touch `prompts/prompt.md`, keep it as a separate commit from code changes (but prefer no prompt.md changes for this run).
+  * total: `SELECT COUNT(*) as n FROM products WHERE ...`
+  * data: `SELECT id, title, description, metadata, created_at, updated_at FROM products WHERE ... ORDER BY id DESC LIMIT ? OFFSET ?`
+* 戻り値：`jsonOk(c, { data, total, page, perPage })`
+* `q` が空なら WHERE なしで全件
 
-VERIFICATION
-After patch, output EXACTLY 10 copy/paste commands:
+2. `apps/api/src/index.ts` に route 登録
 
-1. pnpm -C apps/api test -- stripeWebhook.test.ts
-2. pnpm -C apps/api test
-3. rg -n "refund.succeeded|charge.refunded" apps/api/src/routes/stripeWebhook.test.ts
-4. rg -n "different event id" apps/api/src/routes/stripeWebhook.test.ts
-5. rg -n "Different event id, same provider_refund_id" -S apps/api/src/routes/stripeWebhook.test.ts
-6. rg -n "Different event id, same provider_payment_id" -S apps/api/src/routes/stripeWebhook.test.ts
-7. git diff --stat
-8. git status --short
-9. git commit -m "test: extend stripe webhook idempotency (refund types + provider id dedupe)"
-10. (optional) pnpm -C apps/api test -- -t "Stripe webhook route"
+* `import { adminProducts } from './routes/adminProducts'`
+* `app.route('/admin', adminProducts)` を追加
+
+3. API動作確認コマンド（コメントでもOK）
+
+* `curl -sS "http://localhost:8787/admin/products?page=1&perPage=20&q=Seed" -H "x-admin-key: dev-admin-key" | jq .`
+
+---
+
+## Task 2: Storefront(Astro) - `/admin/products` ページを追加（SSR）
+
+1. `apps/storefront/src/pages/admin/products.astro` を新規作成
+
+* Layoutは既存の `Layout.astro` を使用
+* URL query：
+
+  * `page`（default 1）
+  * `perPage`（default 20）
+  * `q`（検索文字列）
+* SSRでAPIを叩く
+
+  * base URL: `import.meta.env.API_BASE_URL` を優先、無ければ `http://localhost:8787`
+  * headers:
+
+    * `x-admin-key: import.meta.env.ADMIN_API_KEY`（ローカル用。必ずSSRでのみ参照）
+* レスポンスの `data/total/page/perPage` を使って一覧描画
+* 表示カラム：id / title / created_at（必要なら updated_at）
+* 検索フォーム（GET）を上部に配置
+* ページング（前へ/次へ、総ページ数）を下部に配置
+* UIは既存の Button/Badge 等があるなら流用し、シンプルに
+
+2. セキュリティ（最低限）
+
+* ページ側で `ADMIN_UI_KEY` の簡易ガードを追加（Cloudflare Accessが無いローカルでも誤操作防止）
+
+  * 例：`/admin/products?key=dev-ui-key`
+  * `import.meta.env.ADMIN_UI_KEY` と一致しないなら 404 か 403
+* 本番は Cloudflare Access が守る前提だが、二重で守ってもよい
+
+---
+
+## Task 3: 環境変数（開発用）
+
+1. API（wrangler dev）: `apps/api/.dev.vars`
+
+* `DEV_MODE=true`
+* `ADMIN_API_KEY=dev-admin-key`
+
+2. Storefront（Astro dev）: `apps/storefront/.env`（or `.env.local`）
+
+* `API_BASE_URL=http://localhost:8787`
+* `ADMIN_API_KEY=dev-admin-key`  # PUBLIC_禁止
+* `ADMIN_UI_KEY=dev-ui-key`
+
+※ 既存のenvファイル運用があるなら、それに合わせて配置すること。
+
+---
+
+## Task 4: 動作確認
+
+1. （必要なら）/dev/seed で products を複数作成
+2. API確認：
+
+* `curl -sS "http://localhost:8787/admin/products?page=1&perPage=20&q=" -H "x-admin-key: dev-admin-key" | jq .`
+
+3. Storefront確認：
+
+* `http://localhost:4321/admin/products?key=dev-ui-key`
+* 一覧が出る、検索できる、ページングが動く
+
+---
+
+## Deliverables
+
+* 追加/変更したファイル一覧
+* 確認手順（コマンド）
+* 可能ならコミットまで（例：`feat(admin): add astro products list`）
 

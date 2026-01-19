@@ -142,7 +142,8 @@ dev.post('/seed', async (c) => {
       const source = orders[i % orders.length];
       const amount = source.totalNet;
       const fee = Math.round(amount * 0.03 + 30);
-      const providerPaymentId = `pi_seed_${date}_${i + 1}`;
+      const providerPaymentId = `pi_seed_${date}_${i + 1}_${crypto.randomUUID()}`;
+
       const res = await c.env.DB.prepare(
         `INSERT INTO payments (order_id, status, amount, fee, currency, method, provider, provider_payment_id, created_at, updated_at)
          VALUES (?, 'succeeded', ?, ?, 'JPY', 'card', 'stripe', ?, ?, ?)`

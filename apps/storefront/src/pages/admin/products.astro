@@ -1,0 +1,164 @@
+---
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import Container from '../../components/Container.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+const q = Astro.url.searchParams.get('q') || '';
+const page = Number(Astro.url.searchParams.get('page') || '1');
+const perPage = 20;
+
+let products: any[] = [];
+let meta = { totalCount: 0, totalPages: 1 };
+let error = null;
+
+// SSR Data Fetching
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const query = new URLSearchParams({
+			q,
+			page: page.toString(),
+			perPage: perPage.toString()
+		});
+		
+		const res = await fetch(`${apiBase}/admin/products?${query}`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY
+			}
+		});
+
+		if (!res.ok) {
+			throw new Error(`API Error: ${res.status}`);
+		}
+
+		const data = await res.json();
+		products = data.products || [];
+		meta = data.meta || meta;
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load products. Please check your admin key.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing in server environment.';
+}
+
+const hasNext = page < meta.totalPages;
+const hasPrev = page > 1;
+---
+
+<Layout title="Products - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center justify-between">
+				<div class="flex items-center gap-4">
+					<h1 class="text-lg font-semibold text-[#1d1d1f]">Products</h1>
+					<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				</div>
+				<div class="flex items-center gap-3">
+					<Button href="/admin/products/new" size="sm" variant="primary">
+						+ New Product
+					</Button>
+				</div>
+			</Container>
+		</header>
+
+		<Container class="mt-8">
+			{/* Search Bar */}
+			<div class="mb-6">
+				<form method="get" class="relative max-w-md">
+					<input
+						type="search"
+						name="q"
+						value={q}
+						placeholder="Search by title..."
+						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+					/>
+					<svg
+						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+					</svg>
+				</form>
+			</div>
+
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{/* Product Table */}
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+				<div class="overflow-x-auto">
+					<table class="w-full text-left text-sm text-[#1d1d1f]">
+						<thead class="bg-gray-50 border-b border-gray-200">
+							<tr>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Updated</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100">
+							{products.length > 0 ? (
+								products.map((product) => (
+									<tr class="hover:bg-gray-50 transition-colors group">
+										<td class="px-6 py-4">
+											<div class="font-medium">{product.title}</div>
+											<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</div>
+										</td>
+										<td class="px-6 py-4">
+											<Badge severity="info">Active</Badge>
+										</td>
+										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+											{new Date(product.updated_at).toLocaleDateString()}
+										</td>
+										<td class="px-6 py-4 text-right">
+											<a href={`/admin/products/${product.id}`} class="text-[#0071e3] hover:underline font-medium">Edit</a>
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colspan="4" class="px-6 py-12 text-center text-[#86868b]">
+										No products found.
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+				
+				{/* Pagination */}
+				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+					<div class="text-xs text-[#86868b]">
+						Page {page} of {meta.totalPages}
+					</div>
+					<div class="flex gap-2">
+						<Button 
+							href={hasPrev ? `?page=${page - 1}&q=${q}` : '#'} 
+							disabled={!hasPrev} 
+							size="sm" 
+							variant="secondary"
+						>
+							Previous
+						</Button>
+						<Button 
+							href={hasNext ? `?page=${page + 1}&q=${q}` : '#'} 
+							disabled={!hasNext} 
+							size="sm" 
+							variant="secondary"
+						>
+							Next
+						</Button>
+					</div>
+				</div>
+			</div>
+		</Container>
+	</div>
+</Layout>
