@@ -36,6 +36,13 @@ const createMockDb = (
           }
           return null;
         },
+        all: async () => {
+          // For multi-item checkout query
+          if (sql.includes('FROM variants v')) {
+            return { results: variantRow ? [variantRow] : [] };
+          }
+          return { results: [] };
+        },
         run: async () => {
           calls.push({ sql, bind: args });
           if (sql.includes('INSERT INTO orders')) {
@@ -163,7 +170,7 @@ describe('POST /checkout/session', () => {
     expect(res.status).toBe(400);
     expect(json.ok).toBe(false);
     expect(json.error?.code).toBe('STRIPE_PRICE_NOT_CONFIGURED');
-    expect(json.error?.message).toBe('Stripe price not configured for this variant');
+    expect(json.error?.message).toContain('Stripe price not configured for variant');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -252,7 +259,8 @@ describe('POST /checkout/session', () => {
     const json = await res.json();
     expect(res.status).toBe(404);
     expect(json.error?.code).toBe('VARIANT_NOT_FOUND');
-    expect(json.error?.message).toBe('Variant not found');
+    expect(json.error?.message).toContain('Variant');
+    expect(json.error?.message).toContain('not found');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

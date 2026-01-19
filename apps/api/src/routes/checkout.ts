@@ -16,6 +16,11 @@ type VariantPriceRow = {
   provider_price_id: string | null;
 };
 
+type CheckoutItem = {
+  variantId: number;
+  quantity: number;
+};
+
 const normalizeEmail = (value: unknown) => {
   if (!value) return null;
   const trimmed = String(value).trim();
@@ -32,17 +37,27 @@ const jsonErrorWithCode = (c: Context, code: string, message: string, status = 5
   return c.json({ ok: false, message, error: { code, message } }, status);
 };
 
+const validateItem = (item: unknown): CheckoutItem | null => {
+  if (!item || typeof item !== 'object') return null;
+  const obj = item as Record<string, unknown>;
+  const variantId = Number(obj.variantId);
+  const quantity = Number(obj.quantity ?? 1);
+  if (!Number.isInteger(variantId) || variantId <= 0) return null;
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) return null;
+  return { variantId, quantity };
+};
+
 checkout.post('/checkout/session', async (c) => {
-const stripeKey = c.env.STRIPE_SECRET_KEY ?? (c.env as any).STRIPE_API_KEY;
-if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
-if (stripeKey.startsWith('pk_')) {
-  return jsonErrorWithCode(
-    c,
-    'STRIPE_SECRET_KEY_INVALID',
-    'Stripe secret key looks like a publishable key (pk*). Use STRIPE_API_KEY with an sk* value.',
-    500
-  );
-}
+  const stripeKey = c.env.STRIPE_SECRET_KEY ?? (c.env as any).STRIPE_API_KEY;
+  if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
+  if (stripeKey.startsWith('pk_')) {
+    return jsonErrorWithCode(
+      c,
+      'STRIPE_SECRET_KEY_INVALID',
+      'Stripe secret key looks like a publishable key (pk*). Use STRIPE_API_KEY with an sk* value.',
+      500
+    );
+  }
 
   let body: any;
   try {
@@ -51,21 +66,41 @@ if (stripeKey.startsWith('pk_')) {
     return jsonError(c, 'Invalid JSON', 400);
   }
 
-  const variantId = Number(body?.variantId);
-  const quantity = Number(body?.quantity ?? 1);
   const email = normalizeEmail(body?.email);
-
-  if (!Number.isInteger(variantId) || variantId <= 0) {
-    return jsonError(c, 'Invalid variantId', 400);
-  }
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
-    return jsonError(c, 'Invalid quantity', 400);
-  }
   if (email && !isValidEmail(email)) {
     return jsonError(c, 'Invalid email', 400);
   }
 
-  const variantRow = await c.env.DB.prepare(
+  // Support both single item (backward compat) and multiple items
+  let items: CheckoutItem[] = [];
+  if (Array.isArray(body?.items)) {
+    for (const rawItem of body.items) {
+      const item = validateItem(rawItem);
+      if (!item) {
+        return jsonError(c, 'Invalid item in items array', 400);
+      }
+      items.push(item);
+    }
+  } else if (body?.variantId !== undefined) {
+    // Backward compatibility: single variantId
+    const item = validateItem({ variantId: body.variantId, quantity: body.quantity });
+    if (!item) {
+      return jsonError(c, 'Invalid variantId or quantity', 400);
+    }
+    items.push(item);
+  }
+
+  if (items.length === 0) {
+    return jsonError(c, 'No items provided', 400);
+  }
+  if (items.length > 20) {
+    return jsonError(c, 'Too many items (max 20)', 400);
+  }
+
+  // Fetch all variant/price data in one query
+  const variantIds = items.map((i) => i.variantId);
+  const placeholders = variantIds.map(() => '?').join(',');
+  const variantRows = await c.env.DB.prepare(
     `SELECT v.id as variant_id,
             v.title as variant_title,
             v.product_id as product_id,
@@ -77,36 +112,35 @@ if (stripeKey.startsWith('pk_')) {
      FROM variants v
      JOIN products p ON p.id = v.product_id
      JOIN prices pr ON pr.variant_id = v.id
-     WHERE v.id=?
-     ORDER BY pr.id DESC
-     LIMIT 1`
-  ).bind(variantId).first<VariantPriceRow>();
+     WHERE v.id IN (${placeholders})
+     ORDER BY pr.id DESC`
+  ).bind(...variantIds).all<VariantPriceRow>();
 
-  if (!variantRow) {
-    const variantExists = await c.env.DB.prepare(
-      `SELECT id FROM variants WHERE id=?`
-    ).bind(variantId).first<{ id: number }>();
-    if (!variantExists) {
-      return jsonErrorWithCode(c, 'VARIANT_NOT_FOUND', 'Variant not found', 404);
+  // Build map of variant_id -> price row (latest price per variant)
+  const variantMap = new Map<number, VariantPriceRow>();
+  for (const row of variantRows.results || []) {
+    if (!variantMap.has(row.variant_id)) {
+      variantMap.set(row.variant_id, row);
     }
-    return jsonErrorWithCode(
-      c,
-      'STRIPE_PRICE_NOT_CONFIGURED',
-      'Stripe price not configured for this variant',
-      400
-    );
   }
 
-  const providerPriceId = variantRow.provider_price_id?.trim();
-  if (!providerPriceId) {
-    return jsonErrorWithCode(
-      c,
-      'STRIPE_PRICE_NOT_CONFIGURED',
-      'Stripe price not configured for this variant',
-      400
-    );
+  // Validate all variants exist and have prices
+  for (const item of items) {
+    const row = variantMap.get(item.variantId);
+    if (!row) {
+      return jsonErrorWithCode(c, 'VARIANT_NOT_FOUND', `Variant ${item.variantId} not found`, 404);
+    }
+    if (!row.provider_price_id?.trim()) {
+      return jsonErrorWithCode(
+        c,
+        'STRIPE_PRICE_NOT_CONFIGURED',
+        `Stripe price not configured for variant ${item.variantId}`,
+        400
+      );
+    }
   }
 
+  // Customer handling
   let customerId: number | null = null;
   if (email) {
     const existingCustomer = await c.env.DB.prepare(
@@ -123,9 +157,16 @@ if (stripeKey.startsWith('pk_')) {
     }
   }
 
-  const totalNet = variantRow.amount * quantity;
-  const currency = (variantRow.currency || 'JPY').toUpperCase();
+  // Calculate total from all items
+  let totalNet = 0;
+  let currency = 'JPY';
+  for (const item of items) {
+    const row = variantMap.get(item.variantId)!;
+    totalNet += row.amount * item.quantity;
+    currency = (row.currency || 'JPY').toUpperCase();
+  }
 
+  // Create order
   const orderRes = await c.env.DB.prepare(
     `INSERT INTO orders (customer_id, status, total_net, total_fee, currency, metadata, created_at, updated_at)
      VALUES (?, 'pending', ?, 0, ?, ?, datetime('now'), datetime('now'))`
@@ -136,24 +177,28 @@ if (stripeKey.startsWith('pk_')) {
     JSON.stringify({
       source: 'storefront',
       email,
-      variant_id: variantRow.variant_id,
-      quantity
+      items: items.map((i) => ({ variant_id: i.variantId, quantity: i.quantity }))
     })
   ).run();
 
   const orderId = Number(orderRes.meta.last_row_id);
 
-  await c.env.DB.prepare(
-    `INSERT INTO order_items (order_id, variant_id, quantity, unit_price, metadata, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
-  ).bind(
-    orderId,
-    variantRow.variant_id,
-    quantity,
-    variantRow.amount,
-    JSON.stringify({ product_id: variantRow.product_id })
-  ).run();
+  // Insert all order items
+  for (const item of items) {
+    const row = variantMap.get(item.variantId)!;
+    await c.env.DB.prepare(
+      `INSERT INTO order_items (order_id, variant_id, quantity, unit_price, metadata, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+    ).bind(
+      orderId,
+      item.variantId,
+      item.quantity,
+      row.amount,
+      JSON.stringify({ product_id: row.product_id })
+    ).run();
+  }
 
+  // Build Stripe checkout session
   const baseUrl = c.env.STOREFRONT_BASE_URL || 'http://localhost:4321';
   const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${baseUrl}/checkout/cancel`;
@@ -162,8 +207,14 @@ if (stripeKey.startsWith('pk_')) {
   params.set('mode', 'payment');
   params.set('success_url', successUrl);
   params.set('cancel_url', cancelUrl);
-  params.set('line_items[0][price]', providerPriceId);
-  params.set('line_items[0][quantity]', String(quantity));
+
+  // Add line items for each cart item
+  items.forEach((item, index) => {
+    const row = variantMap.get(item.variantId)!;
+    params.set(`line_items[${index}][price]`, row.provider_price_id!.trim());
+    params.set(`line_items[${index}][quantity]`, String(item.quantity));
+  });
+
   params.set('metadata[orderId]', String(orderId));
   params.set('metadata[order_id]', String(orderId));
   params.set('payment_intent_data[metadata][orderId]', String(orderId));
