@@ -201,3 +201,54 @@ export type UpdatePricesInput = z.infer<typeof updatePricesSchema>;
 export type CreateMovementInput = z.infer<typeof createMovementSchema>;
 export type UpdateThresholdInput = z.infer<typeof updateThresholdSchema>;
 export type ThresholdParam = z.infer<typeof thresholdParamSchema>;
+
+// === Fulfillment Schemas ===
+
+export const fulfillmentStatusSchema = z.enum([
+  'pending',
+  'processing',
+  'shipped',
+  'delivered',
+  'cancelled',
+]);
+
+export const fulfillmentIdParamSchema = z.object({
+  id: z
+    .string()
+    .regex(/^\d+$/, 'ID must be a positive integer')
+    .transform((v) => parseInt(v, 10))
+    .refine((v) => v > 0, 'ID must be greater than 0'),
+});
+
+export const orderFulfillmentParamSchema = z.object({
+  orderId: z
+    .string()
+    .regex(/^\d+$/, 'Order ID must be a positive integer')
+    .transform((v) => parseInt(v, 10))
+    .refine((v) => v > 0, 'Order ID must be greater than 0'),
+});
+
+export const createFulfillmentSchema = z.object({
+  status: fulfillmentStatusSchema.optional().default('pending'),
+  tracking_number: z
+    .string()
+    .max(100, 'Tracking number must be 100 characters or less')
+    .optional()
+    .nullable()
+    .transform((v) => v?.trim() || null),
+});
+
+export const updateFulfillmentSchema = z.object({
+  status: fulfillmentStatusSchema,
+  tracking_number: z
+    .string()
+    .max(100, 'Tracking number must be 100 characters or less')
+    .optional()
+    .nullable()
+    .transform((v) => v?.trim() || null),
+});
+
+export type FulfillmentIdParam = z.infer<typeof fulfillmentIdParamSchema>;
+export type OrderFulfillmentParam = z.infer<typeof orderFulfillmentParamSchema>;
+export type CreateFulfillmentInput = z.infer<typeof createFulfillmentSchema>;
+export type UpdateFulfillmentInput = z.infer<typeof updateFulfillmentSchema>;
