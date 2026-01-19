@@ -9,7 +9,7 @@
  * - STRIPE_WEBHOOK_SECRET in .dev.vars
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { unstable_dev, type UnstableDevWorker } from 'wrangler';
+import { unstable_dev, type Unstable_DevWorker } from 'wrangler';
 import { computeStripeSignature } from '../lib/stripe';
 
 const TEST_WEBHOOK_SECRET = 'whsec_test_secret';
@@ -36,7 +36,7 @@ type OrderResponse = {
 };
 
 describe.skip('Stripe Webhook Integration', () => {
-  let worker: UnstableDevWorker;
+  let worker: Unstable_DevWorker;
   let testOrderId: number;
   let testOrderTotal: number;
 
@@ -80,7 +80,7 @@ describe.skip('Stripe Webhook Integration', () => {
 
   const sendWebhook = async (event: object) => {
     const payload = JSON.stringify(event);
-    const timestamp = Math.floor(Date.now() / 1000);
+    const timestamp = String(Math.floor(Date.now() / 1000));
     const signature = await computeStripeSignature(payload, TEST_WEBHOOK_SECRET, timestamp);
 
     return worker.fetch('/webhooks/stripe', {

@@ -32,9 +32,9 @@ const isValidEmail = (value: string) => {
   return value.includes('@');
 };
 
-const jsonErrorWithCode = (c: Context, code: string, message: string, status = 500) => {
+const jsonErrorWithCode = (c: Context, code: string, message: string, status: number = 500) => {
   console.error(message);
-  return c.json({ ok: false, message, error: { code, message } }, status);
+  return c.json({ ok: false, message, error: { code, message } }, status as 400 | 500);
 };
 
 const validateItem = (item: unknown): CheckoutItem | null => {

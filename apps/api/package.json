@@ -8,6 +8,10 @@
     "dev": "wrangler dev --local --config ../../wrangler.toml --port ${PORT:-8787}",
     "build": "wrangler build",
     "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run --include '**/*.integration.test.ts'",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit -p tsconfig.build.json",
     "smoke": "./scripts/smoke.sh",
     "smoke:ok": "./scripts/smoke-ok.sh"
   },
@@ -18,6 +22,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240614.0",
+    "@vitest/coverage-v8": "^1.6.1",
     "typescript": "^5.4.0",
     "vitest": "^1.6.1",
     "wrangler": "^4.59.1"

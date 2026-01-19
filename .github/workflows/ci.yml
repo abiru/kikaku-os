@@ -3,8 +3,42 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install API dependencies
+        run: pnpm install
+        working-directory: apps/api
+
+      - name: Type check API
+        run: pnpm typecheck
+        working-directory: apps/api
+
+      - name: Install Storefront dependencies
+        run: pnpm install
+        working-directory: apps/storefront
+
+      - name: Type check Storefront
+        run: pnpm exec astro check
+        working-directory: apps/storefront
+        continue-on-error: true  # TODO: Fix storefront type errors
+
   test-api:
     name: Test API
     runs-on: ubuntu-latest
@@ -25,9 +59,17 @@ jobs:
         run: pnpm install
         working-directory: apps/api
 
-      - name: Run tests
-        run: pnpm test
+      - name: Run tests with coverage
+        run: pnpm test:coverage
         working-directory: apps/api
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          files: apps/api/coverage/coverage-final.json
+          flags: api
+          fail_ci_if_error: false
+        if: always()
 
   test-storefront:
     name: Test Storefront
@@ -55,6 +97,7 @@ jobs:
 
   build-api:
     name: Build API
+    needs: [typecheck, test-api]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,6 +122,7 @@ jobs:
 
   build-storefront:
     name: Build Storefront
+    needs: [test-storefront]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

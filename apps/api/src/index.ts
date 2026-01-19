@@ -47,7 +47,7 @@ app.use(
   })
 );
 
-app.options('*', (c) => c.text('', 204));
+app.options('*', (c) => c.body(null, 204));
 
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
