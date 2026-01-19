@@ -1,11 +1,33 @@
 import { Env } from '../env';
 import { DailyReport } from './dailyReport';
 
-export const journalizeDailyClose = async (env: Env['Bindings'], date: string, report: DailyReport) => {
+export type JournalizeResult = {
+  entriesCreated: number;
+  skipped: boolean;
+};
+
+export const journalizeDailyClose = async (
+  env: Env['Bindings'],
+  date: string,
+  report: DailyReport,
+  options?: { force?: boolean }
+): Promise<JournalizeResult> => {
   const existing = await env.DB.prepare(
     `SELECT COUNT(*) as cnt FROM ledger_entries WHERE ref_type='daily_close' AND ref_id=?`
   ).bind(date).first<{ cnt: number }>();
-  if ((existing?.cnt || 0) > 0) return;
+
+  const hasExisting = (existing?.cnt || 0) > 0;
+
+  if (hasExisting && !options?.force) {
+    return { entriesCreated: 0, skipped: true };
+  }
+
+  // Force mode: delete existing entries first
+  if (hasExisting && options?.force) {
+    await env.DB.prepare(
+      `DELETE FROM ledger_entries WHERE ref_type='daily_close' AND ref_id=?`
+    ).bind(date).run();
+  }
 
   const paymentsTotal = report.payments.totalAmount;
   const feeTotal = report.payments.totalFee;
@@ -33,6 +55,8 @@ export const journalizeDailyClose = async (env: Env['Bindings'], date: string, r
   for (const e of entries) {
     await stmt.bind('daily_close', date, e.account, e.debit, e.credit, e.memo).run();
   }
+
+  return { entriesCreated: entries.length, skipped: false };
 };
 
 export const listLedgerEntries = async (env: Env['Bindings'], date: string) => {
