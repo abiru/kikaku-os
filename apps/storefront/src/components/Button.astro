@@ -5,31 +5,42 @@ const {
 	href,
 	type = 'button',
 	class: className = '',
+	disabled = false,
 	...rest
 } = Astro.props;
 
+// Apple-style base: Pill shape, smooth font, refined transitions
 const base =
-	'inline-flex items-center justify-center rounded-full font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/20 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+	'inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+
 const variants = {
-	primary: 'bg-zinc-900 text-white hover:bg-zinc-800',
-	secondary: 'border border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50',
-	ghost: 'text-zinc-700 hover:bg-zinc-100'
+	// Apple Blue for primary actions
+	primary: 'bg-[#0071e3] text-white hover:bg-[#0077ED]', 
+	// Standard dark for secondary
+	dark: 'bg-[#1d1d1f] text-white hover:bg-[#1d1d1f]/90',
+	// Minimalist outline/secondary
+	secondary: 'bg-white text-[#1d1d1f] hover:text-[#0071e3] shadow-sm',
+	// Ghost link style
+	link: 'text-[#0071e3] hover:underline underline-offset-4',
+    outline: 'border border-[#d2d2d7] bg-transparent text-[#1d1d1f] hover:border-[#86868b]'
 };
+
 const sizes = {
-	sm: 'h-8 px-3 text-xs',
-	md: 'h-10 px-4 text-sm',
-	lg: 'h-12 px-5 text-sm'
+	sm: 'h-7 px-3 text-[12px]',
+	md: 'h-9 px-5 text-[14px]',
+	lg: 'h-11 px-8 text-[17px]', // Larger, typical for "Buy" buttons
+    icon: 'h-10 w-10'
 };
 
 const classes = `${base} ${variants[variant] ?? variants.primary} ${sizes[size] ?? sizes.md} ${className}`;
 ---
 
-{href ? (
+{href && !disabled ? (
 	<a href={href} class={classes} {...rest}>
 		<slot />
 	</a>
 ) : (
-	<button type={type} class={classes} {...rest}>
+	<button type={type} class={classes} disabled={disabled} {...rest}>
 		<slot />
 	</button>
 )}

@@ -1,0 +1,116 @@
+---
+import Container from '../components/Container.astro';
+import Layout from '../layouts/Layout.astro';
+
+const lastUpdated = "2026年1月19日";
+---
+
+<Layout title="返品・返金ポリシー - Led Kikaku">
+	<div class="bg-white min-h-screen">
+		{/* Header */}
+		<section class="pt-24 pb-16 md:pt-32 md:pb-24">
+			<Container>
+				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-center text-[#1d1d1f]">
+					返品・返金について
+				</h1>
+				<p class="mt-6 text-center text-[#86868b] text-lg font-medium">
+					最終更新日：{lastUpdated}
+				</p>
+			</Container>
+		</section>
+
+		{/* Content */}
+		<section class="pb-24">
+			<Container class="max-w-3xl">
+				<div class="space-y-16">
+					
+					{/* Preamble */}
+					<div class="text-[17px] leading-relaxed text-[#424245]">
+						<p>
+							合同会社SBO（以下「当社」）では、お客様に安心してご利用いただくため、以下の通り返品・返金ポリシーを定めています。商品のご注文前に必ずご一読ください。
+						</p>
+					</div>
+
+					<div class="border-t border-gray-100"></div>
+
+					{/* Policy 1: Returns */}
+					<section>
+						<span class="block text-xs font-bold text-[#86868b] tracking-wider mb-2">ポリシー 1</span>
+						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
+							お客様都合による返品
+						</h2>
+						<div class="space-y-4 text-[17px] leading-relaxed text-[#424245]">
+							<p>
+								<span class="font-semibold text-[#1d1d1f]">未使用・未開封の商品に限り</span>、商品到着後7日以内にお申し出いただければ返品を承ります。
+							</p>
+							<p>
+								ただし、以下の商品は返品をお受けできません。
+							</p>
+							<ul class="list-disc list-outside pl-5 space-y-2 marker:text-[#86868b]">
+								<li>デジタルコンテンツ（ダウンロード商品）</li>
+								<li>受注生産品またはカスタマイズされた商品</li>
+								<li>開封済みまたは既に使用された商品</li>
+							</ul>
+							<p class="text-sm text-[#86868b] mt-2">
+								※ お客様都合による返品の場合、返送にかかる送料はお客様負担となります。
+							</p>
+						</div>
+					</section>
+
+					<div class="border-t border-gray-100"></div>
+
+					{/* Policy 2: Defects */}
+					<section>
+						<span class="block text-xs font-bold text-[#86868b] tracking-wider mb-2">ポリシー 2</span>
+						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
+							製品不具合・誤配送
+						</h2>
+						<p class="text-[17px] leading-relaxed text-[#424245]">
+							万が一、お届けした商品に不具合（初期不良）があった場合、または注文と異なる商品が届いた場合は、商品到着後7日以内にご連絡ください。当社の送料負担にて、速やかに交換または返金の手続きを行います。
+						</p>
+					</section>
+
+					<div class="border-t border-gray-100"></div>
+
+					{/* Policy 3: Refund Process */}
+					<section>
+						<span class="block text-xs font-bold text-[#86868b] tracking-wider mb-2">ポリシー 3</span>
+						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
+							返金方法と手数料
+						</h2>
+						<div class="space-y-4 text-[17px] leading-relaxed text-[#424245]">
+							<p>
+								返金は、ご購入時に利用されたクレジットカード（Stripe決済）に対して行われます。
+							</p>
+							<ul class="list-disc list-outside pl-5 space-y-2 marker:text-[#86868b]">
+								<li>
+									<span class="font-semibold text-[#1d1d1f]">処理期間：</span> 当社での返品確認後、通常5〜10営業日以内にStripeを通じて返金処理が実行されます。お客様のカード明細への反映時期は、カード会社により異なります。
+								</li>
+								<li>
+									<span class="font-semibold text-[#1d1d1f]">手数料：</span> 不具合による返金の場合は全額を返金いたします。お客様都合による返金の場合、決済手数料または振込手数料を差し引いた金額となる場合があります。
+								</li>
+							</ul>
+						</div>
+					</section>
+
+					<div class="border-t border-gray-100"></div>
+
+					{/* Contact Info */}
+					<section>
+						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
+							返品・交換のご連絡先
+						</h2>
+						<p class="text-[17px] leading-relaxed text-[#424245] mb-6">
+							返品や交換をご希望の際は、注文番号を添えて下記までご連絡ください。
+						</p>
+						<div class="p-6 bg-[#f5f5f7] rounded-2xl text-[15px] text-[#424245]">
+							<p class="font-semibold text-[#1d1d1f]">Led Kikaku サポートチーム</p>
+							<p class="mt-1">Email: support@ledkikaku.com</p>
+						</div>
+					</section>
+
+				</div>
+			</Container>
+		</section>
+	</div>
+</Layout>

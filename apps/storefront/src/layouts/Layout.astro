@@ -6,7 +6,7 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="ja">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -14,28 +14,89 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 	</head>
-	<body>
-		<div class="min-h-screen bg-white text-zinc-900">
-			<header class="border-b border-zinc-200 bg-white">
-				<Container class="flex h-16 items-center justify-between">
-					<a href="/" class="text-lg font-semibold tracking-tight">Led Kikaku</a>
-					<nav class="flex items-center gap-6 text-sm font-semibold text-zinc-600">
-						<a href="/" class="transition hover:text-zinc-900">Store</a>
-						<a href="/products" class="transition hover:text-zinc-900">Products</a>
+	<body class="font-sans text-[#1d1d1f] antialiased bg-[#f5f5f7]">
+		<div class="min-h-screen flex flex-col">
+			{/* Apple-style Global Nav: Sticky, Backdrop Blur, Minimal */}
+			<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50 transition-all duration-300">
+				<Container class="flex h-[48px] items-center justify-between">
+					{/* Logo Area */}
+					<a href="/" class="flex items-center gap-2 group transition-opacity hover:opacity-80">
+						<span class="text-[17px] font-semibold tracking-tight">LED Kikaku</span>
+					</a>
+
+					{/* Desktop Nav - Centered & Subtle */}
+					<nav class="hidden md:flex items-center gap-8 text-[12px] font-normal text-[#1d1d1f]/80">
+						<a href="/" class="transition-colors hover:text-[#1d1d1f]">Store</a>
+						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Mac</a>
+						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">iPad</a>
+						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">iPhone</a>
+						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Watch</a>
+						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Vision</a>
+						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">AirPods</a>
 					</nav>
+					
+					{/* Utilities: Search & Cart */}
+					<div class="flex items-center gap-6">
+						<button type="button" class="text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
+							<span class="sr-only">Search</span>
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+						</button>
+						<button type="button" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
+							<span class="sr-only">Open cart</span>
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+						</button>
+					</div>
 				</Container>
 			</header>
 
-			<main class="flex-1 py-10 sm:py-12">
+			<main class="flex-1">
 				<slot />
 			</main>
 
-			<footer class="border-t border-zinc-200 bg-white py-8">
-				<Container class="flex flex-col gap-2 text-xs text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-					<span>(c) 2024 Led Kikaku. All rights reserved.</span>
-					<div class="flex flex-wrap gap-4">
-						<a href="/products" class="transition hover:text-zinc-700">Products</a>
-						<a href="/" class="transition hover:text-zinc-700">Store</a>
+			<footer class="bg-[#f5f5f7] border-t border-gray-200 py-10 text-[11px] text-[#86868b]">
+				<Container>
+					<div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5 mb-8">
+						<div class="space-y-3">
+							<h3 class="font-semibold text-[#1d1d1f]">Shop and Learn</h3>
+							<ul class="space-y-2">
+								<li><a href="/products" class="hover:underline">Store</a></li>
+								<li><a href="#" class="hover:underline">Mac</a></li>
+								<li><a href="#" class="hover:underline">iPad</a></li>
+							</ul>
+						</div>
+						<div class="space-y-3">
+							<h3 class="font-semibold text-[#1d1d1f]">Account</h3>
+							<ul class="space-y-2">
+								<li><a href="#" class="hover:underline">Manage Your ID</a></li>
+								<li><a href="#" class="hover:underline">Store Account</a></li>
+								<li><a href="#" class="hover:underline">iCloud.com</a></li>
+							</ul>
+						</div>
+						<div class="space-y-3">
+							<h3 class="font-semibold text-[#1d1d1f]">Values</h3>
+							<ul class="space-y-2">
+								<li><a href="#" class="hover:underline">Accessibility</a></li>
+								<li><a href="#" class="hover:underline">Education</a></li>
+								<li><a href="#" class="hover:underline">Environment</a></li>
+							</ul>
+						</div>
+						<div class="space-y-3">
+							<h3 class="font-semibold text-[#1d1d1f]">About</h3>
+							<ul class="space-y-2">
+								<li><a href="#" class="hover:underline">Newsroom</a></li>
+								<li><a href="#" class="hover:underline">Leadership</a></li>
+								<li><a href="#" class="hover:underline">Investors</a></li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="pt-4 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+						<p>Copyright © 2024 Led Kikaku Inc. All rights reserved.</p>
+						<div class="flex gap-4">
+							<a href="/privacy" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">Privacy Policy</a>
+							<a href="/terms" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">Terms of Use</a>
+							<a href="/refund" class="hover:underline">Sales and Refunds</a>
+						</div>
 					</div>
 				</Container>
 			</footer>

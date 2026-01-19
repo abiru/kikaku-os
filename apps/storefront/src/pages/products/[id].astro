@@ -31,7 +31,7 @@ const variant = product?.variants?.[0] ?? null;
 const variantId = variant?.id ?? null;
 const priceLabel = variant?.price
 	? `${variant.price.amount} ${variant.price.currency}`
-	: 'Price not set';
+	: 'Check Price';
 
 const stockValue =
 	typeof variant?.stock === 'number'
@@ -40,119 +40,181 @@ const stockValue =
 			? variant.inventory
 			: null;
 const stockNote =
-	typeof stockValue === 'number' ? (stockValue > 0 ? `In stock: ${stockValue}` : 'Out of stock') : null;
+	typeof stockValue === 'number' ? (stockValue > 0 ? `In stock: ${stockValue}` : 'Check availability') : null;
 ---
 
-<Layout title="Product Detail">
-	<section class="bg-white">
-		<Container>
-			<a href="/products" class="text-sm font-semibold text-zinc-500 transition hover:text-zinc-900">
-				← Back to products
-			</a>
-			{loadState === 'ready' && product ? (
-				<section
-					id="product-detail"
-					data-variant-id={variantId ?? ''}
-					class="mt-8 grid gap-10 lg:grid-cols-[1.05fr_0.95fr]"
-				>
-					<div class="space-y-4">
-						<div class="rounded-3xl border border-zinc-200 bg-zinc-50 p-6 shadow-sm">
-							<div class="aspect-[4/3] w-full rounded-2xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200"></div>
+<Layout title={product ? `${product.title} - Led Kikaku` : 'Product Detail'}>
+	{loadState === 'ready' && product ? (
+		<div id="product-page" data-variant-id={variantId ?? ''} class="bg-white min-h-screen pb-20">
+			
+			{/* Sticky Product Header (Apple Style) */}
+			<div id="sticky-header" class="sticky top-[48px] z-40 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md transition-transform duration-300 -translate-y-full opacity-0">
+				<Container class="flex h-14 items-center justify-between">
+					<h2 class="text-sm font-semibold text-[#1d1d1f]">{product.title}</h2>
+					<div class="flex items-center gap-4">
+						<span class="text-xs font-medium text-[#1d1d1f]">{priceLabel}</span>
+						<Button id="sticky-buy-btn" size="sm">Buy</Button>
+					</div>
+				</Container>
+			</div>
+
+			{/* Hero Section */}
+			<section class="pt-16 pb-12 sm:pt-24 text-center">
+				<Container>
+					<Badge severity="new" class="mb-4">New</Badge>
+					<h1 class="text-5xl font-semibold tracking-tight text-[#1d1d1f] md:text-7xl mb-6">
+						{product.title}
+					</h1>
+					<p class="text-xl font-medium text-[#1d1d1f] md:text-2xl max-w-2xl mx-auto mb-12">
+						{product.description ?? 'Experience the next generation of LED technology.'}
+					</p>
+					
+					<div class="mt-10 mx-auto aspect-[16/9] max-w-5xl rounded-3xl bg-[#f5f5f7] flex items-center justify-center shadow-sm">
+						<span class="text-9xl font-bold text-gray-200 select-none">HERO</span>
+					</div>
+				</Container>
+			</section>
+
+			{/* Feature Grid (Storytelling) */}
+			<section class="py-24 bg-[#f5f5f7]">
+				<Container>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div class="rounded-3xl bg-white p-12 flex flex-col items-center text-center shadow-sm">
+							<h3 class="text-4xl font-semibold text-[#1d1d1f] mb-4">Pro Performance.</h3>
+							<p class="text-lg text-[#86868b]">Optimized spectrum for maximum yield.</p>
+							<div class="mt-10 h-64 w-full bg-[#f5f5f7] rounded-xl"></div>
 						</div>
-						<div class="grid grid-cols-3 gap-3">
-							{Array.from({ length: 3 }).map(() => (
-								<div class="aspect-[4/3] rounded-2xl border border-zinc-200 bg-zinc-50"></div>
-							))}
+						<div class="rounded-3xl bg-white p-12 flex flex-col items-center text-center shadow-sm">
+							<h3 class="text-4xl font-semibold text-[#1d1d1f] mb-4">Efficient.</h3>
+							<p class="text-lg text-[#86868b]">Less energy, more growth.</p>
+							<div class="mt-10 h-64 w-full bg-[#f5f5f7] rounded-xl"></div>
 						</div>
 					</div>
-					<div class="space-y-6">
-						<div class="space-y-3">
-							<Badge severity="info">Featured</Badge>
-							<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">{product.title}</h1>
-							<p class="text-base text-zinc-600">{product.description ?? ''}</p>
-							{stockNote ? <p class="text-sm text-zinc-500">{stockNote}</p> : null}
-						</div>
-						<div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-							<div class="flex items-baseline justify-between">
-								<p class="text-sm font-medium text-zinc-500">Price</p>
-								<p class="text-2xl font-semibold text-zinc-900">{priceLabel}</p>
+				</Container>
+			</section>
+
+			{/* Purchase Section */}
+			<section id="buy-section" class="py-24 bg-white">
+				<Container>
+					<div class="max-w-4xl mx-auto rounded-3xl border border-gray-200 bg-white p-8 md:p-12 shadow-sm">
+						<div class="flex flex-col md:flex-row gap-12">
+							{/* Left: Product Recap */}
+							<div class="flex-1">
+								<div class="aspect-square w-full rounded-2xl bg-[#f5f5f7] mb-6"></div>
+								<h2 class="text-3xl font-semibold text-[#1d1d1f]">{product.title}</h2>
+								<p class="mt-2 text-xl text-[#1d1d1f]">{priceLabel}</p>
 							</div>
-							<div class="mt-6 grid gap-4">
-								<label class="grid gap-2 text-sm font-medium text-zinc-700">
-									Quantity
-									<select id="qty-input">
-										{Array.from({ length: 10 }).map((_, index) => (
-											<option value={index + 1}>{index + 1}</option>
-										))}
-									</select>
-								</label>
-								<label class="grid gap-2 text-sm font-medium text-zinc-700">
-									Email (optional)
+
+							{/* Right: Options */}
+							<div class="flex-1 space-y-8">
+								<div>
+									<h3 class="text-sm font-semibold text-[#1d1d1f] mb-4">Quantity</h3>
+									<div class="relative">
+										<select id="qty-input" class="w-full appearance-none rounded-xl border border-gray-300 py-4 pl-4 pr-10 text-base font-medium text-[#1d1d1f] focus:border-[#0071e3] focus:outline-none focus:ring-1 focus:ring-[#0071e3]">
+											{Array.from({ length: 10 }).map((_, index) => (
+												<option value={index + 1}>{index + 1}</option>
+											))}
+										</select>
+										<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+											<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+										</div>
+									</div>
+								</div>
+
+								<div>
+									<h3 class="text-sm font-semibold text-[#1d1d1f] mb-4">Email Receipt</h3>
 									<input
 										id="email-input"
 										type="email"
-										placeholder="you@example.com"
-										autocomplete="email"
-									/>
-								</label>
-							</div>
-							{variantId ? null : (
-								<div class="mt-6">
-									<Alert
-										severity="warn"
-										title="Variant unavailable"
-										description="This product doesn't have a purchasable variant yet."
+										placeholder="your@email.com"
+										class="w-full rounded-xl border border-gray-300 p-4 text-base font-medium text-[#1d1d1f] placeholder:text-gray-400 focus:border-[#0071e3] focus:outline-none focus:ring-1 focus:ring-[#0071e3]"
 									/>
 								</div>
-							)}
-							<div class="mt-6 grid gap-3">
-								<Button id="buy-button" size="lg" class="w-full" disabled={!variantId}>
-									<span id="buy-label">Buy now</span>
-									<span
-										id="buy-spinner"
-										class="ml-2 hidden h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-									></span>
-								</Button>
-								<p class="text-xs text-zinc-500">
-									Secure checkout powered by Stripe. You will be redirected to a hosted checkout.
-								</p>
-							</div>
-							<div id="checkout-error" class="mt-4 hidden" aria-live="polite">
-								<Alert severity="critical" title="Checkout failed">
-									<p id="checkout-error-message" class="text-sm text-red-800"></p>
-								</Alert>
+
+								<div class="pt-6 border-t border-gray-100">
+									<Button id="buy-button" size="lg" class="w-full justify-between" disabled={!variantId}>
+										<span id="buy-label">Add to Bag</span>
+										<span id="buy-spinner" class="hidden animate-spin">⟳</span>
+									</Button>
+									<p class="mt-4 text-center text-xs text-[#86868b]">
+										Free shipping on all orders. <br/>
+										Secure checkout via Stripe.
+									</p>
+								</div>
+								
+								<div id="checkout-error" class="hidden">
+									<Alert severity="critical" title="Error">
+										<p id="checkout-error-message" class="text-sm"></p>
+									</Alert>
+								</div>
 							</div>
 						</div>
 					</div>
-				</section>
-			) : loadState === 'unavailable' ? (
-				<div class="mt-8">
-					<EmptyState
-						title="Product unavailable"
-						description="We couldn't load this product. Please retry in a moment."
-						ctaLabel="Retry"
-						ctaHref={`/products/${encodedId}`}
-					/>
-				</div>
-			) : (
-				<div class="mt-8">
-					<EmptyState
-						title="Product not found"
-						description="This item doesn't exist or has been removed."
-						ctaLabel="Back to Products"
-						ctaHref="/products"
-					/>
-				</div>
-			)}
-		</Container>
-	</section>
+				</Container>
+			</section>
+
+		</div>
+	) : loadState === 'unavailable' ? (
+		<div class="mt-8">
+			<EmptyState
+				title="Product unavailable"
+				description="We couldn't load this product. Please retry in a moment."
+				ctaLabel="Retry"
+				ctaHref={`/products/${encodedId}`}
+			/>
+		</div>
+	) : (
+		<div class="mt-8">
+			<EmptyState
+				title="Product not found"
+				description="This item doesn't exist or has been removed."
+				ctaLabel="Back to Products"
+				ctaHref="/products"
+			/>
+		</div>
+	)}
 
 	<script>
 		import { createCheckoutSession } from '../../lib/api';
 
-		const detail = document.getElementById('product-detail');
-		if (detail) {
-			const variantId = detail.dataset.variantId ? Number(detail.dataset.variantId) : null;
+		const stickyHeader = document.getElementById('sticky-header');
+		const buySection = document.getElementById('buy-section');
+		const stickyBuyBtn = document.getElementById('sticky-buy-btn');
+
+		// 1. Sticky Header Logic
+		if (stickyHeader && buySection) {
+			const observer = new IntersectionObserver(
+				([entry]) => {
+					// When buy section is visible, hide sticky header
+					if (entry.isIntersecting) {
+						stickyHeader.classList.add('-translate-y-full', 'opacity-0');
+					} else {
+						// Only show if we've scrolled PAST the buy section? No, show when we scroll past Hero.
+						// Let's simpler logic: Show when scrolled down 200px.
+					}
+				},
+				{ threshold: 0.1 }
+			);
+			// Actually simpler scroll listener for Apple feel
+			window.addEventListener('scroll', () => {
+				const scrollY = window.scrollY;
+				if (scrollY > 600) {
+					stickyHeader.classList.remove('-translate-y-full', 'opacity-0');
+				} else {
+					stickyHeader.classList.add('-translate-y-full', 'opacity-0');
+				}
+			});
+			
+			// Scroll to buy section on click
+			stickyBuyBtn?.addEventListener('click', () => {
+				buySection.scrollIntoView({ behavior: 'smooth' });
+			});
+		}
+
+		// 2. Checkout Logic (Existing logic adapted)
+		const page = document.getElementById('product-page');
+		if (page) {
+			const variantId = page.dataset.variantId ? Number(page.dataset.variantId) : null;
 			const buyButton = document.getElementById('buy-button');
 			const buyLabel = document.getElementById('buy-label');
 			const buySpinner = document.getElementById('buy-spinner');
@@ -166,8 +228,7 @@ const stockNote =
 			const setLoading = (loading) => {
 				if (!buyButton || !buyLabel || !buySpinner) return;
 				buyButton.disabled = loading || !variantId;
-				buyButton.setAttribute('aria-busy', loading ? 'true' : 'false');
-				buyLabel.textContent = loading ? 'Starting checkout...' : 'Buy now';
+				buyLabel.textContent = loading ? 'Processing...' : 'Add to Bag';
 				buySpinner.classList.toggle('hidden', !loading);
 			};
 
@@ -183,27 +244,15 @@ const stockNote =
 				errorWrap.classList.add('hidden');
 			};
 
-			setLoading(false);
-
 			if (buyButton && variantId) {
 				buyButton.addEventListener('click', async () => {
 					if (isSubmitting) return;
 					clearError();
-
-					const quantity = Number(qtyInput?.value || 1);
-					if (!Number.isFinite(quantity) || quantity < 1 || quantity > 10) {
-						showError('Please select a quantity between 1 and 10.');
-						return;
-					}
-
-					const email = emailInput?.value?.trim();
-					if (email && !emailInput?.checkValidity()) {
-						showError('Please enter a valid email address.');
-						return;
-					}
-
 					isSubmitting = true;
 					setLoading(true);
+
+					const quantity = Number(qtyInput?.value || 1);
+					const email = emailInput?.value?.trim();
 
 					try {
 						const session = await createCheckoutSession({
@@ -214,7 +263,6 @@ const stockNote =
 						window.location.href = session.url;
 					} catch (error) {
 						showError(error instanceof Error ? error.message : 'Checkout failed.');
-					} finally {
 						isSubmitting = false;
 						setLoading(false);
 					}

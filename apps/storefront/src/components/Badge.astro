@@ -1,15 +1,18 @@
 ---
 const { severity = 'info', class: className = '' } = Astro.props;
 
+// Apple-style: Very subtle, text-forward, or simple colored dots.
 const variants = {
-	info: 'border-zinc-200 bg-zinc-100 text-zinc-700',
-	warn: 'border-amber-200 bg-amber-100 text-amber-900',
-	critical: 'border-red-200 bg-red-100 text-red-900'
+	info: 'text-[#1d1d1f] border-[#d2d2d7] bg-white',
+	secondary: 'text-[#86868b] border-transparent bg-[#f5f5f7]',
+	warn: 'text-amber-600 border-amber-200 bg-amber-50',
+    new: 'text-[#bf4800] border-transparent', // Apple's "New" orange text often has no bg
+	critical: 'text-red-600 border-red-200 bg-red-50'
 };
 
 const classes = `${variants[severity] ?? variants.info} ${className}`;
 ---
 
-<span class={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${classes}`}>
+<span class={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-medium leading-4 ${classes}`}>
 	<slot />
 </span>

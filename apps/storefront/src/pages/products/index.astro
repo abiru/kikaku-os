@@ -2,62 +2,69 @@
 import Badge from '../../components/Badge.astro';
 import Container from '../../components/Container.astro';
 import EmptyState from '../../components/EmptyState.astro';
-import Skeleton from '../../components/Skeleton.astro';
 import Layout from '../../layouts/Layout.astro';
 
-const skeletonCards = Array.from({ length: 9 });
+const skeletonCards = Array.from({ length: 6 });
 ---
 
-<Layout title="Products">
-	<section class="bg-white">
-		<Container>
-			<div class="flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Catalog</p>
-					<h1 class="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">Products</h1>
-					<p class="mt-2 text-sm text-zinc-500">Curated goods ready for Stripe Checkout.</p>
-				</div>
-				<Badge severity="info">Live catalog</Badge>
-			</div>
+<Layout title="Store - Led Kikaku">
+	<div class="bg-white min-h-screen">
+		<section class="pt-24 pb-12 sm:pt-32 border-b border-gray-200">
+			<Container>
+				<h1 class="text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
+					Store. <span class="text-[#86868b]">The best way to buy the products you love.</span>
+				</h1>
+			</Container>
+		</section>
 
-			<div id="product-state" class="mt-8 space-y-6">
-				<div id="product-skeleton" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-					{skeletonCards.map(() => (
-						<div class="rounded-2xl border border-zinc-200 bg-white shadow-sm">
-							<div class="aspect-[4/3] w-full rounded-t-2xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200"></div>
-							<div class="space-y-4 p-5">
-								<Skeleton lines={2} />
-								<div class="flex items-center justify-between">
-									<div class="h-5 w-24 rounded-md bg-zinc-100"></div>
-									<div class="h-8 w-20 rounded-full bg-zinc-100"></div>
+		<section class="py-12 bg-[#f5f5f7]">
+			<Container>
+				<div class="flex items-center justify-between mb-8">
+					<h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">The latest.</h2>
+					<Badge severity="new">New Arrivals</Badge>
+				</div>
+
+				<div id="product-state">
+					{/* Skeleton State */}
+					<div id="product-skeleton" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-8">
+						{skeletonCards.map(() => (
+							<div class="group relative flex flex-col overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-lg">
+								<div class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#f5f5f7]"></div>
+								<div class="mt-6 flex flex-col gap-2">
+									<div class="h-4 w-24 bg-gray-100 rounded-full"></div>
+									<div class="h-6 w-48 bg-gray-100 rounded-lg"></div>
+									<div class="mt-2 h-4 w-16 bg-gray-100 rounded-full"></div>
 								</div>
 							</div>
-						</div>
-					))}
-				</div>
+						))}
+					</div>
 
-				<div id="product-error" class="hidden">
-					<EmptyState
-						title="Couldn't load products"
-						description="The catalog is unavailable right now. Please retry."
-						ctaLabel="Retry"
-						ctaHref="/products"
-					/>
-				</div>
+					{/* Error State */}
+					<div id="product-error" class="hidden py-20">
+						<EmptyState
+							title="Store unavailable"
+							description="We couldn't load the catalog. Please try again later."
+							ctaLabel="Refresh"
+							ctaHref="/products"
+						/>
+					</div>
 
-				<div id="product-empty" class="hidden">
-					<EmptyState
-						title="No products yet"
-						description="We couldn't find any items in the catalog."
-						ctaLabel="Refresh catalog"
-						ctaHref="/products"
-					/>
-				</div>
+					{/* Empty State */}
+					<div id="product-empty" class="hidden py-20">
+						<EmptyState
+							title="No products found"
+							description="We are updating our inventory."
+							ctaLabel="Check back later"
+							ctaHref="/"
+						/>
+					</div>
 
-				<div id="product-grid" class="hidden grid gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
-			</div>
-		</Container>
-	</section>
+					{/* Loaded Grid */}
+					<div id="product-grid" class="hidden grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-8"></div>
+				</div>
+			</Container>
+		</section>
+	</div>
 
 	<script>
 		import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
@@ -88,52 +95,58 @@ const skeletonCards = Array.from({ length: 9 });
 			grid.innerHTML = '';
 
 			products.forEach((product) => {
-				const card = document.createElement('a');
-				card.href = `/products/${product.id}`;
-				card.className =
-					'group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md';
+				const card = document.createElement('div');
+				card.className = 'group relative flex flex-col overflow-hidden rounded-3xl bg-white p-8 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-xl hover:scale-[1.01]';
 
-				const media = document.createElement('div');
-				media.className =
-					'aspect-[4/3] w-full bg-gradient-to-br from-zinc-100 via-white to-zinc-200';
+				// 1. Tag / Badge (Top Left)
+				const tag = document.createElement('span');
+				tag.className = 'mb-2 text-[10px] font-bold uppercase tracking-wider text-[#bf4800]';
+				tag.textContent = 'New';
+				card.appendChild(tag);
 
-				const body = document.createElement('div');
-				body.className = 'p-5';
+				// 2. Title & Desc
+				const titleLink = document.createElement('a');
+				titleLink.href = `/products/${product.id}`;
+				titleLink.className = 'text-xl font-semibold text-[#1d1d1f] hover:underline decoration-1 underline-offset-2';
+				titleLink.textContent = String(product.title ?? '');
+				
+				const fullLinkOverlay = document.createElement('span');
+				fullLinkOverlay.className = 'absolute inset-0';
+				titleLink.appendChild(fullLinkOverlay);
 
-				const title = document.createElement('h2');
-				title.className = 'text-lg font-semibold text-zinc-900 line-clamp-2';
-				title.textContent = String(product.title ?? '');
+				card.appendChild(titleLink);
 
-				body.appendChild(title);
+				// 3. Image Container
+				const imgContainer = document.createElement('div');
+				imgContainer.className = 'mt-8 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#f5f5f7] flex items-center justify-center';
+				
+				// Placeholder Image Logic (Since we don't have real images yet)
+				const imgPlaceholder = document.createElement('div');
+				imgPlaceholder.className = 'text-4xl font-bold text-gray-200 select-none';
+				imgPlaceholder.textContent = 'IMG';
+				imgContainer.appendChild(imgPlaceholder);
 
-				const description = typeof product.description === 'string' ? product.description : '';
-				if (description) {
-					const descEl = document.createElement('p');
-					descEl.className = 'mt-2 text-sm text-zinc-500 line-clamp-2';
-					descEl.textContent = description;
-					body.appendChild(descEl);
-				}
+				card.appendChild(imgContainer);
 
+				// 4. Price & Buy (Bottom)
 				const footer = document.createElement('div');
-				footer.className = 'mt-5 flex items-center justify-between';
+				footer.className = 'mt-auto pt-6 flex items-center justify-between';
 
 				const variant = Array.isArray(product.variants) ? product.variants[0] : null;
 				const price = variant?.price;
+				
 				const priceEl = document.createElement('span');
-				priceEl.className = 'text-base font-semibold text-zinc-900';
-				priceEl.textContent = price ? `${price.amount} ${price.currency}` : 'Price not set';
+				priceEl.className = 'text-[15px] text-[#1d1d1f]';
+				priceEl.textContent = price ? `From ${price.amount} ${price.currency}` : '';
 
-				const cta = document.createElement('span');
-				cta.className =
-					'inline-flex items-center text-sm font-semibold text-zinc-900 transition group-hover:text-zinc-700';
-				cta.textContent = 'View';
+				const buyBtn = document.createElement('span');
+				buyBtn.className = 'rounded-full bg-[#0071e3] px-4 py-1.5 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100';
+				buyBtn.textContent = 'Buy';
 
-				body.appendChild(footer);
 				footer.appendChild(priceEl);
-				footer.appendChild(cta);
+				footer.appendChild(buyBtn);
+				card.appendChild(footer);
 
-				card.appendChild(media);
-				card.appendChild(body);
 				grid.appendChild(card);
 			});
 		};

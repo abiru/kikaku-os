@@ -1,50 +1,46 @@
 ---
 import Button from '../components/Button.astro';
-import Container from '../components/Container.astro';
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Led Kikaku Store">
-	<section class="bg-white">
-		<Container>
-			<div class="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
-				<div class="space-y-6">
-					<p class="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">
-						Stripe Checkout Demo
-					</p>
-					<h1 class="text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl">
-						Led Kikaku Storefront
-					</h1>
-					<p class="text-lg text-zinc-600">
-						Minimal product catalog with a safe Stripe Checkout flow and webhook-driven order updates.
-					</p>
-					<div class="flex flex-wrap gap-3">
-						<Button href="/products" size="lg">
-							Browse Products
-						</Button>
-						<Button href="/products" variant="secondary" size="lg">
-							View Pricing
-						</Button>
-					</div>
+<Layout title="Led Kikaku - Pro Growth">
+	<div class="bg-[#f5f5f7]">
+		{/* Hero Section - Apple Style Jumbotron */}
+		<section class="relative w-full pt-16 pb-20 text-center lg:pt-32 lg:pb-32">
+			<div class="mx-auto max-w-[980px] px-6">
+				<h1 class="text-5xl font-semibold tracking-tight text-[#1d1d1f] md:text-7xl">
+					Plant cultivation,<br />
+					<span class="text-[#6e6e73]">more freely.</span>
+				</h1>
+				<p class="mt-6 text-xl font-medium text-[#1d1d1f] md:text-2xl">
+					Beyond the limits of natural light. Next-generation LED lights.
+				</p>
+				<div class="mt-10 flex items-center justify-center gap-4">
+					<Button href="/products" size="lg">Buy</Button>
+					<Button href="/products" variant="link" size="lg">Learn more ></Button>
 				</div>
-				<div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-8 shadow-sm">
-					<div class="flex flex-col gap-4">
-						<div class="h-40 rounded-xl bg-gradient-to-br from-zinc-100 via-white to-zinc-200" />
-						<div class="space-y-2">
-							<p class="text-sm font-semibold text-zinc-500">Order Flow</p>
-							<p class="text-base text-zinc-700">
-								Create order → Stripe Checkout → Webhook marks paid → Daily Close reflects totals.
-							</p>
-						</div>
-						<a
-							href="/products"
-							class="text-sm font-semibold text-zinc-900 transition hover:text-zinc-700"
-						>
-							Go to products →
-						</a>
+			</div>
+			
+			{/* Hero Image Placeholder - Mimicking a high-res product shot */}
+			<div class="mt-14 w-full px-4 md:px-0">
+				<div class="mx-auto aspect-[16/9] max-w-[1200px] rounded-3xl bg-white shadow-2xl shadow-black/5 ring-1 ring-black/5 flex items-center justify-center overflow-hidden">
+					<div class="text-center">
+						<div class="text-9xl font-bold text-gray-100 select-none">SF1000</div>
 					</div>
 				</div>
 			</div>
-		</Container>
-	</section>
+		</section>
+
+		{/* Secondary Feature Section */}
+		<section class="py-24 bg-white">
+			<div class="mx-auto max-w-[980px] px-6 text-center">
+				<h2 class="text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
+					Pro-grade spectrum.
+				</h2>
+				<p class="mt-4 text-lg font-medium text-[#86868b] md:text-xl">
+					Optimized for every stage of plant growth.
+				</p>
+			</div>
+		</section>
+	</div>
 </Layout>
