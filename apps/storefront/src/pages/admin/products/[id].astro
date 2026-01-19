@@ -10,6 +10,26 @@ const { id } = Astro.params;
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
 
+type Price = {
+	id: number;
+	variant_id: number;
+	currency: string;
+	amount: number;
+	provider_price_id: string | null;
+};
+
+type Variant = {
+	id: number;
+	product_id: number;
+	title: string;
+	sku: string | null;
+	options: string | null;
+	metadata: string | null;
+	created_at: string;
+	updated_at: string;
+	prices: Price[];
+};
+
 type Product = {
 	id: number;
 	title: string;
@@ -21,6 +41,7 @@ type Product = {
 };
 
 let product: Product | null = null;
+let variants: Variant[] = [];
 let error: string | null = null;
 let successMessage: string | null = null;
 
@@ -85,6 +106,21 @@ if (!product && apiKey) {
 	error = 'ADMIN_API_KEY is missing in server environment';
 }
 
+// Fetch variants if product is loaded
+if (product && apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/admin/products/${id}/variants`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+		if (res.ok) {
+			const data = await res.json();
+			variants = data.variants || [];
+		}
+	} catch (e) {
+		console.error('Failed to fetch variants:', e);
+	}
+}
+
 const formatDate = (dateStr: string | null) => {
 	if (!dateStr) return '-';
 	return new Date(dateStr).toLocaleString('ja-JP', {
@@ -94,6 +130,14 @@ const formatDate = (dateStr: string | null) => {
 		hour: '2-digit',
 		minute: '2-digit'
 	});
+};
+
+const formatPrice = (amount: number, currency: string = 'JPY') => {
+	return new Intl.NumberFormat('ja-JP', {
+		style: 'currency',
+		currency: currency,
+		minimumFractionDigits: 0,
+	}).format(amount);
 };
 ---
 
@@ -199,7 +243,295 @@ const formatDate = (dateStr: string | null) => {
 						</Button>
 					</div>
 				</form>
+
+				<!-- Variants Section -->
+				<div class="mt-8">
+					<div class="flex items-center justify-between mb-4">
+						<h2 class="text-lg font-semibold text-[#1d1d1f]">Variants</h2>
+						<button
+							type="button"
+							id="add-variant-btn"
+							class="text-sm text-[#0071e3] hover:underline flex items-center gap-1"
+						>
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+							</svg>
+							Add Variant
+						</button>
+					</div>
+
+					{variants.length === 0 ? (
+						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+							<p class="text-[#86868b] text-sm">No variants yet. Add one to set prices.</p>
+						</div>
+					) : (
+						<div class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+							{variants.map((variant) => {
+								const price = variant.prices?.[0];
+								return (
+									<div class="p-4 flex items-center justify-between" data-variant-id={variant.id}>
+										<div class="flex-1">
+											<div class="font-medium text-[#1d1d1f]">{variant.title}</div>
+											<div class="text-sm text-[#86868b] mt-1 flex flex-wrap gap-x-4 gap-y-1">
+												<span>SKU: {variant.sku || '-'}</span>
+												<span class="tabular-nums">
+													{price ? formatPrice(price.amount, price.currency) : 'No price set'}
+												</span>
+												<span class="font-mono text-xs">
+													Stripe: {price?.provider_price_id || '-'}
+												</span>
+											</div>
+										</div>
+										<div class="flex items-center gap-2 ml-4">
+											<button
+												type="button"
+												class="edit-variant-btn text-sm text-[#0071e3] hover:underline"
+												data-variant={JSON.stringify(variant)}
+											>
+												Edit
+											</button>
+											<button
+												type="button"
+												class="delete-variant-btn text-sm text-red-500 hover:underline"
+												data-variant-id={variant.id}
+												data-variant-title={variant.title}
+											>
+												Delete
+											</button>
+										</div>
+									</div>
+								);
+							})}
+						</div>
+					)}
+				</div>
+
+				<!-- Variant Modal -->
+				<div id="variant-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+					<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+						<div class="p-6 border-b border-gray-100">
+							<h3 id="modal-title" class="text-lg font-semibold text-[#1d1d1f]">Add Variant</h3>
+						</div>
+						<form id="variant-form" class="p-6 space-y-4">
+							<input type="hidden" id="variant-id" name="variantId" value="" />
+
+							<div>
+								<label for="variant-title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									Title <span class="text-red-500">*</span>
+								</label>
+								<input
+									type="text"
+									id="variant-title"
+									name="title"
+									required
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									placeholder="e.g., Default, Size M, Color Red"
+								/>
+							</div>
+
+							<div>
+								<label for="variant-sku" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									SKU
+								</label>
+								<input
+									type="text"
+									id="variant-sku"
+									name="sku"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									placeholder="Optional SKU code"
+								/>
+							</div>
+
+							<div>
+								<label for="price-amount" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									Price (JPY) <span class="text-red-500">*</span>
+								</label>
+								<input
+									type="number"
+									id="price-amount"
+									name="amount"
+									required
+									min="0"
+									step="1"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all tabular-nums"
+									placeholder="1000"
+								/>
+							</div>
+
+							<div>
+								<label for="stripe-price-id" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									Stripe Price ID
+								</label>
+								<input
+									type="text"
+									id="stripe-price-id"
+									name="provider_price_id"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									placeholder="price_xxxxxxxx"
+								/>
+								<p class="text-xs text-[#86868b] mt-1">Required for checkout. Get this from your Stripe Dashboard.</p>
+							</div>
+
+							<div id="modal-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+
+							<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+								<button
+									type="button"
+									id="cancel-modal-btn"
+									class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+								>
+									Cancel
+								</button>
+								<button
+									type="submit"
+									class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+								>
+									Save
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
 			)}
 		</Container>
 	</div>
 </Layout>
+
+<script define:vars={{ apiBase, apiKey, productId: id }}>
+	const modal = document.getElementById('variant-modal');
+	const modalTitle = document.getElementById('modal-title');
+	const variantForm = document.getElementById('variant-form');
+	const variantIdInput = document.getElementById('variant-id');
+	const variantTitleInput = document.getElementById('variant-title');
+	const variantSkuInput = document.getElementById('variant-sku');
+	const priceAmountInput = document.getElementById('price-amount');
+	const stripePriceIdInput = document.getElementById('stripe-price-id');
+	const modalError = document.getElementById('modal-error');
+	const addVariantBtn = document.getElementById('add-variant-btn');
+	const cancelModalBtn = document.getElementById('cancel-modal-btn');
+
+	function showModal(isEdit = false, variant = null) {
+		modalTitle.textContent = isEdit ? 'Edit Variant' : 'Add Variant';
+		variantIdInput.value = variant?.id || '';
+		variantTitleInput.value = variant?.title || '';
+		variantSkuInput.value = variant?.sku || '';
+		const price = variant?.prices?.[0];
+		priceAmountInput.value = price?.amount || '';
+		stripePriceIdInput.value = price?.provider_price_id || '';
+		modalError.classList.add('hidden');
+		modal.classList.remove('hidden');
+	}
+
+	function hideModal() {
+		modal.classList.add('hidden');
+		variantForm.reset();
+	}
+
+	function showError(message) {
+		modalError.textContent = message;
+		modalError.classList.remove('hidden');
+	}
+
+	addVariantBtn?.addEventListener('click', () => showModal(false));
+	cancelModalBtn?.addEventListener('click', hideModal);
+	modal?.addEventListener('click', (e) => {
+		if (e.target === modal) hideModal();
+	});
+
+	document.querySelectorAll('.edit-variant-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			const variant = JSON.parse(btn.dataset.variant);
+			showModal(true, variant);
+		});
+	});
+
+	document.querySelectorAll('.delete-variant-btn').forEach(btn => {
+		btn.addEventListener('click', async () => {
+			const variantId = btn.dataset.variantId;
+			const variantTitle = btn.dataset.variantTitle;
+			if (!confirm(`Delete variant "${variantTitle}"? This will also delete its prices.`)) return;
+
+			try {
+				const res = await fetch(`${apiBase}/admin/products/${productId}/variants/${variantId}`, {
+					method: 'DELETE',
+					headers: { 'x-admin-key': apiKey }
+				});
+				if (res.ok) {
+					location.reload();
+				} else {
+					const data = await res.json();
+					alert(data.message || 'Failed to delete variant');
+				}
+			} catch (e) {
+				alert('Failed to delete variant. Please try again.');
+			}
+		});
+	});
+
+	variantForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const variantId = variantIdInput.value;
+		const isEdit = !!variantId;
+
+		const title = variantTitleInput.value.trim();
+		const sku = variantSkuInput.value.trim() || null;
+		const amount = parseInt(priceAmountInput.value, 10);
+		const provider_price_id = stripePriceIdInput.value.trim() || null;
+
+		if (!title) {
+			showError('Title is required');
+			return;
+		}
+		if (isNaN(amount) || amount < 0) {
+			showError('Price must be a valid positive number');
+			return;
+		}
+
+		try {
+			// Create or update variant
+			const variantUrl = isEdit
+				? `${apiBase}/admin/products/${productId}/variants/${variantId}`
+				: `${apiBase}/admin/products/${productId}/variants`;
+
+			const variantRes = await fetch(variantUrl, {
+				method: isEdit ? 'PUT' : 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({ title, sku })
+			});
+
+			if (!variantRes.ok) {
+				const data = await variantRes.json();
+				showError(data.message || 'Failed to save variant');
+				return;
+			}
+
+			const variantData = await variantRes.json();
+			const savedVariantId = variantData.variant?.id || variantId;
+
+			// Update prices
+			const priceRes = await fetch(`${apiBase}/admin/variants/${savedVariantId}/prices`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({
+					prices: [{ currency: 'JPY', amount, provider_price_id }]
+				})
+			});
+
+			if (!priceRes.ok) {
+				const data = await priceRes.json();
+				showError(data.message || 'Failed to save price');
+				return;
+			}
+
+			location.reload();
+		} catch (e) {
+			showError('An error occurred. Please try again.');
+		}
+	});
+</script>
