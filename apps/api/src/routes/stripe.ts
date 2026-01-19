@@ -2,6 +2,7 @@ import { Hono, type Context } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
 import { verifyStripeSignature } from '../lib/stripe';
+import { calculateOrderStatus, getStatusChangeReason } from '../services/orderStatus';
 
 type StripeEvent = {
   id: string;
@@ -257,14 +258,41 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
 
       if (resolvedOrderId) {
         const orderRow = await env.DB.prepare(
-          `SELECT id, total_net, status FROM orders WHERE id=?`
-        ).bind(resolvedOrderId).first<{ id: number; total_net: number; status: string }>();
+          `SELECT id, total_net, status, refunded_amount FROM orders WHERE id=?`
+        ).bind(resolvedOrderId).first<{
+          id: number;
+          total_net: number;
+          status: string;
+          refunded_amount: number;
+        }>();
 
-        if (orderRow?.id && orderRow.status === 'paid') {
-          const newStatus = amount >= (orderRow.total_net || 0) ? 'refunded' : 'partially_refunded';
+        if (orderRow?.id && (orderRow.status === 'paid' || orderRow.status === 'partially_refunded')) {
+          const oldStatus = orderRow.status;
+          const currentRefundedAmount = orderRow.refunded_amount || 0;
+          const newRefundedAmount = currentRefundedAmount + amount;
+
+          const refundCountRow = await env.DB.prepare(
+            `SELECT refund_count FROM orders WHERE id=?`
+          ).bind(resolvedOrderId).first<{ refund_count: number }>();
+          const newRefundCount = (refundCountRow?.refund_count || 0) + 1;
+
+          const newStatus = calculateOrderStatus({
+            status: oldStatus,
+            total_net: orderRow.total_net || 0,
+            refunded_amount: newRefundedAmount
+          });
+
           await env.DB.prepare(
-            `UPDATE orders SET status=?, updated_at=datetime('now') WHERE id=?`
-          ).bind(newStatus, orderRow.id).run();
+            `UPDATE orders SET status=?, refunded_amount=?, refund_count=?, updated_at=datetime('now') WHERE id=?`
+          ).bind(newStatus, newRefundedAmount, newRefundCount, orderRow.id).run();
+
+          if (oldStatus !== newStatus) {
+            const reason = getStatusChangeReason(newStatus);
+            await env.DB.prepare(
+              `INSERT INTO order_status_history (order_id, old_status, new_status, reason, stripe_event_id, created_at)
+               VALUES (?, ?, ?, ?, ?, datetime('now'))`
+            ).bind(resolvedOrderId, oldStatus, newStatus, reason, event.id).run();
+          }
         }
       }
     }
