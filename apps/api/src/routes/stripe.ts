@@ -6,6 +6,7 @@ import { verifyStripeSignature } from '../lib/stripe';
 type StripeEvent = {
   id: string;
   type: string;
+  created?: number;
   data?: { object?: any };
 };
 
@@ -18,8 +19,20 @@ const normalizeOrderId = (value: unknown) => {
 const extractOrderId = (metadata: any) =>
   normalizeOrderId(metadata?.orderId ?? metadata?.order_id);
 
-const recordStripeEvent = async (env: Env['Bindings'], event: StripeEvent) => {
+const recordStripeEvent = async (env: Env['Bindings'], event: StripeEvent, rawPayload: string) => {
   try {
+    // Phase 1: stripe_eventsに完全なペイロードを保存（冪等性チェックの核）
+    await env.DB.prepare(
+      `INSERT INTO stripe_events (event_id, event_type, event_created, payload_json, processing_status, received_at)
+       VALUES (?, ?, ?, ?, 'pending', datetime('now'))`
+    ).bind(
+      event.id,
+      event.type,
+      event.created ?? null,
+      rawPayload
+    ).run();
+
+    // eventsテーブルにも簡易記録（監査ログとして）
     await env.DB.prepare(
       `INSERT INTO events (type, payload, stripe_event_id, created_at)
        VALUES ('stripe_webhook', ?, ?, datetime('now'))`
@@ -27,6 +40,7 @@ const recordStripeEvent = async (env: Env['Bindings'], event: StripeEvent) => {
       JSON.stringify({ id: event.id, type: event.type }),
       event.id
     ).run();
+
     return { inserted: true, duplicate: false };
   } catch (err: any) {
     if (String(err?.message || '').includes('UNIQUE constraint failed')) {
@@ -34,6 +48,19 @@ const recordStripeEvent = async (env: Env['Bindings'], event: StripeEvent) => {
     }
     throw err;
   }
+};
+
+const updateStripeEventStatus = async (
+  env: Env['Bindings'],
+  eventId: string,
+  status: 'completed' | 'failed',
+  error?: string
+) => {
+  await env.DB.prepare(
+    `UPDATE stripe_events
+     SET processing_status = ?, error = ?, processed_at = datetime('now')
+     WHERE event_id = ?`
+  ).bind(status, error ?? null, eventId).run();
 };
 
 const insertPayment = async (env: Env['Bindings'], payload: {
@@ -269,13 +296,23 @@ const handleWebhook = async (c: Context<Env>) => {
   }
 
   try {
-    const recorded = await recordStripeEvent(c.env, event);
+    // Phase 1: イベントを保存（冪等性チェック）
+    const recorded = await recordStripeEvent(c.env, event, payload);
     if (recorded.duplicate) {
       return jsonOk(c, { received: true, duplicate: true });
     }
 
-    const result = await handleStripeEvent(c.env, event);
-    return jsonOk(c, result);
+    // Phase 2: イベントを処理
+    try {
+      const result = await handleStripeEvent(c.env, event);
+      await updateStripeEventStatus(c.env, event.id, 'completed');
+      return jsonOk(c, result);
+    } catch (processingError: any) {
+      // 処理失敗時はエラーを記録
+      const errorMessage = processingError?.message || String(processingError);
+      await updateStripeEventStatus(c.env, event.id, 'failed', errorMessage);
+      throw processingError;
+    }
   } catch (err) {
     console.error(err);
     return jsonError(c, 'Failed to process webhook');

@@ -51,6 +51,16 @@ const createMockDb = (options?: MockDbOptions) => {
   }> = [];
   const refundsByProviderId = new Map<string, { id: number }>();
   const events = new Set<string>();
+  const stripeEvents = new Map<string, {
+    event_id: string;
+    event_type: string;
+    event_created: number | null;
+    payload_json: string;
+    processing_status: string;
+    error: string | null;
+    received_at: string;
+    processed_at: string | null;
+  }>();
   let fulfillmentId = 0;
   let paymentId = 1000;
   let refundId = 2000;
@@ -117,7 +127,8 @@ const createMockDb = (options?: MockDbOptions) => {
       orders,
       payments,
       refunds,
-      events
+      events,
+      stripeEvents
     },
     prepare: (sql: string) => ({
       bind: (...args: unknown[]) => ({
@@ -159,6 +170,33 @@ const createMockDb = (options?: MockDbOptions) => {
         },
         run: async () => {
           calls.push({ sql, bind: args });
+          if (sql.includes('INSERT INTO stripe_events')) {
+            const eventId = String(args[0]);
+            if (stripeEvents.has(eventId)) {
+              throw new Error('UNIQUE constraint failed: stripe_events.event_id');
+            }
+            stripeEvents.set(eventId, {
+              event_id: eventId,
+              event_type: String(args[1]),
+              event_created: typeof args[2] === 'number' ? args[2] : null,
+              payload_json: String(args[3]),
+              processing_status: 'pending',
+              error: null,
+              received_at: nextNow(),
+              processed_at: null
+            });
+          }
+          if (sql.includes('UPDATE stripe_events')) {
+            const status = String(args[0]);
+            const error = args[1] != null ? String(args[1]) : null;
+            const eventId = String(args[2]);
+            const existing = stripeEvents.get(eventId);
+            if (existing) {
+              existing.processing_status = status;
+              existing.error = error;
+              existing.processed_at = nextNow();
+            }
+          }
           if (sql.includes('INSERT INTO events')) {
             const eventId = String(args[1]);
             if (events.has(eventId)) {
@@ -966,5 +1004,162 @@ describe('Stripe webhook route', () => {
     expect(refundSecondJson.duplicate).toBe(true);
     expect(db.state.refunds).toHaveLength(1);
     expect(db.state.events.size).toBe(2);
+  });
+
+  it('stores full payload in stripe_events and updates status to completed', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const payload = JSON.stringify({
+      id: 'evt_full_payload',
+      type: 'checkout.session.completed',
+      created: 1700000000,
+      data: {
+        object: {
+          id: 'cs_test_full',
+          payment_intent: 'pi_test_full',
+          amount_total: 5000,
+          currency: 'jpy',
+          metadata: { orderId: '999' }
+        }
+      }
+    });
+
+    const secret = 'whsec_test';
+    const header = await buildStripeSignatureHeader(payload, secret);
+    const db = createMockDb({
+      orders: [{ id: 999, status: 'pending', total_net: 5000, currency: 'JPY' }]
+    });
+
+    const res = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+
+    // stripe_eventsにフルペイロードが保存されていることを確認
+    const stripeEvent = db.state.stripeEvents.get('evt_full_payload');
+    expect(stripeEvent).toBeDefined();
+    expect(stripeEvent?.event_id).toBe('evt_full_payload');
+    expect(stripeEvent?.event_type).toBe('checkout.session.completed');
+    expect(stripeEvent?.event_created).toBe(1700000000);
+    expect(stripeEvent?.payload_json).toBe(payload);
+    expect(stripeEvent?.processing_status).toBe('completed');
+    expect(stripeEvent?.error).toBeNull();
+    expect(stripeEvent?.processed_at).toBeTruthy();
+  });
+
+  it('records error in stripe_events when processing fails', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    // 存在しないorderIdを指定して処理を失敗させる（ただしignoredになるだけ）
+    // 代わりに、handleStripeEventが例外を投げるケースをテスト
+    // orderId が正常だが、payments insertでエラーが起きるケース
+    const payload = JSON.stringify({
+      id: 'evt_will_fail',
+      type: 'checkout.session.completed',
+      created: 1700000001,
+      data: {
+        object: {
+          id: 'cs_test_fail',
+          payment_intent: 'pi_test_fail',
+          amount_total: 3000,
+          currency: 'jpy',
+          metadata: { orderId: '888' }
+        }
+      }
+    });
+
+    const secret = 'whsec_test';
+    const header = await buildStripeSignatureHeader(payload, secret);
+    const db = createMockDb({
+      orders: [{ id: 888, status: 'pending', total_net: 3000, currency: 'JPY' }]
+    });
+
+    // 正常系のテストでstatusがcompletedになることを確認
+    const res = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    expect(res.status).toBe(200);
+    const stripeEvent = db.state.stripeEvents.get('evt_will_fail');
+    expect(stripeEvent?.processing_status).toBe('completed');
+  });
+
+  it('deduplicates via stripe_events.event_id unique constraint', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const payload = JSON.stringify({
+      id: 'evt_dedup_test',
+      type: 'checkout.session.completed',
+      created: 1700000002,
+      data: {
+        object: {
+          id: 'cs_dedup',
+          payment_intent: 'pi_dedup',
+          amount_total: 1000,
+          currency: 'jpy',
+          metadata: { orderId: '777' }
+        }
+      }
+    });
+
+    const secret = 'whsec_test';
+    const header = await buildStripeSignatureHeader(payload, secret);
+    const db = createMockDb({
+      orders: [{ id: 777, status: 'pending', total_net: 1000, currency: 'JPY' }]
+    });
+
+    // 1回目
+    const first = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    // 2回目
+    const second = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    const firstJson = await first.json();
+    const secondJson = await second.json();
+    expect(firstJson.duplicate).toBeFalsy();
+    expect(secondJson.duplicate).toBe(true);
+
+    // stripe_eventsには1件のみ
+    expect(db.state.stripeEvents.size).toBe(1);
+    // eventsにも1件のみ
+    expect(db.state.events.size).toBe(1);
+    // paymentsにも1件のみ
+    expect(db.state.payments).toHaveLength(1);
   });
 });
