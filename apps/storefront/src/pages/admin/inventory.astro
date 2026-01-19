@@ -1,0 +1,560 @@
+---
+export const prerender = false;
+
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import Container from '../../components/Container.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+
+type InventoryItem = {
+	variant_id: number;
+	variant_title: string;
+	product_id: number;
+	product_title: string;
+	sku: string | null;
+	on_hand: number;
+	threshold: number | null;
+	status: 'ok' | 'low' | 'out';
+};
+
+let inventory: InventoryItem[] = [];
+let error: string | null = null;
+let actionMessage: { type: 'success' | 'error'; text: string } | null = null;
+
+// Get filter from query params
+const statusFilter = Astro.url.searchParams.get('status') || '';
+const searchQuery = Astro.url.searchParams.get('q') || '';
+
+// Fetch inventory
+if (apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/admin/inventory`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+
+		if (!res.ok) {
+			const data = await res.json();
+			error = data.message || `API Error: ${res.status}`;
+		} else {
+			const data = await res.json();
+			inventory = data.inventory || [];
+		}
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load inventory. Please check your connection.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing in server environment.';
+}
+
+// Apply filters
+let filteredInventory = inventory;
+
+if (statusFilter) {
+	filteredInventory = filteredInventory.filter((item) => item.status === statusFilter);
+}
+
+if (searchQuery) {
+	const q = searchQuery.toLowerCase();
+	filteredInventory = filteredInventory.filter(
+		(item) =>
+			item.product_title.toLowerCase().includes(q) ||
+			item.variant_title.toLowerCase().includes(q) ||
+			(item.sku && item.sku.toLowerCase().includes(q))
+	);
+}
+
+// Counts for tabs
+const counts = {
+	all: inventory.length,
+	low: inventory.filter((i) => i.status === 'low').length,
+	out: inventory.filter((i) => i.status === 'out').length
+};
+
+const buildFilterUrl = (newStatus: string) => {
+	const params = new URLSearchParams();
+	if (newStatus) params.set('status', newStatus);
+	if (searchQuery) params.set('q', searchQuery);
+	const queryString = params.toString();
+	return queryString ? `?${queryString}` : '/admin/inventory';
+};
+
+const getStatusSeverity = (status: string) => {
+	switch (status) {
+		case 'ok':
+			return 'info';
+		case 'low':
+			return 'warn';
+		case 'out':
+			return 'critical';
+		default:
+			return 'secondary';
+	}
+};
+
+const getStatusLabel = (status: string) => {
+	switch (status) {
+		case 'ok':
+			return 'OK';
+		case 'low':
+			return 'Low';
+		case 'out':
+			return 'Out';
+		default:
+			return status;
+	}
+};
+---
+
+<Layout title="Inventory - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center justify-between">
+				<div class="flex items-center gap-4">
+					<h1 class="text-lg font-semibold text-[#1d1d1f]">Inventory</h1>
+					<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{inventory.length} variants</span>
+				</div>
+			</Container>
+		</header>
+
+		<Container class="mt-8">
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{actionMessage && (
+				<div
+					class={`mb-6 px-4 py-3 rounded-lg text-sm border ${
+						actionMessage.type === 'success'
+							? 'bg-green-50 text-green-700 border-green-200'
+							: 'bg-red-50 text-red-700 border-red-200'
+					}`}
+				>
+					{actionMessage.text}
+				</div>
+			)}
+
+			<!-- Filter Tabs -->
+			<div class="mb-6 flex gap-2 flex-wrap">
+				<a
+					href={buildFilterUrl('')}
+					class:list={[
+						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+						!statusFilter
+							? 'bg-[#1d1d1f] text-white'
+							: 'bg-white border border-gray-200 text-[#1d1d1f] hover:bg-gray-50'
+					]}
+				>
+					All ({counts.all})
+				</a>
+				<a
+					href={buildFilterUrl('low')}
+					class:list={[
+						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+						statusFilter === 'low'
+							? 'bg-yellow-500 text-white'
+							: 'bg-white border border-gray-200 text-[#1d1d1f] hover:bg-gray-50'
+					]}
+				>
+					Low Stock ({counts.low})
+				</a>
+				<a
+					href={buildFilterUrl('out')}
+					class:list={[
+						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+						statusFilter === 'out'
+							? 'bg-red-500 text-white'
+							: 'bg-white border border-gray-200 text-[#1d1d1f] hover:bg-gray-50'
+					]}
+				>
+					Out of Stock ({counts.out})
+				</a>
+			</div>
+
+			<!-- Search -->
+			<div class="mb-6">
+				<form method="get" class="relative max-w-md">
+					<input type="hidden" name="status" value={statusFilter} />
+					<input
+						type="search"
+						name="q"
+						value={searchQuery}
+						placeholder="Search by product, variant, or SKU..."
+						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+					/>
+					<svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+					</svg>
+				</form>
+			</div>
+
+			<!-- Inventory Table -->
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+				<div class="overflow-x-auto">
+					<table class="w-full text-left text-sm text-[#1d1d1f]">
+						<thead class="bg-gray-50 border-b border-gray-200">
+							<tr>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Product</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Variant</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">SKU</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">On Hand</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Threshold</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Actions</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100">
+							{filteredInventory.length > 0 ? (
+								filteredInventory.map((item) => (
+									<tr class="hover:bg-gray-50 transition-colors" data-variant-id={item.variant_id}>
+										<td class="px-6 py-4">
+											<a href={`/admin/products/${item.product_id}`} class="text-[#0071e3] hover:underline">
+												{item.product_title}
+											</a>
+										</td>
+										<td class="px-6 py-4 font-medium">{item.variant_title}</td>
+										<td class="px-6 py-4 text-[#86868b] font-mono text-xs">{item.sku || '-'}</td>
+										<td class="px-6 py-4 text-right tabular-nums font-semibold">{item.on_hand}</td>
+										<td class="px-6 py-4 text-right tabular-nums text-[#86868b]">{item.threshold ?? '-'}</td>
+										<td class="px-6 py-4">
+											<Badge severity={getStatusSeverity(item.status)}>{getStatusLabel(item.status)}</Badge>
+										</td>
+										<td class="px-6 py-4 text-right">
+											<div class="flex justify-end gap-2">
+												<button
+													type="button"
+													class="adjust-btn text-sm text-[#0071e3] hover:underline"
+													data-variant-id={item.variant_id}
+													data-variant-title={item.variant_title}
+													data-product-title={item.product_title}
+													data-on-hand={item.on_hand}
+												>
+													Adjust
+												</button>
+												<button
+													type="button"
+													class="threshold-btn text-sm text-[#86868b] hover:text-[#1d1d1f] hover:underline"
+													data-variant-id={item.variant_id}
+													data-variant-title={item.variant_title}
+													data-threshold={item.threshold ?? ''}
+												>
+													Threshold
+												</button>
+											</div>
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colspan="7" class="px-6 py-12 text-center text-[#86868b]">
+										{inventory.length === 0 ? 'No variants found. Add variants to products first.' : 'No items match your filters.'}
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</Container>
+
+		<!-- Adjustment Modal -->
+		<div id="adjust-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+				<div class="p-6 border-b border-gray-100">
+					<h3 class="text-lg font-semibold text-[#1d1d1f]">Adjust Stock</h3>
+					<p id="adjust-subtitle" class="text-sm text-[#86868b] mt-1"></p>
+				</div>
+				<form id="adjust-form" class="p-6 space-y-4">
+					<input type="hidden" id="adjust-variant-id" name="variant_id" />
+
+					<div>
+						<label class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Current Stock: <span id="adjust-current" class="font-semibold tabular-nums"></span>
+						</label>
+					</div>
+
+					<div>
+						<label for="adjust-type" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Adjustment Type <span class="text-red-500">*</span>
+						</label>
+						<select
+							id="adjust-type"
+							name="type"
+							required
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+						>
+							<option value="add">Add Stock</option>
+							<option value="remove">Remove Stock</option>
+						</select>
+					</div>
+
+					<div>
+						<label for="adjust-quantity" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Quantity <span class="text-red-500">*</span>
+						</label>
+						<input
+							type="number"
+							id="adjust-quantity"
+							name="quantity"
+							required
+							min="1"
+							step="1"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all tabular-nums"
+							placeholder="Enter quantity"
+						/>
+					</div>
+
+					<div>
+						<label for="adjust-reason" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Reason <span class="text-red-500">*</span>
+						</label>
+						<select
+							id="adjust-reason"
+							name="reason"
+							required
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+						>
+							<option value="restock">Restock</option>
+							<option value="adjustment">Adjustment</option>
+							<option value="damaged">Damaged</option>
+							<option value="return">Return</option>
+							<option value="sale">Sale</option>
+							<option value="other">Other</option>
+						</select>
+					</div>
+
+					<div id="adjust-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+
+					<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+						<button
+							type="button"
+							id="cancel-adjust-btn"
+							class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+						>
+							Cancel
+						</button>
+						<button
+							type="submit"
+							class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+						>
+							Save
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Threshold Modal -->
+		<div id="threshold-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+				<div class="p-6 border-b border-gray-100">
+					<h3 class="text-lg font-semibold text-[#1d1d1f]">Set Threshold</h3>
+					<p id="threshold-subtitle" class="text-sm text-[#86868b] mt-1"></p>
+				</div>
+				<form id="threshold-form" class="p-6 space-y-4">
+					<input type="hidden" id="threshold-variant-id" name="variant_id" />
+
+					<div>
+						<label for="threshold-value" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Low Stock Threshold
+						</label>
+						<input
+							type="number"
+							id="threshold-value"
+							name="threshold"
+							required
+							min="0"
+							step="1"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all tabular-nums"
+							placeholder="Enter threshold"
+						/>
+						<p class="text-xs text-[#86868b] mt-1">Alert when stock falls below this number.</p>
+					</div>
+
+					<div id="threshold-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+
+					<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+						<button
+							type="button"
+							id="cancel-threshold-btn"
+							class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+						>
+							Cancel
+						</button>
+						<button
+							type="submit"
+							class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+						>
+							Save
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<script define:vars={{ apiBase, apiKey }}>
+	// Adjust Modal
+	const adjustModal = document.getElementById('adjust-modal');
+	const adjustForm = document.getElementById('adjust-form');
+	const adjustSubtitle = document.getElementById('adjust-subtitle');
+	const adjustVariantId = document.getElementById('adjust-variant-id');
+	const adjustCurrent = document.getElementById('adjust-current');
+	const adjustType = document.getElementById('adjust-type');
+	const adjustQuantity = document.getElementById('adjust-quantity');
+	const adjustReason = document.getElementById('adjust-reason');
+	const adjustError = document.getElementById('adjust-error');
+	const cancelAdjustBtn = document.getElementById('cancel-adjust-btn');
+
+	// Threshold Modal
+	const thresholdModal = document.getElementById('threshold-modal');
+	const thresholdForm = document.getElementById('threshold-form');
+	const thresholdSubtitle = document.getElementById('threshold-subtitle');
+	const thresholdVariantId = document.getElementById('threshold-variant-id');
+	const thresholdValue = document.getElementById('threshold-value');
+	const thresholdError = document.getElementById('threshold-error');
+	const cancelThresholdBtn = document.getElementById('cancel-threshold-btn');
+
+	function showAdjustModal(variantId, variantTitle, productTitle, onHand) {
+		adjustVariantId.value = variantId;
+		adjustSubtitle.textContent = `${productTitle} - ${variantTitle}`;
+		adjustCurrent.textContent = onHand;
+		adjustQuantity.value = '';
+		adjustType.value = 'add';
+		adjustReason.value = 'restock';
+		adjustError.classList.add('hidden');
+		adjustModal.classList.remove('hidden');
+	}
+
+	function hideAdjustModal() {
+		adjustModal.classList.add('hidden');
+		adjustForm.reset();
+	}
+
+	function showThresholdModal(variantId, variantTitle, currentThreshold) {
+		thresholdVariantId.value = variantId;
+		thresholdSubtitle.textContent = variantTitle;
+		thresholdValue.value = currentThreshold || '';
+		thresholdError.classList.add('hidden');
+		thresholdModal.classList.remove('hidden');
+	}
+
+	function hideThresholdModal() {
+		thresholdModal.classList.add('hidden');
+		thresholdForm.reset();
+	}
+
+	function showError(errorEl, message) {
+		errorEl.textContent = message;
+		errorEl.classList.remove('hidden');
+	}
+
+	// Event listeners for Adjust buttons
+	document.querySelectorAll('.adjust-btn').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			showAdjustModal(
+				btn.dataset.variantId,
+				btn.dataset.variantTitle,
+				btn.dataset.productTitle,
+				btn.dataset.onHand
+			);
+		});
+	});
+
+	// Event listeners for Threshold buttons
+	document.querySelectorAll('.threshold-btn').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			showThresholdModal(btn.dataset.variantId, btn.dataset.variantTitle, btn.dataset.threshold);
+		});
+	});
+
+	cancelAdjustBtn?.addEventListener('click', hideAdjustModal);
+	cancelThresholdBtn?.addEventListener('click', hideThresholdModal);
+
+	adjustModal?.addEventListener('click', (e) => {
+		if (e.target === adjustModal) hideAdjustModal();
+	});
+
+	thresholdModal?.addEventListener('click', (e) => {
+		if (e.target === thresholdModal) hideThresholdModal();
+	});
+
+	// Adjust form submission
+	adjustForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+
+		const variantId = parseInt(adjustVariantId.value, 10);
+		const type = adjustType.value;
+		const quantity = parseInt(adjustQuantity.value, 10);
+		const reason = adjustReason.value;
+
+		if (isNaN(quantity) || quantity < 1) {
+			showError(adjustError, 'Please enter a valid quantity');
+			return;
+		}
+
+		const delta = type === 'add' ? quantity : -quantity;
+
+		try {
+			const res = await fetch(`${apiBase}/admin/inventory/movements`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({ variant_id: variantId, delta, reason })
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				showError(adjustError, data.message || 'Failed to record movement');
+				return;
+			}
+
+			location.reload();
+		} catch (err) {
+			showError(adjustError, 'An error occurred. Please try again.');
+		}
+	});
+
+	// Threshold form submission
+	thresholdForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+
+		const variantId = parseInt(thresholdVariantId.value, 10);
+		const threshold = parseInt(thresholdValue.value, 10);
+
+		if (isNaN(threshold) || threshold < 0) {
+			showError(thresholdError, 'Please enter a valid threshold (0 or greater)');
+			return;
+		}
+
+		try {
+			const res = await fetch(`${apiBase}/admin/inventory/thresholds/${variantId}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({ threshold })
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				showError(thresholdError, data.message || 'Failed to update threshold');
+				return;
+			}
+
+			location.reload();
+		} catch (err) {
+			showError(thresholdError, 'An error occurred. Please try again.');
+		}
+	});
+</script>
