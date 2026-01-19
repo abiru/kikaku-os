@@ -98,7 +98,7 @@ export const createVariantSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => v?.trim() || null),
-  options: z.record(z.string()).optional().nullable(),
+  options: z.record(z.string(), z.string()).optional().nullable(),
 });
 
 export const updateVariantSchema = createVariantSchema;

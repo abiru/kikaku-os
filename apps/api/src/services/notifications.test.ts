@@ -79,7 +79,7 @@ describe('buildSlackMessage', () => {
 describe('sendSlackNotification', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    global.fetch = vi.fn();
+    globalThis.fetch = vi.fn();
   });
 
   it('returns error when SLACK_WEBHOOK_URL is not configured', async () => {
@@ -91,7 +91,7 @@ describe('sendSlackNotification', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('SLACK_WEBHOOK_URL not configured');
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it('returns error when SLACK_WEBHOOK_URL is empty string', async () => {
@@ -110,7 +110,7 @@ describe('sendSlackNotification', () => {
     const env = { DB: mockDB, SLACK_WEBHOOK_URL: 'https://hooks.slack.com/test' };
     const payload = createMockPayload();
 
-    (global.fetch as any).mockResolvedValue({
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       status: 200
     });
@@ -118,7 +118,7 @@ describe('sendSlackNotification', () => {
     const result = await sendSlackNotification(env as any, payload);
 
     expect(result.success).toBe(true);
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(globalThis.fetch).toHaveBeenCalledWith(
       'https://hooks.slack.com/test',
       expect.objectContaining({
         method: 'POST',
@@ -137,7 +137,7 @@ describe('sendSlackNotification', () => {
     const env = { DB: mockDB, SLACK_WEBHOOK_URL: 'https://hooks.slack.com/test' };
     const payload = createMockPayload();
 
-    (global.fetch as any).mockResolvedValue({
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: false,
       status: 500,
       text: vi.fn().mockResolvedValue('Internal Server Error')
@@ -158,7 +158,7 @@ describe('sendSlackNotification', () => {
     const env = { DB: mockDB, SLACK_WEBHOOK_URL: 'https://hooks.slack.com/test' };
     const payload = createMockPayload();
 
-    (global.fetch as any).mockRejectedValue(new Error('Network error'));
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
 
     const result = await sendSlackNotification(env as any, payload);
 

@@ -281,7 +281,7 @@ const handleWebhook = async (c: Context<Env>) => {
   const secret = c.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) return jsonError(c, 'Stripe webhook secret not configured', 500);
 
-  const signature = c.req.header('stripe-signature');
+  const signature = c.req.header('stripe-signature') ?? null;
   const payload = await c.req.text();
   const valid = await verifyStripeSignature(payload, signature, secret, { toleranceSeconds: 300 });
   if (!valid) return jsonError(c, 'Invalid signature', 400);

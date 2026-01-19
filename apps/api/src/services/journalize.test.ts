@@ -4,10 +4,10 @@ import type { DailyReport } from './dailyReport';
 
 const createMockReport = (overrides?: Partial<DailyReport>): DailyReport => ({
   date: '2025-01-15',
-  orders: { total: 2, paid: 2, fulfilled: 1, partiallyRefunded: 0 },
+  orders: { count: 2, totalNet: 25000, totalFee: 750 },
   payments: { count: 2, totalAmount: 25000, totalFee: 750 },
   refunds: { count: 0, totalAmount: 0 },
-  anomalies: { level: 'ok', diff: 0 },
+  anomalies: { level: 'ok', diff: 0, message: '' },
   ...overrides
 });
 
