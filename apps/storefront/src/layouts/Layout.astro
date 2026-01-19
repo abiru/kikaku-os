@@ -133,8 +133,8 @@ const isAdmin = Astro.url.pathname.startsWith('/admin');
 				}
 			};
 
-			// Initial update
-			updateCartBadge();
+			// Update on page load (works with View Transitions)
+			document.addEventListener('astro:page-load', updateCartBadge);
 
 			// Subscribe to cart changes
 			$cartCount.subscribe(updateCartBadge);

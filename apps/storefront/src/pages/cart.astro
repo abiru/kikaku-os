@@ -188,18 +188,13 @@ import Layout from '../layouts/Layout.astro';
 		}
 	};
 
-	// Initialize cart
-	const init = () => {
+	// Initialize cart on page load (works with View Transitions)
+	document.addEventListener('astro:page-load', () => {
 		renderCart();
-		$cartItems.subscribe(() => {
-			renderCart();
-		});
-	};
+	});
 
-	// Ensure DOM is ready
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', init);
-	} else {
-		init();
-	}
+	// Re-render on cart changes
+	$cartItems.subscribe(() => {
+		renderCart();
+	});
 </script>
