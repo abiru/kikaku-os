@@ -69,9 +69,22 @@ const stockNote =
 						{product.description ?? 'Experience the next generation of LED technology.'}
 					</p>
 					
-					<div class="mt-10 mx-auto aspect-[16/9] max-w-5xl rounded-3xl bg-[#f5f5f7] flex items-center justify-center shadow-sm">
+					{product.image ? (
+					<img
+						src={product.image}
+						alt={product.title}
+						loading="eager"
+						class="mt-10 mx-auto aspect-[16/9] max-w-5xl rounded-3xl object-cover shadow-sm"
+						transition:name={`product-image-${product.id}`}
+					/>
+				) : (
+					<div
+						class="mt-10 mx-auto aspect-[16/9] max-w-5xl rounded-3xl bg-[#f5f5f7] flex items-center justify-center shadow-sm"
+						transition:name={`product-image-${product.id}`}
+					>
 						<span class="text-9xl font-bold text-gray-200 select-none">HERO</span>
 					</div>
+				)}
 				</Container>
 			</section>
 
@@ -142,7 +155,11 @@ const stockNote =
 						<div class="flex flex-col md:flex-row gap-12">
 							{/* Left: Product Recap */}
 							<div class="flex-1">
-								<div class="aspect-square w-full rounded-2xl bg-[#f5f5f7] mb-6"></div>
+								{product.image ? (
+									<img src={product.image} alt={product.title} class="aspect-square w-full rounded-2xl object-cover mb-6" />
+								) : (
+									<div class="aspect-square w-full rounded-2xl bg-[#f5f5f7] mb-6"></div>
+								)}
 								<h2 class="text-3xl font-semibold text-[#1d1d1f]">{product.title}</h2>
 								<p class="mt-2 text-xl text-[#1d1d1f]">{priceLabel}</p>
 							</div>
