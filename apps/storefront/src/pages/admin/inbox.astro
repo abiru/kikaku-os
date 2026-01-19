@@ -1,0 +1,156 @@
+---
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import Container from '../../components/Container.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+
+// Form Action Handling (SSR)
+let actionMessage = null;
+
+if (Astro.request.method === 'POST') {
+	try {
+		const formData = await Astro.request.formData();
+		const action = formData.get('action');
+		const id = formData.get('id');
+
+		if (apiKey && id && (action === 'approve' || action === 'reject')) {
+			const res = await fetch(`${apiBase}/inbox/${id}/${action}`, {
+				method: 'POST',
+				headers: { 'x-admin-key': apiKey }
+			});
+			if (!res.ok) throw new Error(`API Error: ${res.status}`);
+			actionMessage = { type: 'success', text: `Item ${action}ed successfully.` };
+		}
+	} catch (e) {
+		console.error(e);
+		actionMessage = { type: 'error', text: 'Failed to process action.' };
+	}
+}
+
+// Data Fetching
+let items: any[] = [];
+let error = null;
+
+if (apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/inbox?status=open&limit=50`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+		if (!res.ok) throw new Error(`API Error: ${res.status}`);
+		const data = await res.json();
+		items = data.items || [];
+	} catch (e) {
+		error = 'Failed to load inbox.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing.';
+}
+
+const parseBody = (body: string) => {
+	try {
+		// Attempt to parse if it looks like JSON
+		if (body.startsWith('{') || body.startsWith('[')) {
+			const json = JSON.parse(body);
+			return JSON.stringify(json, null, 2);
+		}
+		return body;
+	} catch {
+		return body;
+	}
+};
+---
+
+<Layout title="Inbox - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center justify-between">
+				<div class="flex items-center gap-4">
+					<h1 class="text-lg font-semibold text-[#1d1d1f]">Inbox</h1>
+					<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{items.length} pending</span>
+				</div>
+				<div class="flex items-center gap-3">
+					<Button href="/admin/products" size="sm" variant="secondary">
+						Products
+					</Button>
+				</div>
+			</Container>
+		</header>
+
+		<Container class="mt-8 max-w-4xl">
+			{actionMessage && (
+				<div class={`mb-6 px-4 py-3 rounded-lg text-sm border ${
+					actionMessage.type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+				}`}>
+					{actionMessage.text}
+				</div>
+			)}
+
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{items.length > 0 ? (
+				<div class="space-y-4">
+					{items.map((item) => (
+						<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200/60 flex flex-col sm:flex-row gap-6">
+							<div class="flex-1 space-y-3">
+								<div class="flex items-center gap-3">
+									<Badge severity={item.severity === 'critical' ? 'critical' : item.severity === 'warning' ? 'warn' : 'info'}>
+										{item.severity}
+									</Badge>
+									<h2 class="text-base font-semibold text-[#1d1d1f]">{item.title}</h2>
+									<span class="text-xs text-[#86868b] ml-auto sm:ml-0">
+										{new Date(item.created_at).toLocaleString()}
+									</span>
+								</div>
+								
+								<div class="bg-gray-50 rounded-lg p-3 text-sm font-mono text-[#424245] overflow-x-auto">
+									<pre class="whitespace-pre-wrap">{parseBody(item.body)}</pre>
+								</div>
+							</div>
+
+							<div class="flex sm:flex-col gap-3 justify-center sm:min-w-[120px]">
+								<form method="POST" class="w-full">
+									<input type="hidden" name="id" value={item.id} />
+									<input type="hidden" name="action" value="approve" />
+									<button
+										type="submit"
+										class="w-full rounded-lg bg-[#f2fcf5] text-[#1d1d1f] border border-[#d6f2de] px-4 py-2 text-sm font-medium hover:bg-[#e6f7eb] transition-colors"
+									>
+										Approve
+									</button>
+								</form>
+								<form method="POST" class="w-full">
+									<input type="hidden" name="id" value={item.id} />
+									<input type="hidden" name="action" value="reject" />
+									<button
+										type="submit"
+										class="w-full rounded-lg bg-white text-[#86868b] border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-50 hover:text-[#1d1d1f] transition-colors"
+									>
+										Dismiss
+									</button>
+								</form>
+							</div>
+						</div>
+					))}
+				</div>
+			) : (
+				<div class="py-20">
+					<EmptyState
+						title="All caught up"
+						description="No pending items in your inbox."
+						ctaLabel="Refresh"
+						ctaHref="/admin/inbox"
+					/>
+				</div>
+			)}
+		</Container>
+	</div>
+</Layout>
