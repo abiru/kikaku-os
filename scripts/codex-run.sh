@@ -122,7 +122,6 @@ compute_scopes() {
   case "$area" in
   storefront) scopes+=(apps/storefront) ;;
   api) scopes+=(apps/api) ;;
-  admin) scopes+=(apps/admin) ;;
   infra) scopes+=(infra scripts prompts) ;;
   docs) scopes+=(docs) ;;
   tests) scopes+=(apps) ;;
@@ -215,7 +214,7 @@ fi
 if [[ -z "${TITLE}" ]]; then
   TITLE_PROMPT=$'以下の情報から、この作業を表す短いタイトルを1行で作ってください。\n\
 - 形式: "<area>: <summary>"\n\
-- area は storefront|api|admin|infra|docs|tests のどれか\n\
+- area は storefront|api|infra|docs|tests のどれか\n\
 - summary は英小文字中心、5〜8語以内、盛らない（事実ベース）\n\
 - 出力はタイトル1行のみ（説明禁止）\n\
 \n\

@@ -19,14 +19,12 @@ Shopify Premium相当以上の「マーケ自動化」「高度検索」「自�
   - Cloudflare Workers + Hono（API）
   - Cloudflare D1（DB）
   - Cloudflare R2（証跡/生成物）
-  - Admin: React + Refine + Tailwind（Vite）
-  - Storefront: Astro（Phase 1で導入）
+  - Storefront + Admin: Astro SSR
 - AIは不正確になり得る前提
   - 最終決裁は人間（Inbox / Approve / Reject）
   - AIの入力/出力/根拠は証跡化（R2）
 - 変更は必ずテストを追加し、実行して担保する
 - npm/Node は最新版運用（ただし依存整合性を最優先）
-- 依存は「同一メジャーで揃える」を原則（特に Refine 系）
 
 ---
 
@@ -60,8 +58,7 @@ Shopify Premium相当以上の「マーケ自動化」「高度検索」「自�
 ## 3. To-be アーキテクチャ（全体像）
 ### 3.1 Apps
 - apps/api（Workers + Hono）
-- apps/admin（Refine + Tailwind）
-- apps/storefront（Astro）※Phase 1で追加
+- apps/storefront（Astro SSR - ストア + 管理画面）
 
 ### 3.2 データの流れ
 1) Stripe Webhook / 同期で orders/payments/refunds をD1へ反映  
