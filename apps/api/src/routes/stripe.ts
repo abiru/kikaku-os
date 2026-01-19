@@ -260,10 +260,11 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
           `SELECT id, total_net, status FROM orders WHERE id=?`
         ).bind(resolvedOrderId).first<{ id: number; total_net: number; status: string }>();
 
-        if (orderRow?.id && orderRow.status === 'paid' && amount >= (orderRow.total_net || 0)) {
+        if (orderRow?.id && orderRow.status === 'paid') {
+          const newStatus = amount >= (orderRow.total_net || 0) ? 'refunded' : 'partially_refunded';
           await env.DB.prepare(
-            `UPDATE orders SET status='refunded', updated_at=datetime('now') WHERE id=?`
-          ).bind(orderRow.id).run();
+            `UPDATE orders SET status=?, updated_at=datetime('now') WHERE id=?`
+          ).bind(newStatus, orderRow.id).run();
         }
       }
     }
