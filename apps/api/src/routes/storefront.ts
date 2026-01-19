@@ -1,6 +1,12 @@
 import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
 import type { Env } from '../env';
 import { jsonOk } from '../lib/http';
+
+const storeProductsQuerySchema = z.object({
+  q: z.string().max(100).optional().default('')
+});
 
 const storefront = new Hono<Env>();
 
@@ -83,10 +89,26 @@ const baseQuery = `
   JOIN prices pr ON pr.variant_id = v.id
 `;
 
-storefront.get('/products', async (c) => {
-  const res = await c.env.DB.prepare(`${baseQuery} ORDER BY p.id, v.id, pr.id DESC`).all<StorefrontRow>();
+storefront.get('/products', zValidator('query', storeProductsQuerySchema), async (c) => {
+  const { q } = c.req.valid('query');
+
+  let sql = baseQuery;
+  const bindings: string[] = [];
+
+  if (q) {
+    sql += ` WHERE (p.title LIKE ? OR p.description LIKE ?)`;
+    bindings.push(`%${q}%`, `%${q}%`);
+  }
+
+  sql += ` ORDER BY p.id, v.id, pr.id DESC`;
+
+  const stmt = bindings.length > 0
+    ? c.env.DB.prepare(sql).bind(...bindings)
+    : c.env.DB.prepare(sql);
+
+  const res = await stmt.all<StorefrontRow>();
   const products = rowsToProducts(res.results || []);
-  return jsonOk(c, { products });
+  return jsonOk(c, { products, query: q || null });
 });
 
 storefront.get('/products/:id', async (c) => {

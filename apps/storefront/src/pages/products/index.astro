@@ -19,8 +19,19 @@ const skeletonCards = Array.from({ length: 6 });
 
 		<section class="py-12 bg-[#f5f5f7]">
 			<Container>
+				<div id="search-info" class="hidden mb-6">
+					<div class="flex items-center justify-between">
+						<p class="text-gray-600">
+							Showing results for "<span id="search-term"></span>"
+						</p>
+						<a href="/products" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+							Clear search
+						</a>
+					</div>
+				</div>
+
 				<div class="flex items-center justify-between mb-8">
-					<h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">The latest.</h2>
+					<h2 id="section-title" class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">The latest.</h2>
 					<Badge severity="new">New Arrivals</Badge>
 				</div>
 
@@ -53,9 +64,9 @@ const skeletonCards = Array.from({ length: 6 });
 					<div id="product-empty" class="hidden py-20">
 						<EmptyState
 							title="No products found"
-							description="We are updating our inventory."
-							ctaLabel="Check back later"
-							ctaHref="/"
+							description="Try a different search term or browse all products."
+							ctaLabel="View all products"
+							ctaHref="/products"
 						/>
 					</div>
 
@@ -162,8 +173,26 @@ const skeletonCards = Array.from({ length: 6 });
 			const apiBase = getApiBase();
 			setState('loading');
 
+			// Get search query from URL
+			const urlParams = new URLSearchParams(window.location.search);
+			const searchQuery = urlParams.get('q') || '';
+
+			// Update UI for search
+			const searchInfo = document.getElementById('search-info');
+			const searchTerm = document.getElementById('search-term');
+			const sectionTitle = document.getElementById('section-title');
+
+			if (searchQuery && searchInfo && searchTerm && sectionTitle) {
+				searchTerm.textContent = searchQuery;
+				searchInfo.classList.remove('hidden');
+				sectionTitle.textContent = 'Search results';
+			}
+
 			try {
-				const data = await fetchJson(buildStoreUrl('/products', apiBase));
+				const url = searchQuery
+					? buildStoreUrl(`/products?q=${encodeURIComponent(searchQuery)}`, apiBase)
+					: buildStoreUrl('/products', apiBase);
+				const data = await fetchJson(url);
 				const products = Array.isArray(data?.products) ? data.products.filter(isProduct) : [];
 
 				if (!products.length) {
