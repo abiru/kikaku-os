@@ -24,7 +24,7 @@ const createMockDB = (existingCount: number = 0) => {
           return null;
         }),
         run: vi.fn(async () => {
-          if (sql.includes('INSERT INTO ledger_entries')) {
+          if (sql.includes('INSERT') && sql.includes('ledger_entries')) {
             insertedEntries.push({
               ref_type: args[0],
               ref_id: args[1],
@@ -34,7 +34,7 @@ const createMockDB = (existingCount: number = 0) => {
               memo: args[5]
             });
           }
-          return { success: true };
+          return { success: true, meta: { changes: 1 } };
         })
       }))
     })),
@@ -107,7 +107,7 @@ describe('journalizeDailyClose', () => {
               if (sql.includes('DELETE FROM ledger_entries')) {
                 deleteCalled.value = true;
               }
-              return { success: true };
+              return { success: true, meta: { changes: 1 } };
             })
           }))
         }))
