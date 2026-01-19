@@ -1,0 +1,205 @@
+---
+export const prerender = false;
+
+import Button from '../../../components/Button.astro';
+import Container from '../../../components/Container.astro';
+import Layout from '../../../layouts/Layout.astro';
+import { getApiBase } from '../../../lib/api';
+
+const { id } = Astro.params;
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+
+type Product = {
+	id: number;
+	title: string;
+	description: string | null;
+	metadata: string | null;
+	status: string | null;
+	created_at: string;
+	updated_at: string;
+};
+
+let product: Product | null = null;
+let error: string | null = null;
+let successMessage: string | null = null;
+
+// Handle POST - Update product
+if (Astro.request.method === 'POST' && apiKey) {
+	try {
+		const formData = await Astro.request.formData();
+		const title = formData.get('title')?.toString().trim() || '';
+		const description = formData.get('description')?.toString().trim() || '';
+		const status = formData.get('status')?.toString() || 'active';
+
+		if (!title) {
+			error = 'Title is required';
+		} else {
+			const res = await fetch(`${apiBase}/admin/products/${id}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({ title, description, status })
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				error = data.message || 'Failed to update product';
+			} else {
+				product = data.product;
+				successMessage = 'Product updated successfully';
+			}
+		}
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to update product. Please check your connection.';
+	}
+}
+
+// Fetch product data (if not already set from POST)
+if (!product && apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/admin/products/${id}`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+
+		if (!res.ok) {
+			if (res.status === 404) {
+				error = 'Product not found';
+			} else {
+				const data = await res.json();
+				error = data.message || `API Error: ${res.status}`;
+			}
+		} else {
+			const data = await res.json();
+			product = data.product;
+		}
+	} catch (e) {
+		console.error(e);
+		error = error || 'Failed to load product. Please check your connection.';
+	}
+} else if (!apiKey) {
+	error = 'ADMIN_API_KEY is missing in server environment';
+}
+
+const formatDate = (dateStr: string | null) => {
+	if (!dateStr) return '-';
+	return new Date(dateStr).toLocaleString('ja-JP', {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit'
+	});
+};
+---
+
+<Layout title={product ? `${product.title} - Admin` : 'Product - Admin'}>
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center gap-4">
+				<a href="/admin/products" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+					</svg>
+					Products
+				</a>
+				<h1 class="text-lg font-semibold text-[#1d1d1f]">
+					{product ? `Edit: ${product.title}` : 'Product'}
+				</h1>
+			</Container>
+		</header>
+
+		<Container class="mt-8 max-w-2xl mx-auto">
+			{successMessage && (
+				<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
+					{successMessage}
+				</div>
+			)}
+
+			{error && !product && (
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+					<div class="text-red-600 mb-4">{error}</div>
+					<Button href="/admin/products" variant="secondary" size="sm">
+						Back to Products
+					</Button>
+				</div>
+			)}
+
+			{error && product && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{product && (
+				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+					<div>
+						<label for="title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Title <span class="text-red-500">*</span>
+						</label>
+						<input
+							type="text"
+							id="title"
+							name="title"
+							required
+							value={product.title}
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						/>
+					</div>
+
+					<div>
+						<label for="description" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Description
+						</label>
+						<textarea
+							id="description"
+							name="description"
+							rows="4"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+						>{product.description || ''}</textarea>
+					</div>
+
+					<div>
+						<label for="status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Status
+						</label>
+						<select
+							id="status"
+							name="status"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+						>
+							<option value="active" selected={product.status === 'active'}>Active</option>
+							<option value="draft" selected={product.status === 'draft'}>Draft</option>
+						</select>
+					</div>
+
+					<div class="pt-4 border-t border-gray-100">
+						<dl class="grid grid-cols-2 gap-4 text-sm">
+							<div>
+								<dt class="text-[#86868b]">Created</dt>
+								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(product.created_at)}</dd>
+							</div>
+							<div>
+								<dt class="text-[#86868b]">Updated</dt>
+								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(product.updated_at)}</dd>
+							</div>
+						</dl>
+					</div>
+
+					<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+						<Button href="/admin/products" variant="secondary" size="sm">
+							Back
+						</Button>
+						<Button type="submit" variant="primary" size="sm">
+							Save Changes
+						</Button>
+					</div>
+				</form>
+			)}
+		</Container>
+	</div>
+</Layout>
