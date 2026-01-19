@@ -45,7 +45,17 @@ const stockNote =
 
 <Layout title={product ? `${product.title} - Led Kikaku` : 'Product Detail'}>
 	{loadState === 'ready' && product ? (
-		<div id="product-page" data-variant-id={variantId ?? ''} class="bg-white min-h-screen pb-20" transition:animate="fade">
+		<div
+			id="product-page"
+			data-variant-id={variantId ?? ''}
+			data-product-id={product.id}
+			data-product-title={product.title}
+			data-variant-title={variant?.title || 'Default'}
+			data-price={variant?.price?.amount || 0}
+			data-currency={variant?.price?.currency || 'JPY'}
+			class="bg-white min-h-screen pb-20"
+			transition:animate="fade"
+		>
 			
 			{/* Sticky Product Header (Apple Style) */}
 			<div id="sticky-header" class="sticky top-[48px] z-40 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md transition-transform duration-300 -translate-y-full opacity-0">
@@ -234,7 +244,7 @@ const stockNote =
 	)}
 
 	<script>
-		import { createCheckoutSession } from '../../lib/api';
+		import { addToCart } from '../../lib/cart';
 
 		const stickyHeader = document.getElementById('sticky-header');
 		const buySection = document.getElementById('buy-section');
@@ -242,19 +252,6 @@ const stockNote =
 
 		// 1. Sticky Header Logic
 		if (stickyHeader && buySection) {
-			const observer = new IntersectionObserver(
-				([entry]) => {
-					// When buy section is visible, hide sticky header
-					if (entry.isIntersecting) {
-						stickyHeader.classList.add('-translate-y-full', 'opacity-0');
-					} else {
-						// Only show if we've scrolled PAST the buy section? No, show when we scroll past Hero.
-						// Let's simpler logic: Show when scrolled down 200px.
-					}
-				},
-				{ threshold: 0.1 }
-			);
-			// Actually simpler scroll listener for Apple feel
 			window.addEventListener('scroll', () => {
 				const scrollY = window.scrollY;
 				if (scrollY > 600) {
@@ -263,35 +260,39 @@ const stockNote =
 					stickyHeader.classList.add('-translate-y-full', 'opacity-0');
 				}
 			});
-			
+
 			// Scroll to buy section on click
 			stickyBuyBtn?.addEventListener('click', () => {
 				buySection.scrollIntoView({ behavior: 'smooth' });
 			});
 		}
 
-		// 2. Checkout Logic (Existing logic adapted)
+		// 2. Add to Cart Logic
 		const page = document.getElementById('product-page');
 		if (page) {
 			const variantId = page.dataset.variantId ? Number(page.dataset.variantId) : null;
+			const productId = page.dataset.productId ? Number(page.dataset.productId) : null;
+			const productTitle = page.dataset.productTitle || '';
+			const variantTitle = page.dataset.variantTitle || 'Default';
+			const price = page.dataset.price ? Number(page.dataset.price) : 0;
+			const currency = page.dataset.currency || 'JPY';
+
 			const buyButton = document.getElementById('buy-button');
 			const buyLabel = document.getElementById('buy-label');
 			const buySpinner = document.getElementById('buy-spinner');
-			const qtyInput = document.getElementById('qty-input');
-			const emailInput = document.getElementById('email-input');
+			const qtyInput = document.getElementById('qty-input') as HTMLSelectElement;
 			const errorWrap = document.getElementById('checkout-error');
 			const errorMessage = document.getElementById('checkout-error-message');
 
-			let isSubmitting = false;
-
-			const setLoading = (loading) => {
-				if (!buyButton || !buyLabel || !buySpinner) return;
-				buyButton.disabled = loading || !variantId;
-				buyLabel.textContent = loading ? 'Processing...' : 'Add to Bag';
-				buySpinner.classList.toggle('hidden', !loading);
+			const showSuccess = () => {
+				if (!buyLabel) return;
+				buyLabel.textContent = 'Added to cart!';
+				setTimeout(() => {
+					buyLabel.textContent = 'Add to Bag';
+				}, 2000);
 			};
 
-			const showError = (message) => {
+			const showError = (message: string) => {
 				if (!errorWrap || !errorMessage) return;
 				errorMessage.textContent = message;
 				errorWrap.classList.remove('hidden');
@@ -303,27 +304,24 @@ const stockNote =
 				errorWrap.classList.add('hidden');
 			};
 
-			if (buyButton && variantId) {
-				buyButton.addEventListener('click', async () => {
-					if (isSubmitting) return;
+			if (buyButton && variantId && productId) {
+				buyButton.addEventListener('click', () => {
 					clearError();
-					isSubmitting = true;
-					setLoading(true);
 
 					const quantity = Number(qtyInput?.value || 1);
-					const email = emailInput?.value?.trim();
 
 					try {
-						const session = await createCheckoutSession({
+						addToCart({
 							variantId,
-							quantity,
-							email: email || undefined
-						});
-						window.location.href = session.url;
+							productId,
+							title: productTitle,
+							variantTitle,
+							price,
+							currency
+						}, quantity);
+						showSuccess();
 					} catch (error) {
-						showError(error instanceof Error ? error.message : 'Checkout failed.');
-						isSubmitting = false;
-						setLoading(false);
+						showError(error instanceof Error ? error.message : 'Failed to add to cart.');
 					}
 				});
 			}
