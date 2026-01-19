@@ -26,6 +26,7 @@ import { upsertDocument } from './services/documents';
 import { journalizeDailyClose } from './services/journalize';
 import { enqueueDailyCloseAnomaly } from './services/inboxAnomalies';
 import { runAllAnomalyChecks } from './services/anomalyRules';
+import { startDailyCloseRun, completeDailyCloseRun } from './services/dailyCloseRuns';
 
 const app = new Hono<Env>();
 
@@ -103,28 +104,49 @@ app.get('/r2', async (c) => {
 const buildJstYesterday = () => jstYesterdayStringFromMs();
 
 const runDailyCloseArtifacts = async (env: Env['Bindings'], date: string) => {
-  const report = await generateDailyReport(env, date);
-  const evidence = await generateStripeEvidence(env, date);
-  const html = renderDailyCloseHtml(report, evidence);
+  const runId = await startDailyCloseRun(env, date, false);
 
-  const baseKey = `daily-close/${date}`;
-  const reportKey = `${baseKey}/report.json`;
-  const evidenceKey = `${baseKey}/stripe-evidence.json`;
-  const htmlKey = `${baseKey}/report.html`;
+  try {
+    const report = await generateDailyReport(env, date);
+    const evidence = await generateStripeEvidence(env, date);
+    const html = renderDailyCloseHtml(report, evidence);
 
-  await putJson(env.R2, reportKey, report);
-  await putJson(env.R2, evidenceKey, evidence);
-  await putText(env.R2, htmlKey, html, 'text/html; charset=utf-8');
+    const baseKey = `daily-close/${date}`;
+    const reportKey = `${baseKey}/report.json`;
+    const evidenceKey = `${baseKey}/stripe-evidence.json`;
+    const htmlKey = `${baseKey}/report.html`;
 
-  await upsertDocument(env, 'daily_close', date, reportKey, 'application/json');
-  await upsertDocument(env, 'daily_close', date, evidenceKey, 'application/json');
-  await upsertDocument(env, 'daily_close', date, htmlKey, 'text/html');
+    await putJson(env.R2, reportKey, report);
+    await putJson(env.R2, evidenceKey, evidence);
+    await putText(env.R2, htmlKey, html, 'text/html; charset=utf-8');
 
-  await journalizeDailyClose(env, date, report);
-  await enqueueDailyCloseAnomaly(env, report, {
-    reportKey,
-    htmlKey
-  });
+    await upsertDocument(env, 'daily_close', date, reportKey, 'application/json');
+    await upsertDocument(env, 'daily_close', date, evidenceKey, 'application/json');
+    await upsertDocument(env, 'daily_close', date, htmlKey, 'text/html');
+
+    const journalResult = await journalizeDailyClose(env, date, report);
+    const anomalyCreated = await enqueueDailyCloseAnomaly(env, report, {
+      reportKey,
+      htmlKey
+    });
+
+    await completeDailyCloseRun(env, runId, {
+      status: 'success',
+      artifactsGenerated: 3,
+      ledgerEntriesCreated: journalResult.entriesCreated,
+      anomalyDetected: anomalyCreated
+    });
+
+    console.log(`Daily close completed for ${date}: runId=${runId}, ledgerEntries=${journalResult.entriesCreated}`);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    await completeDailyCloseRun(env, runId, {
+      status: 'failed',
+      errorMessage
+    });
+    console.error(`Daily close failed for ${date}: runId=${runId}`, err);
+    throw err;
+  }
 };
 
 const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
