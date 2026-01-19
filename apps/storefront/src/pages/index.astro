@@ -6,24 +6,24 @@ import Layout from '../layouts/Layout.astro';
 <Layout title="Led Kikaku - Pro Growth">
 	<div class="bg-[#f5f5f7]">
 		{/* Hero Section - Apple Style Jumbotron */}
-		<section class="relative w-full pt-16 pb-20 text-center lg:pt-32 lg:pb-32">
+		<section class="relative w-full pt-20 pb-24 text-center lg:pt-40 lg:pb-40">
 			<div class="mx-auto max-w-[980px] px-6">
 				<h1 class="text-5xl font-semibold tracking-tight text-[#1d1d1f] md:text-7xl">
 					Plant cultivation,<br />
-					<span class="text-[#6e6e73]">more freely.</span>
+					<span class="text-[#6e6e73]">illuminated.</span>
 				</h1>
-				<p class="mt-6 text-xl font-medium text-[#1d1d1f] md:text-2xl">
-					Beyond the limits of natural light. Next-generation LED lights.
+				<p class="mx-auto mt-6 max-w-2xl text-xl font-medium text-[#1d1d1f] md:text-2xl">
+					Professional-grade LED grow lights engineered for every stage of plant development.
 				</p>
 				<div class="mt-10 flex items-center justify-center gap-4">
 					<Button href="/products" size="lg">Buy</Button>
 					<Button href="/products" variant="link" size="lg">Learn more ></Button>
 				</div>
 			</div>
-			
-			{/* Hero Image Placeholder - Mimicking a high-res product shot */}
-			<div class="mt-14 w-full px-4 md:px-0">
-				<div class="mx-auto aspect-[16/9] max-w-[1200px] rounded-3xl bg-white shadow-2xl shadow-black/5 ring-1 ring-black/5 flex items-center justify-center overflow-hidden">
+
+			{/* Hero Image - High-res product showcase */}
+			<div class="mt-16 w-full px-4 md:px-0">
+				<div class="mx-auto aspect-[16/9] max-w-[1200px] overflow-hidden rounded-3xl bg-white shadow-2xl shadow-black/10 ring-1 ring-black/5 flex items-center justify-center">
 					<div class="text-center">
 						<div class="text-9xl font-bold text-gray-100 select-none">SF1000</div>
 					</div>
@@ -34,12 +34,45 @@ import Layout from '../layouts/Layout.astro';
 		{/* Secondary Feature Section */}
 		<section class="py-24 bg-white">
 			<div class="mx-auto max-w-[980px] px-6 text-center">
-				<h2 class="text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
+				<span class="text-sm font-semibold uppercase tracking-wider text-[#bf4800]">New</span>
+				<h2 class="mt-2 text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
 					Pro-grade spectrum.
 				</h2>
 				<p class="mt-4 text-lg font-medium text-[#86868b] md:text-xl">
-					Optimized for every stage of plant growth.
+					Full-spectrum light optimized for every growth phase.
 				</p>
+				<div class="mt-6">
+					<Button href="/products" variant="link" size="lg">Explore all products ></Button>
+				</div>
+			</div>
+		</section>
+
+		{/* Feature Grid Section */}
+		<section class="py-24 bg-[#f5f5f7]">
+			<div class="mx-auto max-w-6xl px-6">
+				<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+					{/* Feature Card 1 - Efficient */}
+					<div class="rounded-3xl bg-white p-12 shadow-sm transition-shadow duration-300 hover:shadow-lg">
+						<h3 class="mb-3 text-3xl font-semibold text-[#1d1d1f]">Efficient.</h3>
+						<p class="text-lg text-[#86868b]">Up to 50% less energy consumption compared to traditional grow lights.</p>
+						<div class="mt-8 aspect-video overflow-hidden rounded-2xl bg-[#f5f5f7] flex items-center justify-center">
+							<svg class="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+							</svg>
+						</div>
+					</div>
+
+					{/* Feature Card 2 - Durable */}
+					<div class="rounded-3xl bg-white p-12 shadow-sm transition-shadow duration-300 hover:shadow-lg">
+						<h3 class="mb-3 text-3xl font-semibold text-[#1d1d1f]">Durable.</h3>
+						<p class="text-lg text-[#86868b]">50,000+ hours of rated lifespan with passive cooling design.</p>
+						<div class="mt-8 aspect-video overflow-hidden rounded-2xl bg-[#f5f5f7] flex items-center justify-center">
+							<svg class="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+							</svg>
+						</div>
+					</div>
+				</div>
 			</div>
 		</section>
 	</div>

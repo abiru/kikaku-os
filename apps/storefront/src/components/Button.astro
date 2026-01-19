@@ -9,9 +9,9 @@ const {
 	...rest
 } = Astro.props;
 
-// Apple-style base: Pill shape, smooth font, refined transitions
+// Apple-style base: Pill shape, smooth font, refined transitions with subtle scale
 const base =
-	'inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+	'inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
 const variants = {
 	// Apple Blue for primary actions

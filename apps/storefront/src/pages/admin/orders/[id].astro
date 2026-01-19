@@ -1,0 +1,249 @@
+---
+export const prerender = false;
+
+import Badge from '../../../components/Badge.astro';
+import Button from '../../../components/Button.astro';
+import Container from '../../../components/Container.astro';
+import Layout from '../../../layouts/Layout.astro';
+import { getApiBase } from '../../../lib/api';
+
+const { id } = Astro.params;
+const apiBase = getApiBase();
+
+let order: any = null;
+let payments: any[] = [];
+let refunds: any[] = [];
+let stripeEvents: any[] = [];
+let error: string | null = null;
+
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const res = await fetch(`${apiBase}/admin/orders/${id}`, {
+			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+		});
+
+		if (!res.ok) {
+			if (res.status === 404) {
+				error = 'Order not found.';
+			} else {
+				throw new Error(`API Error: ${res.status}`);
+			}
+		} else {
+			const data = await res.json();
+			order = data.order;
+			payments = data.payments || [];
+			refunds = data.refunds || [];
+			stripeEvents = data.stripeEvents || [];
+		}
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load order details.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing.';
+}
+
+const formatCurrency = (amount: number, currency: string) => {
+	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);
+};
+
+const formatDate = (dateStr: string | null) => {
+	if (!dateStr) return '-';
+	const d = new Date(dateStr);
+	return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+};
+
+const getStatusSeverity = (status: string) => {
+	switch (status) {
+		case 'paid':
+		case 'completed':
+		case 'succeeded':
+			return 'info';
+		case 'pending':
+			return 'warn';
+		case 'failed':
+		case 'refunded':
+			return 'critical';
+		default:
+			return 'secondary';
+	}
+};
+---
+
+<Layout title={`Order #${id} - Admin`}>
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center justify-between">
+				<div class="flex items-center gap-4">
+					<a href="/admin/orders" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+						</svg>
+						Orders
+					</a>
+					<h1 class="text-lg font-semibold text-[#1d1d1f]">Order #{id}</h1>
+					{order && <Badge severity={getStatusSeverity(order.status)}>{order.status}</Badge>}
+				</div>
+			</Container>
+		</header>
+
+		<Container class="mt-8">
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{order && (
+				<div class="space-y-6">
+					{/* Order Summary */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<h2 class="text-base font-semibold text-[#1d1d1f] mb-4">Order Summary</h2>
+						<dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+							<div>
+								<dt class="text-[#86868b]">Total</dt>
+								<dd class="font-semibold text-[#1d1d1f] text-lg">{formatCurrency(order.total_net, order.currency)}</dd>
+							</div>
+							<div>
+								<dt class="text-[#86868b]">Customer</dt>
+								<dd class="text-[#1d1d1f]">{order.customer_email || 'Guest'}</dd>
+							</div>
+							<div>
+								<dt class="text-[#86868b]">Created</dt>
+								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(order.created_at)}</dd>
+							</div>
+							<div>
+								<dt class="text-[#86868b]">Paid At</dt>
+								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(order.paid_at)}</dd>
+							</div>
+						</dl>
+
+						{(order.provider_checkout_session_id || order.provider_payment_intent_id) && (
+							<div class="mt-4 pt-4 border-t border-gray-100">
+								<h3 class="text-xs font-medium text-[#86868b] uppercase tracking-wider mb-2">Stripe IDs</h3>
+								<div class="text-xs text-[#1d1d1f] font-mono space-y-1">
+									{order.provider_checkout_session_id && (
+										<div>Checkout: <span class="bg-gray-100 px-1 py-0.5 rounded">{order.provider_checkout_session_id}</span></div>
+									)}
+									{order.provider_payment_intent_id && (
+										<div>PaymentIntent: <span class="bg-gray-100 px-1 py-0.5 rounded">{order.provider_payment_intent_id}</span></div>
+									)}
+								</div>
+							</div>
+						)}
+					</div>
+
+					{/* Payments */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+							<h2 class="text-base font-semibold text-[#1d1d1f]">Payments</h2>
+							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
+						</div>
+						<div class="overflow-x-auto">
+							<table class="w-full text-left text-sm text-[#1d1d1f]">
+								<thead class="bg-gray-50 border-b border-gray-200">
+									<tr>
+										<th class="px-6 py-3 font-medium text-[#86868b]">ID</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Amount</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Provider ID</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Date</th>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-gray-100">
+									{payments.length > 0 ? (
+										payments.map((p) => (
+											<tr class="hover:bg-gray-50 transition-colors">
+												<td class="px-6 py-4 font-medium">{p.id}</td>
+												<td class="px-6 py-4"><Badge severity={getStatusSeverity(p.status)}>{p.status}</Badge></td>
+												<td class="px-6 py-4 tabular-nums">{formatCurrency(p.amount, p.currency)}</td>
+												<td class="px-6 py-4 font-mono text-xs">{p.provider_payment_id || '-'}</td>
+												<td class="px-6 py-4 text-[#86868b] tabular-nums">{formatDate(p.created_at)}</td>
+											</tr>
+										))
+									) : (
+										<tr><td colspan="5" class="px-6 py-8 text-center text-[#86868b]">No payments</td></tr>
+									)}
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					{/* Refunds */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+							<h2 class="text-base font-semibold text-[#1d1d1f]">Refunds</h2>
+							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
+						</div>
+						<div class="overflow-x-auto">
+							<table class="w-full text-left text-sm text-[#1d1d1f]">
+								<thead class="bg-gray-50 border-b border-gray-200">
+									<tr>
+										<th class="px-6 py-3 font-medium text-[#86868b]">ID</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Amount</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Provider ID</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Reason</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Date</th>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-gray-100">
+									{refunds.length > 0 ? (
+										refunds.map((r) => (
+											<tr class="hover:bg-gray-50 transition-colors">
+												<td class="px-6 py-4 font-medium">{r.id}</td>
+												<td class="px-6 py-4"><Badge severity={getStatusSeverity(r.status)}>{r.status}</Badge></td>
+												<td class="px-6 py-4 tabular-nums">{formatCurrency(r.amount, r.currency)}</td>
+												<td class="px-6 py-4 font-mono text-xs">{r.provider_refund_id || '-'}</td>
+												<td class="px-6 py-4 text-[#86868b]">{r.reason || '-'}</td>
+												<td class="px-6 py-4 text-[#86868b] tabular-nums">{formatDate(r.created_at)}</td>
+											</tr>
+										))
+									) : (
+										<tr><td colspan="6" class="px-6 py-8 text-center text-[#86868b]">No refunds</td></tr>
+									)}
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					{/* Stripe Events */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+							<h2 class="text-base font-semibold text-[#1d1d1f]">Stripe Events</h2>
+							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
+						</div>
+						<div class="overflow-x-auto">
+							<table class="w-full text-left text-sm text-[#1d1d1f]">
+								<thead class="bg-gray-50 border-b border-gray-200">
+									<tr>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Event ID</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Type</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Error</th>
+										<th class="px-6 py-3 font-medium text-[#86868b]">Received</th>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-gray-100">
+									{stripeEvents.length > 0 ? (
+										stripeEvents.map((e) => (
+											<tr class="hover:bg-gray-50 transition-colors">
+												<td class="px-6 py-4 font-mono text-xs">{e.event_id}</td>
+												<td class="px-6 py-4 font-mono text-xs">{e.event_type}</td>
+												<td class="px-6 py-4"><Badge severity={getStatusSeverity(e.processing_status)}>{e.processing_status}</Badge></td>
+												<td class="px-6 py-4 text-xs text-red-600">{e.error || '-'}</td>
+												<td class="px-6 py-4 text-[#86868b] tabular-nums">{formatDate(e.received_at)}</td>
+											</tr>
+										))
+									) : (
+										<tr><td colspan="5" class="px-6 py-8 text-center text-[#86868b]">No related events</td></tr>
+									)}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			)}
+		</Container>
+	</div>
+</Layout>
