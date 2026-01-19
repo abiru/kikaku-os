@@ -115,7 +115,11 @@ const hasPrev = page > 1;
 											<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</div>
 										</td>
 										<td class="px-6 py-4">
-											<Badge severity="info">Active</Badge>
+											{product.status === 'draft' ? (
+												<Badge severity="secondary">Draft</Badge>
+											) : (
+												<Badge severity="info">Active</Badge>
+											)}
 										</td>
 										<td class="px-6 py-4 text-[#86868b] tabular-nums">
 											{new Date(product.updated_at).toLocaleDateString()}

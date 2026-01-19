@@ -12,7 +12,9 @@
     "smoke:ok": "./scripts/smoke-ok.sh"
   },
   "dependencies": {
-    "hono": "^4.5.0"
+    "@hono/zod-validator": "^0.7.6",
+    "hono": "^4.5.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240614.0",

@@ -1,4 +1,4 @@
-CREATE TABLE stripe_events (
+CREATE TABLE IF NOT EXISTS stripe_events (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   event_id TEXT NOT NULL UNIQUE,
   event_type TEXT NOT NULL,
@@ -10,5 +10,5 @@ CREATE TABLE stripe_events (
   processed_at TEXT
 );
 
-CREATE INDEX idx_stripe_events_status ON stripe_events(processing_status);
-CREATE INDEX idx_stripe_events_type ON stripe_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_stripe_events_status ON stripe_events(processing_status);
+CREATE INDEX IF NOT EXISTS idx_stripe_events_type ON stripe_events(event_type);

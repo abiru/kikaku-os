@@ -39,7 +39,7 @@ app.use(
   cors({
     origin: (origin) => (origin && allowedOrigins.includes(origin) ? origin : undefined),
     allowHeaders: ['Content-Type', 'x-admin-key'],
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'OPTIONS'],
     maxAge: 86400
   })
 );
