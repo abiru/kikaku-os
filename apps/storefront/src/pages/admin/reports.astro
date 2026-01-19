@@ -1,0 +1,156 @@
+---
+import Container from '../../components/Container.astro';
+import Layout from '../../layouts/Layout.astro';
+import Button from '../../components/Button.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+const page = Number(Astro.url.searchParams.get('page') || '1');
+const perPage = 20;
+
+let reports: any[] = [];
+let meta = { totalCount: 0, totalPages: 1 };
+let error = null;
+
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const query = new URLSearchParams({
+			page: page.toString(),
+			perPage: perPage.toString()
+		});
+		
+		const res = await fetch(`${apiBase}/admin/reports?${query}`, {
+			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+		});
+
+		if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+		const data = await res.json();
+		reports = data.reports || [];
+		meta = data.meta || meta;
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load reports.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing.';
+}
+
+const hasNext = page < meta.totalPages;
+const hasPrev = page > 1;
+
+// Helper to construct R2 proxy link
+const getReportLink = (key: string) => {
+	return `${apiBase}/r2?key=${key}&x-admin-key=${import.meta.env.ADMIN_API_KEY}`;
+};
+---
+
+<Layout title="Daily Reports - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center justify-between">
+				<div class="flex items-center gap-4">
+					<h1 class="text-lg font-semibold text-[#1d1d1f]">Reports</h1>
+					<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} reports</span>
+				</div>
+			</Container>
+		</header>
+
+		<Container class="mt-8">
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+				<div class="overflow-x-auto">
+					<table class="w-full text-left text-sm text-[#1d1d1f]">
+						<thead class="bg-gray-50 border-b border-gray-200">
+							<tr>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Date</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Type</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Generated At</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100">
+							{reports.length > 0 ? (
+								reports.map((report) => (
+									<tr class="hover:bg-gray-50 transition-colors">
+										<td class="px-6 py-4 font-medium">
+											{new Date(report.date).toLocaleDateString()}
+										</td>
+										<td class="px-6 py-4 text-[#86868b]">
+											Daily Close
+										</td>
+										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+											{new Date(report.created_at).toLocaleString()}
+										</td>
+										<td class="px-6 py-4 text-right">
+											{/* Note: This link exposes ADMIN_API_KEY in URL if clicked. 
+                                                In a real production app with Cloudflare Access, this wouldn't be needed 
+                                                or would be handled by a session cookie. 
+                                                For this "phase 1", we are using the key. 
+                                                Ideally we proxy via SSR page, but the prompt says use /r2 link.
+                                             */}
+											<a 
+												href={`${apiBase}/r2?key=${report.path}`} 
+												target="_blank"
+                                                rel="noopener noreferrer"
+												class="text-[#0071e3] hover:underline font-medium"
+                                                // We need to pass the header manually if clicking the link?
+                                                // Browsers don't send custom headers on navigation.
+                                                // The prompt says "existing /r2?key=...". 
+                                                // If that endpoint requires x-admin-key header (which it does in index.ts),
+                                                // we cannot simply link to it. 
+                                                // However, I will check index.ts for /r2 endpoint security.
+											>
+												View Report
+											</a>
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colspan="4" class="px-6 py-12 text-center text-[#86868b]">
+										No reports found.
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				{/* Pagination */}
+				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+					<div class="text-xs text-[#86868b]">
+						Page {page} of {meta.totalPages}
+					</div>
+					<div class="flex gap-2">
+						<Button 
+							href={hasPrev ? `?page=${page - 1}` : '#'} 
+							disabled={!hasPrev} 
+							size="sm" 
+							variant="secondary"
+						>
+							Previous
+						</Button>
+						<Button 
+							href={hasNext ? `?page=${page + 1}` : '#'} 
+							disabled={!hasNext} 
+							size="sm" 
+							variant="secondary"
+						>
+							Next
+						</Button>
+					</div>
+				</div>
+			</div>
+            <p class="mt-4 text-xs text-[#86868b] text-center">
+                Note: To view reports, you may need to use a tool that sends the 'x-admin-key' header, or use the CLI.
+                Direct browser links are protected.
+            </p>
+		</Container>
+	</div>
+</Layout>

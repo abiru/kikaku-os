@@ -1,0 +1,144 @@
+---
+import Container from '../../components/Container.astro';
+import Layout from '../../layouts/Layout.astro';
+import Button from '../../components/Button.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+const page = Number(Astro.url.searchParams.get('page') || '1');
+const perPage = 50;
+
+let entries: any[] = [];
+let meta = { totalCount: 0, totalPages: 1 };
+let error = null;
+
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const query = new URLSearchParams({
+			page: page.toString(),
+			perPage: perPage.toString()
+		});
+		
+		const res = await fetch(`${apiBase}/admin/ledger?${query}`, {
+			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+		});
+
+		if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+		const data = await res.json();
+		entries = data.entries || [];
+		meta = data.meta || meta;
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load ledger entries.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing.';
+}
+
+const hasNext = page < meta.totalPages;
+const hasPrev = page > 1;
+
+const formatCurrency = (amount: number, currency: string) => {
+	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);
+};
+---
+
+<Layout title="Ledger - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center justify-between">
+				<div class="flex items-center gap-4">
+					<h1 class="text-lg font-semibold text-[#1d1d1f]">Ledger</h1>
+					<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} entries</span>
+				</div>
+			</Container>
+		</header>
+
+		<Container class="mt-8">
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+				<div class="overflow-x-auto">
+					<table class="w-full text-left text-sm text-[#1d1d1f]">
+						<thead class="bg-gray-50 border-b border-gray-200">
+							<tr>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Date</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Ref</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Account</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Memo</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Debit</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Credit</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100 font-mono">
+							{entries.length > 0 ? (
+								entries.map((entry) => (
+									<tr class="hover:bg-gray-50 transition-colors">
+										<td class="px-6 py-3 text-[#86868b] whitespace-nowrap font-sans">
+											{new Date(entry.created_at).toLocaleDateString()}
+                                            <div class="text-[10px]">{new Date(entry.created_at).toLocaleTimeString()}</div>
+										</td>
+										<td class="px-6 py-3 whitespace-nowrap font-sans">
+											<span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-[#424245]">
+                                                {entry.ref_type}
+                                            </span>
+                                            <div class="text-[10px] text-[#86868b] mt-0.5 truncate max-w-[80px]">#{entry.ref_id}</div>
+										</td>
+										<td class="px-6 py-3 font-semibold text-[#1d1d1f] font-sans">
+											{entry.account_name}
+										</td>
+										<td class="px-6 py-3 text-[#424245] truncate max-w-xs font-sans">
+											{entry.memo || '-'}
+										</td>
+										<td class="px-6 py-3 text-right">
+											{entry.debit > 0 ? formatCurrency(entry.debit, entry.currency) : ''}
+										</td>
+                                        <td class="px-6 py-3 text-right">
+											{entry.credit > 0 ? formatCurrency(entry.credit, entry.currency) : ''}
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colspan="6" class="px-6 py-12 text-center text-[#86868b] font-sans">
+										No ledger entries found.
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				{/* Pagination */}
+				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between font-sans">
+					<div class="text-xs text-[#86868b]">
+						Page {page} of {meta.totalPages}
+					</div>
+					<div class="flex gap-2">
+						<Button 
+							href={hasPrev ? `?page=${page - 1}` : '#'} 
+							disabled={!hasPrev} 
+							size="sm" 
+							variant="secondary"
+						>
+							Previous
+						</Button>
+						<Button 
+							href={hasNext ? `?page=${page + 1}` : '#'} 
+							disabled={!hasNext} 
+							size="sm" 
+							variant="secondary"
+						>
+							Next
+						</Button>
+					</div>
+				</div>
+			</div>
+		</Container>
+	</div>
+</Layout>

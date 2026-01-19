@@ -12,6 +12,7 @@ import inventory from './routes/inventory';
 import ai from './routes/ai';
 import adminOrders from './routes/adminOrders';
 import adminProducts from './routes/adminProducts';
+import adminReports from './routes/adminReports';
 import stripe from './routes/stripe';
 import checkout from './routes/checkout';
 import storefront from './routes/storefront';
@@ -56,7 +57,7 @@ app.use('*', async (c, next) => {
   ) {
     return next();
   }
-  const key = c.req.header('x-admin-key');
+  const key = c.req.header('x-admin-key') || (c.req.path === '/r2' ? c.req.query('x-admin-key') : undefined);
   if (!key || key !== c.env.ADMIN_API_KEY) return jsonError(c, 'Unauthorized', 401);
   await next();
 });
@@ -72,6 +73,7 @@ app.route('/', inventory);
 app.route('/ai', ai);
 app.route('/', adminOrders);
 app.route('/admin', adminProducts);
+app.route('/admin', adminReports);
 app.route('/', stripe);
 app.route('/', checkout);
 app.route('/store', storefront);
