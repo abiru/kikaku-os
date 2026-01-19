@@ -41,9 +41,9 @@ if (import.meta.env.ADMIN_API_KEY) {
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
 
-// Helper to construct R2 proxy link
-const getReportLink = (key: string) => {
-	return `${apiBase}/r2?key=${key}&x-admin-key=${import.meta.env.ADMIN_API_KEY}`;
+// Helper to construct secure download link (via document ID)
+const getReportLink = (id: number) => {
+	return `${apiBase}/admin/documents/${id}/download`;
 };
 ---
 
@@ -90,23 +90,11 @@ const getReportLink = (key: string) => {
 											{new Date(report.created_at).toLocaleString()}
 										</td>
 										<td class="px-6 py-4 text-right">
-											{/* Note: This link exposes ADMIN_API_KEY in URL if clicked. 
-                                                In a real production app with Cloudflare Access, this wouldn't be needed 
-                                                or would be handled by a session cookie. 
-                                                For this "phase 1", we are using the key. 
-                                                Ideally we proxy via SSR page, but the prompt says use /r2 link.
-                                             */}
-											<a 
-												href={`${apiBase}/r2?key=${report.path}`} 
+											<a
+												href={getReportLink(report.id)}
 												target="_blank"
-                                                rel="noopener noreferrer"
+												rel="noopener noreferrer"
 												class="text-[#0071e3] hover:underline font-medium"
-                                                // We need to pass the header manually if clicking the link?
-                                                // Browsers don't send custom headers on navigation.
-                                                // The prompt says "existing /r2?key=...". 
-                                                // If that endpoint requires x-admin-key header (which it does in index.ts),
-                                                // we cannot simply link to it. 
-                                                // However, I will check index.ts for /r2 endpoint security.
 											>
 												View Report
 											</a>
@@ -149,10 +137,6 @@ const getReportLink = (key: string) => {
 					</div>
 				</div>
 			</div>
-            <p class="mt-4 text-xs text-[#86868b] text-center">
-                Note: To view reports, you may need to use a tool that sends the 'x-admin-key' header, or use the CLI.
-                Direct browser links are protected.
-            </p>
 		</Container>
 	</div>
 </Layout>
