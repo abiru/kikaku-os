@@ -120,19 +120,16 @@ const skeletonCards = Array.from({ length: 6 });
 				const imgContainer = document.createElement('div');
 				imgContainer.className = 'mt-8 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#f5f5f7] flex items-center justify-center';
 
-				// Image or Placeholder with View Transition support
 				if (product.image) {
 					const img = document.createElement('img');
 					img.src = product.image;
 					img.alt = product.title ?? '';
 					img.className = 'w-full h-full object-cover';
-					img.style.viewTransitionName = `product-image-${product.id}`;
 					imgContainer.appendChild(img);
 				} else {
 					const imgPlaceholder = document.createElement('div');
 					imgPlaceholder.className = 'text-4xl font-bold text-gray-200 select-none';
 					imgPlaceholder.textContent = 'IMG';
-					imgPlaceholder.style.viewTransitionName = `product-image-${product.id}`;
 					imgContainer.appendChild(imgPlaceholder);
 				}
 
@@ -181,9 +178,6 @@ const skeletonCards = Array.from({ length: 6 });
 			}
 		};
 
-		// Load on page load (works with View Transitions)
-		document.addEventListener('astro:page-load', () => {
-			loadProducts();
-		});
+		loadProducts();
 	</script>
 </Layout>

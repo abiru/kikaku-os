@@ -1,5 +1,4 @@
 ---
-import { ViewTransitions } from 'astro:transitions';
 import Container from '../components/Container.astro';
 import '../styles/global.css';
 
@@ -15,12 +14,11 @@ const isAdmin = Astro.url.pathname.startsWith('/admin');
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
-		<ViewTransitions />
 	</head>
 	<body class="font-sans text-[#1d1d1f] antialiased bg-[#f5f5f7]">
 		<div class="min-h-screen flex flex-col">
 			{/* Apple-style Global Nav: Sticky, Backdrop Blur, Minimal */}
-			<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50 transition-all duration-300" transition:persist>
+			<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50">
 				<Container class="flex h-[48px] items-center justify-between">
 					{/* Logo Area */}
 					<a href={isAdmin ? '/admin/inbox' : '/'} class="flex items-center gap-2 group transition-opacity hover:opacity-80">
@@ -133,8 +131,8 @@ const isAdmin = Astro.url.pathname.startsWith('/admin');
 				}
 			};
 
-			// Update on page load (works with View Transitions)
-			document.addEventListener('astro:page-load', updateCartBadge);
+			// Initial update
+			updateCartBadge();
 
 			// Subscribe to cart changes
 			$cartCount.subscribe(updateCartBadge);

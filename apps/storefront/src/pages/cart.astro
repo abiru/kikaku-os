@@ -188,10 +188,8 @@ import Layout from '../layouts/Layout.astro';
 		}
 	};
 
-	// Initialize cart on page load (works with View Transitions)
-	document.addEventListener('astro:page-load', () => {
-		renderCart();
-	});
+	// Initial render
+	renderCart();
 
 	// Re-render on cart changes
 	$cartItems.subscribe(() => {
