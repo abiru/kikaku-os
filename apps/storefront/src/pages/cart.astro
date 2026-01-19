@@ -22,8 +22,11 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-	import { $cartItems, $cartArray, $cartTotal, $cartCurrency, removeFromCart, updateQuantity, clearCart, type CartItem } from '../lib/cart';
+	import { $cartItems, $cartArray, $cartTotal, $cartCurrency, removeFromCart, updateQuantity, clearCart, cleanupCart, type CartItem } from '../lib/cart';
 	import { getApiBase } from '../lib/api';
+
+	// Clean up any corrupted cart data on page load
+	cleanupCart();
 
 	const formatPrice = (amount: number, currency: string) => {
 		return new Intl.NumberFormat('ja-JP', {

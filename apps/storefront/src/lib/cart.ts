@@ -14,8 +14,16 @@ export type CartItem = {
 // Cart items stored by variantId as key
 export const $cartItems = persistentMap<Record<string, CartItem>>('cart:', {});
 
-// Computed: array of cart items
-export const $cartArray = computed($cartItems, (items) => Object.values(items));
+// Computed: array of cart items (filter out invalid entries)
+export const $cartArray = computed($cartItems, (items) =>
+	Object.values(items).filter((item): item is CartItem =>
+		item != null &&
+		typeof item.variantId === 'number' &&
+		!isNaN(item.variantId) &&
+		typeof item.price === 'number' &&
+		!isNaN(item.price)
+	)
+);
 
 // Computed: total item count
 export const $cartCount = computed($cartArray, (items) =>
@@ -86,7 +94,13 @@ export const clearCart = () => {
 };
 
 export const getCartItems = (): CartItem[] => {
-	return Object.values($cartItems.get()).filter(Boolean);
+	return Object.values($cartItems.get()).filter((item): item is CartItem =>
+		item != null &&
+		typeof item.variantId === 'number' &&
+		!isNaN(item.variantId) &&
+		typeof item.price === 'number' &&
+		!isNaN(item.price)
+	);
 };
 
 export const getCartTotal = (): number => {
@@ -95,4 +109,29 @@ export const getCartTotal = (): number => {
 
 export const getCartCount = (): number => {
 	return getCartItems().reduce((sum, item) => sum + item.quantity, 0);
+};
+
+// Clean up invalid cart items from storage
+export const cleanupCart = () => {
+	const items = $cartItems.get();
+	const validItems: CartItem[] = [];
+
+	// Collect valid items
+	Object.values(items).forEach((item) => {
+		if (
+			item != null &&
+			typeof item.variantId === 'number' &&
+			!isNaN(item.variantId) &&
+			typeof item.price === 'number' &&
+			!isNaN(item.price)
+		) {
+			validItems.push(item);
+		}
+	});
+
+	// Clear all and re-add valid items
+	clearCart();
+	validItems.forEach((item) => {
+		$cartItems.setKey(String(item.variantId), item);
+	});
 };
