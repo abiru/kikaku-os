@@ -4,8 +4,11 @@
  * - Sales: high refund rate, webhook failures, unfulfilled orders
  */
 
+import { sendSlackNotification } from './notifications';
+
 type Bindings = {
   DB: D1Database;
+  SLACK_WEBHOOK_URL?: string;
 };
 
 type AnomalyResult = {
@@ -16,6 +19,7 @@ type AnomalyResult = {
 
 /**
  * Helper to insert inbox item with deduplication (kind + date unique constraint)
+ * Sends Slack notification for warning/critical severity items
  */
 const insertInboxItem = async (
   env: Bindings,
@@ -28,10 +32,25 @@ const insertInboxItem = async (
   }
 ): Promise<boolean> => {
   try {
-    await env.DB.prepare(
+    const result = await env.DB.prepare(
       `INSERT INTO inbox_items (title, body, severity, status, kind, date, created_at, updated_at)
        VALUES (?, ?, ?, 'open', ?, ?, datetime('now'), datetime('now'))`
     ).bind(params.title, params.body, params.severity, params.kind, params.date).run();
+
+    // Send notification for warning/critical severity (non-blocking)
+    if (params.severity !== 'info' && result.meta.last_row_id) {
+      sendSlackNotification(env as any, {
+        inboxItemId: result.meta.last_row_id,
+        title: params.title,
+        body: params.body,
+        severity: params.severity,
+        kind: params.kind,
+        date: params.date
+      }).catch((err) => {
+        console.error('Failed to send Slack notification:', err);
+      });
+    }
+
     return true;
   } catch (err: any) {
     if (String(err?.message || '').includes('UNIQUE constraint failed')) return false;

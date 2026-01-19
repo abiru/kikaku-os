@@ -8,5 +8,6 @@ export type Env = {
     STRIPE_SECRET_KEY?: string;
     STRIPE_WEBHOOK_SECRET: string;
     STOREFRONT_BASE_URL: string;
+    SLACK_WEBHOOK_URL?: string;
   };
 };
