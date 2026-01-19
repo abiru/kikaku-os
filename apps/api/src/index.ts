@@ -25,6 +25,7 @@ import { putJson, putText } from './lib/r2';
 import { upsertDocument } from './services/documents';
 import { journalizeDailyClose } from './services/journalize';
 import { enqueueDailyCloseAnomaly } from './services/inboxAnomalies';
+import { runAllAnomalyChecks } from './services/anomalyRules';
 
 const app = new Hono<Env>();
 
@@ -126,25 +127,18 @@ const runDailyCloseArtifacts = async (env: Env['Bindings'], date: string) => {
   });
 };
 
-const runInventoryCheck = async (env: Env['Bindings']) => {
-  const res = await env.DB.prepare(
-    `SELECT t.variant_id as variant_id,
-            COALESCE(SUM(m.delta), 0) as on_hand,
-            t.threshold as threshold
-     FROM inventory_thresholds t
-     LEFT JOIN inventory_movements m ON m.variant_id = t.variant_id
-     GROUP BY t.variant_id
-     HAVING on_hand < t.threshold`
-  ).all<{ variant_id: number; on_hand: number; threshold: number }>();
-
-  for (const row of res.results || []) {
-    await env.DB.prepare(
-      `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
-       VALUES (?, ?, 'warning', 'open', datetime('now'), datetime('now'))`
-    ).bind(
-      'Low stock',
-      `variant_id=${row.variant_id} on_hand=${row.on_hand} threshold=${row.threshold}`
-    ).run();
+const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
+  try {
+    const result = await runAllAnomalyChecks(env, date);
+    console.log(`Anomaly checks completed for ${date}:`, {
+      lowStock: result.lowStock.filter((r) => r.created).length,
+      negativeStock: result.negativeStock.filter((r) => r.created).length,
+      highRefundRate: result.highRefundRate?.created ?? false,
+      webhookFailures: result.webhookFailures?.created ?? false,
+      unfulfilledOrders: result.unfulfilledOrders?.created ?? false
+    });
+  } catch (err) {
+    console.error('Anomaly check failed:', err);
   }
 };
 
@@ -153,6 +147,6 @@ export default {
   scheduled: async (_event: ScheduledEvent, env: Env['Bindings'], ctx: ExecutionContext) => {
     const date = buildJstYesterday();
     ctx.waitUntil(runDailyCloseArtifacts(env, date));
-    ctx.waitUntil(runInventoryCheck(env));
+    ctx.waitUntil(runAnomalyChecks(env, date));
   }
 };
