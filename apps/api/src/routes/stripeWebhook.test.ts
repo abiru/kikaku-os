@@ -231,10 +231,11 @@ const createMockDb = (options?: MockDbOptions) => {
               order.updated_at = nextNow();
             }
           }
-          if (sql.includes("UPDATE orders SET status='refunded'")) {
-            const orderId = Number(args[0]);
+          if (sql.includes('UPDATE orders SET status=?')) {
+            const newStatus = String(args[0]);
+            const orderId = Number(args[1]);
             const order = getOrCreateOrder(orderId);
-            order.status = 'refunded';
+            order.status = newStatus;
             order.updated_at = nextNow();
           }
           if (sql.includes('INSERT INTO payments') && options?.duplicatePayment) {
@@ -422,9 +423,10 @@ describe('Stripe webhook handling', () => {
     expect(refundInsert?.bind[3]).toBe('re_123');
     expect(refundInsert?.bind[1]).toBe(2500);
     const statusUpdate = mockDb.calls.find((call) =>
-      call.sql.includes("UPDATE orders SET status='refunded'")
+      call.sql.includes('UPDATE orders SET status=?')
     );
     expect(statusUpdate).toBeDefined();
+    expect(statusUpdate?.bind[0]).toBe('refunded');
   });
 });
 
