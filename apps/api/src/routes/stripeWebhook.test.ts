@@ -584,6 +584,275 @@ describe('Stripe webhook route', () => {
     expect(refundInserts).toHaveLength(1);
   });
 
+  it('accepts refund.succeeded and is idempotent', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const payload = JSON.stringify({
+      id: 'evt_refund_succeeded',
+      type: 'refund.succeeded',
+      data: {
+        object: {
+          id: 're_succeeded_123',
+          amount: 2500,
+          currency: 'jpy',
+          payment_intent: 'pi_refund_succeeded',
+          metadata: { orderId: '123' }
+        }
+      }
+    });
+
+    const secret = 'whsec_test';
+    const header = await buildStripeSignatureHeader(payload, secret);
+    const db = createMockDb({
+      existingPayments: [{ providerPaymentId: 'pi_refund_succeeded', orderId: 123 }],
+      orders: [{ id: 123, status: 'paid', total_net: 2500, currency: 'JPY' }]
+    });
+
+    const first = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const second = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const firstJson = await first.json();
+    const secondJson = await second.json();
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(firstJson.ok).toBe(true);
+    expect(secondJson.ok).toBe(true);
+    expect(secondJson.duplicate).toBe(true);
+    expect(db.state.refunds).toHaveLength(1);
+    expect(db.state.events.size).toBe(1);
+    expect(db.state.orders.get(123)?.status).toBe('refunded');
+  });
+
+  it('accepts charge.refunded and is idempotent', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const payload = JSON.stringify({
+      id: 'evt_charge_refunded',
+      type: 'charge.refunded',
+      data: {
+        object: {
+          id: 'ch_123',
+          amount_refunded: 2500,
+          currency: 'jpy',
+          payment_intent: 'pi_charge_refunded',
+          refunds: {
+            data: [
+              {
+                id: 're_charge_123',
+                amount: 2500,
+                currency: 'jpy',
+                payment_intent: 'pi_charge_refunded',
+                metadata: { orderId: '123' }
+              }
+            ]
+          },
+          metadata: { orderId: '123' }
+        }
+      }
+    });
+
+    const secret = 'whsec_test';
+    const header = await buildStripeSignatureHeader(payload, secret);
+    const db = createMockDb({
+      existingPayments: [{ providerPaymentId: 'pi_charge_refunded', orderId: 123 }],
+      orders: [{ id: 123, status: 'paid', total_net: 2500, currency: 'JPY' }]
+    });
+
+    const first = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const second = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': header },
+        body: payload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const firstJson = await first.json();
+    const secondJson = await second.json();
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(firstJson.ok).toBe(true);
+    expect(secondJson.ok).toBe(true);
+    expect(secondJson.duplicate).toBe(true);
+    expect(db.state.refunds).toHaveLength(1);
+    expect(db.state.events.size).toBe(1);
+    expect(db.state.orders.get(123)?.status).toBe('refunded');
+  });
+
+  it('handles different event id with same provider_refund_id without duplicating refund', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const baseRefund = {
+      id: 're_same_provider_refund',
+      amount: 2500,
+      currency: 'jpy',
+      payment_intent: 'pi_refund_dupe',
+      metadata: { orderId: '456' }
+    };
+
+    const firstPayload = JSON.stringify({
+      id: 'evt_refund_dupe_a',
+      type: 'refund.updated',
+      data: { object: baseRefund }
+    });
+    const secondPayload = JSON.stringify({
+      id: 'evt_refund_dupe_b',
+      type: 'refund.updated',
+      data: { object: baseRefund }
+    });
+
+    const secret = 'whsec_test';
+    const firstHeader = await buildStripeSignatureHeader(firstPayload, secret);
+    const secondHeader = await buildStripeSignatureHeader(secondPayload, secret);
+    const db = createMockDb({
+      existingPayments: [{ providerPaymentId: 'pi_refund_dupe', orderId: 456 }],
+      orders: [{ id: 456, status: 'paid', total_net: 2500, currency: 'JPY' }]
+    });
+
+    const first = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': firstHeader },
+        body: firstPayload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const second = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': secondHeader },
+        body: secondPayload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const firstJson = await first.json();
+    const secondJson = await second.json();
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(firstJson.ok).toBe(true);
+    expect(secondJson.ok).toBe(true);
+    expect(firstJson.duplicate ?? false).toBe(false);
+    expect(secondJson.duplicate).toBe(true);
+    expect(db.state.refunds).toHaveLength(1);
+    expect(db.state.events.size).toBe(2);
+    expect(db.state.orders.get(456)?.status).toBe('refunded');
+  });
+
+  it('handles different event id with same provider_payment_id without duplicating payment', async () => {
+    const app = new Hono();
+    app.route('/', stripe);
+
+    const orderId = 789;
+    const firstPayload = JSON.stringify({
+      id: 'evt_paid_idem_a',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_paid_idem_a',
+          payment_intent: 'pi_paid_idem',
+          amount_total: 5000,
+          currency: 'jpy',
+          metadata: { orderId: String(orderId) }
+        }
+      }
+    });
+    const secondPayload = JSON.stringify({
+      id: 'evt_paid_idem_b',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_paid_idem_b',
+          payment_intent: 'pi_paid_idem',
+          amount_total: 5000,
+          currency: 'jpy',
+          metadata: { orderId: String(orderId) }
+        }
+      }
+    });
+
+    const secret = 'whsec_test';
+    const firstHeader = await buildStripeSignatureHeader(firstPayload, secret);
+    const secondHeader = await buildStripeSignatureHeader(secondPayload, secret);
+    const db = createMockDb({
+      orders: [{ id: orderId, status: 'pending', total_net: 5000, currency: 'JPY' }]
+    });
+
+    const first = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': firstHeader },
+        body: firstPayload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const firstJson = await first.json();
+    expect(first.status).toBe(200);
+    expect(firstJson.ok).toBe(true);
+    expect(db.state.payments).toHaveLength(1);
+    const firstOrder = db.state.orders.get(orderId);
+    const paidAt = firstOrder?.paid_at;
+    expect(firstOrder?.provider_checkout_session_id).toBe('cs_paid_idem_a');
+    expect(firstOrder?.provider_payment_intent_id).toBe('pi_paid_idem');
+
+    const second = await app.request(
+      'http://localhost/stripe/webhook',
+      {
+        method: 'POST',
+        headers: { 'stripe-signature': secondHeader },
+        body: secondPayload
+      },
+      { DB: db, STRIPE_WEBHOOK_SECRET: secret } as any
+    );
+
+    const secondJson = await second.json();
+    expect(second.status).toBe(200);
+    expect(secondJson.ok).toBe(true);
+    expect(secondJson.duplicate).toBe(true);
+    expect(db.state.payments).toHaveLength(1);
+    const secondOrder = db.state.orders.get(orderId);
+    expect(secondOrder?.provider_checkout_session_id).toBe('cs_paid_idem_a');
+    expect(secondOrder?.provider_payment_intent_id).toBe('pi_paid_idem');
+    expect(secondOrder?.paid_at).toBe(paidAt);
+    expect(db.state.events.size).toBe(2);
+  });
+
   it('processes paid then refund events with idempotency and state updates', async () => {
     const app = new Hono();
     app.route('/', stripe);
