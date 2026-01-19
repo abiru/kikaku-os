@@ -5,7 +5,10 @@ import type { Env } from '../env';
 import { jsonOk } from '../lib/http';
 
 const storeProductsQuerySchema = z.object({
-  q: z.string().max(100).optional().default('')
+  q: z.string().max(100).optional().default(''),
+  category: z.string().max(50).optional(),
+  minPrice: z.coerce.number().int().min(0).optional(),
+  maxPrice: z.coerce.number().int().min(0).optional()
 });
 
 const storefront = new Hono<Env>();
@@ -90,17 +93,36 @@ const baseQuery = `
 `;
 
 storefront.get('/products', zValidator('query', storeProductsQuerySchema), async (c) => {
-  const { q } = c.req.valid('query');
+  const { q, category, minPrice, maxPrice } = c.req.valid('query');
 
-  let sql = baseQuery;
-  const bindings: string[] = [];
+  const whereConditions: string[] = [];
+  const bindings: (string | number)[] = [];
 
   if (q) {
-    sql += ` WHERE (p.title LIKE ? OR p.description LIKE ?)`;
+    whereConditions.push('(p.title LIKE ? OR p.description LIKE ?)');
     bindings.push(`%${q}%`, `%${q}%`);
   }
 
-  sql += ` ORDER BY p.id, v.id, pr.id DESC`;
+  if (category) {
+    whereConditions.push('p.category = ?');
+    bindings.push(category);
+  }
+
+  if (minPrice !== undefined) {
+    whereConditions.push('pr.amount >= ?');
+    bindings.push(minPrice);
+  }
+
+  if (maxPrice !== undefined) {
+    whereConditions.push('pr.amount <= ?');
+    bindings.push(maxPrice);
+  }
+
+  const whereClause = whereConditions.length > 0
+    ? ` WHERE ${whereConditions.join(' AND ')}`
+    : '';
+
+  const sql = baseQuery + whereClause + ` ORDER BY p.id, v.id, pr.id DESC`;
 
   const stmt = bindings.length > 0
     ? c.env.DB.prepare(sql).bind(...bindings)
@@ -108,7 +130,41 @@ storefront.get('/products', zValidator('query', storeProductsQuerySchema), async
 
   const res = await stmt.all<StorefrontRow>();
   const products = rowsToProducts(res.results || []);
-  return jsonOk(c, { products, query: q || null });
+  return jsonOk(c, {
+    products,
+    query: q || null,
+    filters: {
+      category: category || null,
+      minPrice: minPrice ?? null,
+      maxPrice: maxPrice ?? null
+    }
+  });
+});
+
+type CategoryRow = { category: string | null };
+type PriceRangeRow = { minPrice: number | null; maxPrice: number | null };
+
+storefront.get('/products/filters', async (c) => {
+  const categoriesRes = await c.env.DB.prepare(`
+    SELECT DISTINCT category FROM products
+    WHERE category IS NOT NULL
+    ORDER BY category
+  `).all<CategoryRow>();
+
+  const priceRange = await c.env.DB.prepare(`
+    SELECT MIN(pr.amount) as minPrice, MAX(pr.amount) as maxPrice
+    FROM prices pr
+    JOIN variants v ON v.id = pr.variant_id
+    JOIN products p ON p.id = v.product_id
+  `).first<PriceRangeRow>();
+
+  return jsonOk(c, {
+    categories: categoriesRes.results?.map(r => r.category).filter(Boolean) || [],
+    priceRange: {
+      min: priceRange?.minPrice ?? 0,
+      max: priceRange?.maxPrice ?? 100000
+    }
+  });
 });
 
 storefront.get('/products/:id', async (c) => {
