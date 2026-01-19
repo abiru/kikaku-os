@@ -82,3 +82,31 @@ export const createCheckoutSession = async ({ variantId, quantity, email }: Chec
 
 	return data;
 };
+
+type OrderItem = {
+	title: string;
+	quantity: number;
+	unit_price: number;
+};
+
+type Order = {
+	id: number;
+	status: string;
+	total_net: number;
+	currency: string;
+	created_at: string;
+	customer_email: string | null;
+	items: OrderItem[];
+};
+
+type OrderBySessionResponse = {
+	ok: boolean;
+	order: Order | null;
+};
+
+export const getOrderBySession = async (sessionId: string): Promise<Order | null> => {
+	const data = await fetchJson<OrderBySessionResponse>(
+		buildStoreUrl(`/orders/by-session/${sessionId}`)
+	);
+	return data.order;
+};
