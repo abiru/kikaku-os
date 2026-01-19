@@ -18,6 +18,8 @@ type MockDbOptions = {
     provider_payment_intent_id?: string | null;
     paid_at?: string | null;
     updated_at?: string | null;
+    refunded_amount?: number;
+    refund_count?: number;
   }>;
 };
 
@@ -33,7 +35,18 @@ const createMockDb = (options?: MockDbOptions) => {
     provider_payment_intent_id: string | null;
     paid_at: string | null;
     updated_at: string | null;
+    refunded_amount: number;
+    refund_count: number;
   }>();
+  const orderStatusHistory: Array<{
+    id: number;
+    order_id: number;
+    old_status: string;
+    new_status: string;
+    reason: string;
+    stripe_event_id: string;
+  }> = [];
+  let orderStatusHistoryId = 0;
   const payments: Array<{
     id: number;
     order_id: number | null;
@@ -90,7 +103,9 @@ const createMockDb = (options?: MockDbOptions) => {
       provider_checkout_session_id: order.provider_checkout_session_id ?? null,
       provider_payment_intent_id: order.provider_payment_intent_id ?? null,
       paid_at: order.paid_at ?? null,
-      updated_at: order.updated_at ?? null
+      updated_at: order.updated_at ?? null,
+      refunded_amount: order.refunded_amount ?? 0,
+      refund_count: order.refund_count ?? 0
     });
   }
 
@@ -110,7 +125,9 @@ const createMockDb = (options?: MockDbOptions) => {
       provider_checkout_session_id: null,
       provider_payment_intent_id: null,
       paid_at: null,
-      updated_at: null
+      updated_at: null,
+      refunded_amount: 0,
+      refund_count: 0
     };
     orders.set(orderId, created);
     return created;
@@ -128,11 +145,29 @@ const createMockDb = (options?: MockDbOptions) => {
       payments,
       refunds,
       events,
-      stripeEvents
+      stripeEvents,
+      orderStatusHistory
     },
     prepare: (sql: string) => ({
       bind: (...args: unknown[]) => ({
         first: async () => {
+          if (sql.includes('SELECT id, total_net, status, refunded_amount FROM orders')) {
+            const id = Number(args[0]);
+            if (!Number.isFinite(id)) return null;
+            const order = getOrCreateOrder(id);
+            return {
+              id: order.id,
+              total_net: order.total_net,
+              status: order.status,
+              refunded_amount: order.refunded_amount
+            };
+          }
+          if (sql.includes('SELECT refund_count FROM orders')) {
+            const id = Number(args[0]);
+            if (!Number.isFinite(id)) return null;
+            const order = getOrCreateOrder(id);
+            return { refund_count: order.refund_count };
+          }
           if (sql.includes('SELECT id, total_net, status FROM orders')) {
             const id = Number(args[0]);
             if (!Number.isFinite(id)) return null;
@@ -231,7 +266,17 @@ const createMockDb = (options?: MockDbOptions) => {
               order.updated_at = nextNow();
             }
           }
-          if (sql.includes('UPDATE orders SET status=?')) {
+          if (sql.includes('UPDATE orders SET status=?, refunded_amount=?, refund_count=?')) {
+            const newStatus = String(args[0]);
+            const newRefundedAmount = Number(args[1]);
+            const newRefundCount = Number(args[2]);
+            const orderId = Number(args[3]);
+            const order = getOrCreateOrder(orderId);
+            order.status = newStatus;
+            order.refunded_amount = newRefundedAmount;
+            order.refund_count = newRefundCount;
+            order.updated_at = nextNow();
+          } else if (sql.includes('UPDATE orders SET status=?')) {
             const newStatus = String(args[0]);
             const orderId = Number(args[1]);
             const order = getOrCreateOrder(orderId);
@@ -286,6 +331,17 @@ if (sql.includes('INSERT INTO refunds')) {
               fulfillmentId += 1;
               fulfillments.set(orderId, fulfillmentId);
             }
+          }
+          if (sql.includes('INSERT INTO order_status_history')) {
+            orderStatusHistoryId += 1;
+            orderStatusHistory.push({
+              id: orderStatusHistoryId,
+              order_id: Number(args[0]),
+              old_status: String(args[1]),
+              new_status: String(args[2]),
+              reason: String(args[3]),
+              stripe_event_id: String(args[4])
+            });
           }
           return { meta: { last_row_id: 1, changes: 1 } };
         }
