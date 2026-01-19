@@ -246,85 +246,90 @@ const stockNote =
 	<script>
 		import { addToCart } from '../../lib/cart';
 
-		const stickyHeader = document.getElementById('sticky-header');
-		const buySection = document.getElementById('buy-section');
-		const stickyBuyBtn = document.getElementById('sticky-buy-btn');
+		const initProductPage = () => {
+			const stickyHeader = document.getElementById('sticky-header');
+			const buySection = document.getElementById('buy-section');
+			const stickyBuyBtn = document.getElementById('sticky-buy-btn');
 
-		// 1. Sticky Header Logic
-		if (stickyHeader && buySection) {
-			window.addEventListener('scroll', () => {
-				const scrollY = window.scrollY;
-				if (scrollY > 600) {
-					stickyHeader.classList.remove('-translate-y-full', 'opacity-0');
-				} else {
-					stickyHeader.classList.add('-translate-y-full', 'opacity-0');
-				}
-			});
-
-			// Scroll to buy section on click
-			stickyBuyBtn?.addEventListener('click', () => {
-				buySection.scrollIntoView({ behavior: 'smooth' });
-			});
-		}
-
-		// 2. Add to Cart Logic
-		const page = document.getElementById('product-page');
-		if (page) {
-			const variantId = page.dataset.variantId ? Number(page.dataset.variantId) : null;
-			const productId = page.dataset.productId ? Number(page.dataset.productId) : null;
-			const productTitle = page.dataset.productTitle || '';
-			const variantTitle = page.dataset.variantTitle || 'Default';
-			const price = page.dataset.price ? Number(page.dataset.price) : 0;
-			const currency = page.dataset.currency || 'JPY';
-
-			const buyButton = document.getElementById('buy-button');
-			const buyLabel = document.getElementById('buy-label');
-			const buySpinner = document.getElementById('buy-spinner');
-			const qtyInput = document.getElementById('qty-input') as HTMLSelectElement;
-			const errorWrap = document.getElementById('checkout-error');
-			const errorMessage = document.getElementById('checkout-error-message');
-
-			const showSuccess = () => {
-				if (!buyLabel) return;
-				buyLabel.textContent = 'Added to cart!';
-				setTimeout(() => {
-					buyLabel.textContent = 'Add to Bag';
-				}, 2000);
-			};
-
-			const showError = (message: string) => {
-				if (!errorWrap || !errorMessage) return;
-				errorMessage.textContent = message;
-				errorWrap.classList.remove('hidden');
-			};
-
-			const clearError = () => {
-				if (!errorWrap || !errorMessage) return;
-				errorMessage.textContent = '';
-				errorWrap.classList.add('hidden');
-			};
-
-			if (buyButton && variantId && productId) {
-				buyButton.addEventListener('click', () => {
-					clearError();
-
-					const quantity = Number(qtyInput?.value || 1);
-
-					try {
-						addToCart({
-							variantId,
-							productId,
-							title: productTitle,
-							variantTitle,
-							price,
-							currency
-						}, quantity);
-						showSuccess();
-					} catch (error) {
-						showError(error instanceof Error ? error.message : 'Failed to add to cart.');
+			// 1. Sticky Header Logic
+			if (stickyHeader && buySection) {
+				const handleScroll = () => {
+					const scrollY = window.scrollY;
+					if (scrollY > 600) {
+						stickyHeader.classList.remove('-translate-y-full', 'opacity-0');
+					} else {
+						stickyHeader.classList.add('-translate-y-full', 'opacity-0');
 					}
+				};
+				window.addEventListener('scroll', handleScroll);
+
+				// Scroll to buy section on click
+				stickyBuyBtn?.addEventListener('click', () => {
+					buySection.scrollIntoView({ behavior: 'smooth' });
 				});
 			}
-		}
+
+			// 2. Add to Cart Logic
+			const page = document.getElementById('product-page');
+			if (page) {
+				const variantId = page.dataset.variantId ? Number(page.dataset.variantId) : null;
+				const productId = page.dataset.productId ? Number(page.dataset.productId) : null;
+				const productTitle = page.dataset.productTitle || '';
+				const variantTitle = page.dataset.variantTitle || 'Default';
+				const price = page.dataset.price ? Number(page.dataset.price) : 0;
+				const currency = page.dataset.currency || 'JPY';
+
+				const buyButton = document.getElementById('buy-button');
+				const buyLabel = document.getElementById('buy-label');
+				const qtyInput = document.getElementById('qty-input') as HTMLSelectElement;
+				const errorWrap = document.getElementById('checkout-error');
+				const errorMessage = document.getElementById('checkout-error-message');
+
+				const showSuccess = () => {
+					if (!buyLabel) return;
+					buyLabel.textContent = 'Added to cart!';
+					setTimeout(() => {
+						buyLabel.textContent = 'Add to Bag';
+					}, 2000);
+				};
+
+				const showError = (message: string) => {
+					if (!errorWrap || !errorMessage) return;
+					errorMessage.textContent = message;
+					errorWrap.classList.remove('hidden');
+				};
+
+				const clearError = () => {
+					if (!errorWrap || !errorMessage) return;
+					errorMessage.textContent = '';
+					errorWrap.classList.add('hidden');
+				};
+
+				if (buyButton && variantId && productId) {
+					buyButton.addEventListener('click', () => {
+						clearError();
+
+						const quantity = Number(qtyInput?.value || 1);
+
+						try {
+							addToCart({
+								variantId,
+								productId,
+								title: productTitle,
+								variantTitle,
+								price,
+								currency
+							}, quantity);
+							showSuccess();
+						} catch (error) {
+							showError(error instanceof Error ? error.message : 'Failed to add to cart.');
+						}
+					});
+				}
+			}
+		};
+
+		// Initialize on page load (works with View Transitions)
+		document.addEventListener('astro:page-load', initProductPage);
 	</script>
 </Layout>

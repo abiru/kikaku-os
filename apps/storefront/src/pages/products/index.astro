@@ -69,13 +69,12 @@ const skeletonCards = Array.from({ length: 6 });
 	<script>
 		import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 
-		const apiBase = getApiBase();
-		const skeleton = document.getElementById('product-skeleton');
-		const errorState = document.getElementById('product-error');
-		const emptyState = document.getElementById('product-empty');
-		const grid = document.getElementById('product-grid');
+		const setState = (next: string) => {
+			const skeleton = document.getElementById('product-skeleton');
+			const errorState = document.getElementById('product-error');
+			const emptyState = document.getElementById('product-empty');
+			const grid = document.getElementById('product-grid');
 
-		const setState = (next) => {
 			const isLoading = next === 'loading';
 			const isError = next === 'error';
 			const isEmpty = next === 'empty';
@@ -87,10 +86,11 @@ const skeletonCards = Array.from({ length: 6 });
 			grid?.classList.toggle('hidden', !isLoaded);
 		};
 
-		const isRecord = (value) => typeof value === 'object' && value !== null;
-		const isProduct = (value) => isRecord(value) && 'id' in value && 'title' in value;
+		const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+		const isProduct = (value: unknown) => isRecord(value) && 'id' in value && 'title' in value;
 
-		const renderProducts = (products) => {
+		const renderProducts = (products: any[]) => {
+			const grid = document.getElementById('product-grid');
 			if (!grid) return;
 			grid.innerHTML = '';
 
@@ -162,6 +162,7 @@ const skeletonCards = Array.from({ length: 6 });
 		};
 
 		const loadProducts = async () => {
+			const apiBase = getApiBase();
 			setState('loading');
 
 			try {
@@ -180,6 +181,9 @@ const skeletonCards = Array.from({ length: 6 });
 			}
 		};
 
-		loadProducts();
+		// Load on page load (works with View Transitions)
+		document.addEventListener('astro:page-load', () => {
+			loadProducts();
+		});
 	</script>
 </Layout>
