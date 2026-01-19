@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCheckoutSession, getApiBase } from './api';
 
 const buildResponse = (status: number, body: unknown) =>
@@ -25,8 +25,19 @@ describe('getApiBase', () => {
 });
 
 describe('createCheckoutSession', () => {
+	const originalApiBase = process.env.PUBLIC_API_BASE;
+
+	beforeEach(() => {
+		process.env.PUBLIC_API_BASE = 'http://localhost:8787';
+	});
+
 	afterEach(() => {
 		vi.unstubAllGlobals();
+		if (originalApiBase === undefined) {
+			delete process.env.PUBLIC_API_BASE;
+		} else {
+			process.env.PUBLIC_API_BASE = originalApiBase;
+		}
 	});
 
 	it('throws on 400 responses', async () => {
