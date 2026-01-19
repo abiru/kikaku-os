@@ -3,6 +3,7 @@ import Container from '../components/Container.astro';
 import '../styles/global.css';
 
 const { title = 'Led Kikaku Store' } = Astro.props;
+const isAdmin = Astro.url.pathname.startsWith('/admin');
 ---
 
 <!doctype html>
@@ -20,19 +21,29 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 			<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50 transition-all duration-300">
 				<Container class="flex h-[48px] items-center justify-between">
 					{/* Logo Area */}
-					<a href="/" class="flex items-center gap-2 group transition-opacity hover:opacity-80">
-						<span class="text-[17px] font-semibold tracking-tight">LED Kikaku</span>
+					<a href={isAdmin ? '/admin/inbox' : '/'} class="flex items-center gap-2 group transition-opacity hover:opacity-80">
+						<span class="text-[17px] font-semibold tracking-tight">{isAdmin ? 'Led Kikaku OS' : 'LED Kikaku'}</span>
 					</a>
 
 					{/* Desktop Nav - Centered & Subtle */}
 					<nav class="hidden md:flex items-center gap-8 text-[12px] font-normal text-[#1d1d1f]/80">
-						<a href="/" class="transition-colors hover:text-[#1d1d1f]">Store</a>
-						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Mac</a>
-						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">iPad</a>
-						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">iPhone</a>
-						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Watch</a>
-						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Vision</a>
-						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">AirPods</a>
+						{isAdmin ? (
+							<>
+								<a href="/admin/inbox" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/admin/inbox') ? 'text-[#1d1d1f] font-medium' : ''}`}>Inbox</a>
+								<a href="/admin/products" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/admin/products') ? 'text-[#1d1d1f] font-medium' : ''}`}>Products</a>
+								<a href="/admin/orders" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/admin/orders') ? 'text-[#1d1d1f] font-medium' : ''}`}>Orders</a>
+							</>
+						) : (
+							<>
+								<a href="/" class="transition-colors hover:text-[#1d1d1f]">Store</a>
+								<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Mac</a>
+								<a href="/products" class="transition-colors hover:text-[#1d1d1f]">iPad</a>
+								<a href="/products" class="transition-colors hover:text-[#1d1d1f]">iPhone</a>
+								<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Watch</a>
+								<a href="/products" class="transition-colors hover:text-[#1d1d1f]">Vision</a>
+								<a href="/products" class="transition-colors hover:text-[#1d1d1f]">AirPods</a>
+							</>
+						)}
 					</nav>
 					
 					{/* Utilities: Search & Cart */}
@@ -41,10 +52,12 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 							<span class="sr-only">Search</span>
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 						</button>
-						<button type="button" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
-							<span class="sr-only">Open cart</span>
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-						</button>
+						{!isAdmin && (
+							<button type="button" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
+								<span class="sr-only">Open cart</span>
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+							</button>
+						)}
 					</div>
 				</Container>
 			</header>
