@@ -1,5 +1,4 @@
-import { persistentMap } from '@nanostores/persistent';
-import { computed } from 'nanostores';
+import { atom, computed } from 'nanostores';
 
 export type CartItem = {
 	variantId: number;
@@ -11,18 +10,67 @@ export type CartItem = {
 	quantity: number;
 };
 
-// Cart items stored by variantId as key
-export const $cartItems = persistentMap<Record<string, CartItem>>('cart:', {});
+type CartState = Record<string, CartItem>;
 
-// Computed: array of cart items (filter out invalid entries)
+const STORAGE_KEY = 'led-kikaku-cart';
+
+// Load initial state from localStorage
+const loadCart = (): CartState => {
+	if (typeof window === 'undefined') return {};
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		if (!stored) return {};
+		const parsed = JSON.parse(stored);
+		// Validate parsed data
+		if (typeof parsed !== 'object' || parsed === null) return {};
+		// Filter out invalid items
+		const valid: CartState = {};
+		Object.entries(parsed).forEach(([key, item]) => {
+			if (isValidCartItem(item)) {
+				valid[key] = item as CartItem;
+			}
+		});
+		return valid;
+	} catch {
+		return {};
+	}
+};
+
+const isValidCartItem = (item: unknown): item is CartItem => {
+	if (!item || typeof item !== 'object') return false;
+	const i = item as Record<string, unknown>;
+	return (
+		typeof i.variantId === 'number' &&
+		!isNaN(i.variantId) &&
+		typeof i.productId === 'number' &&
+		typeof i.title === 'string' &&
+		typeof i.price === 'number' &&
+		!isNaN(i.price) &&
+		typeof i.quantity === 'number'
+	);
+};
+
+// Save cart to localStorage
+const saveCart = (state: CartState) => {
+	if (typeof window === 'undefined') return;
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	} catch {
+		// Ignore storage errors
+	}
+};
+
+// Main cart store
+export const $cartItems = atom<CartState>(loadCart());
+
+// Subscribe to changes and save to localStorage
+$cartItems.subscribe((state) => {
+	saveCart(state);
+});
+
+// Computed: array of cart items
 export const $cartArray = computed($cartItems, (items) =>
-	Object.values(items).filter((item): item is CartItem =>
-		item != null &&
-		typeof item.variantId === 'number' &&
-		!isNaN(item.variantId) &&
-		typeof item.price === 'number' &&
-		!isNaN(item.price)
-	)
+	Object.values(items).filter(isValidCartItem)
 );
 
 // Computed: total item count
@@ -45,15 +93,19 @@ export const addToCart = (
 	quantity: number = 1
 ) => {
 	const key = String(item.variantId);
-	const existing = $cartItems.get()[key];
+	const current = $cartItems.get();
+	const existing = current[key];
 
 	if (existing) {
-		$cartItems.setKey(key, {
-			...existing,
-			quantity: existing.quantity + quantity
+		$cartItems.set({
+			...current,
+			[key]: { ...existing, quantity: existing.quantity + quantity }
 		});
 	} else {
-		$cartItems.setKey(key, { ...item, quantity });
+		$cartItems.set({
+			...current,
+			[key]: { ...item, quantity }
+		});
 	}
 };
 
@@ -61,46 +113,32 @@ export const removeFromCart = (variantId: number) => {
 	const key = String(variantId);
 	const current = $cartItems.get();
 	const { [key]: _, ...rest } = current;
-	// Reset the entire map to remove the key
-	Object.keys(current).forEach((k) => {
-		if (k !== key) return;
-		$cartItems.setKey(k, undefined as unknown as CartItem);
-	});
-	// Workaround: persistentMap doesn't support delete, so we rebuild
-	clearCart();
-	Object.values(rest).forEach((item) => {
-		$cartItems.setKey(String(item.variantId), item);
-	});
+	$cartItems.set(rest);
 };
 
 export const updateQuantity = (variantId: number, quantity: number) => {
 	const key = String(variantId);
-	const existing = $cartItems.get()[key];
+	const current = $cartItems.get();
+	const existing = current[key];
 
 	if (!existing) return;
 
 	if (quantity <= 0) {
 		removeFromCart(variantId);
 	} else {
-		$cartItems.setKey(key, { ...existing, quantity });
+		$cartItems.set({
+			...current,
+			[key]: { ...existing, quantity }
+		});
 	}
 };
 
 export const clearCart = () => {
-	const keys = Object.keys($cartItems.get());
-	keys.forEach((key) => {
-		$cartItems.setKey(key, undefined as unknown as CartItem);
-	});
+	$cartItems.set({});
 };
 
 export const getCartItems = (): CartItem[] => {
-	return Object.values($cartItems.get()).filter((item): item is CartItem =>
-		item != null &&
-		typeof item.variantId === 'number' &&
-		!isNaN(item.variantId) &&
-		typeof item.price === 'number' &&
-		!isNaN(item.price)
-	);
+	return Object.values($cartItems.get()).filter(isValidCartItem);
 };
 
 export const getCartTotal = (): number => {
@@ -109,29 +147,4 @@ export const getCartTotal = (): number => {
 
 export const getCartCount = (): number => {
 	return getCartItems().reduce((sum, item) => sum + item.quantity, 0);
-};
-
-// Clean up invalid cart items from storage
-export const cleanupCart = () => {
-	const items = $cartItems.get();
-	const validItems: CartItem[] = [];
-
-	// Collect valid items
-	Object.values(items).forEach((item) => {
-		if (
-			item != null &&
-			typeof item.variantId === 'number' &&
-			!isNaN(item.variantId) &&
-			typeof item.price === 'number' &&
-			!isNaN(item.price)
-		) {
-			validItems.push(item);
-		}
-	});
-
-	// Clear all and re-add valid items
-	clearCart();
-	validItems.forEach((item) => {
-		$cartItems.setKey(String(item.variantId), item);
-	});
 };
