@@ -21,6 +21,9 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+          cache-dependency-path: |
+            apps/api/pnpm-lock.yaml
+            apps/storefront/pnpm-lock.yaml
 
       - name: Install API dependencies
         run: pnpm install
