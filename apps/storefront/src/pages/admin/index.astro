@@ -1,5 +1,244 @@
 ---
 export const prerender = false;
 
-return Astro.redirect('/admin/products');
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import Container from '../../components/Container.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+
+type DashboardData = {
+	today: { orders: number; revenue: number; refunds: number };
+	week: { orders: number; revenue: number; refunds: number };
+	pending: { inbox: number; unfulfilled: number };
+	recentOrders: Array<{
+		id: number;
+		customer_email: string | null;
+		total_net: number;
+		currency: string;
+		status: string;
+		created_at: string;
+	}>;
+	recentInbox: Array<{
+		id: number;
+		title: string;
+		severity: string;
+		kind: string;
+		created_at: string;
+	}>;
+};
+
+let data: DashboardData | null = null;
+let error: string | null = null;
+
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const res = await fetch(`${apiBase}/admin/dashboard`, {
+			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+		});
+
+		if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+		const json = await res.json();
+		data = json as DashboardData;
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load dashboard data.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing.';
+}
+
+const formatCurrency = (amount: number, currency = 'JPY') => {
+	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);
+};
+
+const formatDate = (dateStr: string) => {
+	return new Date(dateStr).toLocaleDateString('ja-JP', {
+		month: 'short',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit'
+	});
+};
+
+const getSeverityVariant = (severity: string) => {
+	switch (severity) {
+		case 'critical': return 'critical';
+		case 'warning': return 'warn';
+		default: return 'info';
+	}
+};
+
+const getStatusVariant = (status: string) => {
+	switch (status) {
+		case 'paid': return 'info';
+		case 'fulfilled': return 'secondary';
+		case 'partial_refunded': return 'warn';
+		case 'refunded': return 'critical';
+		default: return 'secondary';
+	}
+};
 ---
+
+<Layout title="Dashboard - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center">
+				<h1 class="text-lg font-semibold text-[#1d1d1f]">Dashboard</h1>
+			</Container>
+		</header>
+
+		<Container class="mt-8">
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{data && (
+				<>
+					{/* KPI Cards */}
+					<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+						<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+							<div class="flex items-center gap-3 mb-2">
+								<div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+									<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+									</svg>
+								</div>
+								<span class="text-xs text-[#86868b] font-medium">Today's Orders</span>
+							</div>
+							<p class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{data.today.orders}</p>
+						</div>
+
+						<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+							<div class="flex items-center gap-3 mb-2">
+								<div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
+									<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+								</div>
+								<span class="text-xs text-[#86868b] font-medium">Today's Revenue</span>
+							</div>
+							<p class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{formatCurrency(data.today.revenue)}</p>
+						</div>
+
+						<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+							<div class="flex items-center gap-3 mb-2">
+								<div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
+									<svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+									</svg>
+								</div>
+								<span class="text-xs text-[#86868b] font-medium">Pending Inbox</span>
+							</div>
+							<p class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{data.pending.inbox}</p>
+						</div>
+
+						<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+							<div class="flex items-center gap-3 mb-2">
+								<div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
+									<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+									</svg>
+								</div>
+								<span class="text-xs text-[#86868b] font-medium">Unfulfilled</span>
+							</div>
+							<p class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{data.pending.unfulfilled}</p>
+						</div>
+					</div>
+
+					{/* Week Summary */}
+					<div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-8">
+						<h2 class="text-sm font-semibold text-[#1d1d1f] mb-4">This Week</h2>
+						<div class="grid grid-cols-3 gap-6">
+							<div>
+								<p class="text-xs text-[#86868b] mb-1">Orders</p>
+								<p class="text-xl font-semibold text-[#1d1d1f] tabular-nums">{data.week.orders}</p>
+							</div>
+							<div>
+								<p class="text-xs text-[#86868b] mb-1">Revenue</p>
+								<p class="text-xl font-semibold text-[#1d1d1f] tabular-nums">{formatCurrency(data.week.revenue)}</p>
+							</div>
+							<div>
+								<p class="text-xs text-[#86868b] mb-1">Refunds</p>
+								<p class="text-xl font-semibold text-red-600 tabular-nums">{formatCurrency(data.week.refunds)}</p>
+							</div>
+						</div>
+					</div>
+
+					{/* Recent Activity */}
+					<div class="grid lg:grid-cols-2 gap-6">
+						{/* Recent Orders */}
+						<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+							<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+								<h2 class="text-sm font-semibold text-[#1d1d1f]">Recent Orders</h2>
+								<Button href="/admin/orders" size="sm" variant="link">View All</Button>
+							</div>
+							<div class="divide-y divide-gray-100">
+								{data.recentOrders.length > 0 ? (
+									data.recentOrders.map((order) => (
+										<a href={`/admin/orders/${order.id}`} class="flex items-center justify-between px-6 py-3 hover:bg-gray-50 transition-colors">
+											<div class="flex items-center gap-3">
+												<span class="text-sm font-medium text-[#1d1d1f]">#{order.id}</span>
+												<span class="text-xs text-[#86868b] truncate max-w-[120px]">
+													{order.customer_email || 'No email'}
+												</span>
+											</div>
+											<div class="flex items-center gap-3">
+												<span class="text-sm font-medium text-[#1d1d1f] tabular-nums">
+													{formatCurrency(order.total_net, order.currency)}
+												</span>
+												<Badge variant={getStatusVariant(order.status)} size="sm">
+													{order.status}
+												</Badge>
+											</div>
+										</a>
+									))
+								) : (
+									<div class="px-6 py-8 text-center text-sm text-[#86868b]">
+										No recent orders
+									</div>
+								)}
+							</div>
+						</div>
+
+						{/* Recent Inbox */}
+						<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+							<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+								<h2 class="text-sm font-semibold text-[#1d1d1f]">Pending Inbox</h2>
+								<Button href="/admin/inbox" size="sm" variant="link">View All</Button>
+							</div>
+							<div class="divide-y divide-gray-100">
+								{data.recentInbox.length > 0 ? (
+									data.recentInbox.map((item) => (
+										<a href="/admin/inbox" class="flex items-center justify-between px-6 py-3 hover:bg-gray-50 transition-colors">
+											<div class="flex items-center gap-3">
+												<Badge variant={getSeverityVariant(item.severity)} size="sm">
+													{item.severity}
+												</Badge>
+												<span class="text-sm text-[#1d1d1f] truncate max-w-[200px]">
+													{item.title}
+												</span>
+											</div>
+											<span class="text-xs text-[#86868b]">
+												{formatDate(item.created_at)}
+											</span>
+										</a>
+									))
+								) : (
+									<div class="px-6 py-8 text-center text-sm text-[#86868b]">
+										No pending items
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+				</>
+			)}
+		</Container>
+	</div>
+</Layout>

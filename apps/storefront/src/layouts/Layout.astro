@@ -22,7 +22,7 @@ const isAdmin = Astro.url.pathname.startsWith('/admin');
 			<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50">
 				<Container class="flex h-[48px] items-center justify-between">
 					{/* Logo Area */}
-					<a href={isAdmin ? '/admin/inbox' : '/'} class="flex items-center gap-2 group transition-opacity hover:opacity-80">
+					<a href={isAdmin ? '/admin/' : '/'} class="flex items-center gap-2 group transition-opacity hover:opacity-80">
 						<span class="text-[17px] font-semibold tracking-tight">{isAdmin ? 'Led Kikaku OS' : 'LED Kikaku'}</span>
 					</a>
 
@@ -30,6 +30,7 @@ const isAdmin = Astro.url.pathname.startsWith('/admin');
 					<nav class="hidden md:flex items-center gap-8 text-[12px] font-normal text-[#1d1d1f]/80">
 						{isAdmin ? (
 							<>
+								<a href="/admin/" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/admin/' || Astro.url.pathname === '/admin' ? 'text-[#1d1d1f] font-medium' : ''}`}>Dashboard</a>
 								<a href="/admin/inbox" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/admin/inbox') ? 'text-[#1d1d1f] font-medium' : ''}`}>Inbox</a>
 								<a href="/admin/orders" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/admin/orders') ? 'text-[#1d1d1f] font-medium' : ''}`}>Orders</a>
 								<a href="/admin/events" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/admin/events') ? 'text-[#1d1d1f] font-medium' : ''}`}>Events</a>

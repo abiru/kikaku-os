@@ -1,8 +1,156 @@
 import { Hono } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
+import { buildJstToday, buildJstWeekStart } from '../lib/date';
 
 const adminReports = new Hono<Env>();
+
+// GET /admin/dashboard - Dashboard KPIs and recent activity
+adminReports.get('/dashboard', async (c) => {
+  try {
+    const today = buildJstToday();
+    const weekStart = buildJstWeekStart();
+
+    // Today's orders and revenue
+    const todayStats = await c.env.DB.prepare(`
+      SELECT
+        COUNT(*) as order_count,
+        COALESCE(SUM(total_net), 0) as revenue
+      FROM orders
+      WHERE status IN ('paid', 'fulfilled', 'partial_refunded')
+        AND substr(created_at, 1, 10) = ?
+    `).bind(today).first<{ order_count: number; revenue: number }>();
+
+    // Today's refunds
+    const todayRefunds = await c.env.DB.prepare(`
+      SELECT COALESCE(SUM(amount), 0) as refund_total
+      FROM refunds
+      WHERE status = 'succeeded'
+        AND substr(created_at, 1, 10) = ?
+    `).bind(today).first<{ refund_total: number }>();
+
+    // This week's orders and revenue
+    const weekStats = await c.env.DB.prepare(`
+      SELECT
+        COUNT(*) as order_count,
+        COALESCE(SUM(total_net), 0) as revenue
+      FROM orders
+      WHERE status IN ('paid', 'fulfilled', 'partial_refunded')
+        AND substr(created_at, 1, 10) >= ?
+    `).bind(weekStart).first<{ order_count: number; revenue: number }>();
+
+    // This week's refunds
+    const weekRefunds = await c.env.DB.prepare(`
+      SELECT COALESCE(SUM(amount), 0) as refund_total
+      FROM refunds
+      WHERE status = 'succeeded'
+        AND substr(created_at, 1, 10) >= ?
+    `).bind(weekStart).first<{ refund_total: number }>();
+
+    // Pending inbox items
+    const pendingInbox = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM inbox_items WHERE status = 'open'
+    `).first<{ count: number }>();
+
+    // Unfulfilled orders (paid but no shipped/delivered fulfillment)
+    const unfulfilledOrders = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count
+      FROM orders o
+      WHERE o.status = 'paid'
+        AND NOT EXISTS (
+          SELECT 1 FROM fulfillments f
+          WHERE f.order_id = o.id AND f.status IN ('shipped', 'delivered')
+        )
+    `).first<{ count: number }>();
+
+    // Recent orders (5)
+    const recentOrders = await c.env.DB.prepare(`
+      SELECT o.id, c.email as customer_email, o.total_net, o.currency, o.status, o.created_at
+      FROM orders o
+      LEFT JOIN customers c ON c.id = o.customer_id
+      ORDER BY o.created_at DESC
+      LIMIT 5
+    `).all<{
+      id: number;
+      customer_email: string | null;
+      total_net: number;
+      currency: string;
+      status: string;
+      created_at: string;
+    }>();
+
+    // Recent inbox items (5)
+    const recentInbox = await c.env.DB.prepare(`
+      SELECT id, title, severity, kind, created_at
+      FROM inbox_items
+      WHERE status = 'open'
+      ORDER BY created_at DESC
+      LIMIT 5
+    `).all<{
+      id: number;
+      title: string;
+      severity: string;
+      kind: string;
+      created_at: string;
+    }>();
+
+    return jsonOk(c, {
+      today: {
+        orders: todayStats?.order_count || 0,
+        revenue: todayStats?.revenue || 0,
+        refunds: todayRefunds?.refund_total || 0
+      },
+      week: {
+        orders: weekStats?.order_count || 0,
+        revenue: weekStats?.revenue || 0,
+        refunds: weekRefunds?.refund_total || 0
+      },
+      pending: {
+        inbox: pendingInbox?.count || 0,
+        unfulfilled: unfulfilledOrders?.count || 0
+      },
+      recentOrders: recentOrders.results || [],
+      recentInbox: recentInbox.results || []
+    });
+  } catch (err) {
+    console.error(err);
+    return jsonError(c, 'Failed to fetch dashboard data');
+  }
+});
+
+// GET /admin/documents/:id/download - Download document from R2
+adminReports.get('/documents/:id/download', async (c) => {
+  const id = parseInt(c.req.param('id'));
+  if (isNaN(id) || id <= 0) {
+    return jsonError(c, 'Invalid document ID', 400);
+  }
+
+  try {
+    const doc = await c.env.DB.prepare(
+      'SELECT r2_key, content_type FROM documents WHERE id = ?'
+    ).bind(id).first<{ r2_key: string; content_type: string }>();
+
+    if (!doc || !doc.r2_key) {
+      return jsonError(c, 'Document not found', 404);
+    }
+
+    const object = await c.env.R2.get(doc.r2_key);
+    if (!object) {
+      return jsonError(c, 'File not found in storage', 404);
+    }
+
+    const filename = doc.r2_key.split('/').pop() || 'download';
+    return new Response(object.body, {
+      headers: {
+        'Content-Type': doc.content_type || object.httpMetadata?.contentType || 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${filename}"`
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    return jsonError(c, 'Failed to download document');
+  }
+});
 
 // GET /admin/reports - List Daily Close documents
 adminReports.get('/reports', async (c) => {
