@@ -152,11 +152,20 @@ adminOrders.get(
         LIMIT 50
       `).bind(`%"orderId":"${id}"%`, `%"order_id":"${id}"%`).all();
 
+      // Get fulfillments for this order
+      const fulfillmentsRes = await c.env.DB.prepare(`
+        SELECT id, status, tracking_number, created_at, updated_at
+        FROM fulfillments
+        WHERE order_id = ?
+        ORDER BY created_at DESC
+      `).bind(id).all();
+
       return jsonOk(c, {
         order,
         payments: paymentsRes.results || [],
         refunds: refundsRes.results || [],
-        stripeEvents: stripeEventsRes.results || []
+        stripeEvents: stripeEventsRes.results || [],
+        fulfillments: fulfillmentsRes.results || []
       });
     } catch (err) {
       console.error(err);
