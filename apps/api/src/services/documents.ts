@@ -14,8 +14,12 @@ export const upsertDocument = async (
   path: string,
   contentType: string
 ) => {
-  await env.DB.prepare(`DELETE FROM documents WHERE ref_type=? AND ref_id=? AND path=?`).bind(refType, refId, path).run();
-  await env.DB.prepare(
-    `INSERT INTO documents (ref_type, ref_id, path, content_type) VALUES (?, ?, ?, ?)`
-  ).bind(refType, refId, path, contentType).run();
+  // Atomic upsert using ON CONFLICT (requires unique index on ref_type, ref_id, path)
+  await env.DB.prepare(`
+    INSERT INTO documents (ref_type, ref_id, path, content_type, created_at, updated_at)
+    VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+    ON CONFLICT(ref_type, ref_id, path) DO UPDATE SET
+      content_type = excluded.content_type,
+      updated_at = datetime('now')
+  `).bind(refType, refId, path, contentType).run();
 };

@@ -49,14 +49,19 @@ export const journalizeDailyClose = async (
     entries.push({ account: 'acct_bank', debit: 0, credit: refundTotal, memo: 'Refunds' });
   }
 
+  // Use INSERT OR IGNORE to handle race conditions gracefully
+  // If entries already exist (from concurrent run), they will be skipped
   const stmt = env.DB.prepare(
-    `INSERT INTO ledger_entries (ref_type, ref_id, account_id, debit, credit, memo) VALUES (?, ?, ?, ?, ?, ?)`
+    `INSERT OR IGNORE INTO ledger_entries (ref_type, ref_id, account_id, debit, credit, memo) VALUES (?, ?, ?, ?, ?, ?)`
   );
+  let inserted = 0;
   for (const e of entries) {
-    await stmt.bind('daily_close', date, e.account, e.debit, e.credit, e.memo).run();
+    const result = await stmt.bind('daily_close', date, e.account, e.debit, e.credit, e.memo).run();
+    if (result.meta.changes > 0) inserted++;
   }
 
-  return { entriesCreated: entries.length, skipped: false };
+  // Return actual number of entries created (may be less if some already existed)
+  return { entriesCreated: inserted, skipped: inserted === 0 && entries.length > 0 };
 };
 
 export const listLedgerEntries = async (env: Env['Bindings'], date: string) => {
