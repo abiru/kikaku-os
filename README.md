@@ -1,13 +1,12 @@
 # Led Kikaku OS v1
 
-脱Shopify運用OSの最小実装。Cloudflare Workers + Hono API と React + Tailwind 管理画面で日次締め・証跡・仕訳ドラフト・Inbox を提供します。
+脱Shopify運用OSの最小実装。Cloudflare Workers + Hono API と Astro SSR（ストア + 管理画面）で日次締め・証跡・仕訳ドラフト・Inbox を提供します。
 
 ## スタック
 - Cloudflare Workers + Hono (TypeScript)
 - Cloudflare D1 (SQLite)
 - Cloudflare R2
-- Admin: React + Tailwind (Vite)
-- Storefront: Astro
+- Storefront + Admin: Astro SSR
 
 ## ローカル開発
 依存は pnpm を推奨します。
@@ -21,9 +20,8 @@
   - `STRIPE_WEBHOOK_SECRET`
   - `STOREFRONT_BASE_URL`
 - API: http://localhost:8787
-- Admin: http://localhost:5173
-- Storefront: http://localhost:4321
-- CORS origin: http://localhost:5173 / http://127.0.0.1:5173 / http://localhost:4321 / http://127.0.0.1:4321
+- Storefront + Admin: http://localhost:4321
+- CORS origin: http://localhost:4321 / http://127.0.0.1:4321
 - ローカルseed: `DEV_MODE=true` のときのみ `/dev/seed` が有効
 
 ### API
@@ -45,12 +43,6 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 Note: If the API shows up on 8788 (or smoke/dev seems odd), it usually means double-boot: another dev server is already listening on 8787.
 Check: `lsof -nP -iTCP:8787 -sTCP:LISTEN` then `kill <PID>`.
 
-### Admin
-```bash
-pnpm install --prefix apps/admin
-pnpm -C apps/admin dev
-```
-
 ### Storefront
 ```bash
 pnpm install --prefix apps/storefront
@@ -58,12 +50,6 @@ cp apps/storefront/.env.example apps/storefront/.env
 pnpm -C apps/storefront dev
 ```
 環境変数: `PUBLIC_API_BASE`（デフォルトは http://localhost:8787）
-
-Adminの起動確認（キャッシュが残る場合）:
-```bash
-rm -rf apps/admin/node_modules/.vite
-pnpm -C apps/admin dev
-```
 
 ## 主要エンドポイント
 
@@ -90,11 +76,14 @@ curl -X POST http://localhost:8787/dev/seed \
   -d '{"date":"2026-01-13","orders":5,"refunds":1}'
 ```
 
-## Admin 画面
+## 管理画面（/admin/*）
 
-* 日次締め: 日付選択、レポート表示、証跡作成、ドキュメント閲覧
-* 仕訳: 日付別 ledger entries をテーブル表示
-* Inbox: Open items の詳細と Approve/Reject
+* /admin/inbox: Open items の詳細と Approve/Reject
+* /admin/orders: 注文一覧・詳細（payments/refunds/events）
+* /admin/events: Stripe webhook ログ
+* /admin/products: 商品一覧
+* /admin/reports: 日次締めレポート
+* /admin/ledger: 仕訳一覧
 
 ## 動作確認手順（curl例）
 

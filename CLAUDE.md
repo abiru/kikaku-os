@@ -4,15 +4,14 @@
 
 ## プロジェクト概要
 
-Led Kikaku OS - Cloudflareスタック上に構築されたECプラットフォーム。pnpmワークスペースによるモノレポ構成で、3つのアプリケーションから成る。
+Led Kikaku OS - Cloudflareスタック上に構築されたECプラットフォーム。pnpmワークスペースによるモノレポ構成で、2つのアプリケーションから成る。
 
 ## アーキテクチャ
 
 ```
 apps/
 ├── api/        # Hono + Cloudflare Workers バックエンドAPI
-├── admin/      # React 19 + Vite 管理画面
-└── storefront/ # Astro SSR 公開ストア
+└── storefront/ # Astro SSR 公開ストア + 管理画面（/admin/*）
 ```
 
 - **データベース**: Cloudflare D1 (SQLite)
@@ -29,20 +28,17 @@ pnpm install
 ### 開発サーバー起動
 ```bash
 pnpm -C apps/api dev --port 8787        # API: http://localhost:8787
-pnpm -C apps/admin dev                   # Admin: http://localhost:5173
-pnpm -C apps/storefront dev              # Store: http://localhost:4321
+pnpm -C apps/storefront dev              # Store + Admin: http://localhost:4321
 ```
 
 ### テスト実行
 ```bash
 pnpm -C apps/api test
-pnpm -C apps/admin test
 ```
 
 ### ビルド
 ```bash
 pnpm -C apps/api build
-pnpm -C apps/admin build
 pnpm -C apps/storefront build
 ```
 
@@ -64,12 +60,6 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 - レスポンス: `jsonOk()`, `jsonError()` ヘルパーを使用
 - 認証: `x-admin-key` ヘッダー（管理者API）
 
-### Admin (React)
-- TanStack React Queryでサーバー状態管理
-- React Router v7でルーティング
-- Tailwind CSSでスタイリング（ユーティリティファースト）
-- `api/client.ts` の `apiFetch()` でAPI呼び出し
-
 ### Storefront (Astro)
 - `.astro` ファイルでSSRページ
 - クライアントJSはインライン `<script>` タグ
@@ -78,9 +68,7 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 ## テスト
 
 - **テストフレームワーク**: Vitest
-- **Admin環境**: jsdom + React Testing Library
 - **命名**: `*_test.ts` または `*.test.ts`
-- **セットアップ**: `apps/admin/src/test/setup.ts` にlocalStorage/fetchモック
 
 ## 主要な設計方針
 
