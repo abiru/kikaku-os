@@ -40,6 +40,18 @@ type Product = {
 	updated_at: string;
 };
 
+type ProductImage = {
+	id: number;
+	product_id: number;
+	r2_key: string;
+	filename: string;
+	content_type: string;
+	size_bytes: number;
+	position: number;
+	created_at: string;
+	updated_at: string;
+};
+
 type Category = {
 	category: string;
 	product_count: number;
@@ -47,6 +59,7 @@ type Category = {
 
 let product: Product | null = null;
 let variants: Variant[] = [];
+let images: ProductImage[] = [];
 let categories: Category[] = [];
 let error: string | null = null;
 let successMessage: string | null = null;
@@ -125,6 +138,21 @@ if (product && apiKey) {
 		}
 	} catch (e) {
 		console.error('Failed to fetch variants:', e);
+	}
+}
+
+// Fetch images if product is loaded
+if (product && apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/admin/products/${id}/images`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+		if (res.ok) {
+			const data = await res.json();
+			images = data.images || [];
+		}
+	} catch (e) {
+		console.error('Failed to fetch images:', e);
 	}
 }
 
@@ -283,6 +311,84 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 					</div>
 				</form>
 
+				<!-- Images Section -->
+				<div class="mt-8">
+					<div class="flex items-center justify-between mb-4">
+						<h2 class="text-lg font-semibold text-[#1d1d1f]">Images</h2>
+						<label
+							class="text-sm text-[#0071e3] hover:underline flex items-center gap-1 cursor-pointer"
+						>
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+							</svg>
+							Add Images
+							<input
+								type="file"
+								id="image-upload"
+								accept="image/jpeg,image/png,image/gif,image/webp"
+								multiple
+								class="hidden"
+							/>
+						</label>
+					</div>
+
+					<div id="upload-progress" class="hidden mb-4">
+						<div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+							<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+							</svg>
+							<span>Uploading...</span>
+						</div>
+					</div>
+
+					<div id="image-error" class="hidden mb-4">
+						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+					</div>
+
+					{images.length === 0 ? (
+						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+							<p class="text-[#86868b] text-sm">No images yet. Add product images to showcase your products.</p>
+						</div>
+					) : (
+						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+							<div id="images-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+								{images.map((image, index) => (
+									<div
+										class="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden"
+										data-image-id={image.id}
+									>
+										<img
+											src={`${apiBase}/r2?key=${encodeURIComponent(image.r2_key)}&x-admin-key=${apiKey}`}
+											alt={image.filename}
+											class="w-full h-full object-cover"
+											loading="lazy"
+										/>
+										{index === 0 && (
+											<span class="absolute top-2 left-2 bg-[#0071e3] text-white text-xs px-2 py-0.5 rounded-full">
+												Main
+											</span>
+										)}
+										<button
+											type="button"
+											class="delete-image-btn absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+											data-image-id={image.id}
+											data-image-filename={image.filename}
+										>
+											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+											</svg>
+										</button>
+										<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+											<p class="text-white text-xs truncate">{image.filename}</p>
+										</div>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
+				</div>
+
 				<!-- Variants Section -->
 				<div class="mt-8">
 					<div class="flex items-center justify-between mb-4">
@@ -436,6 +542,75 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 </AdminLayout>
 
 <script define:vars={{ apiBase, apiKey, productId: id }}>
+	// Image handling
+	const imageUpload = document.getElementById('image-upload');
+	const uploadProgress = document.getElementById('upload-progress');
+	const imageError = document.getElementById('image-error');
+
+	function showImageError(message) {
+		const errorDiv = imageError.querySelector('div');
+		errorDiv.textContent = message;
+		imageError.classList.remove('hidden');
+		setTimeout(() => imageError.classList.add('hidden'), 5000);
+	}
+
+	imageUpload?.addEventListener('change', async (e) => {
+		const files = e.target.files;
+		if (!files || files.length === 0) return;
+
+		uploadProgress.classList.remove('hidden');
+		imageError.classList.add('hidden');
+
+		const formData = new FormData();
+		for (const file of files) {
+			formData.append('file', file);
+		}
+
+		try {
+			const res = await fetch(`${apiBase}/admin/products/${productId}/images`, {
+				method: 'POST',
+				headers: { 'x-admin-key': apiKey },
+				body: formData
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				showImageError(data.message || 'Failed to upload images');
+			} else {
+				location.reload();
+			}
+		} catch (err) {
+			showImageError('Failed to upload images. Please try again.');
+		} finally {
+			uploadProgress.classList.add('hidden');
+			imageUpload.value = '';
+		}
+	});
+
+	document.querySelectorAll('.delete-image-btn').forEach(btn => {
+		btn.addEventListener('click', async () => {
+			const imageId = btn.dataset.imageId;
+			const filename = btn.dataset.imageFilename;
+			if (!confirm(`Delete image "${filename}"?`)) return;
+
+			try {
+				const res = await fetch(`${apiBase}/admin/products/${productId}/images/${imageId}`, {
+					method: 'DELETE',
+					headers: { 'x-admin-key': apiKey }
+				});
+				if (res.ok) {
+					location.reload();
+				} else {
+					const data = await res.json();
+					showImageError(data.message || 'Failed to delete image');
+				}
+			} catch (err) {
+				showImageError('Failed to delete image. Please try again.');
+			}
+		});
+	});
+
+	// Variant handling
 	const modal = document.getElementById('variant-modal');
 	const modalTitle = document.getElementById('modal-title');
 	const variantForm = document.getElementById('variant-form');
