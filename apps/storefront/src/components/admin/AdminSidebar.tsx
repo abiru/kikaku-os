@@ -22,6 +22,7 @@ import {
   ArchiveBoxIcon,
   ChartBarIcon,
   DocumentTextIcon,
+  DocumentDuplicateIcon,
   Cog6ToothIcon,
   FolderIcon,
   TicketIcon,
@@ -45,6 +46,7 @@ const navigation: NavigationItem[] = [
   { name: 'Categories', href: '/admin/categories', icon: FolderIcon },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },
   { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon },
+  { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon },
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
 ]
