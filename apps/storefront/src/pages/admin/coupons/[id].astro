@@ -3,8 +3,7 @@ export const prerender = false;
 
 import Badge from '../../../components/Badge.astro';
 import Button from '../../../components/Button.astro';
-import Container from '../../../components/Container.astro';
-import Layout from '../../../layouts/Layout.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
 const { id } = Astro.params;
@@ -174,23 +173,19 @@ const isExpired = (c: Coupon) => {
 const canDelete = coupon && coupon.current_uses === 0;
 ---
 
-<Layout title={coupon ? `${coupon.code} - Admin` : 'Coupon - Admin'}>
-	<div class="bg-[#f5f5f7] min-h-screen pb-20">
-		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
-			<Container class="h-16 flex items-center gap-4">
-				<a href="/admin/coupons" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-					</svg>
-					Coupons
-				</a>
-				<h1 class="text-lg font-semibold text-[#1d1d1f]">
-					{coupon ? `Edit: ${coupon.code}` : 'Coupon'}
-				</h1>
-			</Container>
-		</header>
-
-		<Container class="mt-8 max-w-2xl mx-auto">
+<AdminLayout title={coupon ? `${coupon.code} - Admin` : 'Coupon - Admin'}>
+	<div class="space-y-6 max-w-2xl">
+		<div class="flex items-center gap-4">
+			<a href="/admin/coupons" class="text-indigo-600 hover:text-indigo-500 text-sm flex items-center gap-1">
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+				</svg>
+				Coupons
+			</a>
+			<h1 class="text-2xl font-semibold text-gray-900">
+				{coupon ? `Edit: ${coupon.code}` : 'Coupon'}
+			</h1>
+		</div>
 			{successMessage && (
 				<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
 					{successMessage}
@@ -417,9 +412,8 @@ const canDelete = coupon && coupon.current_uses === 0;
 					</form>
 				</>
 			)}
-		</Container>
 	</div>
-</Layout>
+</AdminLayout>
 
 <script define:vars={{ apiBase, apiKey, couponId: id, canDelete }}>
 	const deleteBtn = document.getElementById('delete-btn');
