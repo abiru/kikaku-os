@@ -9,6 +9,7 @@ import {
 } from '../lib/schemas';
 import type { Env } from '../env';
 import { getActor } from '../middleware/clerkAuth';
+import { sendShippingNotificationEmail } from '../services/orderEmail';
 
 const fulfillments = new Hono<Env>();
 
@@ -37,7 +38,7 @@ fulfillments.put(
   zValidator('json', updateFulfillmentSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
-    const { status, tracking_number } = c.req.valid('json');
+    const { status, tracking_number, carrier } = c.req.valid('json');
 
     try {
       // Verify fulfillment exists
@@ -65,7 +66,20 @@ fulfillments.put(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(getActor(c), 'update_fulfillment', `fulfillment:${id}`,
-        JSON.stringify({ status, tracking_number, order_id: existing.order_id })).run();
+        JSON.stringify({ status, tracking_number, carrier, order_id: existing.order_id })).run();
+
+      // Send shipping notification email when status changes to 'shipped'
+      if (status === 'shipped' && tracking_number) {
+        sendShippingNotificationEmail(c.env, existing.order_id, carrier || '配送業者', tracking_number)
+          .then((result) => {
+            if (!result.success) {
+              console.error('Shipping notification email failed:', result.error);
+            }
+          })
+          .catch((err) => {
+            console.error('Failed to send shipping notification email:', err);
+          });
+      }
 
       return jsonOk(c, { fulfillment: updated });
     } catch (err) {

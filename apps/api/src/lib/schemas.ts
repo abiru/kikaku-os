@@ -320,6 +320,12 @@ export const updateFulfillmentSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => v?.trim() || null),
+  carrier: z
+    .string()
+    .max(50, 'Carrier name must be 50 characters or less')
+    .optional()
+    .nullable()
+    .transform((v) => v?.trim() || null),
 });
 
 export type FulfillmentIdParam = z.infer<typeof fulfillmentIdParamSchema>;
