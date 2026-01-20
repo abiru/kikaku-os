@@ -1,7 +1,7 @@
-import { Clerk } from '@clerk/clerk-js';
+import type { Clerk as ClerkType } from '@clerk/clerk-js';
 
-let clerkInstance: Clerk | null = null;
-let clerkLoadPromise: Promise<Clerk> | null = null;
+let clerkInstance: ClerkType | null = null;
+let clerkLoadPromise: Promise<ClerkType> | null = null;
 
 export const getClerkPublishableKey = (): string => {
   const key =
@@ -17,7 +17,7 @@ export const getClerkPublishableKey = (): string => {
   return key;
 };
 
-export const loadClerk = async (): Promise<Clerk> => {
+export const loadClerk = async (): Promise<ClerkType> => {
   if (clerkInstance) {
     return clerkInstance;
   }
@@ -32,6 +32,7 @@ export const loadClerk = async (): Promise<Clerk> => {
       throw new Error('PUBLIC_CLERK_PUBLISHABLE_KEY is not set');
     }
 
+    const { Clerk } = await import('@clerk/clerk-js');
     const clerk = new Clerk(publishableKey);
     await clerk.load();
     clerkInstance = clerk;
@@ -41,7 +42,7 @@ export const loadClerk = async (): Promise<Clerk> => {
   return clerkLoadPromise;
 };
 
-export const getClerk = (): Clerk | null => {
+export const getClerk = (): ClerkType | null => {
   return clerkInstance;
 };
 
