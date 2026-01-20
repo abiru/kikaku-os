@@ -4,7 +4,9 @@
 declare global {
   interface Window {
     Clerk?: {
+      loaded?: boolean;
       session?: {
+        id: string;
         getToken: () => Promise<string | null>;
       } | null;
       user?: {
@@ -26,7 +28,7 @@ const waitForClerk = (): Promise<NonNullable<Window['Clerk']>> => {
       return;
     }
 
-    if (window.Clerk) {
+    if (window.Clerk?.loaded) {
       resolve(window.Clerk);
       return;
     }
@@ -36,7 +38,7 @@ const waitForClerk = (): Promise<NonNullable<Window['Clerk']>> => {
     const maxAttempts = 100;
     const interval = setInterval(() => {
       attempts++;
-      if (window.Clerk) {
+      if (window.Clerk?.loaded) {
         clearInterval(interval);
         resolve(window.Clerk);
       } else if (attempts >= maxAttempts) {
