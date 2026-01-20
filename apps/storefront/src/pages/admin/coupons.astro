@@ -1,0 +1,250 @@
+---
+export const prerender = false;
+
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import Container from '../../components/Container.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+const q = Astro.url.searchParams.get('q') || '';
+const status = Astro.url.searchParams.get('status') || 'all';
+const page = Number(Astro.url.searchParams.get('page') || '1');
+const perPage = 20;
+
+type Coupon = {
+	id: number;
+	code: string;
+	type: string;
+	value: number;
+	currency: string;
+	min_order_amount: number;
+	max_uses: number | null;
+	uses_per_customer: number;
+	current_uses: number;
+	status: string;
+	starts_at: string | null;
+	expires_at: string | null;
+	created_at: string;
+	updated_at: string;
+};
+
+let coupons: Coupon[] = [];
+let meta = { totalCount: 0, totalPages: 1 };
+let error = null;
+
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const query = new URLSearchParams({
+			q,
+			status,
+			page: page.toString(),
+			perPage: perPage.toString()
+		});
+
+		const res = await fetch(`${apiBase}/admin/coupons?${query}`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY
+			}
+		});
+
+		if (!res.ok) {
+			throw new Error(`API Error: ${res.status}`);
+		}
+
+		const data = await res.json();
+		coupons = data.coupons || [];
+		meta = data.meta || meta;
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load coupons. Please check your admin key.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing in server environment.';
+}
+
+const hasNext = page < meta.totalPages;
+const hasPrev = page > 1;
+
+const formatValue = (coupon: Coupon) => {
+	if (coupon.type === 'percentage') {
+		return `${coupon.value}%`;
+	}
+	return new Intl.NumberFormat('ja-JP', {
+		style: 'currency',
+		currency: coupon.currency,
+		minimumFractionDigits: 0
+	}).format(coupon.value);
+};
+
+const formatDate = (dateStr: string | null) => {
+	if (!dateStr) return '-';
+	return new Date(dateStr).toLocaleDateString('ja-JP');
+};
+
+const isExpired = (coupon: Coupon) => {
+	if (!coupon.expires_at) return false;
+	return new Date(coupon.expires_at) < new Date();
+};
+---
+
+<Layout title="Coupons - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center justify-between">
+				<div class="flex items-center gap-4">
+					<h1 class="text-lg font-semibold text-[#1d1d1f]">Coupons</h1>
+					<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				</div>
+				<div class="flex items-center gap-3">
+					<Button href="/admin/coupons/new" size="sm" variant="primary">
+						+ New Coupon
+					</Button>
+				</div>
+			</Container>
+		</header>
+
+		<Container class="mt-8">
+			{/* Search & Filter */}
+			<div class="mb-6 flex flex-col sm:flex-row gap-4">
+				<form method="get" class="relative flex-1 max-w-md">
+					<input
+						type="search"
+						name="q"
+						value={q}
+						placeholder="Search by code..."
+						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+					/>
+					<input type="hidden" name="status" value={status} />
+					<svg
+						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+					</svg>
+				</form>
+				<div class="flex gap-2">
+					<a
+						href={`?q=${q}&status=all`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+					>
+						All
+					</a>
+					<a
+						href={`?q=${q}&status=active`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'active' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+					>
+						Active
+					</a>
+					<a
+						href={`?q=${q}&status=inactive`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'inactive' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+					>
+						Inactive
+					</a>
+				</div>
+			</div>
+
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{/* Coupon Table */}
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+				<div class="overflow-x-auto">
+					<table class="w-full text-left text-sm text-[#1d1d1f]">
+						<thead class="bg-gray-50 border-b border-gray-200">
+							<tr>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Code</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Type</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Value</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Usage</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Expires</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100">
+							{coupons.length > 0 ? (
+								coupons.map((coupon) => (
+									<tr class="hover:bg-gray-50 transition-colors group">
+										<td class="px-6 py-4">
+											<div class="font-mono font-medium">{coupon.code}</div>
+											{coupon.min_order_amount > 0 && (
+												<div class="text-xs text-[#86868b]">
+													Min: {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: coupon.currency, minimumFractionDigits: 0 }).format(coupon.min_order_amount)}
+												</div>
+											)}
+										</td>
+										<td class="px-6 py-4">
+											<Badge severity="secondary">
+												{coupon.type === 'percentage' ? 'Percentage' : 'Fixed'}
+											</Badge>
+										</td>
+										<td class="px-6 py-4 font-medium tabular-nums">
+											{formatValue(coupon)}
+										</td>
+										<td class="px-6 py-4">
+											{isExpired(coupon) ? (
+												<Badge severity="warning">Expired</Badge>
+											) : coupon.status === 'active' ? (
+												<Badge severity="info">Active</Badge>
+											) : (
+												<Badge severity="secondary">Inactive</Badge>
+											)}
+										</td>
+										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+											{coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ''}
+										</td>
+										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+											{formatDate(coupon.expires_at)}
+										</td>
+										<td class="px-6 py-4 text-right">
+											<a href={`/admin/coupons/${coupon.id}`} class="text-[#0071e3] hover:underline font-medium">Edit</a>
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colspan="7" class="px-6 py-12 text-center text-[#86868b]">
+										No coupons found.
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+
+				{/* Pagination */}
+				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+					<div class="text-xs text-[#86868b]">
+						Page {page} of {meta.totalPages}
+					</div>
+					<div class="flex gap-2">
+						<Button
+							href={hasPrev ? `?page=${page - 1}&q=${q}&status=${status}` : '#'}
+							disabled={!hasPrev}
+							size="sm"
+							variant="secondary"
+						>
+							Previous
+						</Button>
+						<Button
+							href={hasNext ? `?page=${page + 1}&q=${q}&status=${status}` : '#'}
+							disabled={!hasNext}
+							size="sm"
+							variant="secondary"
+						>
+							Next
+						</Button>
+					</div>
+				</div>
+			</div>
+		</Container>
+	</div>
+</Layout>

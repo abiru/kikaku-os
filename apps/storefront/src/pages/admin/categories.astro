@@ -1,0 +1,397 @@
+---
+export const prerender = false;
+
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import Container from '../../components/Container.astro';
+import Layout from '../../layouts/Layout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+const q = Astro.url.searchParams.get('q') || '';
+
+type Category = {
+	category: string;
+	product_count: number;
+};
+
+let categories: Category[] = [];
+let error = null;
+
+// SSR Data Fetching
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const query = new URLSearchParams({ q });
+
+		const res = await fetch(`${apiBase}/admin/categories?${query}`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY
+			}
+		});
+
+		if (!res.ok) {
+			throw new Error(`API Error: ${res.status}`);
+		}
+
+		const data = await res.json();
+		categories = data.categories || [];
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load categories. Please check your admin key.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing in server environment.';
+}
+---
+
+<Layout title="Categories - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center justify-between">
+				<div class="flex items-center gap-4">
+					<h1 class="text-lg font-semibold text-[#1d1d1f]">Categories</h1>
+					<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{categories.length} items</span>
+				</div>
+			</Container>
+		</header>
+
+		<Container class="mt-8">
+			{/* Search Bar */}
+			<div class="mb-6">
+				<form method="get" class="relative max-w-md">
+					<input
+						type="search"
+						name="q"
+						value={q}
+						placeholder="Search categories..."
+						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+					/>
+					<svg
+						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+					</svg>
+				</form>
+			</div>
+
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{/* Category Table */}
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+				<div class="overflow-x-auto">
+					<table class="w-full text-left text-sm text-[#1d1d1f]">
+						<thead class="bg-gray-50 border-b border-gray-200">
+							<tr>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Category Name</th>
+								<th class="px-6 py-3 font-medium text-[#86868b]">Products</th>
+								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Actions</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-gray-100">
+							{categories.length > 0 ? (
+								categories.map((cat) => (
+									<tr class="hover:bg-gray-50 transition-colors group" data-category={cat.category}>
+										<td class="px-6 py-4">
+											<a href={`/admin/categories/${encodeURIComponent(cat.category)}`} class="font-medium text-[#1d1d1f] hover:text-[#0071e3]">
+												{cat.category}
+											</a>
+										</td>
+										<td class="px-6 py-4">
+											<Badge severity="secondary">{cat.product_count} products</Badge>
+										</td>
+										<td class="px-6 py-4 text-right">
+											<div class="flex items-center justify-end gap-3">
+												<button
+													type="button"
+													class="rename-btn text-[#0071e3] hover:underline font-medium"
+													data-category={cat.category}
+												>
+													Rename
+												</button>
+												<button
+													type="button"
+													class="delete-btn text-red-500 hover:underline font-medium"
+													data-category={cat.category}
+													data-count={cat.product_count}
+												>
+													Delete
+												</button>
+											</div>
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colspan="3" class="px-6 py-12 text-center text-[#86868b]">
+										No categories found. Categories are created automatically when you assign them to products.
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</Container>
+
+		{/* Rename Modal */}
+		<div id="rename-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+				<div class="p-6 border-b border-gray-100">
+					<h3 class="text-lg font-semibold text-[#1d1d1f]">Rename Category</h3>
+				</div>
+				<form id="rename-form" class="p-6 space-y-4">
+					<input type="hidden" id="rename-old-name" name="oldName" value="" />
+
+					<div>
+						<label for="rename-current" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Current Name
+						</label>
+						<input
+							type="text"
+							id="rename-current"
+							readonly
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#86868b] bg-gray-50"
+						/>
+					</div>
+
+					<div>
+						<label for="rename-new" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							New Name <span class="text-red-500">*</span>
+						</label>
+						<input
+							type="text"
+							id="rename-new"
+							name="newName"
+							required
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							placeholder="Enter new category name"
+						/>
+					</div>
+
+					<div id="rename-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+
+					<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+						<button
+							type="button"
+							id="rename-cancel-btn"
+							class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+						>
+							Cancel
+						</button>
+						<button
+							type="submit"
+							class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+						>
+							Rename
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		{/* Delete Modal */}
+		<div id="delete-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+				<div class="p-6 border-b border-gray-100">
+					<h3 class="text-lg font-semibold text-[#1d1d1f]">Delete Category</h3>
+				</div>
+				<form id="delete-form" class="p-6 space-y-4">
+					<input type="hidden" id="delete-name" name="deleteName" value="" />
+
+					<p class="text-sm text-[#1d1d1f]">
+						Are you sure you want to delete the category "<span id="delete-category-name" class="font-medium"></span>"?
+					</p>
+					<p class="text-sm text-[#86868b]">
+						<span id="delete-product-count"></span> product(s) will have their category removed.
+					</p>
+
+					<div>
+						<label for="delete-move-to" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Move products to (optional)
+						</label>
+						<input
+							type="text"
+							id="delete-move-to"
+							name="moveTo"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							placeholder="Leave empty to remove category from products"
+						/>
+					</div>
+
+					<div id="delete-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+
+					<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+						<button
+							type="button"
+							id="delete-cancel-btn"
+							class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+						>
+							Cancel
+						</button>
+						<button
+							type="submit"
+							class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+						>
+							Delete
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</Layout>
+
+<script define:vars={{ apiBase, apiKey: import.meta.env.ADMIN_API_KEY }}>
+	// Rename Modal
+	const renameModal = document.getElementById('rename-modal');
+	const renameForm = document.getElementById('rename-form');
+	const renameOldName = document.getElementById('rename-old-name');
+	const renameCurrent = document.getElementById('rename-current');
+	const renameNew = document.getElementById('rename-new');
+	const renameError = document.getElementById('rename-error');
+	const renameCancelBtn = document.getElementById('rename-cancel-btn');
+
+	// Delete Modal
+	const deleteModal = document.getElementById('delete-modal');
+	const deleteForm = document.getElementById('delete-form');
+	const deleteName = document.getElementById('delete-name');
+	const deleteCategoryName = document.getElementById('delete-category-name');
+	const deleteProductCount = document.getElementById('delete-product-count');
+	const deleteMoveTo = document.getElementById('delete-move-to');
+	const deleteError = document.getElementById('delete-error');
+	const deleteCancelBtn = document.getElementById('delete-cancel-btn');
+
+	function showRenameModal(category) {
+		renameOldName.value = category;
+		renameCurrent.value = category;
+		renameNew.value = '';
+		renameError.classList.add('hidden');
+		renameModal.classList.remove('hidden');
+		renameNew.focus();
+	}
+
+	function hideRenameModal() {
+		renameModal.classList.add('hidden');
+		renameForm.reset();
+	}
+
+	function showDeleteModal(category, count) {
+		deleteName.value = category;
+		deleteCategoryName.textContent = category;
+		deleteProductCount.textContent = count;
+		deleteMoveTo.value = '';
+		deleteError.classList.add('hidden');
+		deleteModal.classList.remove('hidden');
+	}
+
+	function hideDeleteModal() {
+		deleteModal.classList.add('hidden');
+		deleteForm.reset();
+	}
+
+	function showError(element, message) {
+		element.textContent = message;
+		element.classList.remove('hidden');
+	}
+
+	// Rename button handlers
+	document.querySelectorAll('.rename-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			showRenameModal(btn.dataset.category);
+		});
+	});
+
+	// Delete button handlers
+	document.querySelectorAll('.delete-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			showDeleteModal(btn.dataset.category, btn.dataset.count);
+		});
+	});
+
+	// Modal close handlers
+	renameCancelBtn?.addEventListener('click', hideRenameModal);
+	deleteCancelBtn?.addEventListener('click', hideDeleteModal);
+
+	renameModal?.addEventListener('click', (e) => {
+		if (e.target === renameModal) hideRenameModal();
+	});
+
+	deleteModal?.addEventListener('click', (e) => {
+		if (e.target === deleteModal) hideDeleteModal();
+	});
+
+	// Rename form submit
+	renameForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const oldName = renameOldName.value;
+		const newName = renameNew.value.trim();
+
+		if (!newName) {
+			showError(renameError, 'New name is required');
+			return;
+		}
+
+		if (newName === oldName) {
+			showError(renameError, 'New name must be different from current name');
+			return;
+		}
+
+		try {
+			const res = await fetch(`${apiBase}/admin/categories/${encodeURIComponent(oldName)}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({ newName })
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				showError(renameError, data.message || 'Failed to rename category');
+				return;
+			}
+
+			location.reload();
+		} catch (err) {
+			showError(renameError, 'An error occurred. Please try again.');
+		}
+	});
+
+	// Delete form submit
+	deleteForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const name = deleteName.value;
+		const moveTo = deleteMoveTo.value.trim() || null;
+
+		try {
+			const res = await fetch(`${apiBase}/admin/categories/${encodeURIComponent(name)}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({ moveTo })
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				showError(deleteError, data.message || 'Failed to delete category');
+				return;
+			}
+
+			location.reload();
+		} catch (err) {
+			showError(deleteError, 'An error occurred. Please try again.');
+		}
+	});
+</script>

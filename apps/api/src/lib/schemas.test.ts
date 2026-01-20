@@ -47,7 +47,8 @@ describe('Product Schemas', () => {
       expect(result.data).toEqual({
         title: 'Test Product',
         description: 'A description',
-        status: 'active'
+        status: 'active',
+        category: null
       });
     });
 
