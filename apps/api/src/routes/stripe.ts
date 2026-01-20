@@ -3,6 +3,7 @@ import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
 import { verifyStripeSignature } from '../lib/stripe';
 import { calculateOrderStatus, getStatusChangeReason } from '../services/orderStatus';
+import { sendOrderConfirmationEmail } from '../services/orderEmail';
 
 type StripeEvent = {
   id: string;
@@ -150,6 +151,13 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
         currency,
         providerPaymentId: paymentIntentId,
         eventId: event.id
+      });
+    }
+
+    // Send order confirmation email (non-blocking, don't fail webhook on email error)
+    if (!paymentResult?.duplicate) {
+      sendOrderConfirmationEmail(env, orderId).catch((err) => {
+        console.error('Failed to send order confirmation email:', err);
       });
     }
 

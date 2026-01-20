@@ -9,6 +9,8 @@ export type Env = {
     STRIPE_WEBHOOK_SECRET: string;
     STOREFRONT_BASE_URL: string;
     SLACK_WEBHOOK_URL?: string;
+    RESEND_API_KEY?: string;
+    RESEND_FROM_EMAIL?: string;
     CLERK_SECRET_KEY: string;
   };
 };

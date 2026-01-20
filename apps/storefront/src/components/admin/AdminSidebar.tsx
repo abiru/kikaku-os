@@ -26,6 +26,7 @@ import {
   Cog6ToothIcon,
   FolderIcon,
   TicketIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { loadClerk, signOut, getCurrentUser } from '../../lib/clerk'
@@ -48,6 +49,7 @@ const navigation: NavigationItem[] = [
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },
   { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon },
   { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon },
+  { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon },
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
 ]
