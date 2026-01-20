@@ -1,4 +1,15 @@
 ---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'button'> {
+	variant?: 'primary' | 'dark' | 'secondary' | 'link' | 'outline';
+	size?: 'sm' | 'md' | 'lg' | 'icon';
+	href?: string;
+	type?: 'button' | 'submit' | 'reset';
+	class?: string;
+	disabled?: boolean;
+}
+
 const {
 	variant = 'primary',
 	size = 'md',

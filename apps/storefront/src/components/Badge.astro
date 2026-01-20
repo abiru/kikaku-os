@@ -1,5 +1,16 @@
 ---
-const { severity = 'info', class: className = '' } = Astro.props;
+type BadgeVariant = 'info' | 'secondary' | 'warn' | 'new' | 'critical';
+
+interface Props {
+	severity?: BadgeVariant;
+	variant?: BadgeVariant; // Alias for severity
+	size?: 'sm' | 'md' | 'lg'; // Accepted but not used (for API compatibility)
+	class?: string;
+}
+
+const { severity, variant, class: className = '' } = Astro.props;
+// Use variant as alias for severity if severity is not provided
+const effectiveSeverity = severity ?? variant ?? 'info';
 
 // Apple-style: Very subtle, text-forward, or simple colored dots.
 const variants = {
@@ -10,7 +21,7 @@ const variants = {
 	critical: 'text-red-600 border-red-200 bg-red-50'
 };
 
-const classes = `${variants[severity] ?? variants.info} ${className}`;
+const classes = `${variants[effectiveSeverity]} ${className}`;
 ---
 
 <span class={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-medium leading-4 ${classes}`}>

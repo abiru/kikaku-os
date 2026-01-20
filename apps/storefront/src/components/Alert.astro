@@ -1,4 +1,11 @@
 ---
+interface Props {
+	title?: string;
+	description?: string;
+	severity?: 'info' | 'warn' | 'critical';
+	class?: string;
+}
+
 const { title = '', description = '', severity = 'info', class: className = '' } = Astro.props;
 
 const variants = {
