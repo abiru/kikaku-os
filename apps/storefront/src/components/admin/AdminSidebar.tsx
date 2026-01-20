@@ -21,6 +21,7 @@ import {
   CubeIcon,
   ArchiveBoxIcon,
   ChartBarIcon,
+  PresentationChartLineIcon,
   DocumentTextIcon,
   DocumentDuplicateIcon,
   Cog6ToothIcon,
@@ -49,6 +50,7 @@ const navigation: NavigationItem[] = [
   { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon },
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
+  { name: 'Analytics', href: '/admin/analytics', icon: PresentationChartLineIcon },
 ]
 
 const userNavigation = [
