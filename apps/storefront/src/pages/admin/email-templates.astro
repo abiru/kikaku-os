@@ -1,0 +1,147 @@
+---
+export const prerender = false;
+
+import Badge from '../../components/Badge.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+
+type EmailTemplate = {
+	id: number;
+	slug: string;
+	name: string;
+	subject: string;
+	body_html: string;
+	body_text: string;
+	variables: string[];
+	created_at: string;
+	updated_at: string;
+};
+
+let templates: EmailTemplate[] = [];
+let error = null;
+
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const res = await fetch(`${apiBase}/admin/email-templates`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY
+			}
+		});
+
+		if (!res.ok) {
+			throw new Error(`API Error: ${res.status}`);
+		}
+
+		const data = await res.json();
+		templates = data.templates || [];
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load email templates. Please check your admin key.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing in server environment.';
+}
+
+const formatDate = (dateStr: string) => {
+	return new Date(dateStr).toLocaleDateString('ja-JP', {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	});
+};
+
+const templateLabels: Record<string, string> = {
+	'order-confirmation': 'Order Confirmation',
+	'shipping-notification': 'Shipping Notification',
+	'payment-failed': 'Payment Failed'
+};
+---
+
+<AdminLayout title="Email Templates - Admin">
+	<div class="space-y-6">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-4">
+				<h1 class="text-2xl font-semibold text-gray-900">Email Templates</h1>
+				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{templates.length} templates</span>
+			</div>
+		</div>
+
+		<p class="text-sm text-[#86868b]">
+			Customize the email notifications sent to customers. Click on a template to edit its content.
+		</p>
+
+		{error && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				{error}
+			</div>
+		)}
+
+		{/* Templates Grid */}
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			{templates.length > 0 ? (
+				templates.map((template) => (
+					<a
+						href={`/admin/email-templates/${template.slug}`}
+						class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md hover:border-[#0071e3]/30 transition-all group"
+					>
+						<div class="flex items-start justify-between mb-4">
+							<div class="w-10 h-10 rounded-lg bg-[#0071e3]/10 flex items-center justify-center">
+								<svg class="w-5 h-5 text-[#0071e3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+								</svg>
+							</div>
+							<svg class="w-5 h-5 text-[#86868b] group-hover:text-[#0071e3] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+							</svg>
+						</div>
+						<h3 class="font-semibold text-[#1d1d1f] mb-1">{template.name}</h3>
+						<p class="text-sm text-[#86868b] mb-4 truncate">{template.subject}</p>
+						<div class="flex items-center justify-between text-xs">
+							<Badge severity="secondary">{templateLabels[template.slug] || template.slug}</Badge>
+							<span class="text-[#86868b] tabular-nums">{formatDate(template.updated_at)}</span>
+						</div>
+					</a>
+				))
+			) : !error && (
+				<div class="col-span-full bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
+					<div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+						<svg class="w-8 h-8 text-[#86868b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+						</svg>
+					</div>
+					<h3 class="text-lg font-semibold text-[#1d1d1f] mb-2">No email templates found</h3>
+					<p class="text-sm text-[#86868b]">Run database migrations to create default templates.</p>
+				</div>
+			)}
+		</div>
+
+		{/* Help Section */}
+		<div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+			<h3 class="font-semibold text-blue-900 mb-2">Using Template Variables</h3>
+			<p class="text-sm text-blue-800 mb-4">
+				Templates support dynamic variables that are replaced with actual data when emails are sent.
+				Use the format <code class="bg-blue-100 px-1.5 py-0.5 rounded text-xs">{"{{variable_name}}"}</code> in your templates.
+			</p>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+				<div>
+					<h4 class="font-medium text-blue-900 mb-1">Order Confirmation</h4>
+					<ul class="text-blue-800 space-y-1">
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{customer_name}}"}</code> - Customer name</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_number}}"}</code> - Order ID</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_date}}"}</code> - Order date</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{total_amount}}"}</code> - Total amount</li>
+					</ul>
+				</div>
+				<div>
+					<h4 class="font-medium text-blue-900 mb-1">Shipping Notification</h4>
+					<ul class="text-blue-800 space-y-1">
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{carrier}}"}</code> - Shipping carrier</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{tracking_number}}"}</code> - Tracking number</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</AdminLayout>
