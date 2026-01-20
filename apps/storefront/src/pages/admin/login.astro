@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import '../../styles/global.css';
+import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
 ---
 
 <!doctype html>
@@ -25,49 +26,27 @@ import '../../styles/global.css';
 
 			<div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
 				<div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-					<div id="clerk-sign-in" class="flex justify-center"></div>
-					<div id="loading" class="text-center text-gray-500">
-						Loading...
-					</div>
+					<SignedOut>
+						<div class="flex justify-center">
+							<SignIn
+								routing="hash"
+								forceRedirectUrl="/admin/"
+							/>
+						</div>
+					</SignedOut>
+					<SignedIn>
+						<div class="text-center">
+							<p class="text-gray-600 mb-4">You are already signed in.</p>
+							<a
+								href="/admin/"
+								class="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+							>
+								Go to Admin Dashboard
+							</a>
+						</div>
+					</SignedIn>
 				</div>
 			</div>
 		</div>
-
-		<script>
-			import { loadClerk, isSignedIn } from '../../lib/clerk';
-
-			async function init() {
-				const loadingEl = document.getElementById('loading');
-				const signInEl = document.getElementById('clerk-sign-in') as HTMLDivElement | null;
-
-				try {
-					const clerk = await loadClerk();
-
-					if (loadingEl) {
-						loadingEl.style.display = 'none';
-					}
-
-					if (await isSignedIn()) {
-						window.location.href = '/admin/';
-						return;
-					}
-
-					if (signInEl) {
-						clerk.mountSignIn(signInEl, {
-							afterSignInUrl: '/admin/',
-							afterSignUpUrl: '/admin/',
-						});
-					}
-				} catch (err) {
-					console.error('Failed to load Clerk:', err);
-					if (loadingEl) {
-						loadingEl.textContent = 'Failed to load authentication. Please refresh.';
-						loadingEl.classList.add('text-red-500');
-					}
-				}
-			}
-
-			init();
-		</script>
 	</body>
 </html>
