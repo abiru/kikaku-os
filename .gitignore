@@ -76,3 +76,6 @@ temp/
 .cache/
 codex-runs/
 
+# --- Migration data ---
+shopify/
+

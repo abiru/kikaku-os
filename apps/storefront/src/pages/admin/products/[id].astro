@@ -189,6 +189,18 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 		minimumFractionDigits: 0,
 	}).format(amount);
 };
+
+const getExternalImageUrl = (metadata: string | null): string | null => {
+	if (!metadata) return null;
+	try {
+		const parsed = JSON.parse(metadata);
+		return parsed.image_url || null;
+	} catch {
+		return null;
+	}
+};
+
+const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 ---
 
 <AdminLayout title={product ? `${product.title} - Admin` : 'Product - Admin'}>
@@ -311,10 +323,188 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 					</div>
 				</form>
 
+				<!-- Web Update Section -->
+				<div class="mt-8">
+					<div class="flex items-center justify-between mb-4">
+						<h2 class="text-lg font-semibold text-[#1d1d1f]">Web更新</h2>
+					</div>
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
+						<div>
+							<label for="fetch-url" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								商品ページURL
+							</label>
+							<div class="flex gap-2">
+								<input
+									type="url"
+									id="fetch-url"
+									placeholder="https://www.spider-farmer.com/products/..."
+									class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								/>
+								<button
+									type="button"
+									id="fetch-btn"
+									class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors flex items-center gap-2"
+								>
+									<svg id="fetch-spinner" class="hidden animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+									</svg>
+									<span id="fetch-label">取得</span>
+								</button>
+							</div>
+							<p class="text-xs text-[#86868b] mt-1">メーカーの公式サイトURLを入力して情報を取得します</p>
+						</div>
+
+						<div id="fetch-error" class="hidden">
+							<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+						</div>
+
+						<div id="fetch-warning" class="hidden">
+							<div class="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm"></div>
+						</div>
+
+						<!-- Manual input fallback -->
+						<details class="text-sm">
+							<summary class="text-[#86868b] cursor-pointer hover:text-[#1d1d1f]">
+								URLで取得できない場合は手動入力
+							</summary>
+							<div class="mt-3 space-y-3 pl-4 border-l-2 border-gray-200">
+								<div>
+									<label for="manual-image" class="block text-xs text-[#86868b] mb-1">画像URL</label>
+									<input
+										type="url"
+										id="manual-image"
+										placeholder="https://example.com/image.jpg"
+										class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+									/>
+								</div>
+								<div>
+									<label for="manual-description" class="block text-xs text-[#86868b] mb-1">説明文</label>
+									<textarea
+										id="manual-description"
+										rows="3"
+										placeholder="商品の説明..."
+										class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none"
+									></textarea>
+								</div>
+								<button
+									type="button"
+									id="manual-apply-btn"
+									class="px-3 py-1.5 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+								>
+									手動データでプレビュー
+								</button>
+							</div>
+						</details>
+
+						<div id="fetch-preview" class="hidden border-t border-gray-100 pt-4 space-y-4">
+							<h3 class="text-sm font-semibold text-[#1d1d1f]">取得結果</h3>
+
+							<!-- Image -->
+							<div class="flex gap-4">
+								<div class="flex-shrink-0">
+									<p class="text-xs text-[#86868b] mb-1">画像</p>
+									<img id="preview-image" src="" alt="Preview" class="w-32 h-32 object-contain rounded-lg bg-gray-50" />
+								</div>
+								<div class="flex-1 space-y-2">
+									<div>
+										<p class="text-xs text-[#86868b]">取得元タイトル</p>
+										<p id="preview-original-title" class="text-sm text-[#1d1d1f]"></p>
+									</div>
+									<div>
+										<p class="text-xs text-[#86868b]">スペック</p>
+										<p id="preview-specs" class="text-xs text-[#1d1d1f] font-mono"></p>
+									</div>
+									<div>
+										<p class="text-xs text-[#86868b]">ソース</p>
+										<p id="preview-source" class="text-sm text-[#1d1d1f] font-mono"></p>
+									</div>
+								</div>
+							</div>
+
+							<!-- Generated Title -->
+							<div class="p-3 bg-blue-50 rounded-lg">
+								<p class="text-xs text-blue-600 mb-1">生成されたタイトル</p>
+								<p id="preview-generated-title" class="text-sm font-medium text-[#1d1d1f]"></p>
+							</div>
+
+							<!-- Generated Description -->
+							<div>
+								<p class="text-xs text-[#86868b] mb-1">生成された説明文</p>
+								<div id="preview-generated-description" class="p-4 bg-gray-50 rounded-lg text-sm prose prose-sm max-w-none max-h-64 overflow-y-auto"></div>
+							</div>
+
+							<div class="flex flex-wrap gap-2 pt-2">
+								<button
+									type="button"
+									id="apply-all-btn"
+									class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+								>
+									すべて適用
+								</button>
+								<button
+									type="button"
+									id="apply-title-only-btn"
+									class="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+								>
+									タイトルのみ
+								</button>
+								<button
+									type="button"
+									id="apply-desc-only-btn"
+									class="px-4 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+								>
+									説明文のみ
+								</button>
+								<button
+									type="button"
+									id="send-inbox-btn"
+									class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+								>
+									Inboxに送信
+								</button>
+								<button
+									type="button"
+									id="cancel-preview-btn"
+									class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+								>
+									キャンセル
+								</button>
+							</div>
+						</div>
+
+						<div id="apply-success" class="hidden">
+							<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+								Inboxに送信しました。<a href="/admin/inbox" class="underline">Inbox</a>で承認してください。
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- External Image URL (from metadata) -->
+				{externalImageUrl && (
+					<div class="mt-8">
+						<h2 class="text-lg font-semibold text-[#1d1d1f] mb-4">External Image</h2>
+						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+							<div class="flex gap-4">
+								<img
+									src={externalImageUrl}
+									alt={product.title}
+									class="w-32 h-32 object-contain rounded-lg bg-gray-50"
+								/>
+								<div class="flex-1 min-w-0">
+									<p class="text-xs text-[#86868b] mb-1">Image URL (from web search)</p>
+									<p class="text-sm text-[#1d1d1f] break-all font-mono">{externalImageUrl}</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
+
 				<!-- Images Section -->
 				<div class="mt-8">
 					<div class="flex items-center justify-between mb-4">
-						<h2 class="text-lg font-semibold text-[#1d1d1f]">Images</h2>
+						<h2 class="text-lg font-semibold text-[#1d1d1f]">Images (R2 Storage)</h2>
 						<label
 							class="text-sm text-[#0071e3] hover:underline flex items-center gap-1 cursor-pointer"
 						>
@@ -766,6 +956,285 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 				showError('An error occurred. Please try again.');
 			}
 		});
+
+		// Web fetch functionality
+		const fetchUrlInput = document.getElementById('fetch-url');
+		const fetchBtn = document.getElementById('fetch-btn');
+		const fetchSpinner = document.getElementById('fetch-spinner');
+		const fetchLabel = document.getElementById('fetch-label');
+		const fetchError = document.getElementById('fetch-error');
+		const fetchPreview = document.getElementById('fetch-preview');
+		const previewImage = document.getElementById('preview-image');
+		const previewOriginalTitle = document.getElementById('preview-original-title');
+		const previewSpecs = document.getElementById('preview-specs');
+		const previewSource = document.getElementById('preview-source');
+		const previewGeneratedTitle = document.getElementById('preview-generated-title');
+		const previewGeneratedDescription = document.getElementById('preview-generated-description');
+		const applyAllBtn = document.getElementById('apply-all-btn');
+		const applyTitleOnlyBtn = document.getElementById('apply-title-only-btn');
+		const applyDescOnlyBtn = document.getElementById('apply-desc-only-btn');
+		const sendInboxBtn = document.getElementById('send-inbox-btn');
+		const cancelPreviewBtn = document.getElementById('cancel-preview-btn');
+		const applySuccess = document.getElementById('apply-success');
+
+		const fetchWarning = document.getElementById('fetch-warning');
+
+		let fetchedData = null;
+
+		function showFetchError(message) {
+			if (!fetchError) return;
+			const errorDiv = fetchError.querySelector('div');
+			if (errorDiv) {
+				errorDiv.textContent = message;
+				fetchError.classList.remove('hidden');
+			}
+		}
+
+		function hideFetchError() {
+			if (fetchError) fetchError.classList.add('hidden');
+		}
+
+		function showFetchWarning(message) {
+			if (!fetchWarning) return;
+			const warningDiv = fetchWarning.querySelector('div');
+			if (warningDiv) {
+				warningDiv.textContent = message;
+				fetchWarning.classList.remove('hidden');
+			}
+		}
+
+		function hideFetchWarning() {
+			if (fetchWarning) fetchWarning.classList.add('hidden');
+		}
+
+		function showPreview(data) {
+			if (!fetchPreview) return;
+			fetchedData = data;
+
+			// Show image
+			if (previewImage && data.image_url) {
+				previewImage.src = data.image_url;
+				previewImage.parentElement?.classList.remove('hidden');
+			} else if (previewImage) {
+				previewImage.parentElement?.classList.add('hidden');
+			}
+
+			// Show original title
+			if (previewOriginalTitle) {
+				previewOriginalTitle.textContent = data.original_title || '-';
+			}
+
+			// Show specs
+			if (previewSpecs && data.specs) {
+				const specsText = Object.entries(data.specs)
+					.map(([key, value]) => `${key}: ${value}`)
+					.join(' | ');
+				previewSpecs.textContent = specsText || '-';
+			} else if (previewSpecs) {
+				previewSpecs.textContent = '-';
+			}
+
+			// Show source
+			if (previewSource) {
+				previewSource.textContent = data.source || '-';
+			}
+
+			// Show generated title
+			if (previewGeneratedTitle) {
+				previewGeneratedTitle.textContent = data.generated_title || '-';
+			}
+
+			// Show generated description (as HTML)
+			if (previewGeneratedDescription) {
+				previewGeneratedDescription.innerHTML = data.generated_description || '-';
+			}
+
+			fetchPreview.classList.remove('hidden');
+		}
+
+		function hidePreview() {
+			if (fetchPreview) fetchPreview.classList.add('hidden');
+			fetchedData = null;
+		}
+
+		fetchBtn?.addEventListener('click', async () => {
+			const url = fetchUrlInput?.value?.trim();
+			if (!url) {
+				showFetchError('URLを入力してください');
+				return;
+			}
+
+			hideFetchError();
+			hideFetchWarning();
+			hidePreview();
+			if (applySuccess) applySuccess.classList.add('hidden');
+
+			// Show loading state
+			if (fetchSpinner) fetchSpinner.classList.remove('hidden');
+			if (fetchLabel) fetchLabel.textContent = '取得中...';
+			if (fetchBtn) fetchBtn.disabled = true;
+
+			try {
+				const productName = document.querySelector('input[name="title"]')?.value?.trim() || '';
+				const res = await fetch('/api/admin/products/fetch-url', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ url, product_name: productName })
+				});
+
+				const data = await res.json();
+
+				if (!data.success) {
+					showFetchError(data.error || '取得に失敗しました');
+				} else {
+					// Show warning if URL fetch failed but content was generated
+					if (data.warning) {
+						showFetchWarning(data.warning);
+					}
+					showPreview(data);
+				}
+			} catch (err) {
+				showFetchError('通信エラーが発生しました');
+			} finally {
+				if (fetchSpinner) fetchSpinner.classList.add('hidden');
+				if (fetchLabel) fetchLabel.textContent = '取得';
+				if (fetchBtn) fetchBtn.disabled = false;
+			}
+		});
+
+		cancelPreviewBtn?.addEventListener('click', hidePreview);
+
+		// Manual input handler
+		const manualImageInput = document.getElementById('manual-image');
+		const manualDescInput = document.getElementById('manual-description');
+		const manualApplyBtn = document.getElementById('manual-apply-btn');
+
+		manualApplyBtn?.addEventListener('click', async () => {
+			const imageUrl = manualImageInput?.value?.trim();
+			const description = manualDescInput?.value?.trim();
+
+			if (!imageUrl && !description) {
+				showFetchError('画像URLまたは説明文を入力してください');
+				return;
+			}
+
+			hideFetchError();
+			if (applySuccess) applySuccess.classList.add('hidden');
+
+			const productTitle = document.querySelector('input[name="title"]')?.value?.trim() || 'Product';
+
+			try {
+				const res = await fetch('/api/admin/products/fetch-url', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						image_url: imageUrl,
+						description,
+						product_name: productTitle
+					})
+				});
+
+				const data = await res.json();
+				if (data.success) {
+					showPreview(data);
+				}
+			} catch (err) {
+				showFetchError('エラーが発生しました');
+			}
+		});
+
+		// Apply all (title + description) directly to form
+		applyAllBtn?.addEventListener('click', () => {
+			if (!fetchedData) return;
+
+			const titleInput = document.getElementById('title');
+			const descTextarea = document.getElementById('description');
+
+			if (titleInput && fetchedData.generated_title) {
+				titleInput.value = fetchedData.generated_title;
+			}
+			if (descTextarea && fetchedData.generated_description) {
+				descTextarea.value = fetchedData.generated_description;
+			}
+
+			hidePreview();
+			titleInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			titleInput?.focus();
+		});
+
+		// Apply title only
+		applyTitleOnlyBtn?.addEventListener('click', () => {
+			if (!fetchedData) return;
+
+			const titleInput = document.getElementById('title');
+			if (titleInput && fetchedData.generated_title) {
+				titleInput.value = fetchedData.generated_title;
+			}
+
+			titleInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			titleInput?.focus();
+		});
+
+		// Apply description only
+		applyDescOnlyBtn?.addEventListener('click', () => {
+			if (!fetchedData) return;
+
+			const descTextarea = document.getElementById('description');
+			if (descTextarea && fetchedData.generated_description) {
+				descTextarea.value = fetchedData.generated_description;
+			}
+
+			descTextarea?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			descTextarea?.focus();
+		});
+
+		// Send to inbox for approval
+		sendInboxBtn?.addEventListener('click', async () => {
+			if (!fetchedData) return;
+
+			sendInboxBtn.disabled = true;
+			sendInboxBtn.textContent = '送信中...';
+
+			try {
+				// Create inbox item via API
+				const res = await fetch(`${apiBase}/inbox`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': apiKey
+					},
+					body: JSON.stringify({
+						title: `Product Update: ${document.querySelector('input[name="title"]')?.value || 'Unknown'}`,
+						body: `Web取得による商品情報更新の提案\n\n画像: ${fetchedData.image_url || 'なし'}\n元タイトル: ${fetchedData.original_title || 'なし'}\n生成タイトル: ${fetchedData.generated_title || 'なし'}\nソース: ${fetchedData.source || 'なし'}`,
+						severity: 'info',
+						kind: 'product_update',
+						metadata: JSON.stringify({
+							product_id: parseInt(productId),
+							image_url: fetchedData.image_url,
+							title: fetchedData.generated_title,
+							description: fetchedData.generated_description,
+							original_title: fetchedData.original_title,
+							specs: fetchedData.specs,
+							source: fetchedData.source
+						})
+					})
+				});
+
+				if (!res.ok) {
+					const data = await res.json();
+					showFetchError(data.message || 'Inbox送信に失敗しました');
+				} else {
+					hidePreview();
+					if (applySuccess) applySuccess.classList.remove('hidden');
+				}
+			} catch (err) {
+				showFetchError('通信エラーが発生しました');
+			} finally {
+				sendInboxBtn.disabled = false;
+				sendInboxBtn.textContent = 'Inboxに送信';
+			}
+		});
+
 	}
 
 	// Start initialization

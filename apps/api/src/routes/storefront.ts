@@ -17,6 +17,7 @@ type StorefrontRow = {
   product_id: number;
   product_title: string;
   product_description: string | null;
+  product_metadata: string | null;
   variant_id: number;
   variant_title: string;
   sku: string | null;
@@ -42,7 +43,18 @@ type StorefrontProduct = {
   id: number;
   title: string;
   description: string | null;
+  image: string | null;
   variants: StorefrontVariant[];
+};
+
+const extractImageUrl = (metadata: string | null): string | null => {
+  if (!metadata) return null;
+  try {
+    const parsed = JSON.parse(metadata);
+    return parsed.image_url || null;
+  } catch {
+    return null;
+  }
 };
 
 const rowsToProducts = (rows: StorefrontRow[]): StorefrontProduct[] => {
@@ -55,6 +67,7 @@ const rowsToProducts = (rows: StorefrontRow[]): StorefrontProduct[] => {
         id: row.product_id,
         title: row.product_title,
         description: row.product_description,
+        image: extractImageUrl(row.product_metadata),
         variants: []
       });
     }
@@ -80,6 +93,7 @@ const baseQuery = `
   SELECT p.id as product_id,
          p.title as product_title,
          p.description as product_description,
+         p.metadata as product_metadata,
          v.id as variant_id,
          v.title as variant_title,
          v.sku as sku,
