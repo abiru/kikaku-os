@@ -180,6 +180,10 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 	const cancelBtn = document.getElementById('cancel-ship-btn');
 
 	function showModal(orderId, fulfillmentId) {
+		if (!modal || !orderIdInput || !fulfillmentIdInput || !subtitle || !trackingInput || !errorEl) {
+			console.error('Ship modal elements not found');
+			return;
+		}
 		orderIdInput.value = orderId;
 		fulfillmentIdInput.value = fulfillmentId || '';
 		subtitle.textContent = `Order #${orderId}`;
@@ -189,11 +193,13 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 	}
 
 	function hideModal() {
+		if (!modal || !form) return;
 		modal.classList.add('hidden');
 		form.reset();
 	}
 
 	function showError(message) {
+		if (!errorEl) return;
 		errorEl.textContent = message;
 		errorEl.classList.remove('hidden');
 	}
@@ -201,8 +207,9 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 	// Event listeners for Ship buttons
 	document.querySelectorAll('.ship-btn').forEach((btn) => {
 		btn.addEventListener('click', () => {
-			const orderId = btn.dataset.orderId;
-			const fulfillmentId = btn.dataset.fulfillmentId;
+			const button = btn;
+			const orderId = button.dataset.orderId;
+			const fulfillmentId = button.dataset.fulfillmentId;
 			showModal(orderId, fulfillmentId);
 		});
 	});

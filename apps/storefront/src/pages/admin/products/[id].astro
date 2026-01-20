@@ -359,7 +359,7 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 										data-image-id={image.id}
 									>
 										<img
-											src={`${apiBase}/r2?key=${encodeURIComponent(image.r2_key)}&x-admin-key=${apiKey}`}
+											src={`${apiBase}/r2?key=${encodeURIComponent(image.r2_key)}&x-admin-key=${encodeURIComponent(apiKey || '')}`}
 											alt={image.filename}
 											class="w-full h-full object-cover"
 											loading="lazy"
