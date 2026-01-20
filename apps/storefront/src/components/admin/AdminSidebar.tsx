@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useStore } from '@nanostores/react'
-import { $userStore, $authStore, $clerkStore } from '@clerk/astro/client'
 import {
   Dialog,
   DialogBackdrop,
@@ -85,6 +83,74 @@ function classNames(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(' ')
 }
 
+// Custom hook to access Clerk via window global
+function useClerkAuth() {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [user, setUser] = useState<UserInfo | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    let attempts = 0;
+    const maxAttempts = 100; // 10 seconds max
+
+    const checkClerk = () => {
+      const clerk = (window as { Clerk?: {
+        loaded?: boolean;
+        session?: { id: string } | null;
+        user?: {
+          primaryEmailAddress?: { emailAddress: string };
+          firstName: string | null;
+          lastName: string | null;
+          imageUrl: string;
+        } | null;
+        signOut?: () => Promise<void>;
+      } }).Clerk;
+
+      if (clerk?.loaded) {
+        if (mounted) {
+          setIsLoaded(true);
+          setIsSignedIn(!!clerk.session);
+          if (clerk.user) {
+            setUser({
+              email: clerk.user.primaryEmailAddress?.emailAddress || null,
+              firstName: clerk.user.firstName,
+              lastName: clerk.user.lastName,
+              imageUrl: clerk.user.imageUrl,
+            });
+          }
+        }
+        return;
+      }
+
+      attempts++;
+      if (attempts < maxAttempts) {
+        setTimeout(checkClerk, 100);
+      } else if (mounted) {
+        // Clerk failed to load, but we still mark as loaded to show UI
+        setIsLoaded(true);
+        setIsSignedIn(false);
+      }
+    };
+
+    checkClerk();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const signOut = async () => {
+    const clerk = (window as { Clerk?: { signOut?: () => Promise<void> } }).Clerk;
+    if (clerk?.signOut) {
+      await clerk.signOut();
+    }
+    window.location.href = '/admin/login';
+  };
+
+  return { isLoaded, isSignedIn, user, signOut };
+}
+
 type Props = {
   currentPath: string
   children: React.ReactNode
@@ -92,34 +158,16 @@ type Props = {
 
 export default function AdminSidebar({ currentPath, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const clerkUser = useStore($userStore)
-  const auth = useStore($authStore)
-  const clerk = useStore($clerkStore)
-
-  const user: UserInfo | null = clerkUser ? {
-    email: clerkUser.primaryEmailAddress?.emailAddress || null,
-    firstName: clerkUser.firstName,
-    lastName: clerkUser.lastName,
-    imageUrl: clerkUser.imageUrl,
-  } : null;
-
-  const isLoading = auth === undefined;
+  const { isLoaded, isSignedIn, user, signOut } = useClerkAuth()
 
   useEffect(() => {
-    // Redirect to login if not authenticated (after store is loaded)
-    if (auth !== undefined && !auth?.userId) {
+    // Redirect to login if not authenticated (after auth is loaded)
+    if (isLoaded && !isSignedIn) {
       window.location.href = '/admin/login';
     }
-  }, [auth]);
+  }, [isLoaded, isSignedIn]);
 
-  const handleSignOut = async () => {
-    if (clerk) {
-      await clerk.signOut();
-      window.location.href = '/admin/login';
-    }
-  };
-
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3">
@@ -319,7 +367,7 @@ export default function AdminSidebar({ currentPath, children }: Props) {
                   <MenuItem>
                     <button
                       type="button"
-                      onClick={handleSignOut}
+                      onClick={signOut}
                       className="block w-full text-left px-3 py-1 text-sm leading-6 text-gray-900 data-focus:bg-gray-50"
                     >
                       Sign out
