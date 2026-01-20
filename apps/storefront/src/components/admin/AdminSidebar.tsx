@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogBackdrop,
@@ -31,6 +31,53 @@ import {
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { loadClerk, signOut, getCurrentUser } from '../../lib/clerk'
 
+type UserInfo = {
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string | null;
+};
+
+const AUTH_CACHE_KEY = 'admin_auth_cache';
+const AUTH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+type CachedAuth = {
+  timestamp: number;
+  user: UserInfo;
+};
+
+const getCachedAuth = (): CachedAuth | null => {
+  try {
+    const cached = sessionStorage.getItem(AUTH_CACHE_KEY);
+    if (!cached) return null;
+    const parsed = JSON.parse(cached) as CachedAuth;
+    if (Date.now() - parsed.timestamp > AUTH_CACHE_TTL) {
+      sessionStorage.removeItem(AUTH_CACHE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const setCachedAuth = (user: UserInfo): void => {
+  try {
+    const cache: CachedAuth = { timestamp: Date.now(), user };
+    sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // Ignore storage errors
+  }
+};
+
+const clearCachedAuth = (): void => {
+  try {
+    sessionStorage.removeItem(AUTH_CACHE_KEY);
+  } catch {
+    // Ignore storage errors
+  }
+};
+
 type NavigationItem = {
   name: string
   href: string
@@ -53,13 +100,6 @@ const navigation: NavigationItem[] = [
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
 ]
-
-type UserInfo = {
-  email: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  imageUrl: string | null;
-};
 
 const getInitials = (user: UserInfo | null): string => {
   if (!user) return 'A';
@@ -91,28 +131,40 @@ type Props = {
 
 export default function AdminSidebar({ currentPath, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [user, setUser] = useState<UserInfo | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+
+  // Try to get cached auth for optimistic rendering
+  const cachedAuth = useRef<CachedAuth | null>(null);
+  if (typeof window !== 'undefined' && cachedAuth.current === null) {
+    cachedAuth.current = getCachedAuth();
+  }
+
+  const [user, setUser] = useState<UserInfo | null>(cachedAuth.current?.user || null)
+  // If we have cached auth, skip loading state for better UX
+  const [isLoading, setIsLoading] = useState(!cachedAuth.current)
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const clerk = await loadClerk();
         if (!clerk.session) {
+          clearCachedAuth();
           window.location.href = '/admin/login';
           return;
         }
         const clerkUser = await getCurrentUser();
         if (clerkUser) {
-          setUser({
+          const userInfo: UserInfo = {
             email: clerkUser.primaryEmailAddress?.emailAddress || null,
             firstName: clerkUser.firstName,
             lastName: clerkUser.lastName,
             imageUrl: clerkUser.imageUrl,
-          });
+          };
+          setUser(userInfo);
+          setCachedAuth(userInfo);
         }
       } catch (err) {
         console.error('Auth check failed:', err);
+        clearCachedAuth();
         window.location.href = '/admin/login';
       } finally {
         setIsLoading(false);
@@ -122,6 +174,7 @@ export default function AdminSidebar({ currentPath, children }: Props) {
   }, []);
 
   const handleSignOut = async () => {
+    clearCachedAuth();
     await signOut();
     window.location.href = '/admin/login';
   };
