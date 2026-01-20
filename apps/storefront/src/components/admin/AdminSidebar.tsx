@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useStore } from '@nanostores/react'
-import { $userStore, $authStore, $clerkStore } from '@clerk/astro/client'
+import { useAuth, SignOutButton } from '@clerk/astro/react'
 import {
   Dialog,
   DialogBackdrop,
@@ -92,32 +91,18 @@ type Props = {
 
 export default function AdminSidebar({ currentPath, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const clerkUser = useStore($userStore)
-  const auth = useStore($authStore)
-  const clerk = useStore($clerkStore)
+  const { isLoaded, isSignedIn, userId } = useAuth()
 
-  const user: UserInfo | null = clerkUser ? {
-    email: clerkUser.primaryEmailAddress?.emailAddress || null,
-    firstName: clerkUser.firstName,
-    lastName: clerkUser.lastName,
-    imageUrl: clerkUser.imageUrl,
-  } : null;
+  const user: UserInfo | null = null; // User details are now handled by middleware
 
-  const isLoading = auth === undefined;
+  const isLoading = !isLoaded;
 
   useEffect(() => {
-    // Redirect to login if not authenticated (after store is loaded)
-    if (auth !== undefined && !auth?.userId) {
+    // Redirect to login if not authenticated (after auth is loaded)
+    if (isLoaded && !isSignedIn) {
       window.location.href = '/admin/login';
     }
-  }, [auth]);
-
-  const handleSignOut = async () => {
-    if (clerk) {
-      await clerk.signOut();
-      window.location.href = '/admin/login';
-    }
-  };
+  }, [isLoaded, isSignedIn]);
 
   if (isLoading) {
     return (
@@ -317,13 +302,14 @@ export default function AdminSidebar({ currentPath, children }: Props) {
                     </a>
                   </MenuItem>
                   <MenuItem>
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="block w-full text-left px-3 py-1 text-sm leading-6 text-gray-900 data-focus:bg-gray-50"
-                    >
-                      Sign out
-                    </button>
+                    <SignOutButton redirectUrl="/admin/login">
+                      <button
+                        type="button"
+                        className="block w-full text-left px-3 py-1 text-sm leading-6 text-gray-900 data-focus:bg-gray-50"
+                      >
+                        Sign out
+                      </button>
+                    </SignOutButton>
                   </MenuItem>
                 </MenuItems>
               </Menu>
