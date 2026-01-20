@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { Env } from './env';
 import { jsonError, jsonOk } from './lib/http';
+import { clerkAuth } from './middleware/clerkAuth';
 import { jstYesterdayStringFromMs } from './lib/date';
 import reports from './routes/reports';
 import accounting from './routes/accounting';
@@ -48,7 +49,7 @@ app.use(
   '*',
   cors({
     origin: (origin) => (origin && allowedOrigins.includes(origin) ? origin : undefined),
-    allowHeaders: ['Content-Type', 'x-admin-key'],
+    allowHeaders: ['Content-Type', 'x-admin-key', 'Authorization'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     maxAge: 86400
   })
@@ -68,9 +69,7 @@ app.use('*', async (c, next) => {
   ) {
     return next();
   }
-  const key = c.req.header('x-admin-key') || (c.req.path === '/r2' ? c.req.query('x-admin-key') : undefined);
-  if (!key || key !== c.env.ADMIN_API_KEY) return jsonError(c, 'Unauthorized', 401);
-  await next();
+  return clerkAuth(c, next);
 });
 
 app.get('/', (c) => jsonOk(c, { message: 'led kikaku os api' }));

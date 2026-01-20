@@ -16,6 +16,7 @@
     "smoke:ok": "./scripts/smoke-ok.sh"
   },
   "dependencies": {
+    "@clerk/backend": "^2.29.3",
     "@hono/zod-validator": "^0.7.6",
     "hono": "^4.5.0",
     "resend": "^4.0.0",

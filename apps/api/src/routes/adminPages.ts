@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
+import { getActor } from '../middleware/clerkAuth';
 import {
   pageIdParamSchema,
   pageListQuerySchema,
@@ -75,7 +76,7 @@ app.get(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(
-        'admin',
+        getActor(c),
         'view_pages',
         'admin_pages_list',
         JSON.stringify({ q, status, page, perPage, count: pages.results.length })
@@ -117,7 +118,7 @@ app.get(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'view_page', `page:${id}`, JSON.stringify({ page_id: id })).run();
+      ).bind(getActor(c), 'view_page', `page:${id}`, JSON.stringify({ page_id: id })).run();
 
       return jsonOk(c, {
         page,
@@ -168,7 +169,7 @@ app.post(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'create_page', `page:${pageId}`, JSON.stringify({ slug: data.slug })).run();
+      ).bind(getActor(c), 'create_page', `page:${pageId}`, JSON.stringify({ slug: data.slug })).run();
 
       return jsonOk(c, { page });
     } catch (e) {
@@ -228,7 +229,7 @@ app.put(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'update_page', `page:${id}`, JSON.stringify({ slug: data.slug })).run();
+      ).bind(getActor(c), 'update_page', `page:${id}`, JSON.stringify({ slug: data.slug })).run();
 
       return jsonOk(c, { page });
     } catch (e) {
@@ -265,7 +266,7 @@ app.post(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'publish_page', `page:${id}`, JSON.stringify({ slug: page.slug })).run();
+      ).bind(getActor(c), 'publish_page', `page:${id}`, JSON.stringify({ slug: page.slug })).run();
 
       return jsonOk(c, { page: updatedPage });
     } catch (e) {
@@ -302,7 +303,7 @@ app.post(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'unpublish_page', `page:${id}`, JSON.stringify({ slug: page.slug })).run();
+      ).bind(getActor(c), 'unpublish_page', `page:${id}`, JSON.stringify({ slug: page.slug })).run();
 
       return jsonOk(c, { page: updatedPage });
     } catch (e) {
@@ -336,7 +337,7 @@ app.delete(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'delete_page', `page:${id}`, JSON.stringify({ slug: page.slug })).run();
+      ).bind(getActor(c), 'delete_page', `page:${id}`, JSON.stringify({ slug: page.slug })).run();
 
       return jsonOk(c, { deleted: true });
     } catch (e) {

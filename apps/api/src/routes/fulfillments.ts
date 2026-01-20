@@ -8,6 +8,7 @@ import {
   createFulfillmentSchema,
 } from '../lib/schemas';
 import type { Env } from '../env';
+import { getActor } from '../middleware/clerkAuth';
 
 const fulfillments = new Hono<Env>();
 
@@ -63,7 +64,7 @@ fulfillments.put(
       // Audit log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'update_fulfillment', `fulfillment:${id}`,
+      ).bind(getActor(c), 'update_fulfillment', `fulfillment:${id}`,
         JSON.stringify({ status, tracking_number, order_id: existing.order_id })).run();
 
       return jsonOk(c, { fulfillment: updated });
@@ -106,7 +107,7 @@ fulfillments.post(
       // Audit log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'create_fulfillment', `order:${orderId}`,
+      ).bind(getActor(c), 'create_fulfillment', `order:${orderId}`,
         JSON.stringify({ status, tracking_number, fulfillment_id: result.meta.last_row_id })).run();
 
       return jsonOk(c, { fulfillment });

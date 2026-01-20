@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
+import { getActor } from '../middleware/clerkAuth';
 import {
   createProductSchema,
   updateProductSchema,
@@ -60,7 +61,7 @@ app.get(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(
-        'admin',
+        getActor(c),
         'view_products',
         'admin_products_list',
         JSON.stringify({ q, page, perPage, count: products.results.length })
@@ -103,7 +104,7 @@ app.get(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'view_product', `product:${id}`, JSON.stringify({ product_id: id })).run();
+      ).bind(getActor(c), 'view_product', `product:${id}`, JSON.stringify({ product_id: id })).run();
 
       return jsonOk(c, { product });
     } catch (e) {
@@ -137,7 +138,7 @@ app.post(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'create_product', `product:${productId}`, JSON.stringify({ title })).run();
+      ).bind(getActor(c), 'create_product', `product:${productId}`, JSON.stringify({ title })).run();
 
       return jsonOk(c, { product });
     } catch (e) {
@@ -178,7 +179,7 @@ app.put(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'update_product', `product:${id}`, JSON.stringify({ title })).run();
+      ).bind(getActor(c), 'update_product', `product:${id}`, JSON.stringify({ title })).run();
 
       return jsonOk(c, { product });
     } catch (e) {
@@ -257,7 +258,7 @@ app.get(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'view_variants', `product:${id}`, JSON.stringify({ product_id: id, count: variants.length })).run();
+      ).bind(getActor(c), 'view_variants', `product:${id}`, JSON.stringify({ product_id: id, count: variants.length })).run();
 
       return jsonOk(c, { variants });
     } catch (e) {
@@ -304,7 +305,7 @@ app.post(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'create_variant', `variant:${variantId}`, JSON.stringify({ product_id: id, title })).run();
+      ).bind(getActor(c), 'create_variant', `variant:${variantId}`, JSON.stringify({ product_id: id, title })).run();
 
       return jsonOk(c, { variant });
     } catch (e) {
@@ -357,7 +358,7 @@ app.put(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'update_variant', `variant:${variantId}`, JSON.stringify({ product_id: id, title })).run();
+      ).bind(getActor(c), 'update_variant', `variant:${variantId}`, JSON.stringify({ product_id: id, title })).run();
 
       return jsonOk(c, { variant });
     } catch (e) {
@@ -393,7 +394,7 @@ app.delete(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'delete_variant', `variant:${variantId}`, JSON.stringify({ product_id: id, title: existing.title })).run();
+      ).bind(getActor(c), 'delete_variant', `variant:${variantId}`, JSON.stringify({ product_id: id, title: existing.title })).run();
 
       return jsonOk(c, { deleted: true });
     } catch (e) {
@@ -449,7 +450,7 @@ app.put(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'update_prices', `variant:${variantId}`, JSON.stringify({ product_id: variant.product_id, count: prices.length })).run();
+      ).bind(getActor(c), 'update_prices', `variant:${variantId}`, JSON.stringify({ product_id: variant.product_id, count: prices.length })).run();
 
       return jsonOk(c, { prices: insertedPrices });
     } catch (e) {

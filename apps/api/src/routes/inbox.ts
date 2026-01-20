@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { jsonError, jsonOk } from '../lib/http';
 import type { Env } from '../env';
+import { getActor } from '../middleware/clerkAuth';
 
 const inbox = new Hono<Env>();
 
@@ -44,8 +45,8 @@ inbox.post('/inbox/:id/approve', async (c) => {
   const id = Number(c.req.param('id'));
   try {
     await c.env.DB.prepare(
-      `UPDATE inbox_items SET status='approved', decided_by='admin', decided_at=datetime('now'), updated_at=datetime('now') WHERE id=?`
-    ).bind(id).run();
+      `UPDATE inbox_items SET status='approved', decided_by=?, decided_at=datetime('now'), updated_at=datetime('now') WHERE id=?`
+    ).bind(getActor(c), id).run();
     return jsonOk(c, {});
   } catch (err) {
     console.error(err);
@@ -57,8 +58,8 @@ inbox.post('/inbox/:id/reject', async (c) => {
   const id = Number(c.req.param('id'));
   try {
     await c.env.DB.prepare(
-      `UPDATE inbox_items SET status='rejected', decided_by='admin', decided_at=datetime('now'), updated_at=datetime('now') WHERE id=?`
-    ).bind(id).run();
+      `UPDATE inbox_items SET status='rejected', decided_by=?, decided_at=datetime('now'), updated_at=datetime('now') WHERE id=?`
+    ).bind(getActor(c), id).run();
     return jsonOk(c, {});
   } catch (err) {
     console.error(err);
