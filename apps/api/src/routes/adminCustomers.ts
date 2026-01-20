@@ -3,20 +3,47 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
 import {
-  customerIdParamSchema,
   customerListQuerySchema,
+  customerIdParamSchema,
   createCustomerSchema,
   updateCustomerSchema,
 } from '../lib/schemas';
 
 const app = new Hono<Env>();
 
-// Custom error handler for zod validation (zod v4 compatible)
+// Custom error handler for zod validation
 const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
   if (!result.success) {
     const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
     return c.json({ ok: false, message: messages }, 400);
   }
+};
+
+type CustomerRow = {
+  id: number;
+  name: string;
+  email: string | null;
+  metadata: string | null;
+  created_at: string;
+  updated_at: string;
+  order_count?: number;
+  total_spent?: number;
+  last_order_date?: string | null;
+};
+
+type OrderRow = {
+  id: number;
+  status: string;
+  total_net: number;
+  currency: string;
+  created_at: string;
+  paid_at: string | null;
+};
+
+type CustomerStats = {
+  total_orders: number;
+  total_spent: number;
+  avg_order_value: number;
 };
 
 // GET /customers - List customers with pagination and search
@@ -32,24 +59,37 @@ app.get(
       const bindings: (string | number)[] = [];
 
       if (q) {
-        whereClause = 'WHERE name LIKE ? OR email LIKE ?';
+        whereClause = 'WHERE c.name LIKE ? OR c.email LIKE ?';
         bindings.push(`%${q}%`, `%${q}%`);
       }
 
-      const countQuery = `SELECT COUNT(*) as count FROM customers ${whereClause}`;
+      // Count query
+      const countQuery = `SELECT COUNT(*) as count FROM customers c ${whereClause}`;
       const countRes = await c.env.DB.prepare(countQuery).bind(...bindings).first<{ count: number }>();
       const totalCount = countRes?.count || 0;
 
+      // Data query with order aggregation
       const dataQuery = `
-        SELECT id, name, email, metadata, created_at, updated_at
-        FROM customers
+        SELECT
+          c.id,
+          c.name,
+          c.email,
+          c.metadata,
+          c.created_at,
+          c.updated_at,
+          COUNT(o.id) as order_count,
+          COALESCE(SUM(o.total_net), 0) as total_spent,
+          MAX(o.created_at) as last_order_date
+        FROM customers c
+        LEFT JOIN orders o ON o.customer_id = c.id
         ${whereClause}
-        ORDER BY created_at DESC
+        GROUP BY c.id
+        ORDER BY c.created_at DESC
         LIMIT ? OFFSET ?
       `;
-      bindings.push(perPage, offset);
+      const dataBindings = [...bindings, perPage, offset];
 
-      const customers = await c.env.DB.prepare(dataQuery).bind(...bindings).all();
+      const customers = await c.env.DB.prepare(dataQuery).bind(...dataBindings).all<CustomerRow>();
 
       // Audit Log
       await c.env.DB.prepare(
@@ -77,7 +117,7 @@ app.get(
   }
 );
 
-// GET /customers/:id - Fetch single customer
+// GET /customers/:id - Fetch single customer with order history
 app.get(
   '/customers/:id',
   zValidator('param', customerIdParamSchema, validationErrorHandler),
@@ -85,22 +125,45 @@ app.get(
     const { id } = c.req.valid('param');
 
     try {
+      // Fetch customer
       const customer = await c.env.DB.prepare(`
         SELECT id, name, email, metadata, created_at, updated_at
         FROM customers
         WHERE id = ?
-      `).bind(id).first();
+      `).bind(id).first<CustomerRow>();
 
       if (!customer) {
         return jsonError(c, 'Customer not found', 404);
       }
+
+      // Fetch order history
+      const ordersResult = await c.env.DB.prepare(`
+        SELECT id, status, total_net, currency, created_at, paid_at
+        FROM orders
+        WHERE customer_id = ?
+        ORDER BY created_at DESC
+      `).bind(id).all<OrderRow>();
+
+      const orders = ordersResult.results || [];
+
+      // Calculate stats
+      const statsResult = await c.env.DB.prepare(`
+        SELECT
+          COUNT(*) as total_orders,
+          COALESCE(SUM(total_net), 0) as total_spent,
+          COALESCE(AVG(total_net), 0) as avg_order_value
+        FROM orders
+        WHERE customer_id = ?
+      `).bind(id).first<CustomerStats>();
+
+      const stats = statsResult || { total_orders: 0, total_spent: 0, avg_order_value: 0 };
 
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind('admin', 'view_customer', `customer:${id}`, JSON.stringify({ customer_id: id })).run();
 
-      return jsonOk(c, { customer });
+      return jsonOk(c, { customer, orders, stats });
     } catch (e) {
       console.error(e);
       return jsonError(c, 'Failed to fetch customer');
@@ -127,7 +190,7 @@ app.post(
       const customer = await c.env.DB.prepare(`
         SELECT id, name, email, metadata, created_at, updated_at
         FROM customers WHERE id = ?
-      `).bind(customerId).first();
+      `).bind(customerId).first<CustomerRow>();
 
       // Audit Log
       await c.env.DB.prepare(
@@ -149,53 +212,27 @@ app.put(
   zValidator('json', updateCustomerSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
-    const { name, email, metadata } = c.req.valid('json');
+    const { name, email } = c.req.valid('json');
 
     try {
       // Check exists
-      const existing = await c.env.DB.prepare(
-        'SELECT id, name, email, metadata FROM customers WHERE id = ?'
-      ).bind(id).first<{ id: number; name: string; email: string | null; metadata: string | null }>();
-
+      const existing = await c.env.DB.prepare('SELECT id FROM customers WHERE id = ?').bind(id).first();
       if (!existing) {
         return jsonError(c, 'Customer not found', 404);
       }
 
-      // Build update query dynamically based on provided fields
-      const updates: string[] = [];
-      const values: (string | null)[] = [];
-
-      if (name !== undefined) {
-        updates.push('name = ?');
-        values.push(name);
-      }
-      if (email !== undefined) {
-        updates.push('email = ?');
-        values.push(email);
-      }
-      if (metadata !== undefined) {
-        updates.push('metadata = ?');
-        values.push(metadata ? JSON.stringify(metadata) : null);
-      }
-
-      if (updates.length === 0) {
-        return jsonError(c, 'No fields to update', 400);
-      }
-
-      updates.push("updated_at = datetime('now')");
-      values.push(String(id));
-
+      // Update customer
       await c.env.DB.prepare(`
         UPDATE customers
-        SET ${updates.join(', ')}
+        SET name = ?, email = ?, updated_at = datetime('now')
         WHERE id = ?
-      `).bind(...values).run();
+      `).bind(name, email, id).run();
 
       // Fetch updated customer
       const customer = await c.env.DB.prepare(`
         SELECT id, name, email, metadata, created_at, updated_at
         FROM customers WHERE id = ?
-      `).bind(id).first();
+      `).bind(id).first<CustomerRow>();
 
       // Audit Log
       await c.env.DB.prepare(
