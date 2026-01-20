@@ -34,14 +34,21 @@ type Product = {
 	id: number;
 	title: string;
 	description: string | null;
+	category: string | null;
 	metadata: string | null;
 	status: string | null;
 	created_at: string;
 	updated_at: string;
 };
 
+type Category = {
+	category: string;
+	product_count: number;
+};
+
 let product: Product | null = null;
 let variants: Variant[] = [];
+let categories: Category[] = [];
 let error: string | null = null;
 let successMessage: string | null = null;
 
@@ -52,6 +59,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 		const title = formData.get('title')?.toString().trim() || '';
 		const description = formData.get('description')?.toString().trim() || '';
 		const status = formData.get('status')?.toString() || 'active';
+		const category = formData.get('category')?.toString().trim() || null;
 
 		if (!title) {
 			error = 'Title is required';
@@ -62,7 +70,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 					'Content-Type': 'application/json',
 					'x-admin-key': apiKey
 				},
-				body: JSON.stringify({ title, description, status })
+				body: JSON.stringify({ title, description, status, category })
 			});
 
 			const data = await res.json();
@@ -118,6 +126,21 @@ if (product && apiKey) {
 		}
 	} catch (e) {
 		console.error('Failed to fetch variants:', e);
+	}
+}
+
+// Fetch categories for dropdown
+if (apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/admin/categories`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+		if (res.ok) {
+			const data = await res.json();
+			categories = data.categories || [];
+		}
+	} catch (e) {
+		console.error('Failed to fetch categories:', e);
 	}
 }
 
@@ -219,6 +242,27 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 							<option value="active" selected={product.status === 'active'}>Active</option>
 							<option value="draft" selected={product.status === 'draft'}>Draft</option>
 						</select>
+					</div>
+
+					<div>
+						<label for="category" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Category
+						</label>
+						<input
+							type="text"
+							id="category"
+							name="category"
+							list="category-list"
+							value={product.category || ''}
+							placeholder="Select or enter a category"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						/>
+						<datalist id="category-list">
+							{categories.map((cat) => (
+								<option value={cat.category} />
+							))}
+						</datalist>
+						<p class="text-xs text-[#86868b] mt-1">Type to create a new category or select from existing ones.</p>
 					</div>
 
 					<div class="pt-4 border-t border-gray-100">
