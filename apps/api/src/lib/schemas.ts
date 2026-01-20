@@ -17,6 +17,12 @@ export const createProductSchema = z.object({
     .nullable()
     .transform((v) => v?.trim() || null),
   status: productStatusSchema.optional().default('active'),
+  category: z
+    .string()
+    .max(255, 'Category must be 255 characters or less')
+    .optional()
+    .nullable()
+    .transform((v) => v?.trim() || null),
 });
 
 export const updateProductSchema = z.object({
@@ -32,6 +38,12 @@ export const updateProductSchema = z.object({
     .nullable()
     .transform((v) => v?.trim() || null),
   status: productStatusSchema.optional().default('active'),
+  category: z
+    .string()
+    .max(255, 'Category must be 255 characters or less')
+    .optional()
+    .nullable()
+    .transform((v) => v?.trim() || null),
 });
 
 export const productIdParamSchema = z.object({
@@ -314,6 +326,42 @@ export type FulfillmentIdParam = z.infer<typeof fulfillmentIdParamSchema>;
 export type OrderFulfillmentParam = z.infer<typeof orderFulfillmentParamSchema>;
 export type CreateFulfillmentInput = z.infer<typeof createFulfillmentSchema>;
 export type UpdateFulfillmentInput = z.infer<typeof updateFulfillmentSchema>;
+
+// === Category Schemas ===
+
+export const categoryNameParamSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Category name is required')
+    .max(255, 'Category name must be 255 characters or less')
+    .transform((v) => decodeURIComponent(v.trim())),
+});
+
+export const categoryListQuerySchema = z.object({
+  q: z.string().max(100).optional().default(''),
+});
+
+export const renameCategorySchema = z.object({
+  newName: z
+    .string()
+    .min(1, 'New category name is required')
+    .max(255, 'Category name must be 255 characters or less')
+    .transform((v) => v.trim()),
+});
+
+export const deleteCategorySchema = z.object({
+  moveTo: z
+    .string()
+    .max(255, 'Category name must be 255 characters or less')
+    .optional()
+    .nullable()
+    .transform((v) => v?.trim() || null),
+});
+
+export type CategoryNameParam = z.infer<typeof categoryNameParamSchema>;
+export type CategoryListQuery = z.infer<typeof categoryListQuerySchema>;
+export type RenameCategoryInput = z.infer<typeof renameCategorySchema>;
+export type DeleteCategoryInput = z.infer<typeof deleteCategorySchema>;
 
 // === Coupon Schemas ===
 
