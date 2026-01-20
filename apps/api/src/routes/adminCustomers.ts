@@ -5,6 +5,7 @@ import { jsonOk, jsonError } from '../lib/http';
 import {
   customerListQuerySchema,
   customerIdParamSchema,
+  createCustomerSchema,
   updateCustomerSchema,
 } from '../lib/schemas';
 
@@ -170,6 +171,40 @@ app.get(
   }
 );
 
+// POST /customers - Create customer
+app.post(
+  '/customers',
+  zValidator('json', createCustomerSchema, validationErrorHandler),
+  async (c) => {
+    const { name, email, metadata } = c.req.valid('json');
+
+    try {
+      const result = await c.env.DB.prepare(`
+        INSERT INTO customers (name, email, metadata, created_at, updated_at)
+        VALUES (?, ?, ?, datetime('now'), datetime('now'))
+      `).bind(name, email, metadata ? JSON.stringify(metadata) : null).run();
+
+      const customerId = result.meta.last_row_id;
+
+      // Fetch created customer
+      const customer = await c.env.DB.prepare(`
+        SELECT id, name, email, metadata, created_at, updated_at
+        FROM customers WHERE id = ?
+      `).bind(customerId).first<CustomerRow>();
+
+      // Audit Log
+      await c.env.DB.prepare(
+        'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
+      ).bind('admin', 'create_customer', `customer:${customerId}`, JSON.stringify({ name, email })).run();
+
+      return jsonOk(c, { customer });
+    } catch (e) {
+      console.error(e);
+      return jsonError(c, 'Failed to create customer');
+    }
+  }
+);
+
 // PUT /customers/:id - Update customer
 app.put(
   '/customers/:id',
@@ -208,6 +243,48 @@ app.put(
     } catch (e) {
       console.error(e);
       return jsonError(c, 'Failed to update customer');
+    }
+  }
+);
+
+// DELETE /customers/:id - Delete customer
+app.delete(
+  '/customers/:id',
+  zValidator('param', customerIdParamSchema, validationErrorHandler),
+  async (c) => {
+    const { id } = c.req.valid('param');
+
+    try {
+      // Check exists
+      const existing = await c.env.DB.prepare(
+        'SELECT id, name FROM customers WHERE id = ?'
+      ).bind(id).first<{ id: number; name: string }>();
+
+      if (!existing) {
+        return jsonError(c, 'Customer not found', 404);
+      }
+
+      // Check for related orders
+      const orderCount = await c.env.DB.prepare(
+        'SELECT COUNT(*) as count FROM orders WHERE customer_id = ?'
+      ).bind(id).first<{ count: number }>();
+
+      if (orderCount && orderCount.count > 0) {
+        return jsonError(c, `Cannot delete customer with ${orderCount.count} existing order(s)`, 400);
+      }
+
+      // Delete customer
+      await c.env.DB.prepare('DELETE FROM customers WHERE id = ?').bind(id).run();
+
+      // Audit Log
+      await c.env.DB.prepare(
+        'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
+      ).bind('admin', 'delete_customer', `customer:${id}`, JSON.stringify({ name: existing.name })).run();
+
+      return jsonOk(c, { deleted: true });
+    } catch (e) {
+      console.error(e);
+      return jsonError(c, 'Failed to delete customer');
     }
   }
 );
