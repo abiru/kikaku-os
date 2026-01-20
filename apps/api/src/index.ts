@@ -38,6 +38,15 @@ import { startDailyCloseRun, completeDailyCloseRun } from './services/dailyClose
 
 const app = new Hono<Env>();
 
+// Global error handler - ensures all errors return JSON
+app.onError((err, c) => {
+  console.error('Unhandled error:', err);
+  return c.json(
+    { ok: false, message: err.message || 'Internal Server Error' },
+    500
+  );
+});
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',

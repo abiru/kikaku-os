@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { $cartItems, $cartArray, $cartTotal, $cartCurrency, removeFromCart, updateQuantity, clearCart, type CartItem } from '../lib/cart';
-import { getApiBase } from '../lib/api';
+import { getApiBase, fetchJson } from '../lib/api';
 import { useState } from 'react';
 
 const formatPrice = (amount: number, currency: string) => {
@@ -157,18 +157,20 @@ export default function Cart() {
 		setIsProcessing(true);
 
 		try {
-			const res = await fetch(`${getApiBase()}/checkout/session`, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					items: items.map((item) => ({
-						variantId: item.variantId,
-						quantity: item.quantity
-					}))
-				})
-			});
+			const data = await fetchJson<{ ok: boolean; url?: string; message?: string }>(
+				`${getApiBase()}/checkout/session`,
+				{
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+						items: items.map((item) => ({
+							variantId: item.variantId,
+							quantity: item.quantity
+						}))
+					})
+				}
+			);
 
-			const data = await res.json();
 			if (data.ok && data.url) {
 				clearCart();
 				window.location.href = data.url;
@@ -177,7 +179,8 @@ export default function Cart() {
 			}
 		} catch (err) {
 			console.error('Checkout error:', err);
-			alert('Failed to start checkout. Please try again.');
+			const message = err instanceof Error ? err.message : 'Unknown error';
+			alert(`Failed to start checkout: ${message}`);
 			setIsProcessing(false);
 		}
 	};
