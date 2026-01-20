@@ -243,4 +243,31 @@ storefront.get('/orders/by-session/:sessionId', async (c) => {
   });
 });
 
+// GET /pages/:slug - Fetch published static page by slug
+type StaticPageRow = {
+  id: number;
+  slug: string;
+  title: string;
+  meta_title: string | null;
+  meta_description: string | null;
+  body: string;
+  status: string;
+  updated_at: string;
+};
+
+storefront.get('/pages/:slug', async (c) => {
+  const slug = c.req.param('slug');
+  if (!slug || slug.length < 1 || slug.length > 100) {
+    return jsonOk(c, { page: null });
+  }
+
+  const page = await c.env.DB.prepare(`
+    SELECT id, slug, title, meta_title, meta_description, body, status, updated_at
+    FROM static_pages
+    WHERE slug = ? AND status = 'published'
+  `).bind(slug).first<StaticPageRow>();
+
+  return jsonOk(c, { page: page || null });
+});
+
 export default storefront;

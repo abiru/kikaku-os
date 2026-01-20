@@ -1,0 +1,453 @@
+---
+export const prerender = false;
+
+import Badge from '../../../components/Badge.astro';
+import Button from '../../../components/Button.astro';
+import Container from '../../../components/Container.astro';
+import Layout from '../../../layouts/Layout.astro';
+import { getApiBase } from '../../../lib/api';
+
+const { id } = Astro.params;
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+
+type Page = {
+	id: number;
+	slug: string;
+	title: string;
+	meta_title: string | null;
+	meta_description: string | null;
+	body: string;
+	status: string;
+	created_at: string;
+	updated_at: string;
+};
+
+let page: Page | null = null;
+let isCorePage = false;
+let error: string | null = null;
+let successMessage: string | null = null;
+
+// Handle POST - Update page
+if (Astro.request.method === 'POST' && apiKey) {
+	try {
+		const formData = await Astro.request.formData();
+		const slug = formData.get('slug')?.toString().trim().toLowerCase() || '';
+		const title = formData.get('title')?.toString().trim() || '';
+		const meta_title = formData.get('meta_title')?.toString().trim() || '';
+		const meta_description = formData.get('meta_description')?.toString().trim() || '';
+		const body = formData.get('body')?.toString() || '';
+		const status = formData.get('status')?.toString() || 'draft';
+
+		if (!slug) {
+			error = 'Slug is required';
+		} else if (!/^[a-z0-9-]+$/.test(slug)) {
+			error = 'Slug must contain only lowercase letters, numbers, and hyphens';
+		} else if (!title) {
+			error = 'Title is required';
+		} else {
+			const res = await fetch(`${apiBase}/admin/pages/${id}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({
+					slug,
+					title,
+					meta_title: meta_title || null,
+					meta_description: meta_description || null,
+					body,
+					status
+				})
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				error = data.message || 'Failed to update page';
+			} else {
+				page = data.page;
+				successMessage = 'Page updated successfully';
+			}
+		}
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to update page. Please check your connection.';
+	}
+}
+
+// Fetch page data
+if (!page && apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/admin/pages/${id}`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+
+		if (!res.ok) {
+			if (res.status === 404) {
+				error = 'Page not found';
+			} else {
+				const data = await res.json();
+				error = data.message || `API Error: ${res.status}`;
+			}
+		} else {
+			const data = await res.json();
+			page = data.page;
+			isCorePage = data.isCorePage || false;
+		}
+	} catch (e) {
+		console.error(e);
+		error = error || 'Failed to load page. Please check your connection.';
+	}
+} else if (!apiKey) {
+	error = 'ADMIN_API_KEY is missing in server environment';
+}
+
+// Re-fetch isCorePage after update
+if (page && apiKey && successMessage) {
+	try {
+		const res = await fetch(`${apiBase}/admin/pages/${id}`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+		if (res.ok) {
+			const data = await res.json();
+			isCorePage = data.isCorePage || false;
+		}
+	} catch (e) {
+		console.error('Failed to fetch page info:', e);
+	}
+}
+
+const formatDate = (dateStr: string) => {
+	return new Date(dateStr).toLocaleString('ja-JP', {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit'
+	});
+};
+
+const canDelete = page && !isCorePage;
+---
+
+<Layout title={page ? `${page.title} - Admin` : 'Page - Admin'}>
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center gap-4">
+				<a href="/admin/pages" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+					</svg>
+					Pages
+				</a>
+				<h1 class="text-lg font-semibold text-[#1d1d1f]">
+					{page ? `Edit: ${page.title}` : 'Page'}
+				</h1>
+				{page && (
+					<a
+						href={`/${page.slug}`}
+						target="_blank"
+						class="text-xs text-[#86868b] hover:text-[#0071e3] flex items-center gap-1"
+					>
+						<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+						</svg>
+						View page
+					</a>
+				)}
+			</Container>
+		</header>
+
+		<Container class="mt-8 max-w-4xl mx-auto">
+			{successMessage && (
+				<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
+					{successMessage}
+				</div>
+			)}
+
+			{error && !page && (
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+					<div class="text-red-600 mb-4">{error}</div>
+					<Button href="/admin/pages" variant="secondary" size="sm">
+						Back to Pages
+					</Button>
+				</div>
+			)}
+
+			{error && page && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			{page && (
+				<form method="POST" class="space-y-6">
+					{/* Status Card */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-4">
+								{page.status === 'published' ? (
+									<Badge severity="info">Published</Badge>
+								) : (
+									<Badge severity="secondary">Draft</Badge>
+								)}
+								{isCorePage && (
+									<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded">Core page</span>
+								)}
+							</div>
+							<div class="flex gap-2">
+								<button
+									type="button"
+									id="publish-btn"
+									class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${page.status === 'published' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+								>
+									{page.status === 'published' ? 'Unpublish' : 'Publish'}
+								</button>
+							</div>
+						</div>
+					</div>
+
+					{/* Basic Info */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+						<h2 class="text-sm font-medium text-[#86868b]">Basic Information</h2>
+
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<label for="title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									Title <span class="text-red-500">*</span>
+								</label>
+								<input
+									type="text"
+									id="title"
+									name="title"
+									required
+									value={page.title}
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								/>
+							</div>
+
+							<div>
+								<label for="slug" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									Slug <span class="text-red-500">*</span>
+								</label>
+								<div class="flex items-center gap-2">
+									<span class="text-sm text-[#86868b]">/</span>
+									<input
+										type="text"
+										id="slug"
+										name="slug"
+										required
+										value={page.slug}
+										pattern="^[a-z0-9-]+$"
+										class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									/>
+								</div>
+								<p class="mt-1 text-xs text-[#86868b]">Only lowercase letters, numbers, and hyphens</p>
+							</div>
+
+							<div>
+								<label for="status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									Status
+								</label>
+								<select
+									id="status"
+									name="status"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+								>
+									<option value="draft" selected={page.status === 'draft'}>Draft</option>
+									<option value="published" selected={page.status === 'published'}>Published</option>
+								</select>
+							</div>
+						</div>
+					</div>
+
+					{/* SEO */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+						<h2 class="text-sm font-medium text-[#86868b]">SEO Settings</h2>
+
+						<div class="space-y-6">
+							<div>
+								<label for="meta_title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									Meta Title
+								</label>
+								<input
+									type="text"
+									id="meta_title"
+									name="meta_title"
+									value={page.meta_title || ''}
+									placeholder="Page Title - Site Name"
+									maxlength="255"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								/>
+								<p class="mt-1 text-xs text-[#86868b]">Used as the browser tab title and in search results</p>
+							</div>
+
+							<div>
+								<label for="meta_description" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+									Meta Description
+								</label>
+								<textarea
+									id="meta_description"
+									name="meta_description"
+									rows="2"
+									maxlength="500"
+									placeholder="Brief description of the page content..."
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+								>{page.meta_description || ''}</textarea>
+								<p class="mt-1 text-xs text-[#86868b]">Displayed in search engine results</p>
+							</div>
+						</div>
+					</div>
+
+					{/* Content */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+						<div class="flex items-center justify-between">
+							<h2 class="text-sm font-medium text-[#86868b]">Page Content (HTML)</h2>
+							<button
+								type="button"
+								id="preview-toggle"
+								class="text-sm text-[#0071e3] hover:underline"
+							>
+								Toggle Preview
+							</button>
+						</div>
+
+						<div id="editor-container">
+							<textarea
+								id="body"
+								name="body"
+								rows="20"
+								class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+							>{page.body}</textarea>
+						</div>
+
+						<div id="preview-container" class="hidden">
+							<div id="preview-content" class="min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white">
+								<p class="text-[#86868b]">Preview will appear here...</p>
+							</div>
+						</div>
+					</div>
+
+					{/* Meta Info */}
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<dl class="grid grid-cols-2 gap-4 text-sm">
+							<div>
+								<dt class="text-[#86868b]">Created</dt>
+								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(page.created_at)}</dd>
+							</div>
+							<div>
+								<dt class="text-[#86868b]">Updated</dt>
+								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(page.updated_at)}</dd>
+							</div>
+						</dl>
+					</div>
+
+					{/* Actions */}
+					<div class="flex justify-between items-center gap-3">
+						<div>
+							{canDelete ? (
+								<button
+									type="button"
+									id="delete-btn"
+									class="text-sm text-red-500 hover:underline"
+								>
+									Delete Page
+								</button>
+							) : isCorePage ? (
+								<span class="text-sm text-[#86868b]">Core pages cannot be deleted</span>
+							) : null}
+						</div>
+						<div class="flex gap-3">
+							<Button href="/admin/pages" variant="secondary" size="sm">
+								Back
+							</Button>
+							<Button type="submit" variant="primary" size="sm">
+								Save Changes
+							</Button>
+						</div>
+					</div>
+				</form>
+			)}
+		</Container>
+	</div>
+</Layout>
+
+<script define:vars={{ apiBase, apiKey, pageId: id, canDelete, currentStatus: page?.status }}>
+	const deleteBtn = document.getElementById('delete-btn');
+	const publishBtn = document.getElementById('publish-btn');
+	const previewToggle = document.getElementById('preview-toggle');
+	const editorContainer = document.getElementById('editor-container');
+	const previewContainer = document.getElementById('preview-container');
+	const bodyTextarea = document.getElementById('body');
+	const previewContent = document.getElementById('preview-content');
+
+	let showPreview = false;
+
+	// Preview toggle
+	previewToggle?.addEventListener('click', () => {
+		showPreview = !showPreview;
+
+		if (showPreview) {
+			editorContainer?.classList.add('hidden');
+			previewContainer?.classList.remove('hidden');
+			if (previewContent && bodyTextarea) {
+				previewContent.innerHTML = bodyTextarea.value || '<p class="text-[#86868b]">No content to preview...</p>';
+			}
+			previewToggle.textContent = 'Edit';
+		} else {
+			editorContainer?.classList.remove('hidden');
+			previewContainer?.classList.add('hidden');
+			previewToggle.textContent = 'Toggle Preview';
+		}
+	});
+
+	// Delete button
+	if (deleteBtn && canDelete) {
+		deleteBtn.addEventListener('click', async () => {
+			if (!confirm('Are you sure you want to delete this page? This action cannot be undone.')) {
+				return;
+			}
+
+			try {
+				const res = await fetch(`${apiBase}/admin/pages/${pageId}`, {
+					method: 'DELETE',
+					headers: { 'x-admin-key': apiKey }
+				});
+
+				if (res.ok) {
+					window.location.href = '/admin/pages';
+				} else {
+					const data = await res.json();
+					alert(data.message || 'Failed to delete page');
+				}
+			} catch (e) {
+				alert('Failed to delete page. Please try again.');
+			}
+		});
+	}
+
+	// Publish/Unpublish button
+	if (publishBtn) {
+		publishBtn.addEventListener('click', async () => {
+			const action = currentStatus === 'published' ? 'unpublish' : 'publish';
+
+			try {
+				const res = await fetch(`${apiBase}/admin/pages/${pageId}/${action}`, {
+					method: 'POST',
+					headers: { 'x-admin-key': apiKey }
+				});
+
+				if (res.ok) {
+					window.location.reload();
+				} else {
+					const data = await res.json();
+					alert(data.message || `Failed to ${action} page`);
+				}
+			} catch (e) {
+				alert(`Failed to ${action} page. Please try again.`);
+			}
+		});
+	}
+</script>

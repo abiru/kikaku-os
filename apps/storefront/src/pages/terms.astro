@@ -1,125 +1,81 @@
 ---
+export const prerender = false;
+
 import Container from '../components/Container.astro';
 import Layout from '../layouts/Layout.astro';
+import { getApiBase } from '../lib/api';
 
-const lastUpdated = "2026年1月19日";
+type StaticPage = {
+	id: number;
+	slug: string;
+	title: string;
+	meta_title: string | null;
+	meta_description: string | null;
+	body: string;
+	status: string;
+	updated_at: string;
+};
+
+let page: StaticPage | null = null;
+let error: string | null = null;
+
+try {
+	const apiBase = getApiBase();
+	const res = await fetch(`${apiBase}/store/pages/terms`);
+	if (res.ok) {
+		const data = await res.json();
+		page = data.page;
+	}
+} catch (e) {
+	console.error('Failed to fetch page:', e);
+	error = 'ページの読み込みに失敗しました。';
+}
+
+const metaTitle = page?.meta_title || '利用規約 - Led Kikaku';
+const metaDescription = page?.meta_description || '';
+
+const formatDate = (dateStr: string) => {
+	return new Date(dateStr).toLocaleDateString('ja-JP', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric'
+	});
+};
 ---
 
-<Layout title="利用規約 - Led Kikaku">
+<Layout title={metaTitle}>
+	{metaDescription && (
+		<meta slot="head" name="description" content={metaDescription} />
+	)}
 	<div class="bg-white min-h-screen">
 		{/* Header */}
 		<section class="pt-24 pb-16 md:pt-32 md:pb-24">
 			<Container>
 				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-center text-[#1d1d1f]">
-					利用規約
+					{page?.title || '利用規約'}
 				</h1>
-				<p class="mt-6 text-center text-[#86868b] text-lg font-medium">
-					最終更新日：{lastUpdated}
-				</p>
+				{page && (
+					<p class="mt-6 text-center text-[#86868b] text-lg font-medium">
+						最終更新日：{formatDate(page.updated_at)}
+					</p>
+				)}
 			</Container>
 		</section>
 
 		{/* Content */}
 		<section class="pb-24">
 			<Container class="max-w-3xl">
-				<div class="space-y-16">
-					
-					{/* Preamble */}
-					<div class="text-[17px] leading-relaxed text-[#424245]">
-						<p>
-							この利用規約（以下「本規約」）は、合同会社SBO（以下「当社」）が提供するオンラインストア「Led Kikaku OS Storefront」（以下「本サービス」）の利用条件を定めるものです。本サービスを利用される全ての皆様（以下「利用者」）には、本規約に同意していただく必要があります。
-						</p>
+				{page && page.body ? (
+					<div class="prose prose-lg max-w-none" set:html={page.body} />
+				) : error ? (
+					<div class="text-center py-12">
+						<p class="text-[#86868b]">{error}</p>
 					</div>
-
-					<div class="border-t border-gray-100"></div>
-
-					{/* Article 1 */}
-					<section>
-						<span class="block text-xs font-bold text-[#86868b] tracking-wider mb-2">第1条</span>
-						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
-							適用
-						</h2>
-						<p class="text-[17px] leading-relaxed text-[#424245]">
-							本規約は、利用者と当社との間の本サービスの利用に関わる一切の関係に適用されます。利用者は本サービスを利用することにより、本規約の内容に同意したものとみなされます。
-						</p>
-					</section>
-
-					<div class="border-t border-gray-100"></div>
-
-					{/* Article 2 */}
-					<section>
-						<span class="block text-xs font-bold text-[#86868b] tracking-wider mb-2">第2条</span>
-						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
-							売買契約と決済
-						</h2>
-						<div class="space-y-6 text-[17px] leading-relaxed text-[#424245]">
-							<p>
-								1. 利用者が当サイト上で注文を行い、当社からの「注文確定メール」が送信された時点で売買契約が成立します。
-							</p>
-							<p>
-								2. <span class="font-semibold text-[#1d1d1f]">決済処理について：</span><br/>
-								当サイトにおけるクレジットカード決済は、決済代行会社 Stripe, Inc.（以下「Stripe」）のシステムを利用しています。利用者は、Stripeが定める利用規約およびプライバシーポリシーに従うものとします。なお、決済の不承認や不正利用の疑いがある場合、当社は注文をキャンセルする権利を有します。
-							</p>
-						</div>
-					</section>
-
-					<div class="border-t border-gray-100"></div>
-
-					{/* Article 3 */}
-					<section>
-						<span class="block text-xs font-bold text-[#86868b] tracking-wider mb-2">第3条</span>
-						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
-							禁止事項
-						</h2>
-						<p class="text-[17px] leading-relaxed text-[#424245] mb-4">
-							利用者は、本サービスの利用にあたり、以下の行為をしてはなりません。
-						</p>
-						<ul class="list-disc list-outside pl-5 space-y-2 text-[17px] text-[#424245] marker:text-[#86868b]">
-							<li>法令または公序良俗に違反する行為</li>
-							<li>犯罪行為に関連する行為</li>
-							<li>当社のサーバーまたはネットワークの機能を破壊したり、妨害したりする行為（DDoS攻撃、過度なアクセス等）</li>
-							<li>当社のサービスの運営を妨害するおそれのある行為</li>
-							<li>本サービスのシステムをリバースエンジニアリング、逆コンパイル、または逆アセンブルする行為</li>
-							<li>他の利用者になりすます行為</li>
-						</ul>
-					</section>
-
-					<div class="border-t border-gray-100"></div>
-
-					{/* Article 4 */}
-					<section>
-						<span class="block text-xs font-bold text-[#86868b] tracking-wider mb-2">第4条</span>
-						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
-							免責事項
-						</h2>
-						<div class="space-y-6 text-[17px] leading-relaxed text-[#424245]">
-							<p>
-								1. 当社は、以下のいずれかの事由があると判断した場合、利用者に事前に通知することなく本サービスの全部または一部の提供を停止または中断することができるものとします。
-							</p>
-							<ul class="list-none pl-4 text-[#6e6e73] space-y-1 text-[15px]">
-								<li>・システムの保守点検または更新を行う場合</li>
-								<li>・地震、落雷、火災、停電または天災などの不可抗力により、本サービスの提供が困難となった場合</li>
-							</ul>
-							<p>
-								2. 当社は、本サービスの利用に関して、利用者の環境（OS、ブラウザ、通信状況等）に起因する不具合や損害について、一切の責任を負わないものとします。
-							</p>
-						</div>
-					</section>
-
-					<div class="border-t border-gray-100"></div>
-
-					{/* Article 5 */}
-					<section>
-						<span class="block text-xs font-bold text-[#86868b] tracking-wider mb-2">第5条</span>
-						<h2 class="text-xl font-semibold text-[#1d1d1f] mb-4">
-							準拠法・裁判管轄
-						</h2>
-						<p class="text-[17px] leading-relaxed text-[#424245]">
-							本規約の解釈にあたっては、日本法を準拠法とします。本サービスに関して紛争が生じた場合には、当社の本店所在地を管轄する裁判所を専属的合意管轄とします。
-						</p>
-					</section>
-
-				</div>
+				) : (
+					<div class="text-center py-12">
+						<p class="text-[#86868b]">このページは現在準備中です。</p>
+					</div>
+				)}
 			</Container>
 		</section>
 	</div>

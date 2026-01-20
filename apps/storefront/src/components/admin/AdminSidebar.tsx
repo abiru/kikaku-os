@@ -22,6 +22,7 @@ import {
   ArchiveBoxIcon,
   ChartBarIcon,
   DocumentTextIcon,
+  DocumentDuplicateIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
@@ -41,6 +42,7 @@ const navigation: NavigationItem[] = [
   { name: 'Events', href: '/admin/events', icon: CalendarIcon },
   { name: 'Products', href: '/admin/products', icon: CubeIcon },
   { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon },
+  { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon },
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
 ]
