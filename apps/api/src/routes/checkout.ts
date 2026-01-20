@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
+import { ensureStripePriceForVariant } from '../services/stripe';
 
 const checkout = new Hono<Env>();
 
@@ -14,6 +15,7 @@ type VariantPriceRow = {
   amount: number;
   currency: string;
   provider_price_id: string | null;
+  provider_product_id: string | null;
 };
 
 type CheckoutItem = {
@@ -105,6 +107,7 @@ checkout.post('/checkout/session', async (c) => {
             v.title as variant_title,
             v.product_id as product_id,
             p.title as product_title,
+            p.provider_product_id as provider_product_id,
             pr.id as price_id,
             pr.amount as amount,
             pr.currency as currency,
@@ -124,19 +127,25 @@ checkout.post('/checkout/session', async (c) => {
     }
   }
 
-  // Validate all variants exist and have prices
+  // Validate all variants exist and ensure Stripe prices are configured
   for (const item of items) {
     const row = variantMap.get(item.variantId);
     if (!row) {
       return jsonErrorWithCode(c, 'VARIANT_NOT_FOUND', `Variant ${item.variantId} not found`, 404);
     }
     if (!row.provider_price_id?.trim()) {
-      return jsonErrorWithCode(
-        c,
-        'STRIPE_PRICE_NOT_CONFIGURED',
-        `Stripe price not configured for variant ${item.variantId}`,
-        400
-      );
+      try {
+        const stripePriceId = await ensureStripePriceForVariant(c.env.DB, stripeKey, row);
+        variantMap.set(item.variantId, { ...row, provider_price_id: stripePriceId });
+      } catch (err) {
+        console.error(`Failed to create Stripe price for variant ${item.variantId}:`, err);
+        return jsonErrorWithCode(
+          c,
+          'STRIPE_PRICE_CREATION_FAILED',
+          `Failed to create Stripe price for variant ${item.variantId}`,
+          500
+        );
+      }
     }
   }
 
