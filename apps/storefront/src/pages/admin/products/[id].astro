@@ -542,53 +542,66 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 </AdminLayout>
 
 <script define:vars={{ apiBase, apiKey, productId: id }}>
-	// Image handling
-	const imageUpload = document.getElementById('image-upload');
-	const uploadProgress = document.getElementById('upload-progress');
-	const imageError = document.getElementById('image-error');
+	function initProductPage() {
+		// Image handling
+		const imageUpload = document.getElementById('image-upload');
+		const uploadProgress = document.getElementById('upload-progress');
+		const imageError = document.getElementById('image-error');
 
-	function showImageError(message) {
-		const errorDiv = imageError.querySelector('div');
-		errorDiv.textContent = message;
-		imageError.classList.remove('hidden');
-		setTimeout(() => imageError.classList.add('hidden'), 5000);
-	}
-
-	imageUpload?.addEventListener('change', async (e) => {
-		const files = e.target.files;
-		if (!files || files.length === 0) return;
-
-		uploadProgress.classList.remove('hidden');
-		imageError.classList.add('hidden');
-
-		const formData = new FormData();
-		for (const file of files) {
-			formData.append('file', file);
+		// If elements don't exist yet (React still loading), retry
+		if (!imageUpload && !document.getElementById('variant-modal')) {
+			setTimeout(initProductPage, 100);
+			return;
 		}
 
-		try {
-			const res = await fetch(`${apiBase}/admin/products/${productId}/images`, {
-				method: 'POST',
-				headers: { 'x-admin-key': apiKey },
-				body: formData
-			});
-
-			if (!res.ok) {
-				const data = await res.json();
-				showImageError(data.message || 'Failed to upload images');
-			} else {
-				location.reload();
+		function showImageError(message) {
+			if (!imageError) return;
+			const errorDiv = imageError.querySelector('div');
+			if (errorDiv) {
+				errorDiv.textContent = message;
+				imageError.classList.remove('hidden');
+				setTimeout(() => imageError.classList.add('hidden'), 5000);
 			}
-		} catch (err) {
-			showImageError('Failed to upload images. Please try again.');
-		} finally {
-			uploadProgress.classList.add('hidden');
-			imageUpload.value = '';
 		}
-	});
 
-	document.querySelectorAll('.delete-image-btn').forEach(btn => {
-		btn.addEventListener('click', async () => {
+		imageUpload?.addEventListener('change', async (e) => {
+			const files = e.target.files;
+			if (!files || files.length === 0) return;
+
+			uploadProgress?.classList.remove('hidden');
+			imageError?.classList.add('hidden');
+
+			const formData = new FormData();
+			for (const file of files) {
+				formData.append('file', file);
+			}
+
+			try {
+				const res = await fetch(`${apiBase}/admin/products/${productId}/images`, {
+					method: 'POST',
+					headers: { 'x-admin-key': apiKey },
+					body: formData
+				});
+
+				if (!res.ok) {
+					const data = await res.json();
+					showImageError(data.message || 'Failed to upload images');
+				} else {
+					location.reload();
+				}
+			} catch (err) {
+				showImageError('Failed to upload images. Please try again.');
+			} finally {
+				uploadProgress?.classList.add('hidden');
+				if (imageUpload) imageUpload.value = '';
+			}
+		});
+
+		// Use event delegation for delete image buttons
+		document.addEventListener('click', async (e) => {
+			const btn = e.target.closest('.delete-image-btn');
+			if (!btn) return;
+
 			const imageId = btn.dataset.imageId;
 			const filename = btn.dataset.imageFilename;
 			if (!confirm(`Delete image "${filename}"?`)) return;
@@ -608,143 +621,157 @@ const formatPrice = (amount: number, currency: string = 'JPY') => {
 				showImageError('Failed to delete image. Please try again.');
 			}
 		});
-	});
 
-	// Variant handling
-	const modal = document.getElementById('variant-modal');
-	const modalTitle = document.getElementById('modal-title');
-	const variantForm = document.getElementById('variant-form');
-	const variantIdInput = document.getElementById('variant-id');
-	const variantTitleInput = document.getElementById('variant-title');
-	const variantSkuInput = document.getElementById('variant-sku');
-	const priceAmountInput = document.getElementById('price-amount');
-	const stripePriceIdInput = document.getElementById('stripe-price-id');
-	const modalError = document.getElementById('modal-error');
-	const addVariantBtn = document.getElementById('add-variant-btn');
-	const cancelModalBtn = document.getElementById('cancel-modal-btn');
+		// Variant handling
+		const modal = document.getElementById('variant-modal');
+		const modalTitle = document.getElementById('modal-title');
+		const variantForm = document.getElementById('variant-form');
+		const variantIdInput = document.getElementById('variant-id');
+		const variantTitleInput = document.getElementById('variant-title');
+		const variantSkuInput = document.getElementById('variant-sku');
+		const priceAmountInput = document.getElementById('price-amount');
+		const stripePriceIdInput = document.getElementById('stripe-price-id');
+		const modalError = document.getElementById('modal-error');
+		const addVariantBtn = document.getElementById('add-variant-btn');
+		const cancelModalBtn = document.getElementById('cancel-modal-btn');
 
-	function showModal(isEdit = false, variant = null) {
-		modalTitle.textContent = isEdit ? 'Edit Variant' : 'Add Variant';
-		variantIdInput.value = variant?.id || '';
-		variantTitleInput.value = variant?.title || '';
-		variantSkuInput.value = variant?.sku || '';
-		const price = variant?.prices?.[0];
-		priceAmountInput.value = price?.amount || '';
-		stripePriceIdInput.value = price?.provider_price_id || '';
-		modalError.classList.add('hidden');
-		modal.classList.remove('hidden');
-	}
+		function showModal(isEdit = false, variant = null) {
+			if (!modal || !modalTitle || !variantIdInput || !variantTitleInput || !variantSkuInput || !priceAmountInput || !stripePriceIdInput || !modalError) return;
+			modalTitle.textContent = isEdit ? 'Edit Variant' : 'Add Variant';
+			variantIdInput.value = variant?.id || '';
+			variantTitleInput.value = variant?.title || '';
+			variantSkuInput.value = variant?.sku || '';
+			const price = variant?.prices?.[0];
+			priceAmountInput.value = price?.amount || '';
+			stripePriceIdInput.value = price?.provider_price_id || '';
+			modalError.classList.add('hidden');
+			modal.classList.remove('hidden');
+		}
 
-	function hideModal() {
-		modal.classList.add('hidden');
-		variantForm.reset();
-	}
+		function hideModal() {
+			if (!modal || !variantForm) return;
+			modal.classList.add('hidden');
+			variantForm.reset();
+		}
 
-	function showError(message) {
-		modalError.textContent = message;
-		modalError.classList.remove('hidden');
-	}
+		function showError(message) {
+			if (!modalError) return;
+			modalError.textContent = message;
+			modalError.classList.remove('hidden');
+		}
 
-	addVariantBtn?.addEventListener('click', () => showModal(false));
-	cancelModalBtn?.addEventListener('click', hideModal);
-	modal?.addEventListener('click', (e) => {
-		if (e.target === modal) hideModal();
-	});
-
-	document.querySelectorAll('.edit-variant-btn').forEach(btn => {
-		btn.addEventListener('click', () => {
-			const variant = JSON.parse(btn.dataset.variant);
-			showModal(true, variant);
+		addVariantBtn?.addEventListener('click', () => showModal(false));
+		cancelModalBtn?.addEventListener('click', hideModal);
+		modal?.addEventListener('click', (e) => {
+			if (e.target === modal) hideModal();
 		});
-	});
 
-	document.querySelectorAll('.delete-variant-btn').forEach(btn => {
-		btn.addEventListener('click', async () => {
-			const variantId = btn.dataset.variantId;
-			const variantTitle = btn.dataset.variantTitle;
-			if (!confirm(`Delete variant "${variantTitle}"? This will also delete its prices.`)) return;
+		// Use event delegation for edit/delete variant buttons
+		document.addEventListener('click', async (e) => {
+			const editBtn = e.target.closest('.edit-variant-btn');
+			if (editBtn) {
+				const variant = JSON.parse(editBtn.dataset.variant);
+				showModal(true, variant);
+				return;
+			}
+
+			const deleteBtn = e.target.closest('.delete-variant-btn');
+			if (deleteBtn) {
+				const variantId = deleteBtn.dataset.variantId;
+				const variantTitle = deleteBtn.dataset.variantTitle;
+				if (!confirm(`Delete variant "${variantTitle}"? This will also delete its prices.`)) return;
+
+				try {
+					const res = await fetch(`${apiBase}/admin/products/${productId}/variants/${variantId}`, {
+						method: 'DELETE',
+						headers: { 'x-admin-key': apiKey }
+					});
+					if (res.ok) {
+						location.reload();
+					} else {
+						const data = await res.json();
+						alert(data.message || 'Failed to delete variant');
+					}
+				} catch (err) {
+					alert('Failed to delete variant. Please try again.');
+				}
+			}
+		});
+
+		variantForm?.addEventListener('submit', async (e) => {
+			e.preventDefault();
+			if (!variantIdInput || !variantTitleInput || !variantSkuInput || !priceAmountInput || !stripePriceIdInput) return;
+
+			const variantId = variantIdInput.value;
+			const isEdit = !!variantId;
+
+			const title = variantTitleInput.value.trim();
+			const sku = variantSkuInput.value.trim() || null;
+			const amount = parseInt(priceAmountInput.value, 10);
+			const provider_price_id = stripePriceIdInput.value.trim() || null;
+
+			if (!title) {
+				showError('Title is required');
+				return;
+			}
+			if (isNaN(amount) || amount < 0) {
+				showError('Price must be a valid positive number');
+				return;
+			}
 
 			try {
-				const res = await fetch(`${apiBase}/admin/products/${productId}/variants/${variantId}`, {
-					method: 'DELETE',
-					headers: { 'x-admin-key': apiKey }
+				// Create or update variant
+				const variantUrl = isEdit
+					? `${apiBase}/admin/products/${productId}/variants/${variantId}`
+					: `${apiBase}/admin/products/${productId}/variants`;
+
+				const variantRes = await fetch(variantUrl, {
+					method: isEdit ? 'PUT' : 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': apiKey
+					},
+					body: JSON.stringify({ title, sku })
 				});
-				if (res.ok) {
-					location.reload();
-				} else {
-					const data = await res.json();
-					alert(data.message || 'Failed to delete variant');
+
+				if (!variantRes.ok) {
+					const data = await variantRes.json();
+					showError(data.message || 'Failed to save variant');
+					return;
 				}
-			} catch (e) {
-				alert('Failed to delete variant. Please try again.');
+
+				const variantData = await variantRes.json();
+				const savedVariantId = variantData.variant?.id || variantId;
+
+				// Update prices
+				const priceRes = await fetch(`${apiBase}/admin/variants/${savedVariantId}/prices`, {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': apiKey
+					},
+					body: JSON.stringify({
+						prices: [{ currency: 'JPY', amount, provider_price_id }]
+					})
+				});
+
+				if (!priceRes.ok) {
+					const data = await priceRes.json();
+					showError(data.message || 'Failed to save price');
+					return;
+				}
+
+				location.reload();
+			} catch (err) {
+				showError('An error occurred. Please try again.');
 			}
 		});
-	});
+	}
 
-	variantForm?.addEventListener('submit', async (e) => {
-		e.preventDefault();
-		const variantId = variantIdInput.value;
-		const isEdit = !!variantId;
-
-		const title = variantTitleInput.value.trim();
-		const sku = variantSkuInput.value.trim() || null;
-		const amount = parseInt(priceAmountInput.value, 10);
-		const provider_price_id = stripePriceIdInput.value.trim() || null;
-
-		if (!title) {
-			showError('Title is required');
-			return;
-		}
-		if (isNaN(amount) || amount < 0) {
-			showError('Price must be a valid positive number');
-			return;
-		}
-
-		try {
-			// Create or update variant
-			const variantUrl = isEdit
-				? `${apiBase}/admin/products/${productId}/variants/${variantId}`
-				: `${apiBase}/admin/products/${productId}/variants`;
-
-			const variantRes = await fetch(variantUrl, {
-				method: isEdit ? 'PUT' : 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
-				},
-				body: JSON.stringify({ title, sku })
-			});
-
-			if (!variantRes.ok) {
-				const data = await variantRes.json();
-				showError(data.message || 'Failed to save variant');
-				return;
-			}
-
-			const variantData = await variantRes.json();
-			const savedVariantId = variantData.variant?.id || variantId;
-
-			// Update prices
-			const priceRes = await fetch(`${apiBase}/admin/variants/${savedVariantId}/prices`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
-				},
-				body: JSON.stringify({
-					prices: [{ currency: 'JPY', amount, provider_price_id }]
-				})
-			});
-
-			if (!priceRes.ok) {
-				const data = await priceRes.json();
-				showError(data.message || 'Failed to save price');
-				return;
-			}
-
-			location.reload();
-		} catch (e) {
-			showError('An error occurred. Please try again.');
-		}
-	});
+	// Start initialization
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initProductPage);
+	} else {
+		initProductPage();
+	}
 </script>
