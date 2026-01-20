@@ -3,8 +3,7 @@ export const prerender = false;
 
 import Badge from '../../components/Badge.astro';
 import Button from '../../components/Button.astro';
-import Container from '../../components/Container.astro';
-import Layout from '../../layouts/Layout.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
@@ -83,20 +82,17 @@ const getStatusVariant = (status: string) => {
 };
 ---
 
-<Layout title="Dashboard - Admin">
-	<div class="bg-[#f5f5f7] min-h-screen pb-20">
-		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
-			<Container class="h-16 flex items-center">
-				<h1 class="text-lg font-semibold text-[#1d1d1f]">Dashboard</h1>
-			</Container>
-		</header>
+<AdminLayout title="Dashboard - Admin">
+	<div class="space-y-8">
+		<div>
+			<h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+		</div>
 
-		<Container class="mt-8">
-			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
-					{error}
-				</div>
-			)}
+		{error && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+				{error}
+			</div>
+		)}
 
 			{data && (
 				<>
@@ -239,6 +235,5 @@ const getStatusVariant = (status: string) => {
 					</div>
 				</>
 			)}
-		</Container>
 	</div>
-</Layout>
+</AdminLayout>

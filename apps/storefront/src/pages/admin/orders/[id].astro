@@ -3,8 +3,7 @@ export const prerender = false;
 
 import Badge from '../../../components/Badge.astro';
 import Button from '../../../components/Button.astro';
-import Container from '../../../components/Container.astro';
-import Layout from '../../../layouts/Layout.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
 const { id } = Astro.params;
@@ -99,24 +98,18 @@ const getFulfillmentStatusSeverity = (status: string) => {
 const apiKey = import.meta.env.ADMIN_API_KEY;
 ---
 
-<Layout title={`Order #${id} - Admin`}>
-	<div class="bg-[#f5f5f7] min-h-screen pb-20">
-		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
-			<Container class="h-16 flex items-center justify-between">
-				<div class="flex items-center gap-4">
-					<a href="/admin/orders" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-						</svg>
-						Orders
-					</a>
-					<h1 class="text-lg font-semibold text-[#1d1d1f]">Order #{id}</h1>
-					{order && <Badge severity={getStatusSeverity(order.status)}>{order.status}</Badge>}
-				</div>
-			</Container>
-		</header>
-
-		<Container class="mt-8">
+<AdminLayout title={`Order #${id} - Admin`}>
+	<div class="space-y-6">
+		<div class="flex items-center gap-4">
+			<a href="/admin/orders" class="text-indigo-600 hover:underline text-sm flex items-center gap-1">
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+				</svg>
+				Orders
+			</a>
+			<h1 class="text-2xl font-semibold text-gray-900">Order #{id}</h1>
+			{order && <Badge severity={getStatusSeverity(order.status)}>{order.status}</Badge>}
+		</div>
 			{error && (
 				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
 					{error}
@@ -450,9 +443,8 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					</form>
 				</div>
 			</div>
-		</Container>
 	</div>
-</Layout>
+</AdminLayout>
 
 <script define:vars={{ apiBase, apiKey, orderId: id }}>
 	// Create Modal elements

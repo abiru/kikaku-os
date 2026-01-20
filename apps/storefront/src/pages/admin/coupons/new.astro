@@ -1,0 +1,271 @@
+---
+export const prerender = false;
+
+import Button from '../../../components/Button.astro';
+import Container from '../../../components/Container.astro';
+import Layout from '../../../layouts/Layout.astro';
+import { getApiBase } from '../../../lib/api';
+
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+
+let error: string | null = null;
+let formValues = {
+	code: '',
+	type: 'percentage',
+	value: '',
+	min_order_amount: '0',
+	max_uses: '',
+	uses_per_customer: '1',
+	status: 'active',
+	starts_at: '',
+	expires_at: ''
+};
+
+if (Astro.request.method === 'POST') {
+	try {
+		const formData = await Astro.request.formData();
+		const code = formData.get('code')?.toString().trim().toUpperCase() || '';
+		const type = formData.get('type')?.toString() || 'percentage';
+		const valueStr = formData.get('value')?.toString() || '';
+		const minOrderStr = formData.get('min_order_amount')?.toString() || '0';
+		const maxUsesStr = formData.get('max_uses')?.toString() || '';
+		const usesPerCustomerStr = formData.get('uses_per_customer')?.toString() || '1';
+		const status = formData.get('status')?.toString() || 'active';
+		const starts_at = formData.get('starts_at')?.toString() || '';
+		const expires_at = formData.get('expires_at')?.toString() || '';
+
+		formValues = {
+			code,
+			type,
+			value: valueStr,
+			min_order_amount: minOrderStr,
+			max_uses: maxUsesStr,
+			uses_per_customer: usesPerCustomerStr,
+			status,
+			starts_at,
+			expires_at
+		};
+
+		const value = parseInt(valueStr, 10);
+		const min_order_amount = parseInt(minOrderStr, 10) || 0;
+		const max_uses = maxUsesStr ? parseInt(maxUsesStr, 10) : null;
+		const uses_per_customer = parseInt(usesPerCustomerStr, 10) || 1;
+
+		if (!code) {
+			error = 'Code is required';
+		} else if (isNaN(value) || value <= 0) {
+			error = 'Value must be a positive number';
+		} else if (type === 'percentage' && value > 100) {
+			error = 'Percentage value cannot exceed 100';
+		} else if (!apiKey) {
+			error = 'ADMIN_API_KEY is missing in server environment';
+		} else {
+			const res = await fetch(`${apiBase}/admin/coupons`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({
+					code,
+					type,
+					value,
+					currency: 'JPY',
+					min_order_amount,
+					max_uses,
+					uses_per_customer,
+					status,
+					starts_at: starts_at || null,
+					expires_at: expires_at || null
+				})
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				error = data.message || 'Failed to create coupon';
+			} else if (data.coupon?.id) {
+				return Astro.redirect(`/admin/coupons/${data.coupon.id}`);
+			} else {
+				error = 'Failed to create coupon';
+			}
+		}
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to create coupon. Please check your connection.';
+	}
+}
+---
+
+<Layout title="New Coupon - Admin">
+	<div class="bg-[#f5f5f7] min-h-screen pb-20">
+		<header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+			<Container class="h-16 flex items-center gap-4">
+				<a href="/admin/coupons" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+					</svg>
+					Coupons
+				</a>
+				<h1 class="text-lg font-semibold text-[#1d1d1f]">New Coupon</h1>
+			</Container>
+		</header>
+
+		<Container class="mt-8 max-w-2xl mx-auto">
+			{error && (
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+					{error}
+				</div>
+			)}
+
+			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div class="md:col-span-2">
+						<label for="code" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Coupon Code <span class="text-red-500">*</span>
+						</label>
+						<input
+							type="text"
+							id="code"
+							name="code"
+							required
+							value={formValues.code}
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							placeholder="SUMMER2024"
+						/>
+						<p class="text-xs text-[#86868b] mt-1">Will be converted to uppercase</p>
+					</div>
+
+					<div>
+						<label for="type" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Discount Type <span class="text-red-500">*</span>
+						</label>
+						<select
+							id="type"
+							name="type"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+						>
+							<option value="percentage" selected={formValues.type === 'percentage'}>Percentage (%)</option>
+							<option value="fixed" selected={formValues.type === 'fixed'}>Fixed Amount (JPY)</option>
+						</select>
+					</div>
+
+					<div>
+						<label for="value" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Value <span class="text-red-500">*</span>
+						</label>
+						<input
+							type="number"
+							id="value"
+							name="value"
+							required
+							min="1"
+							value={formValues.value}
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							placeholder="10"
+						/>
+						<p class="text-xs text-[#86868b] mt-1">For percentage, enter 10 for 10% off</p>
+					</div>
+
+					<div>
+						<label for="min_order_amount" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Minimum Order Amount (JPY)
+						</label>
+						<input
+							type="number"
+							id="min_order_amount"
+							name="min_order_amount"
+							min="0"
+							value={formValues.min_order_amount}
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							placeholder="0"
+						/>
+					</div>
+
+					<div>
+						<label for="max_uses" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Max Total Uses
+						</label>
+						<input
+							type="number"
+							id="max_uses"
+							name="max_uses"
+							min="1"
+							value={formValues.max_uses}
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							placeholder="Unlimited"
+						/>
+						<p class="text-xs text-[#86868b] mt-1">Leave empty for unlimited</p>
+					</div>
+
+					<div>
+						<label for="uses_per_customer" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Uses Per Customer
+						</label>
+						<input
+							type="number"
+							id="uses_per_customer"
+							name="uses_per_customer"
+							min="1"
+							value={formValues.uses_per_customer}
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							placeholder="1"
+						/>
+					</div>
+
+					<div>
+						<label for="status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Status
+						</label>
+						<select
+							id="status"
+							name="status"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+						>
+							<option value="active" selected={formValues.status === 'active'}>Active</option>
+							<option value="inactive" selected={formValues.status === 'inactive'}>Inactive</option>
+						</select>
+					</div>
+
+					<div>
+						<label for="starts_at" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Start Date
+						</label>
+						<input
+							type="datetime-local"
+							id="starts_at"
+							name="starts_at"
+							value={formValues.starts_at}
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						/>
+						<p class="text-xs text-[#86868b] mt-1">Leave empty for immediate</p>
+					</div>
+
+					<div>
+						<label for="expires_at" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Expiration Date
+						</label>
+						<input
+							type="datetime-local"
+							id="expires_at"
+							name="expires_at"
+							value={formValues.expires_at}
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						/>
+						<p class="text-xs text-[#86868b] mt-1">Leave empty for no expiration</p>
+					</div>
+				</div>
+
+				<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+					<Button href="/admin/coupons" variant="secondary" size="sm">
+						Cancel
+					</Button>
+					<Button type="submit" variant="primary" size="sm">
+						Create Coupon
+					</Button>
+				</div>
+			</form>
+		</Container>
+	</div>
+</Layout>
