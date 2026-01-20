@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogBackdrop,
@@ -28,6 +28,7 @@ import {
   TicketIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { loadClerk, signOut, getCurrentUser } from '../../lib/clerk'
 
 type NavigationItem = {
   name: string
@@ -51,10 +52,31 @@ const navigation: NavigationItem[] = [
   { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
 ]
 
-const userNavigation = [
-  { name: 'ストアを見る', href: '/' },
-  { name: 'Sign out', href: '#' },
-]
+type UserInfo = {
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string | null;
+};
+
+const getInitials = (user: UserInfo | null): string => {
+  if (!user) return 'A';
+  if (user.firstName) {
+    return user.firstName.charAt(0).toUpperCase();
+  }
+  if (user.email) {
+    return user.email.charAt(0).toUpperCase();
+  }
+  return 'A';
+};
+
+const getDisplayName = (user: UserInfo | null): string => {
+  if (!user) return 'Admin';
+  if (user.firstName) {
+    return user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName;
+  }
+  return user.email || 'Admin';
+};
 
 function classNames(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(' ')
@@ -67,6 +89,48 @@ type Props = {
 
 export default function AdminSidebar({ currentPath, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [user, setUser] = useState<UserInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const clerk = await loadClerk();
+        if (!clerk.session) {
+          window.location.href = '/admin/login';
+          return;
+        }
+        const clerkUser = await getCurrentUser();
+        if (clerkUser) {
+          setUser({
+            email: clerkUser.primaryEmailAddress?.emailAddress || null,
+            firstName: clerkUser.firstName,
+            lastName: clerkUser.lastName,
+            imageUrl: clerkUser.imageUrl,
+          });
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location.href = '/admin/login';
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.href = '/admin/login';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   const isActive = (href: string) => {
     if (href === '/admin/') {
@@ -224,12 +288,20 @@ export default function AdminSidebar({ currentPath, children }: Props) {
               <Menu as="div" className="relative">
                 <MenuButton className="-m-1.5 flex items-center p-1.5">
                   <span className="sr-only">Open user menu</span>
-                  <span className="inline-flex size-8 items-center justify-center rounded-full bg-gray-500">
-                    <span className="text-sm font-medium text-white">A</span>
-                  </span>
+                  {user?.imageUrl ? (
+                    <img
+                      src={user.imageUrl}
+                      alt=""
+                      className="size-8 rounded-full"
+                    />
+                  ) : (
+                    <span className="inline-flex size-8 items-center justify-center rounded-full bg-gray-500">
+                      <span className="text-sm font-medium text-white">{getInitials(user)}</span>
+                    </span>
+                  )}
                   <span className="hidden lg:flex lg:items-center">
                     <span aria-hidden="true" className="ml-4 text-sm font-semibold leading-6 text-gray-900">
-                      Admin
+                      {getDisplayName(user)}
                     </span>
                     <ChevronDownIcon aria-hidden="true" className="ml-2 size-5 text-gray-400" />
                   </span>
@@ -238,16 +310,23 @@ export default function AdminSidebar({ currentPath, children }: Props) {
                   transition
                   className="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 transition focus:outline-none data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
                 >
-                  {userNavigation.map((item) => (
-                    <MenuItem key={item.name}>
-                      <a
-                        href={item.href}
-                        className="block px-3 py-1 text-sm leading-6 text-gray-900 data-focus:bg-gray-50"
-                      >
-                        {item.name}
-                      </a>
-                    </MenuItem>
-                  ))}
+                  <MenuItem>
+                    <a
+                      href="/"
+                      className="block px-3 py-1 text-sm leading-6 text-gray-900 data-focus:bg-gray-50"
+                    >
+                      View Store
+                    </a>
+                  </MenuItem>
+                  <MenuItem>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-3 py-1 text-sm leading-6 text-gray-900 data-focus:bg-gray-50"
+                    >
+                      Sign out
+                    </button>
+                  </MenuItem>
                 </MenuItems>
               </Menu>
             </div>

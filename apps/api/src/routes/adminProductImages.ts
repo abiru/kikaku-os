@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
+import { getActor } from '../middleware/clerkAuth';
 import { putImage, deleteKey } from '../lib/r2';
 import {
   productIdParamSchema,
@@ -78,7 +79,7 @@ app.get(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       )
         .bind(
-          'admin',
+          getActor(c),
           'view_product_images',
           `product:${id}`,
           JSON.stringify({ product_id: id, count: images.length })
@@ -199,7 +200,7 @@ app.post(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       )
         .bind(
-          'admin',
+          getActor(c),
           'upload_product_images',
           `product:${id}`,
           JSON.stringify({
@@ -274,7 +275,7 @@ app.put(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       )
         .bind(
-          'admin',
+          getActor(c),
           'reorder_product_images',
           `product:${id}`,
           JSON.stringify({ product_id: id, new_order: imageIds })
@@ -319,7 +320,7 @@ app.delete(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       )
         .bind(
-          'admin',
+          getActor(c),
           'delete_product_image',
           `image:${imageId}`,
           JSON.stringify({ product_id: id, filename: image.filename, r2_key: image.r2_key })

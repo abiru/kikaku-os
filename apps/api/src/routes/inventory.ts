@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { jsonError, jsonOk } from '../lib/http';
 import { createMovementSchema, updateThresholdSchema, thresholdParamSchema } from '../lib/schemas';
 import type { Env } from '../env';
+import { getActor } from '../middleware/clerkAuth';
 
 const inventory = new Hono<Env>();
 
@@ -103,7 +104,7 @@ inventory.get('/admin/inventory', async (c) => {
     // Audit Log
     await c.env.DB.prepare(
       'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-    ).bind('admin', 'view_inventory', 'admin_inventory_list', JSON.stringify({ count: inventory.length })).run();
+    ).bind(getActor(c), 'view_inventory', 'admin_inventory_list', JSON.stringify({ count: inventory.length })).run();
 
     return jsonOk(c, { inventory, meta: { totalCount: inventory.length } });
   } catch (err) {
@@ -140,7 +141,7 @@ inventory.post(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'inventory_movement', `variant:${variant_id}`, JSON.stringify({ delta, reason })).run();
+      ).bind(getActor(c), 'inventory_movement', `variant:${variant_id}`, JSON.stringify({ delta, reason })).run();
 
       return jsonOk(c, {
         movement: {
@@ -184,7 +185,7 @@ inventory.put(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'update_threshold', `variant:${variantId}`, JSON.stringify({ threshold })).run();
+      ).bind(getActor(c), 'update_threshold', `variant:${variantId}`, JSON.stringify({ threshold })).run();
 
       return jsonOk(c, { variant_id: variantId, threshold });
     } catch (err) {

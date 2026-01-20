@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
+import { getActor } from '../middleware/clerkAuth';
 import {
   couponIdParamSchema,
   couponListQuerySchema,
@@ -79,7 +80,7 @@ app.get(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(
-        'admin',
+        getActor(c),
         'view_coupons',
         'admin_coupons_list',
         JSON.stringify({ q, status, page, perPage, count: coupons.results.length })
@@ -130,7 +131,7 @@ app.get(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'view_coupon', `coupon:${id}`, JSON.stringify({ coupon_id: id })).run();
+      ).bind(getActor(c), 'view_coupon', `coupon:${id}`, JSON.stringify({ coupon_id: id })).run();
 
       return jsonOk(c, {
         coupon,
@@ -192,7 +193,7 @@ app.post(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'create_coupon', `coupon:${couponId}`, JSON.stringify({ code: data.code })).run();
+      ).bind(getActor(c), 'create_coupon', `coupon:${couponId}`, JSON.stringify({ code: data.code })).run();
 
       return jsonOk(c, { coupon });
     } catch (e) {
@@ -260,7 +261,7 @@ app.put(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'update_coupon', `coupon:${id}`, JSON.stringify({ code: data.code })).run();
+      ).bind(getActor(c), 'update_coupon', `coupon:${id}`, JSON.stringify({ code: data.code })).run();
 
       return jsonOk(c, { coupon });
     } catch (e) {
@@ -297,7 +298,7 @@ app.delete(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'delete_coupon', `coupon:${id}`, JSON.stringify({ code: coupon.code })).run();
+      ).bind(getActor(c), 'delete_coupon', `coupon:${id}`, JSON.stringify({ code: coupon.code })).run();
 
       return jsonOk(c, { deleted: true });
     } catch (e) {
@@ -338,7 +339,7 @@ app.post(
 
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'toggle_coupon', `coupon:${id}`, JSON.stringify({ code: coupon.code, newStatus })).run();
+      ).bind(getActor(c), 'toggle_coupon', `coupon:${id}`, JSON.stringify({ code: coupon.code, newStatus })).run();
 
       return jsonOk(c, { coupon: updatedCoupon });
     } catch (e) {
