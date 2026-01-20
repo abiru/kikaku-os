@@ -27,7 +27,7 @@ const isAdmin = Astro.url.pathname.startsWith('/admin');
 					</a>
 
 					{/* Desktop Nav - Centered & Subtle */}
-					<nav class="hidden md:flex items-center gap-8 text-[12px] font-normal text-[#1d1d1f]/80">
+					<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-[#1d1d1f]/80 overflow-x-auto whitespace-nowrap">
 						{isAdmin ? (
 							<>
 								<a href="/admin/" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/admin/' || Astro.url.pathname === '/admin' ? 'text-[#1d1d1f] font-medium' : ''}`}>Dashboard</a>
