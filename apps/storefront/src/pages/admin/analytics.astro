@@ -1,0 +1,373 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+
+// Get date range from query params or use defaults
+const presetParam = Astro.url.searchParams.get('preset') || '30';
+const fromParam = Astro.url.searchParams.get('from');
+const toParam = Astro.url.searchParams.get('to');
+
+// Calculate dates based on preset or custom range
+const today = new Date();
+const todayStr = today.toISOString().slice(0, 10);
+
+let from: string;
+let to: string;
+let preset = presetParam;
+
+if (fromParam && toParam) {
+	from = fromParam;
+	to = toParam;
+	preset = 'custom';
+} else {
+	to = todayStr;
+	const daysBack = parseInt(presetParam) || 30;
+	const fromDate = new Date(today);
+	fromDate.setDate(fromDate.getDate() - daysBack + 1);
+	from = fromDate.toISOString().slice(0, 10);
+}
+
+type DailySale = {
+	date: string;
+	orders: number;
+	revenue: number;
+};
+
+type AnalyticsData = {
+	dailySales: DailySale[];
+	customerBreakdown: {
+		newCustomers: number;
+		returningCustomers: number;
+	};
+	summary: {
+		totalRevenue: number;
+		totalOrders: number;
+		averageOrderValue: number;
+	};
+};
+
+let data: AnalyticsData | null = null;
+let error: string | null = null;
+
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const query = new URLSearchParams({ from, to });
+		const res = await fetch(`${apiBase}/admin/analytics?${query}`, {
+			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+		});
+
+		if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+		const json = await res.json();
+		if (json.ok) {
+			data = json;
+		} else {
+			error = json.message || 'Failed to load analytics data.';
+		}
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load analytics data.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing.';
+}
+
+const formatCurrency = (value: number) => {
+	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(value);
+};
+---
+
+<AdminLayout title="Analytics - Admin">
+	<div class="space-y-6">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-4">
+				<h1 class="text-2xl font-semibold text-gray-900">Analytics</h1>
+				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+					{from} ~ {to}
+				</span>
+			</div>
+		</div>
+
+		{error && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+				{error}
+			</div>
+		)}
+
+		<!-- Period Selector -->
+		<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+			<form method="get" class="flex flex-wrap items-end gap-4">
+				<div>
+					<label for="preset" class="block text-sm font-medium text-gray-700 mb-1">Period</label>
+					<select
+						id="preset"
+						name="preset"
+						class="block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+					>
+						<option value="7" selected={preset === '7'}>Past 7 days</option>
+						<option value="30" selected={preset === '30'}>Past 30 days</option>
+						<option value="90" selected={preset === '90'}>Past 90 days</option>
+						<option value="custom" selected={preset === 'custom'}>Custom</option>
+					</select>
+				</div>
+
+				<div id="custom-dates" class={preset === 'custom' ? 'flex gap-4' : 'hidden flex gap-4'}>
+					<div>
+						<label for="from" class="block text-sm font-medium text-gray-700 mb-1">From</label>
+						<input
+							type="date"
+							id="from"
+							name="from"
+							value={from}
+							class="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+						/>
+					</div>
+					<div>
+						<label for="to" class="block text-sm font-medium text-gray-700 mb-1">To</label>
+						<input
+							type="date"
+							id="to"
+							name="to"
+							value={to}
+							class="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+						/>
+					</div>
+				</div>
+
+				<button
+					type="submit"
+					class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+				>
+					Apply
+				</button>
+			</form>
+		</div>
+
+		{data && (
+			<>
+				<!-- Summary Cards -->
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<div class="text-sm font-medium text-gray-500">Total Revenue</div>
+						<div class="mt-2 text-3xl font-semibold text-gray-900">
+							{formatCurrency(data.summary.totalRevenue)}
+						</div>
+					</div>
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<div class="text-sm font-medium text-gray-500">Total Orders</div>
+						<div class="mt-2 text-3xl font-semibold text-gray-900">
+							{data.summary.totalOrders.toLocaleString()}
+						</div>
+					</div>
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<div class="text-sm font-medium text-gray-500">Avg. Order Value</div>
+						<div class="mt-2 text-3xl font-semibold text-gray-900">
+							{formatCurrency(data.summary.averageOrderValue)}
+						</div>
+					</div>
+				</div>
+
+				<!-- Charts -->
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<!-- Sales Chart (spans full width on large screens) -->
+					<div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<h2 class="text-lg font-medium text-gray-900 mb-4">Revenue Trend</h2>
+						<div class="h-80">
+							<canvas id="salesChart"></canvas>
+						</div>
+					</div>
+
+					<!-- Orders Chart -->
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<h2 class="text-lg font-medium text-gray-900 mb-4">Orders Trend</h2>
+						<div class="h-64">
+							<canvas id="ordersChart"></canvas>
+						</div>
+					</div>
+
+					<!-- Customer Breakdown Chart -->
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<h2 class="text-lg font-medium text-gray-900 mb-4">Customer Breakdown</h2>
+						<div class="h-64 flex items-center justify-center">
+							<canvas id="customerChart"></canvas>
+						</div>
+					</div>
+				</div>
+			</>
+		)}
+
+		{!data && !error && (
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center text-gray-500">
+				No data available for the selected period.
+			</div>
+		)}
+	</div>
+</AdminLayout>
+
+<script define:vars={{ data }}>
+	// Toggle custom date inputs visibility
+	const presetSelect = document.getElementById('preset');
+	const customDates = document.getElementById('custom-dates');
+
+	if (presetSelect && customDates) {
+		presetSelect.addEventListener('change', (e) => {
+			if (e.target.value === 'custom') {
+				customDates.classList.remove('hidden');
+			} else {
+				customDates.classList.add('hidden');
+			}
+		});
+	}
+</script>
+
+<script define:vars={{ chartData: data }}>
+	if (chartData && chartData.dailySales) {
+		import('chart.js/auto').then((ChartModule) => {
+			const Chart = ChartModule.default;
+
+			const labels = chartData.dailySales.map(d => {
+				const date = new Date(d.date);
+				return `${date.getMonth() + 1}/${date.getDate()}`;
+			});
+			const revenues = chartData.dailySales.map(d => d.revenue);
+			const orders = chartData.dailySales.map(d => d.orders);
+
+			// Sales Line Chart
+			const salesCtx = document.getElementById('salesChart');
+			if (salesCtx) {
+				new Chart(salesCtx, {
+					type: 'line',
+					data: {
+						labels,
+						datasets: [{
+							label: 'Revenue',
+							data: revenues,
+							borderColor: 'rgb(79, 70, 229)',
+							backgroundColor: 'rgba(79, 70, 229, 0.1)',
+							fill: true,
+							tension: 0.3
+						}]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: {
+								display: false
+							},
+							tooltip: {
+								callbacks: {
+									label: (context) => {
+										const value = context.raw;
+										return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(value);
+									}
+								}
+							}
+						},
+						scales: {
+							y: {
+								beginAtZero: true,
+								ticks: {
+									callback: (value) => {
+										if (value >= 10000) {
+											return `${value / 10000}万`;
+										}
+										return value.toLocaleString();
+									}
+								}
+							}
+						}
+					}
+				});
+			}
+
+			// Orders Bar Chart
+			const ordersCtx = document.getElementById('ordersChart');
+			if (ordersCtx) {
+				new Chart(ordersCtx, {
+					type: 'bar',
+					data: {
+						labels,
+						datasets: [{
+							label: 'Orders',
+							data: orders,
+							backgroundColor: 'rgba(16, 185, 129, 0.8)',
+							borderColor: 'rgb(16, 185, 129)',
+							borderWidth: 1
+						}]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: {
+								display: false
+							}
+						},
+						scales: {
+							y: {
+								beginAtZero: true,
+								ticks: {
+									stepSize: 1
+								}
+							}
+						}
+					}
+				});
+			}
+
+			// Customer Pie Chart
+			const customerCtx = document.getElementById('customerChart');
+			if (customerCtx) {
+				const newCustomers = chartData.customerBreakdown.newCustomers;
+				const returningCustomers = chartData.customerBreakdown.returningCustomers;
+				const total = newCustomers + returningCustomers;
+
+				if (total > 0) {
+					new Chart(customerCtx, {
+						type: 'doughnut',
+						data: {
+							labels: ['New Customers', 'Returning Customers'],
+							datasets: [{
+								data: [newCustomers, returningCustomers],
+								backgroundColor: [
+									'rgba(59, 130, 246, 0.8)',
+									'rgba(249, 115, 22, 0.8)'
+								],
+								borderColor: [
+									'rgb(59, 130, 246)',
+									'rgb(249, 115, 22)'
+								],
+								borderWidth: 1
+							}]
+						},
+						options: {
+							responsive: true,
+							maintainAspectRatio: false,
+							plugins: {
+								legend: {
+									position: 'bottom'
+								},
+								tooltip: {
+									callbacks: {
+										label: (context) => {
+											const value = context.raw;
+											const percentage = ((value / total) * 100).toFixed(1);
+											return `${context.label}: ${value} (${percentage}%)`;
+										}
+									}
+								}
+							}
+						}
+					});
+				} else {
+					customerCtx.parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No customer data</div>';
+				}
+			}
+		});
+	}
+</script>
