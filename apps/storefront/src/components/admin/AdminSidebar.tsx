@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { useStore } from '@nanostores/react'
+import { $userStore, $authStore, $clerkStore } from '@clerk/astro/client'
 import {
   Dialog,
   DialogBackdrop,
@@ -29,53 +31,12 @@ import {
   EnvelopeIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { loadClerk, signOut, getCurrentUser } from '../../lib/clerk'
 
 type UserInfo = {
   email: string | null;
   firstName: string | null;
   lastName: string | null;
   imageUrl: string | null;
-};
-
-const AUTH_CACHE_KEY = 'admin_auth_cache';
-const AUTH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-type CachedAuth = {
-  timestamp: number;
-  user: UserInfo;
-};
-
-const getCachedAuth = (): CachedAuth | null => {
-  try {
-    const cached = sessionStorage.getItem(AUTH_CACHE_KEY);
-    if (!cached) return null;
-    const parsed = JSON.parse(cached) as CachedAuth;
-    if (Date.now() - parsed.timestamp > AUTH_CACHE_TTL) {
-      sessionStorage.removeItem(AUTH_CACHE_KEY);
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-};
-
-const setCachedAuth = (user: UserInfo): void => {
-  try {
-    const cache: CachedAuth = { timestamp: Date.now(), user };
-    sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Ignore storage errors
-  }
-};
-
-const clearCachedAuth = (): void => {
-  try {
-    sessionStorage.removeItem(AUTH_CACHE_KEY);
-  } catch {
-    // Ignore storage errors
-  }
 };
 
 type NavigationItem = {
@@ -131,51 +92,31 @@ type Props = {
 
 export default function AdminSidebar({ currentPath, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [user, setUser] = useState<UserInfo | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const clerkUser = useStore($userStore)
+  const auth = useStore($authStore)
+  const clerk = useStore($clerkStore)
+
+  const user: UserInfo | null = clerkUser ? {
+    email: clerkUser.primaryEmailAddress?.emailAddress || null,
+    firstName: clerkUser.firstName,
+    lastName: clerkUser.lastName,
+    imageUrl: clerkUser.imageUrl,
+  } : null;
+
+  const isLoading = auth === undefined;
 
   useEffect(() => {
-    // Check cache first for optimistic rendering
-    const cached = getCachedAuth();
-    if (cached) {
-      setUser(cached.user);
-      setIsLoading(false);
+    // Redirect to login if not authenticated (after store is loaded)
+    if (auth !== undefined && !auth?.userId) {
+      window.location.href = '/admin/login';
     }
-
-    const checkAuth = async () => {
-      try {
-        const clerk = await loadClerk();
-        if (!clerk.session) {
-          clearCachedAuth();
-          window.location.href = '/admin/login';
-          return;
-        }
-        const clerkUser = await getCurrentUser();
-        if (clerkUser) {
-          const userInfo: UserInfo = {
-            email: clerkUser.primaryEmailAddress?.emailAddress || null,
-            firstName: clerkUser.firstName,
-            lastName: clerkUser.lastName,
-            imageUrl: clerkUser.imageUrl,
-          };
-          setUser(userInfo);
-          setCachedAuth(userInfo);
-        }
-      } catch (err) {
-        console.error('Auth check failed:', err);
-        clearCachedAuth();
-        window.location.href = '/admin/login';
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
+  }, [auth]);
 
   const handleSignOut = async () => {
-    clearCachedAuth();
-    await signOut();
-    window.location.href = '/admin/login';
+    if (clerk) {
+      await clerk.signOut();
+      window.location.href = '/admin/login';
+    }
   };
 
   if (isLoading) {
