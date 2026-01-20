@@ -34,6 +34,7 @@ out/
 .vercel/
 .netlify/
 .coverage/
+coverage/
 *.tsbuildinfo
 
 # --- Vite / bundler cache ---
