@@ -314,3 +314,37 @@ export type FulfillmentIdParam = z.infer<typeof fulfillmentIdParamSchema>;
 export type OrderFulfillmentParam = z.infer<typeof orderFulfillmentParamSchema>;
 export type CreateFulfillmentInput = z.infer<typeof createFulfillmentSchema>;
 export type UpdateFulfillmentInput = z.infer<typeof updateFulfillmentSchema>;
+
+// === Product Image Schemas ===
+
+export const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+] as const;
+
+export const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+export const MAX_IMAGES_PER_PRODUCT = 10;
+
+export const productImageParamSchema = z.object({
+  id: z
+    .string()
+    .regex(/^\d+$/, 'Product ID must be a positive integer')
+    .transform((v) => parseInt(v, 10))
+    .refine((v) => v > 0, 'Product ID must be greater than 0'),
+  imageId: z
+    .string()
+    .regex(/^\d+$/, 'Image ID must be a positive integer')
+    .transform((v) => parseInt(v, 10))
+    .refine((v) => v > 0, 'Image ID must be greater than 0'),
+});
+
+export const updateImageOrderSchema = z.object({
+  imageIds: z
+    .array(z.number().int().positive())
+    .min(1, 'At least one image ID is required'),
+});
+
+export type ProductImageParam = z.infer<typeof productImageParamSchema>;
+export type UpdateImageOrderInput = z.infer<typeof updateImageOrderSchema>;
