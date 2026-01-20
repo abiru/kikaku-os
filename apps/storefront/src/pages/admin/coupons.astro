@@ -184,7 +184,7 @@ const isExpired = (coupon: Coupon) => {
 										</td>
 										<td class="px-6 py-4">
 											{isExpired(coupon) ? (
-												<Badge severity="warning">Expired</Badge>
+												<Badge severity="warn">Expired</Badge>
 											) : coupon.status === 'active' ? (
 												<Badge severity="info">Active</Badge>
 											) : (

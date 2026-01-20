@@ -224,7 +224,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 							<div>
 								<div class="flex items-center gap-2">
 									{isExpired(coupon) ? (
-										<Badge severity="warning">Expired</Badge>
+										<Badge severity="warn">Expired</Badge>
 									) : coupon.status === 'active' ? (
 										<Badge severity="info">Active</Badge>
 									) : (
