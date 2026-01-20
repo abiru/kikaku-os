@@ -1,0 +1,73 @@
+---
+export const prerender = false;
+
+import '../../styles/global.css';
+---
+
+<!doctype html>
+<html lang="ja" class="h-full bg-gray-50">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>Login - Led Kikaku OS</title>
+	</head>
+	<body class="h-full font-sans antialiased">
+		<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+			<div class="sm:mx-auto sm:w-full sm:max-w-md">
+				<h1 class="text-center text-2xl font-bold tracking-tight text-gray-900">
+					Led Kikaku OS
+				</h1>
+				<p class="mt-2 text-center text-sm text-gray-600">
+					Admin Panel
+				</p>
+			</div>
+
+			<div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+				<div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+					<div id="clerk-sign-in" class="flex justify-center"></div>
+					<div id="loading" class="text-center text-gray-500">
+						Loading...
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			import { loadClerk, isSignedIn } from '../../lib/clerk';
+
+			async function init() {
+				const loadingEl = document.getElementById('loading');
+				const signInEl = document.getElementById('clerk-sign-in') as HTMLDivElement | null;
+
+				try {
+					const clerk = await loadClerk();
+
+					if (loadingEl) {
+						loadingEl.style.display = 'none';
+					}
+
+					if (await isSignedIn()) {
+						window.location.href = '/admin/';
+						return;
+					}
+
+					if (signInEl) {
+						clerk.mountSignIn(signInEl, {
+							afterSignInUrl: '/admin/',
+							afterSignUpUrl: '/admin/',
+						});
+					}
+				} catch (err) {
+					console.error('Failed to load Clerk:', err);
+					if (loadingEl) {
+						loadingEl.textContent = 'Failed to load authentication. Please refresh.';
+						loadingEl.classList.add('text-red-500');
+					}
+				}
+			}
+
+			init();
+		</script>
+	</body>
+</html>

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
+import { getActor } from '../middleware/clerkAuth';
 import {
   categoryNameParamSchema,
   categoryListQuerySchema,
@@ -56,7 +57,7 @@ app.get(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(
-        'admin',
+        getActor(c),
         'view_categories',
         'admin_categories_list',
         JSON.stringify({ q, count: categories.length })
@@ -110,7 +111,7 @@ app.get(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(
-        'admin',
+        getActor(c),
         'view_category_products',
         `category:${name}`,
         JSON.stringify({ category: name, q, page, perPage, count: products.results.length })
@@ -172,7 +173,7 @@ app.put(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(
-        'admin',
+        getActor(c),
         'rename_category',
         `category:${name}`,
         JSON.stringify({ oldName: name, newName, productsUpdated: result.meta.changes })
@@ -219,7 +220,7 @@ app.delete(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(
-        'admin',
+        getActor(c),
         'delete_category',
         `category:${name}`,
         JSON.stringify({ deletedCategory: name, movedTo: moveTo, productsUpdated: result.meta.changes })

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
+import { getActor } from '../middleware/clerkAuth';
 import {
   customerListQuerySchema,
   customerIdParamSchema,
@@ -95,7 +96,7 @@ app.get(
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
       ).bind(
-        'admin',
+        getActor(c),
         'view_customers',
         'admin_customers_list',
         JSON.stringify({ q, page, perPage, count: customers.results.length })
@@ -161,7 +162,7 @@ app.get(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'view_customer', `customer:${id}`, JSON.stringify({ customer_id: id })).run();
+      ).bind(getActor(c), 'view_customer', `customer:${id}`, JSON.stringify({ customer_id: id })).run();
 
       return jsonOk(c, { customer, orders, stats });
     } catch (e) {
@@ -195,7 +196,7 @@ app.post(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'create_customer', `customer:${customerId}`, JSON.stringify({ name, email })).run();
+      ).bind(getActor(c), 'create_customer', `customer:${customerId}`, JSON.stringify({ name, email })).run();
 
       return jsonOk(c, { customer });
     } catch (e) {
@@ -237,7 +238,7 @@ app.put(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'update_customer', `customer:${id}`, JSON.stringify({ name, email })).run();
+      ).bind(getActor(c), 'update_customer', `customer:${id}`, JSON.stringify({ name, email })).run();
 
       return jsonOk(c, { customer });
     } catch (e) {
@@ -279,7 +280,7 @@ app.delete(
       // Audit Log
       await c.env.DB.prepare(
         'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind('admin', 'delete_customer', `customer:${id}`, JSON.stringify({ name: existing.name })).run();
+      ).bind(getActor(c), 'delete_customer', `customer:${id}`, JSON.stringify({ name: existing.name })).run();
 
       return jsonOk(c, { deleted: true });
     } catch (e) {
