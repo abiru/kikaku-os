@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogBackdrop,
@@ -131,18 +131,17 @@ type Props = {
 
 export default function AdminSidebar({ currentPath, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  // Try to get cached auth for optimistic rendering
-  const cachedAuth = useRef<CachedAuth | null>(null);
-  if (typeof window !== 'undefined' && cachedAuth.current === null) {
-    cachedAuth.current = getCachedAuth();
-  }
-
-  const [user, setUser] = useState<UserInfo | null>(cachedAuth.current?.user || null)
-  // If we have cached auth, skip loading state for better UX
-  const [isLoading, setIsLoading] = useState(!cachedAuth.current)
+  const [user, setUser] = useState<UserInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Check cache first for optimistic rendering
+    const cached = getCachedAuth();
+    if (cached) {
+      setUser(cached.user);
+      setIsLoading(false);
+    }
+
     const checkAuth = async () => {
       try {
         const clerk = await loadClerk();
