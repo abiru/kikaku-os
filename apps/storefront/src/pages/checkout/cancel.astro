@@ -43,3 +43,19 @@ import Layout from '../../layouts/Layout.astro';
 		</Container>
 	</div>
 </Layout>
+
+<script>
+	// Restore cart from backup if current cart is empty
+	if (typeof localStorage !== 'undefined' && typeof sessionStorage !== 'undefined') {
+		const currentCart = localStorage.getItem('led-kikaku-cart');
+		const backup = sessionStorage.getItem('led-kikaku-cart-backup');
+
+		// Only restore if cart is empty or missing
+		if (backup && (!currentCart || currentCart === '{}')) {
+			localStorage.setItem('led-kikaku-cart', backup);
+		}
+
+		// Clear backup after restoration
+		sessionStorage.removeItem('led-kikaku-cart-backup');
+	}
+</script>

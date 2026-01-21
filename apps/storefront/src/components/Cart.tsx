@@ -348,8 +348,13 @@ export default function Cart() {
 			);
 
 			if (data.ok && data.url) {
-				clearCart();
-				removeCoupon();
+				// Save cart backup to sessionStorage before redirect
+				if (typeof sessionStorage !== 'undefined') {
+					const cartData = localStorage.getItem('led-kikaku-cart') || '{}';
+					sessionStorage.setItem('led-kikaku-cart-backup', cartData);
+				}
+
+				// Don't clear cart here - will be cleared on success page
 				window.location.href = data.url;
 			} else {
 				throw new Error(data.message || 'Checkout failed');
