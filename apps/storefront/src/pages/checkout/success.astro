@@ -105,3 +105,15 @@ const formatPrice = (amount: number, currency: string) => {
 		</Container>
 	</div>
 </Layout>
+
+<script>
+	// Clear cart after successful payment
+	if (typeof localStorage !== 'undefined') {
+		localStorage.removeItem('led-kikaku-cart');
+	}
+
+	// Clear sessionStorage backup
+	if (typeof sessionStorage !== 'undefined') {
+		sessionStorage.removeItem('led-kikaku-cart-backup');
+	}
+</script>
