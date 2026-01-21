@@ -1,0 +1,383 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
+---
+
+<Layout title="見積書作成">
+  <div class="container">
+    <h1>見積書作成</h1>
+    <p class="subtitle">カート内の商品から見積書を作成します</p>
+
+    <div id="cart-summary" class="card">
+      <h2>カート内容</h2>
+      <div id="cart-items"></div>
+      <div class="summary">
+        <div class="summary-row">
+          <span>小計（税抜）</span>
+          <span id="subtotal">¥0</span>
+        </div>
+        <div class="summary-row">
+          <span>消費税（10%）</span>
+          <span id="tax">¥0</span>
+        </div>
+        <div class="summary-row total">
+          <span>合計</span>
+          <span id="total">¥0</span>
+        </div>
+      </div>
+    </div>
+
+    <form id="quotation-form" class="card">
+      <h2>お客様情報</h2>
+
+      <div class="form-group">
+        <label for="customerCompany">会社名 <span class="required">*</span></label>
+        <input type="text" id="customerCompany" name="customerCompany" required />
+      </div>
+
+      <div class="form-group">
+        <label for="customerName">担当者名 <span class="required">*</span></label>
+        <input type="text" id="customerName" name="customerName" required />
+      </div>
+
+      <div class="form-group">
+        <label for="customerEmail">メールアドレス</label>
+        <input type="email" id="customerEmail" name="customerEmail" />
+        <small>承認時の連絡先として使用されます（任意）</small>
+      </div>
+
+      <div class="form-group">
+        <label for="customerPhone">電話番号</label>
+        <input type="tel" id="customerPhone" name="customerPhone" />
+        <small>例: 03-1234-5678</small>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">備考</label>
+        <textarea id="notes" name="notes" rows="4"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <a href="/products" class="btn btn-secondary">戻る</a>
+        <button type="submit" class="btn btn-primary" id="submit-btn">見積書を作成</button>
+      </div>
+
+      <div id="error-message" class="error-message" style="display: none;"></div>
+    </form>
+  </div>
+</Layout>
+
+<style>
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #666;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f3f4f6;
+  }
+
+  #cart-items {
+    margin-bottom: 1rem;
+  }
+
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .cart-item:last-child {
+    border-bottom: none;
+  }
+
+  .item-details {
+    flex: 1;
+  }
+
+  .item-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .item-variant {
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  .item-quantity {
+    color: #666;
+    margin-right: 1rem;
+  }
+
+  .item-price {
+    font-weight: 600;
+  }
+
+  .summary {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid #f3f4f6;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    font-size: 0.9375rem;
+  }
+
+  .summary-row.total {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid #e5e7eb;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .required {
+    color: #dc2626;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .form-group small {
+    display: block;
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+  }
+
+  .btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+
+  .btn-secondary:hover {
+    background: #f9fafb;
+  }
+
+  .error-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #dc2626;
+  }
+
+  .empty-cart {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+  }
+
+  .empty-cart-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+</style>
+
+<script define:vars={{ apiUrl }}>
+  import { getCartItems, clearCart } from '../../lib/cart';
+
+  const formatPrice = (amount, currency = 'JPY') => {
+    return new Intl.NumberFormat('ja-JP', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  };
+
+  const displayCartSummary = () => {
+    const items = getCartItems();
+    const cartItemsEl = document.getElementById('cart-items');
+    const subtotalEl = document.getElementById('subtotal');
+    const taxEl = document.getElementById('tax');
+    const totalEl = document.getElementById('total');
+
+    if (items.length === 0) {
+      cartItemsEl.innerHTML = `
+        <div class="empty-cart">
+          <div class="empty-cart-icon">🛒</div>
+          <p>カートが空です</p>
+          <p><a href="/products">商品を見る</a></p>
+        </div>
+      `;
+      document.getElementById('quotation-form').style.display = 'none';
+      return;
+    }
+
+    // Display items
+    cartItemsEl.innerHTML = items.map(item => `
+      <div class="cart-item">
+        <div class="item-details">
+          <div class="item-title">${item.title}</div>
+          <div class="item-variant">${item.variantTitle}</div>
+        </div>
+        <div style="display: flex; align-items: center;">
+          <span class="item-quantity">数量: ${item.quantity}</span>
+          <span class="item-price">${formatPrice(item.price * item.quantity, item.currency)}</span>
+        </div>
+      </div>
+    `).join('');
+
+    // Calculate totals
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = Math.floor(subtotal * 0.1);
+    const total = subtotal + tax;
+
+    subtotalEl.textContent = formatPrice(subtotal);
+    taxEl.textContent = formatPrice(tax);
+    totalEl.textContent = formatPrice(total);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const items = getCartItems();
+    if (items.length === 0) {
+      alert('カートが空です');
+      return;
+    }
+
+    const submitBtn = document.getElementById('submit-btn');
+    const errorMessageEl = document.getElementById('error-message');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '作成中...';
+    errorMessageEl.style.display = 'none';
+
+    const formData = new FormData(e.target);
+    const customerCompany = formData.get('customerCompany');
+    const customerName = formData.get('customerName');
+    const customerEmail = formData.get('customerEmail') || null;
+    const customerPhone = formData.get('customerPhone') || null;
+    const notes = formData.get('notes') || null;
+
+    const quotationItems = items.map(item => ({
+      variantId: item.variantId,
+      quantity: item.quantity
+    }));
+
+    try {
+      const response = await fetch(`${apiUrl}/quotations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          customerCompany,
+          customerName,
+          customerEmail,
+          customerPhone,
+          items: quotationItems,
+          notes
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || '見積書の作成に失敗しました');
+      }
+
+      // Clear cart and redirect to quotation page
+      clearCart();
+      window.location.href = `/quotations/${data.id}`;
+    } catch (error) {
+      console.error('Error creating quotation:', error);
+      errorMessageEl.textContent = error.message || '見積書の作成に失敗しました。もう一度お試しください。';
+      errorMessageEl.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = '見積書を作成';
+    }
+  };
+
+  // Initialize
+  displayCartSummary();
+
+  const form = document.getElementById('quotation-form');
+  form.addEventListener('submit', handleSubmit);
+</script>
