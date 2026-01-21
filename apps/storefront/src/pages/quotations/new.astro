@@ -261,7 +261,14 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
 </style>
 
 <script define:vars={{ apiUrl }}>
+  // API URL is injected from server
+  window.__QUOTATION_API_URL__ = apiUrl;
+</script>
+
+<script>
   import { getCartItems, clearCart } from '../../lib/cart';
+
+  const apiUrl = window.__QUOTATION_API_URL__;
 
   const formatPrice = (amount, currency = 'JPY') => {
     return new Intl.NumberFormat('ja-JP', {
