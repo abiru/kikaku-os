@@ -6,6 +6,13 @@ import { ensureStripePriceForVariant } from '../services/stripe';
 
 const checkout = new Hono<Env>();
 
+checkout.get('/checkout/config', async (c) => {
+  return jsonOk(c, {
+    shippingFee: Number(c.env.SHIPPING_FEE_AMOUNT || 500),
+    freeShippingThreshold: Number(c.env.FREE_SHIPPING_THRESHOLD || 5000)
+  });
+});
+
 type VariantPriceRow = {
   variant_id: number;
   variant_title: string;
@@ -175,13 +182,78 @@ checkout.post('/checkout/session', async (c) => {
     currency = (row.currency || 'JPY').toUpperCase();
   }
 
+  // Coupon validation and discount calculation
+  const couponCode = body?.couponCode?.trim() || '';
+  let discountAmount = 0;
+  let couponId: number | null = null;
+
+  if (couponCode) {
+    type CouponRow = {
+      id: number;
+      code: string;
+      type: 'percentage' | 'fixed';
+      value: number;
+      currency: string;
+      min_order_amount: number | null;
+      max_uses: number | null;
+      current_uses: number;
+      status: string;
+      starts_at: string | null;
+      expires_at: string | null;
+    };
+
+    const coupon = await c.env.DB.prepare(
+      `SELECT id, code, type, value, currency, min_order_amount,
+              max_uses, current_uses, status, starts_at, expires_at
+       FROM coupons
+       WHERE code = ?`
+    ).bind(couponCode).first<CouponRow>();
+
+    if (!coupon || coupon.status !== 'active') {
+      return jsonError(c, 'Invalid or inactive coupon', 400);
+    }
+
+    const now = new Date();
+    if (coupon.starts_at && new Date(coupon.starts_at) > now) {
+      return jsonError(c, 'Coupon not yet valid', 400);
+    }
+    if (coupon.expires_at && new Date(coupon.expires_at) < now) {
+      return jsonError(c, 'Coupon has expired', 400);
+    }
+
+    if (coupon.min_order_amount && totalNet < coupon.min_order_amount) {
+      return jsonError(c, `Minimum order amount of ${coupon.min_order_amount} required`, 400);
+    }
+
+    if (coupon.max_uses !== null && coupon.current_uses >= coupon.max_uses) {
+      return jsonError(c, 'Coupon usage limit reached', 400);
+    }
+
+    // Calculate discount
+    if (coupon.type === 'percentage') {
+      discountAmount = Math.floor(totalNet * coupon.value / 100);
+    } else {
+      discountAmount = Math.min(coupon.value, totalNet);
+    }
+
+    couponId = coupon.id;
+  }
+
+  // Shipping fee calculation
+  const shippingFee = Number(c.env.SHIPPING_FEE_AMOUNT || 500);
+  const freeThreshold = Number(c.env.FREE_SHIPPING_THRESHOLD || 5000);
+  const actualShippingFee = totalNet >= freeThreshold ? 0 : shippingFee;
+
   // Create order
   const orderRes = await c.env.DB.prepare(
-    `INSERT INTO orders (customer_id, status, total_net, total_fee, currency, metadata, created_at, updated_at)
-     VALUES (?, 'pending', ?, 0, ?, ?, datetime('now'), datetime('now'))`
+    `INSERT INTO orders (customer_id, status, total_net, total_discount, shipping_fee, coupon_code, total_fee, currency, metadata, created_at, updated_at)
+     VALUES (?, 'pending', ?, ?, ?, ?, 0, ?, ?, datetime('now'), datetime('now'))`
   ).bind(
     customerId,
     totalNet,
+    discountAmount,
+    actualShippingFee,
+    couponCode || null,
     currency,
     JSON.stringify({
       source: 'storefront',
@@ -207,13 +279,8 @@ checkout.post('/checkout/session', async (c) => {
     ).run();
   }
 
-  // Record coupon usage
-  if (couponId) {
-    await c.env.DB.prepare(
-      `INSERT INTO coupon_usages (coupon_id, order_id, customer_id, discount_amount, created_at)
-       VALUES (?, ?, ?, ?, datetime('now'))`
-    ).bind(couponId, orderId, customerId, discountAmount).run();
-  }
+  // NOTE: Coupon usage is NOT recorded here (would create phantom records for abandoned carts)
+  // Instead, it's recorded in the Stripe webhook handler after successful payment
 
   // Build Stripe checkout session
   const baseUrl = c.env.STOREFRONT_BASE_URL || 'http://localhost:4321';
@@ -240,16 +307,10 @@ checkout.post('/checkout/session', async (c) => {
     params.set(`line_items[${lineItemIndex}][price_data][product_data][name]`, '配送料');
     params.set(`line_items[${lineItemIndex}][price_data][unit_amount]`, String(actualShippingFee));
     params.set(`line_items[${lineItemIndex}][quantity]`, '1');
-    lineItemIndex++;
   }
 
-  // Add discount line item (negative amount)
-  if (discountAmount > 0) {
-    params.set(`line_items[${lineItemIndex}][price_data][currency]`, currency.toLowerCase());
-    params.set(`line_items[${lineItemIndex}][price_data][product_data][name]`, `クーポン割引 (${couponCode})`);
-    params.set(`line_items[${lineItemIndex}][price_data][unit_amount]`, String(-discountAmount));
-    params.set(`line_items[${lineItemIndex}][quantity]`, '1');
-  }
+  // NOTE: Discount is NOT added as negative line_item (Stripe rejects negative amounts)
+  // Instead, discount is recorded in order metadata and displayed in storefront
 
   // Enable shipping address and phone number collection
   params.set('shipping_address_collection[allowed_countries][0]', 'JP');
@@ -260,6 +321,7 @@ checkout.post('/checkout/session', async (c) => {
   if (couponCode) {
     params.set('metadata[couponCode]', couponCode);
     params.set('metadata[discountAmount]', String(discountAmount));
+    params.set('metadata[couponId]', String(couponId));
   }
   params.set('metadata[shippingFee]', String(actualShippingFee));
   params.set('payment_intent_data[metadata][orderId]', String(orderId));

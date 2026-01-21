@@ -7,17 +7,19 @@ import {
 	$appliedCoupon,
 	$cartDiscount,
 	$shippingFee,
+	$shippingConfig,
 	$cartGrandTotal,
 	removeFromCart,
 	updateQuantity,
 	clearCart,
 	applyCoupon,
 	removeCoupon,
+	setShippingConfig,
 	type CartItem,
 	type AppliedCoupon
 } from '../lib/cart';
 import { getApiBase, fetchJson } from '../lib/api';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const formatPrice = (amount: number, currency: string) => {
 	return new Intl.NumberFormat('ja-JP', {
@@ -213,8 +215,8 @@ function OrderSummary({
 	onCheckout: () => void;
 	isProcessing: boolean;
 }) {
-	const FREE_SHIPPING_THRESHOLD = 5000;
-	const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+	const shippingConfig = useStore($shippingConfig);
+	const remainingForFreeShipping = Math.max(0, shippingConfig.freeShippingThreshold - subtotal);
 
 	return (
 		<section aria-labelledby="summary-heading" className="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
@@ -260,7 +262,7 @@ function OrderSummary({
 			</dl>
 
 			{/* Free Shipping Message */}
-			{shipping === 0 && subtotal >= FREE_SHIPPING_THRESHOLD && (
+			{shipping === 0 && subtotal >= shippingConfig.freeShippingThreshold && (
 				<div className="mt-4 text-sm text-green-600 text-center font-medium">
 					🎉 You've qualified for free shipping!
 				</div>
@@ -304,6 +306,25 @@ export default function Cart() {
 	const currency = useStore($cartCurrency);
 	const appliedCoupon = useStore($appliedCoupon);
 	const [isProcessing, setIsProcessing] = useState(false);
+
+	// Fetch shipping config on mount
+	useEffect(() => {
+		const fetchShippingConfig = async () => {
+			try {
+				const data = await fetchJson<{ shippingFee: number; freeShippingThreshold: number }>(
+					`${getApiBase()}/checkout/config`
+				);
+				if (data.shippingFee !== undefined && data.freeShippingThreshold !== undefined) {
+					setShippingConfig(data);
+				}
+			} catch (err) {
+				console.error('Failed to fetch shipping config:', err);
+				// Use default values from store
+			}
+		};
+
+		fetchShippingConfig();
+	}, []);
 
 	const handleCheckout = async () => {
 		if (items.length === 0) return;

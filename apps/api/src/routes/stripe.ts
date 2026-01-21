@@ -155,6 +155,31 @@ const handleCheckoutSessionCompleted = async (
       })
     : null;
 
+  // Record coupon usage (only after successful payment)
+  const couponId = dataObject.metadata?.couponId ? Number(dataObject.metadata.couponId) : null;
+  const discountAmount = dataObject.metadata?.discountAmount ? Number(dataObject.metadata.discountAmount) : null;
+  if (couponId && discountAmount) {
+    const order = await env.DB.prepare(
+      `SELECT customer_id FROM orders WHERE id = ?`
+    ).bind(orderId).first<{ customer_id: number | null }>();
+
+    if (order) {
+      // Insert coupon usage record
+      await env.DB.prepare(
+        `INSERT INTO coupon_usages (coupon_id, order_id, customer_id, discount_amount, created_at)
+         VALUES (?, ?, ?, ?, datetime('now'))`
+      ).bind(couponId, orderId, order.customer_id, discountAmount).run();
+
+      // Increment coupon usage count
+      await env.DB.prepare(
+        `UPDATE coupons
+         SET current_uses = current_uses + 1,
+             updated_at = datetime('now')
+         WHERE id = ?`
+      ).bind(couponId).run();
+    }
+  }
+
   // Send order confirmation email (non-blocking)
   if (!paymentResult?.duplicate) {
     sendOrderConfirmationEmail(env, orderId).catch((err) => {
