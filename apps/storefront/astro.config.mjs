@@ -10,6 +10,12 @@ import clerk from '@clerk/astro';
 export default defineConfig({
   adapter: cloudflare(),
 
+  image: {
+    service: {
+      entrypoint: 'astro/assets/services/noop'
+    }
+  },
+
   vite: {
     plugins: [tailwindcss()]
   },
