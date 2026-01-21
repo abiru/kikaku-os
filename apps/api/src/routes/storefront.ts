@@ -166,6 +166,10 @@ storefront.get('/products', zValidator('query', storeProductsQuerySchema), async
   const whereConditions: string[] = [];
   const bindings: (string | number)[] = [];
 
+  // Only show active products on storefront
+  whereConditions.push("p.status = ?");
+  bindings.push('active');
+
   if (q) {
     whereConditions.push('(p.title LIKE ? OR p.description LIKE ?)');
     bindings.push(`%${q}%`, `%${q}%`);
@@ -216,7 +220,7 @@ type PriceRangeRow = { minPrice: number | null; maxPrice: number | null };
 storefront.get('/products/filters', async (c) => {
   const categoriesRes = await c.env.DB.prepare(`
     SELECT DISTINCT category FROM products
-    WHERE category IS NOT NULL
+    WHERE category IS NOT NULL AND status = 'active'
     ORDER BY category
   `).all<CategoryRow>();
 
@@ -225,6 +229,7 @@ storefront.get('/products/filters', async (c) => {
     FROM prices pr
     JOIN variants v ON v.id = pr.variant_id
     JOIN products p ON p.id = v.product_id
+    WHERE p.status = 'active'
   `).first<PriceRangeRow>();
 
   return jsonOk(c, {
@@ -242,7 +247,7 @@ storefront.get('/products/:id', async (c) => {
     return jsonOk(c, { product: null });
   }
   const res = await c.env.DB.prepare(
-    `${baseQuery} WHERE p.id=? ORDER BY p.id, v.id, pr.id DESC, pi.position ASC`
+    `${baseQuery} WHERE p.id=? AND p.status = 'active' ORDER BY p.id, v.id, pr.id DESC, pi.position ASC`
   ).bind(id).all<StorefrontRow>();
   const baseUrl = new URL(c.req.url).origin;
   const products = rowsToProducts(res.results || [], baseUrl);

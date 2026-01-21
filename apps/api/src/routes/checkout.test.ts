@@ -458,4 +458,178 @@ describe('POST /checkout/session', () => {
     const params = new URLSearchParams(productCreateBody);
     expect(params.get('images[0]')).toBeNull();
   });
+
+  describe('Product Status Validation', () => {
+    it('rejects checkout for archived product (returns empty variant list)', async () => {
+      const app = new Hono();
+      app.route('/', checkout);
+
+      const steps: string[] = [];
+      const fetchMock = vi.fn();
+      globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+      // Mock DB that returns empty results (simulating archived product filtered out)
+      const env = {
+        DB: createMockDb(steps, null, false),
+        STRIPE_SECRET_KEY: 'sk_test_123',
+        STOREFRONT_BASE_URL: 'http://localhost:4321'
+      } as any;
+
+      const res = await app.request(
+        'http://localhost/checkout/session',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ variantId: 10, quantity: 1 })
+        },
+        env
+      );
+
+      const json = await res.json();
+      expect(res.status).toBe(404);
+      expect(json.error?.code).toBe('VARIANT_NOT_FOUND');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('verifies SQL includes status filter in variant query', async () => {
+      const app = new Hono();
+      app.route('/', checkout);
+
+      const steps: string[] = [];
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ id: 'cs_test_123', url: 'https://checkout.stripe.test/session' }),
+        text: async () => ''
+      } as Response));
+
+      globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+      const mockDb = createMockDb(steps);
+      const prepareSpy = vi.spyOn(mockDb, 'prepare');
+
+      const env = {
+        DB: mockDb,
+        STRIPE_SECRET_KEY: 'sk_test_123',
+        STOREFRONT_BASE_URL: 'http://localhost:4321'
+      } as any;
+
+      await app.request(
+        'http://localhost/checkout/session',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ variantId: 10, quantity: 1 })
+        },
+        env
+      );
+
+      // Verify variant query includes status filter
+      const variantQuery = prepareSpy.mock.calls.find(call =>
+        (call[0] as string).includes('FROM variants v')
+      );
+      expect(variantQuery).toBeDefined();
+      expect(variantQuery![0]).toContain("p.status = 'active'");
+    });
+
+    it('allows checkout for active product', async () => {
+      const app = new Hono();
+      app.route('/', checkout);
+
+      const steps: string[] = [];
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ id: 'cs_test_123', url: 'https://checkout.stripe.test/session' }),
+        text: async () => ''
+      } as Response));
+
+      globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+      const env = {
+        DB: createMockDb(steps),
+        STRIPE_SECRET_KEY: 'sk_test_123',
+        STOREFRONT_BASE_URL: 'http://localhost:4321'
+      } as any;
+
+      const res = await app.request(
+        'http://localhost/checkout/session',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ variantId: 10, quantity: 1 })
+        },
+        env
+      );
+
+      const json = await res.json();
+      expect(res.status).toBe(200);
+      expect(json.ok).toBe(true);
+      expect(json.url).toBe('https://checkout.stripe.test/session');
+    });
+
+    it('rejects multi-item checkout when one product is archived (variant not found)', async () => {
+      const app = new Hono();
+      app.route('/', checkout);
+
+      const steps: string[] = [];
+      const fetchMock = vi.fn();
+      globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+      // Create a custom mock DB that only returns variant 10, not variant 20 (simulating archived filter)
+      const mockDb = {
+        prepare: vi.fn((sql: string) => ({
+          bind: vi.fn((..._args: unknown[]) => ({
+            all: vi.fn(async () => {
+              if (sql.includes('FROM variants v')) {
+                // Only return variant 10 (variant 20 is archived and filtered out by status check)
+                return {
+                  results: [{
+                    variant_id: 10,
+                    variant_title: 'Standard',
+                    product_id: 1,
+                    product_title: 'Sample',
+                    price_id: 99,
+                    amount: 1200,
+                    currency: 'jpy',
+                    provider_price_id: 'price_test_123',
+                    provider_product_id: 'prod_test_123',
+                    image_r2_key: null,
+                  }]
+                };
+              }
+              return { results: [] };
+            }),
+            first: vi.fn(async () => null),
+            run: vi.fn(async () => ({ meta: { last_row_id: 1, changes: 1 } }))
+          }))
+        }))
+      };
+
+      const env = {
+        DB: mockDb,
+        STRIPE_SECRET_KEY: 'sk_test_123',
+        STOREFRONT_BASE_URL: 'http://localhost:4321'
+      } as any;
+
+      const res = await app.request(
+        'http://localhost/checkout/session',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            items: [
+              { variantId: 10, quantity: 1 },
+              { variantId: 20, quantity: 1 }  // This will be filtered out by status check
+            ]
+          })
+        },
+        env
+      );
+
+      const json = await res.json();
+      expect(res.status).toBe(404);
+      expect(json.error?.code).toBe('VARIANT_NOT_FOUND');
+      expect(json.error?.message).toContain('20');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
 });
