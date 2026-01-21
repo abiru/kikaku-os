@@ -1,6 +1,5 @@
 ---
 import Alert from '../../components/Alert.astro';
-import Badge from '../../components/Badge.astro';
 import Button from '../../components/Button.astro';
 import Container from '../../components/Container.astro';
 import EmptyState from '../../components/EmptyState.astro';
@@ -39,8 +38,41 @@ const stockValue =
 		: typeof variant?.inventory === 'number'
 			? variant.inventory
 			: null;
-const stockNote =
-	typeof stockValue === 'number' ? (stockValue > 0 ? `In stock: ${stockValue}` : 'Check availability') : null;
+
+// Build images array from product data
+const productImages = [];
+if (product?.image) {
+	productImages.push({ id: 1, src: product.image, alt: product?.title || 'Product image', primary: true });
+}
+if (product?.images && Array.isArray(product.images)) {
+	product.images.forEach((img: any, index: number) => {
+		if (img !== product.image) {
+			productImages.push({ id: index + 2, src: img, alt: `${product?.title} - Image ${index + 2}`, primary: false });
+		}
+	});
+}
+
+// Breadcrumbs
+const breadcrumbs = [
+	{ id: 1, name: 'Products', href: '/products' },
+];
+if (product?.category) {
+	breadcrumbs.push({ id: 2, name: product.category, href: `/products?category=${encodeURIComponent(product.category)}` });
+}
+
+// Product details/features
+const productDetails = product?.details || [
+	'High-quality materials',
+	'Professional grade',
+	'Easy installation',
+	'Long-lasting performance',
+];
+
+// Policies
+const policies = [
+	{ name: 'Free Shipping', icon: 'globe', description: 'Free shipping on all orders' },
+	{ name: 'Secure Payment', icon: 'currency', description: 'Safe checkout via Stripe' },
+];
 ---
 
 <Layout title={product ? `${product.title} - Led Kikaku` : 'Product Detail'}>
@@ -53,195 +85,212 @@ const stockNote =
 			data-variant-title={variant?.title || 'Default'}
 			data-price={variant?.price?.amount || 0}
 			data-currency={variant?.price?.currency || 'JPY'}
-			class="bg-white min-h-screen pb-20"
+			class="bg-white"
 		>
-			
-			{/* Sticky Product Header (Apple Style) */}
-			<div id="sticky-header" class="sticky top-[48px] z-40 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md transition-transform duration-300 -translate-y-full opacity-0">
-				<Container class="flex h-14 items-center justify-between">
-					<h2 class="text-sm font-semibold text-[#1d1d1f]">{product.title}</h2>
-					<div class="flex items-center gap-4">
-						<span class="text-xs font-medium text-[#1d1d1f]">{priceLabel}</span>
-						<Button id="sticky-buy-btn" size="sm">Buy</Button>
-					</div>
-				</Container>
-			</div>
+			<div class="pt-6 pb-16 sm:pb-24">
+				{/* Breadcrumb */}
+				<nav aria-label="Breadcrumb" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+					<ol role="list" class="flex items-center space-x-4">
+						{breadcrumbs.map((breadcrumb) => (
+							<li>
+								<div class="flex items-center">
+									<a href={breadcrumb.href} class="mr-4 text-sm font-medium text-gray-900 hover:text-gray-600">
+										{breadcrumb.name}
+									</a>
+									<svg viewBox="0 0 6 20" aria-hidden="true" class="h-5 w-auto text-gray-300">
+										<path d="M4.878 4.34H3.551L.27 16.532h1.327l3.281-12.19z" fill="currentColor" />
+									</svg>
+								</div>
+							</li>
+						))}
+						<li class="text-sm">
+							<span aria-current="page" class="font-medium text-gray-500">
+								{product.title}
+							</span>
+						</li>
+					</ol>
+				</nav>
 
-			{/* Hero Section */}
-			<section class="pt-16 pb-12 sm:pt-24 text-center">
-				<Container>
-					<Badge severity="new" class="mb-4">New</Badge>
-					<h1 class="text-5xl font-semibold tracking-tight text-[#1d1d1f] md:text-7xl mb-6">
-						{product.title}
-					</h1>
-					<p class="text-xl font-medium text-[#1d1d1f] md:text-2xl max-w-2xl mx-auto mb-12">
-						Experience the next generation of LED technology.
-					</p>
-					
-					{product.image ? (
-					<img
-						src={product.image}
-						alt={product.title}
-						loading="eager"
-						class="mt-10 mx-auto max-h-[500px] max-w-5xl rounded-3xl object-contain shadow-sm"
-					/>
-				) : (
-					<div
-						class="mt-10 mx-auto aspect-[16/9] max-w-5xl rounded-3xl bg-[#f5f5f7] flex items-center justify-center shadow-sm"
-					>
-						<span class="text-9xl font-bold text-gray-200 select-none">HERO</span>
-					</div>
-				)}
-				</Container>
-			</section>
-
-			{/* Product Description */}
-			{product.description && (
-				<section class="py-16 bg-white">
-					<Container>
-						<div class="product-description max-w-4xl mx-auto text-base leading-relaxed text-[#424245]" set:html={product.description} />
-					</Container>
-				</section>
-			)}
-			<style>
-				.product-description h1,
-				.product-description h2,
-				.product-description h3,
-				.product-description h4 {
-					color: #1d1d1f;
-					font-weight: 600;
-					margin-top: 1.5em;
-					margin-bottom: 0.5em;
-				}
-				.product-description h3 { font-size: 1.25rem; }
-				.product-description p { margin-bottom: 1em; }
-				.product-description ul,
-				.product-description ol {
-					margin: 1em 0;
-					padding-left: 1.5em;
-				}
-				.product-description li { margin-bottom: 0.5em; }
-				.product-description strong { color: #1d1d1f; }
-				.product-description a {
-					color: #0071e3;
-					text-decoration: underline;
-				}
-			</style>
-
-			{/* Feature Grid (Storytelling) */}
-			<section class="py-24 bg-[#f5f5f7]">
-				<Container>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div class="rounded-3xl bg-white p-12 flex flex-col items-center text-center shadow-sm">
-							<h3 class="text-4xl font-semibold text-[#1d1d1f] mb-4">Pro Performance.</h3>
-							<p class="text-lg text-[#86868b]">Optimized spectrum for maximum yield.</p>
-							<div class="mt-10 h-64 w-full bg-[#f5f5f7] rounded-xl"></div>
-						</div>
-						<div class="rounded-3xl bg-white p-12 flex flex-col items-center text-center shadow-sm">
-							<h3 class="text-4xl font-semibold text-[#1d1d1f] mb-4">Efficient.</h3>
-							<p class="text-lg text-[#86868b]">Less energy, more growth.</p>
-							<div class="mt-10 h-64 w-full bg-[#f5f5f7] rounded-xl"></div>
-						</div>
-					</div>
-				</Container>
-			</section>
-
-			{/* Storytelling Section 1 - Full Width Image Left */}
-			<section class="bg-white">
-				<div class="grid min-h-[600px] grid-cols-1 lg:grid-cols-2">
-					<div class="flex items-center justify-center bg-[#f5f5f7] p-12">
-						<div class="aspect-square w-full max-w-md rounded-3xl bg-gray-100 flex items-center justify-center">
-							<svg class="h-24 w-24 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-							</svg>
-						</div>
-					</div>
-					<div class="flex flex-col justify-center p-12 lg:p-20">
-						<h3 class="text-3xl font-semibold text-[#1d1d1f] md:text-4xl">
-							Precision spectrum control.
-						</h3>
-						<p class="mt-6 text-lg leading-relaxed text-[#86868b]">
-							Our proprietary LED configuration delivers the exact wavelengths your plants need, from seedling to harvest. No wasted energy, just pure, targeted light.
-						</p>
-					</div>
-				</div>
-			</section>
-
-			{/* Storytelling Section 2 - Full Width Image Right */}
-			<section class="bg-[#f5f5f7]">
-				<div class="grid min-h-[600px] grid-cols-1 lg:grid-cols-2">
-					<div class="order-2 flex flex-col justify-center p-12 lg:order-1 lg:p-20">
-						<h3 class="text-3xl font-semibold text-[#1d1d1f] md:text-4xl">
-							Built to last.
-						</h3>
-						<p class="mt-6 text-lg leading-relaxed text-[#86868b]">
-							Industrial-grade aluminum housing with passive cooling means no fans, no noise, and decades of reliable performance.
-						</p>
-					</div>
-					<div class="order-1 flex items-center justify-center bg-white p-12 lg:order-2">
-						<div class="aspect-square w-full max-w-md rounded-3xl bg-gray-100 flex items-center justify-center">
-							<svg class="h-24 w-24 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-							</svg>
-						</div>
-					</div>
-				</div>
-			</section>
-
-			{/* Purchase Section */}
-			<section id="buy-section" class="py-24 bg-white">
-				<Container>
-					<div class="max-w-4xl mx-auto rounded-3xl border border-gray-200 bg-white p-8 md:p-12 shadow-sm">
-						<div class="flex flex-col md:flex-row gap-12">
-							{/* Left: Product Recap */}
-							<div class="flex-1">
-								{product.mainImage || product.image ? (
-									<img src={product.mainImage || product.image} alt={product.title} class="aspect-square w-full rounded-2xl object-cover mb-6" />
-								) : (
-									<div class="aspect-square w-full rounded-2xl bg-[#f5f5f7] mb-6"></div>
-								)}
-								<h2 class="text-3xl font-semibold text-[#1d1d1f]">{product.title}</h2>
-								<p class="mt-2 text-xl text-[#1d1d1f]">{priceLabel}</p>
+				<div class="mx-auto mt-8 max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+					<div class="lg:grid lg:auto-rows-min lg:grid-cols-12 lg:gap-x-8">
+						{/* Product title and price */}
+						<div class="lg:col-span-5 lg:col-start-8">
+							<div class="flex justify-between">
+								<h1 class="text-xl font-medium text-gray-900">{product.title}</h1>
+								<p class="text-xl font-medium text-gray-900">{priceLabel}</p>
 							</div>
 
-							{/* Right: Options */}
-							<div class="flex-1 space-y-8">
-								<div>
-									<h3 class="text-sm font-semibold text-[#1d1d1f] mb-4">Quantity</h3>
-									<div class="relative">
-										<select id="qty-input" class="w-full appearance-none rounded-xl border border-gray-300 py-4 pl-4 pr-10 text-base font-medium text-[#1d1d1f] focus:border-[#0071e3] focus:outline-none focus:ring-1 focus:ring-[#0071e3]">
-											{Array.from({ length: 10 }).map((_, index) => (
-												<option value={index + 1}>{index + 1}</option>
-											))}
-										</select>
-										<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-											<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-										</div>
+							{/* Stock status */}
+							{stockValue !== null && (
+								<div class="mt-4">
+									<div class="flex items-center">
+										{stockValue > 0 ? (
+											<>
+												<div class="flex items-center">
+													<svg class="size-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+														<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+													</svg>
+													<p class="ml-2 text-sm text-gray-700">In stock ({stockValue} available)</p>
+												</div>
+											</>
+										) : (
+											<p class="text-sm text-gray-500">Check availability</p>
+										)}
 									</div>
 								</div>
+							)}
+						</div>
 
-								<div class="pt-6">
-									<Button id="buy-button" size="lg" class="w-full justify-between" disabled={!variantId}>
-										<span id="buy-label">Add to Bag</span>
-										<span id="buy-spinner" class="hidden animate-spin">⟳</span>
-									</Button>
-									<p class="mt-4 text-center text-xs text-[#86868b]">
-										Free shipping on all orders. <br/>
-										Secure checkout via Stripe.
-									</p>
+						{/* Image gallery */}
+						<div class="mt-8 lg:col-span-7 lg:col-start-1 lg:row-span-3 lg:row-start-1 lg:mt-0">
+							<h2 class="sr-only">Images</h2>
+
+							<div class="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-3 lg:gap-8">
+								{productImages.length > 0 ? (
+									productImages.map((image, index) => (
+										<img
+											id={index === 0 ? 'main-image' : undefined}
+											alt={image.alt}
+											src={image.src}
+											class:list={[
+												'rounded-lg object-cover w-full',
+												image.primary ? 'lg:col-span-2 lg:row-span-2 aspect-square' : 'hidden lg:block aspect-square',
+											]}
+										/>
+									))
+								) : (
+									<div class="lg:col-span-2 lg:row-span-2 aspect-square rounded-lg bg-gray-100 flex items-center justify-center">
+										<svg class="h-24 w-24 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+										</svg>
+									</div>
+								)}
+							</div>
+
+							{/* Thumbnail navigation for mobile */}
+							{productImages.length > 1 && (
+								<div class="mt-4 flex gap-4 overflow-x-auto lg:hidden">
+									{productImages.map((image, index) => (
+										<button
+											type="button"
+											data-index={index}
+											data-url={image.src}
+											class:list={[
+												'thumbnail shrink-0 w-20 h-20 rounded-lg overflow-hidden ring-2 ring-offset-2 transition-all',
+												index === 0 ? 'ring-indigo-600' : 'ring-transparent hover:ring-gray-300',
+											]}
+										>
+											<img src={image.src} alt={image.alt} class="w-full h-full object-cover" />
+										</button>
+									))}
 								</div>
-								
-								<div id="checkout-error" class="hidden">
-									<Alert severity="critical" title="Error">
-										<p id="checkout-error-message" class="text-sm"></p>
-									</Alert>
+							)}
+						</div>
+
+						<div class="mt-8 lg:col-span-5">
+							<form id="product-form">
+								{/* Quantity picker */}
+								<div>
+									<h2 class="text-sm font-medium text-gray-900">Quantity</h2>
+
+									<fieldset aria-label="Choose quantity" class="mt-2">
+										<div class="grid grid-cols-6 gap-3">
+											{[1, 2, 3, 4, 5, 6].map((qty) => (
+												<label
+													class="group relative flex items-center justify-center rounded-md border border-gray-300 bg-white p-3 cursor-pointer hover:bg-gray-50 has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-600 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2"
+												>
+													<input
+														type="radio"
+														name="quantity"
+														value={qty}
+														checked={qty === 1}
+														class="sr-only"
+													/>
+													<span class="text-sm font-medium text-gray-900 group-has-[:checked]:text-white">
+														{qty}
+													</span>
+												</label>
+											))}
+										</div>
+									</fieldset>
+								</div>
+
+								<button
+									type="button"
+									id="buy-button"
+									disabled={!variantId}
+									class="mt-8 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									<span id="buy-label">Add to cart</span>
+									<span id="buy-spinner" class="hidden ml-2 animate-spin">
+										<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+											<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+											<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+										</svg>
+									</span>
+								</button>
+							</form>
+
+							{/* Error message */}
+							<div id="checkout-error" class="hidden mt-4">
+								<Alert severity="critical" title="Error">
+									<p id="checkout-error-message" class="text-sm"></p>
+								</Alert>
+							</div>
+
+							{/* Product description */}
+							{product.description && (
+								<div class="mt-10">
+									<h2 class="text-sm font-medium text-gray-900">Description</h2>
+
+									<div
+										class="mt-4 space-y-4 text-sm leading-6 text-gray-500 product-description"
+										set:html={product.description}
+									/>
+								</div>
+							)}
+
+							{/* Product details */}
+							<div class="mt-8 border-t border-gray-200 pt-8">
+								<h2 class="text-sm font-medium text-gray-900">Details</h2>
+
+								<div class="mt-4">
+									<ul role="list" class="list-disc space-y-1 pl-5 text-sm leading-6 text-gray-500 marker:text-gray-300">
+										{productDetails.map((item: string) => (
+											<li class="pl-2">{item}</li>
+										))}
+									</ul>
 								</div>
 							</div>
+
+							{/* Policies */}
+							<section aria-labelledby="policies-heading" class="mt-10">
+								<h2 id="policies-heading" class="sr-only">Our Policies</h2>
+
+								<dl class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+									{policies.map((policy) => (
+										<div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center">
+											<dt>
+												{policy.icon === 'globe' ? (
+													<svg class="mx-auto size-6 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+														<path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+													</svg>
+												) : (
+													<svg class="mx-auto size-6 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+														<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+													</svg>
+												)}
+												<span class="mt-4 block text-sm font-medium text-gray-900">{policy.name}</span>
+											</dt>
+											<dd class="mt-1 text-sm text-gray-500">{policy.description}</dd>
+										</div>
+									))}
+								</dl>
+							</section>
 						</div>
 					</div>
-				</Container>
-			</section>
-
+				</div>
+			</div>
 		</div>
 	) : loadState === 'unavailable' ? (
 		<div class="mt-8">
@@ -263,30 +312,34 @@ const stockNote =
 		</div>
 	)}
 
+	<style>
+		.product-description h1,
+		.product-description h2,
+		.product-description h3,
+		.product-description h4 {
+			color: #1f2937;
+			font-weight: 600;
+			margin-top: 1.5em;
+			margin-bottom: 0.5em;
+		}
+		.product-description h3 { font-size: 1.125rem; }
+		.product-description p { margin-bottom: 1em; }
+		.product-description ul,
+		.product-description ol {
+			margin: 1em 0;
+			padding-left: 1.5em;
+		}
+		.product-description li { margin-bottom: 0.5em; }
+		.product-description strong { color: #1f2937; }
+		.product-description a {
+			color: #4f46e5;
+			text-decoration: underline;
+		}
+	</style>
+
 	<script>
 		import { addToCart } from '../../lib/cart';
 
-		const stickyHeader = document.getElementById('sticky-header');
-		const buySection = document.getElementById('buy-section');
-		const stickyBuyBtn = document.getElementById('sticky-buy-btn');
-
-		// 1. Sticky Header Logic
-		if (stickyHeader && buySection) {
-			window.addEventListener('scroll', () => {
-				const scrollY = window.scrollY;
-				if (scrollY > 600) {
-					stickyHeader.classList.remove('-translate-y-full', 'opacity-0');
-				} else {
-					stickyHeader.classList.add('-translate-y-full', 'opacity-0');
-				}
-			});
-
-			stickyBuyBtn?.addEventListener('click', () => {
-				buySection.scrollIntoView({ behavior: 'smooth' });
-			});
-		}
-
-		// 2. Add to Cart Logic
 		const page = document.getElementById('product-page');
 		if (page) {
 			const variantId = page.dataset.variantId ? Number(page.dataset.variantId) : null;
@@ -298,15 +351,21 @@ const stockNote =
 
 			const buyButton = document.getElementById('buy-button');
 			const buyLabel = document.getElementById('buy-label');
-			const qtyInput = document.getElementById('qty-input') as HTMLSelectElement;
+			const buySpinner = document.getElementById('buy-spinner');
 			const errorWrap = document.getElementById('checkout-error');
 			const errorMessage = document.getElementById('checkout-error-message');
+			const productForm = document.getElementById('product-form');
+
+			const getSelectedQuantity = (): number => {
+				const selectedRadio = productForm?.querySelector('input[name="quantity"]:checked') as HTMLInputElement | null;
+				return selectedRadio ? Number(selectedRadio.value) : 1;
+			};
 
 			const showSuccess = () => {
 				if (!buyLabel) return;
 				buyLabel.textContent = 'Added to cart!';
 				setTimeout(() => {
-					buyLabel.textContent = 'Add to Bag';
+					buyLabel.textContent = 'Add to cart';
 				}, 2000);
 			};
 
@@ -326,7 +385,7 @@ const stockNote =
 				buyButton.addEventListener('click', () => {
 					clearError();
 
-					const quantity = Number(qtyInput?.value || 1);
+					const quantity = getSelectedQuantity();
 
 					try {
 						addToCart({
@@ -345,49 +404,27 @@ const stockNote =
 			}
 		}
 
-		// 3. Gallery interaction
+		// Thumbnail navigation
 		const mainImage = document.getElementById('main-image') as HTMLImageElement | null;
 		const thumbnails = document.querySelectorAll('.thumbnail');
 
 		if (mainImage && thumbnails.length > 0) {
-			// Set first thumbnail as active
-			thumbnails[0]?.classList.add('ring-[#0071e3]');
-
 			thumbnails.forEach((thumbnail) => {
 				thumbnail.addEventListener('click', (e) => {
 					const target = e.currentTarget as HTMLButtonElement;
 					const imageUrl = target.dataset.url;
-					const imageIndex = target.dataset.index;
 
 					if (imageUrl && mainImage) {
-						// Update main image
 						mainImage.src = imageUrl;
-						mainImage.alt = `Product - Image ${Number(imageIndex) + 1}`;
 
-						// Update active thumbnail
-						thumbnails.forEach(t => t.classList.remove('ring-[#0071e3]'));
-						target.classList.add('ring-[#0071e3]');
+						thumbnails.forEach(t => {
+							t.classList.remove('ring-indigo-600');
+							t.classList.add('ring-transparent');
+						});
+						target.classList.remove('ring-transparent');
+						target.classList.add('ring-indigo-600');
 					}
 				});
-			});
-
-			// Keyboard navigation
-			document.addEventListener('keydown', (e) => {
-				const activeThumbnail = document.querySelector('.thumbnail.ring-\\[\\#0071e3\\]');
-				if (!activeThumbnail) return;
-
-				let nextIndex = -1;
-				const currentIndex = Number((activeThumbnail as HTMLElement).dataset.index);
-
-				if (e.key === 'ArrowRight') {
-					nextIndex = (currentIndex + 1) % thumbnails.length;
-				} else if (e.key === 'ArrowLeft') {
-					nextIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
-				}
-
-				if (nextIndex >= 0) {
-					(thumbnails[nextIndex] as HTMLElement).click();
-				}
 			});
 		}
 	</script>
