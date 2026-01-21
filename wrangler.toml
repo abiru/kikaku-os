@@ -16,3 +16,5 @@ bucket_name = "ledkikaku-artifacts"
 [vars]
 DEV_MODE = "true"
 STOREFRONT_BASE_URL = "http://localhost:4321"
+SHIPPING_FEE_AMOUNT = "500"
+FREE_SHIPPING_THRESHOLD = "5000"

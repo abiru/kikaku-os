@@ -1,7 +1,25 @@
 import { useStore } from '@nanostores/react';
-import { $cartItems, $cartArray, $cartTotal, $cartCurrency, removeFromCart, updateQuantity, clearCart, type CartItem } from '../lib/cart';
+import {
+	$cartItems,
+	$cartArray,
+	$cartTotal,
+	$cartCurrency,
+	$appliedCoupon,
+	$cartDiscount,
+	$shippingFee,
+	$shippingConfig,
+	$cartGrandTotal,
+	removeFromCart,
+	updateQuantity,
+	clearCart,
+	applyCoupon,
+	removeCoupon,
+	setShippingConfig,
+	type CartItem,
+	type AppliedCoupon
+} from '../lib/cart';
 import { getApiBase, fetchJson } from '../lib/api';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const formatPrice = (amount: number, currency: string) => {
 	return new Intl.NumberFormat('ja-JP', {
@@ -96,12 +114,110 @@ function CartItem({ item }: { item: CartItem }) {
 	);
 }
 
-function OrderSummary({ total, currency, onCheckout, isProcessing }: {
-	total: number;
+function CouponInput() {
+	const [code, setCode] = useState('');
+	const [isApplying, setIsApplying] = useState(false);
+	const [error, setError] = useState('');
+	const appliedCoupon = useStore($appliedCoupon);
+	const cartTotal = useStore($cartTotal);
+
+	const handleApply = async () => {
+		if (!code.trim()) return;
+
+		setIsApplying(true);
+		setError('');
+
+		try {
+			const data = await fetchJson<{
+				valid: boolean;
+				coupon?: AppliedCoupon;
+				message?: string;
+			}>(`${getApiBase()}/checkout/validate-coupon`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ code: code.trim(), cartTotal })
+			});
+
+			if (data.valid && data.coupon) {
+				applyCoupon(data.coupon);
+				setCode('');
+			} else {
+				setError(data.message || 'Invalid coupon');
+			}
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Failed to apply coupon');
+		} finally {
+			setIsApplying(false);
+		}
+	};
+
+	if (appliedCoupon) {
+		return (
+			<div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-4 py-2">
+				<div>
+					<span className="text-sm font-medium text-green-900">
+						{appliedCoupon.code}
+					</span>
+					<span className="text-xs text-green-700 ml-2">
+						-{formatPrice(appliedCoupon.discountAmount, 'JPY')}
+					</span>
+				</div>
+				<button
+					onClick={removeCoupon}
+					className="text-sm text-green-700 hover:text-green-900"
+				>
+					Remove
+				</button>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-2">
+			<div className="flex gap-2">
+				<input
+					type="text"
+					value={code}
+					onChange={(e) => setCode(e.target.value.toUpperCase())}
+					placeholder="Coupon code"
+					className="flex-1 rounded-md border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+					disabled={isApplying}
+				/>
+				<button
+					onClick={handleApply}
+					disabled={isApplying || !code.trim()}
+					className="px-4 py-2 bg-gray-100 text-sm font-medium rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+				>
+					{isApplying ? 'Applying...' : 'Apply'}
+				</button>
+			</div>
+			{error && (
+				<p className="text-sm text-red-600">{error}</p>
+			)}
+		</div>
+	);
+}
+
+function OrderSummary({
+	subtotal,
+	discount,
+	shipping,
+	grandTotal,
+	currency,
+	onCheckout,
+	isProcessing
+}: {
+	subtotal: number;
+	discount: number;
+	shipping: number;
+	grandTotal: number;
 	currency: string;
 	onCheckout: () => void;
 	isProcessing: boolean;
 }) {
+	const shippingConfig = useStore($shippingConfig);
+	const remainingForFreeShipping = Math.max(0, shippingConfig.freeShippingThreshold - subtotal);
+
 	return (
 		<section aria-labelledby="summary-heading" className="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
 			<h2 id="summary-heading" className="text-lg font-medium text-gray-900">Order summary</h2>
@@ -109,24 +225,60 @@ function OrderSummary({ total, currency, onCheckout, isProcessing }: {
 			<dl className="mt-6 space-y-4">
 				<div className="flex items-center justify-between">
 					<dt className="text-sm text-gray-600">Subtotal</dt>
-					<dd className="text-sm font-medium text-gray-900">{formatPrice(total, currency)}</dd>
+					<dd className="text-sm font-medium text-gray-900">{formatPrice(subtotal, currency)}</dd>
 				</div>
+
+				{/* Coupon Input */}
+				<div className="border-t border-gray-200 pt-4">
+					<dt className="text-sm text-gray-600 mb-2">Coupon code</dt>
+					<CouponInput />
+				</div>
+
+				{/* Discount Display */}
+				{discount > 0 && (
+					<div className="flex items-center justify-between text-green-600">
+						<dt className="text-sm">Discount</dt>
+						<dd className="text-sm font-medium">-{formatPrice(discount, currency)}</dd>
+					</div>
+				)}
+
+				{/* Shipping */}
 				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
-					<dt className="text-sm text-gray-600">Shipping estimate</dt>
-					<dd className="text-sm font-medium text-gray-900">Calculated at checkout</dd>
+					<dt className="text-sm text-gray-600">Shipping</dt>
+					<dd className="text-sm font-medium text-gray-900">
+						{shipping === 0 ? (
+							<span className="text-green-600 font-semibold">FREE</span>
+						) : (
+							formatPrice(shipping, currency)
+						)}
+					</dd>
 				</div>
+
+				{/* Order Total */}
 				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
 					<dt className="text-base font-medium text-gray-900">Order total</dt>
-					<dd className="text-base font-medium text-gray-900">{formatPrice(total, currency)}</dd>
+					<dd className="text-base font-medium text-gray-900">{formatPrice(grandTotal, currency)}</dd>
 				</div>
 			</dl>
+
+			{/* Free Shipping Message */}
+			{shipping === 0 && subtotal >= shippingConfig.freeShippingThreshold && (
+				<div className="mt-4 text-sm text-green-600 text-center font-medium">
+					🎉 You've qualified for free shipping!
+				</div>
+			)}
+			{remainingForFreeShipping > 0 && (
+				<div className="mt-4 text-sm text-gray-500 text-center">
+					Add {formatPrice(remainingForFreeShipping, currency)} more for free shipping
+				</div>
+			)}
 
 			<div className="mt-6">
 				<button
 					type="button"
 					onClick={onCheckout}
 					disabled={isProcessing}
-					className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+					className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 				>
 					{isProcessing ? 'Processing...' : 'Checkout'}
 				</button>
@@ -147,9 +299,32 @@ function OrderSummary({ total, currency, onCheckout, isProcessing }: {
 
 export default function Cart() {
 	const items = useStore($cartArray);
-	const total = useStore($cartTotal);
+	const subtotal = useStore($cartTotal);
+	const discount = useStore($cartDiscount);
+	const shipping = useStore($shippingFee);
+	const grandTotal = useStore($cartGrandTotal);
 	const currency = useStore($cartCurrency);
+	const appliedCoupon = useStore($appliedCoupon);
 	const [isProcessing, setIsProcessing] = useState(false);
+
+	// Fetch shipping config on mount
+	useEffect(() => {
+		const fetchShippingConfig = async () => {
+			try {
+				const data = await fetchJson<{ shippingFee: number; freeShippingThreshold: number }>(
+					`${getApiBase()}/checkout/config`
+				);
+				if (data.shippingFee !== undefined && data.freeShippingThreshold !== undefined) {
+					setShippingConfig(data);
+				}
+			} catch (err) {
+				console.error('Failed to fetch shipping config:', err);
+				// Use default values from store
+			}
+		};
+
+		fetchShippingConfig();
+	}, []);
 
 	const handleCheckout = async () => {
 		if (items.length === 0) return;
@@ -166,13 +341,15 @@ export default function Cart() {
 						items: items.map((item) => ({
 							variantId: item.variantId,
 							quantity: item.quantity
-						}))
+						})),
+						couponCode: appliedCoupon?.code || undefined
 					})
 				}
 			);
 
 			if (data.ok && data.url) {
 				clearCart();
+				removeCoupon();
 				window.location.href = data.url;
 			} else {
 				throw new Error(data.message || 'Checkout failed');
@@ -201,7 +378,10 @@ export default function Cart() {
 			</section>
 
 			<OrderSummary
-				total={total}
+				subtotal={subtotal}
+				discount={discount}
+				shipping={shipping}
+				grandTotal={grandTotal}
 				currency={currency}
 				onCheckout={handleCheckout}
 				isProcessing={isProcessing}
