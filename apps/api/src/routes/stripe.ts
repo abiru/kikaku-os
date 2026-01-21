@@ -125,6 +125,26 @@ const handleCheckoutSessionCompleted = async (
   await updateOrderToPaid(env, orderId, sessionId, paymentIntentId);
   await ensureFulfillmentExists(env, orderId, sessionId, paymentIntentId, event.id);
 
+  // Save shipping information if provided
+  if (dataObject.shipping_details || dataObject.customer_details?.phone) {
+    const shippingInfo = {
+      address: dataObject.shipping_details?.address || null,
+      name: dataObject.shipping_details?.name || null,
+      phone: dataObject.customer_details?.phone || null
+    };
+
+    await env.DB.prepare(
+      `UPDATE orders
+       SET metadata = json_set(
+             COALESCE(metadata, '{}'),
+             '$.shipping',
+             json(?)
+           ),
+           updated_at = datetime('now')
+       WHERE id = ?`
+    ).bind(JSON.stringify(shippingInfo), orderId).run();
+  }
+
   const paymentResult = paymentIntentId
     ? await insertPayment(env, {
         orderId,

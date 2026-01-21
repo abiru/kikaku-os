@@ -207,6 +207,14 @@ checkout.post('/checkout/session', async (c) => {
     ).run();
   }
 
+  // Record coupon usage
+  if (couponId) {
+    await c.env.DB.prepare(
+      `INSERT INTO coupon_usages (coupon_id, order_id, customer_id, discount_amount, created_at)
+       VALUES (?, ?, ?, ?, datetime('now'))`
+    ).bind(couponId, orderId, customerId, discountAmount).run();
+  }
+
   // Build Stripe checkout session
   const baseUrl = c.env.STOREFRONT_BASE_URL || 'http://localhost:4321';
   const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
@@ -224,8 +232,36 @@ checkout.post('/checkout/session', async (c) => {
     params.set(`line_items[${index}][quantity]`, String(item.quantity));
   });
 
+  let lineItemIndex = items.length;
+
+  // Add shipping fee line item
+  if (actualShippingFee > 0) {
+    params.set(`line_items[${lineItemIndex}][price_data][currency]`, currency.toLowerCase());
+    params.set(`line_items[${lineItemIndex}][price_data][product_data][name]`, '配送料');
+    params.set(`line_items[${lineItemIndex}][price_data][unit_amount]`, String(actualShippingFee));
+    params.set(`line_items[${lineItemIndex}][quantity]`, '1');
+    lineItemIndex++;
+  }
+
+  // Add discount line item (negative amount)
+  if (discountAmount > 0) {
+    params.set(`line_items[${lineItemIndex}][price_data][currency]`, currency.toLowerCase());
+    params.set(`line_items[${lineItemIndex}][price_data][product_data][name]`, `クーポン割引 (${couponCode})`);
+    params.set(`line_items[${lineItemIndex}][price_data][unit_amount]`, String(-discountAmount));
+    params.set(`line_items[${lineItemIndex}][quantity]`, '1');
+  }
+
+  // Enable shipping address and phone number collection
+  params.set('shipping_address_collection[allowed_countries][0]', 'JP');
+  params.set('phone_number_collection[enabled]', 'true');
+
   params.set('metadata[orderId]', String(orderId));
   params.set('metadata[order_id]', String(orderId));
+  if (couponCode) {
+    params.set('metadata[couponCode]', couponCode);
+    params.set('metadata[discountAmount]', String(discountAmount));
+  }
+  params.set('metadata[shippingFee]', String(actualShippingFee));
   params.set('payment_intent_data[metadata][orderId]', String(orderId));
   params.set('payment_intent_data[metadata][order_id]', String(orderId));
   if (email) params.set('customer_email', email);

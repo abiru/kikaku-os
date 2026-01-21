@@ -137,3 +137,34 @@ export const getCartTotal = (): number => {
 export const getCartCount = (): number => {
 	return getCartItems().reduce((sum, item) => sum + item.quantity, 0);
 };
+
+// Coupon types and stores
+export type AppliedCoupon = {
+	code: string;
+	type: 'percentage' | 'fixed';
+	value: number;
+	discountAmount: number;
+};
+
+export const $appliedCoupon = atom<AppliedCoupon | null>(null);
+
+export const $cartDiscount = computed($appliedCoupon, (coupon) => coupon?.discountAmount || 0);
+
+export const $shippingFee = computed($cartTotal, (total) => {
+	const FREE_SHIPPING_THRESHOLD = 5000;
+	const SHIPPING_FEE = 500;
+	return total >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+});
+
+export const $cartGrandTotal = computed(
+	[$cartTotal, $cartDiscount, $shippingFee],
+	(total, discount, shipping) => total - discount + shipping
+);
+
+export const applyCoupon = (coupon: AppliedCoupon) => {
+	$appliedCoupon.set(coupon);
+};
+
+export const removeCoupon = () => {
+	$appliedCoupon.set(null);
+};
