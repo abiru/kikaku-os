@@ -56,6 +56,7 @@ export const productIdParamSchema = z.object({
 
 export const productListQuerySchema = z.object({
   q: z.string().max(100).optional().default(''),
+  status: z.enum(['all', 'active', 'archived']).optional().default('all'),
   page: z
     .string()
     .regex(/^\d+$/)
