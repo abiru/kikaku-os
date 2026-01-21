@@ -124,7 +124,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 							<div>
 								<dt class="text-[#86868b]">Total</dt>
-								<dd class="font-semibold text-[#1d1d1f] text-lg">{formatCurrency(order.total_net, order.currency)}</dd>
+								<dd class="font-semibold text-[#1d1d1f] text-lg">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Customer</dt>
@@ -139,6 +139,43 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(order.paid_at)}</dd>
 							</div>
 						</dl>
+
+						{/* Tax Breakdown */}
+						{(order.subtotal !== undefined || order.tax_amount !== undefined) && (
+							<div class="mt-4 pt-4 border-t border-gray-100">
+								<h3 class="text-xs font-medium text-[#86868b] uppercase tracking-wider mb-3">Price Breakdown</h3>
+								<dl class="space-y-2 text-sm">
+									{order.subtotal !== undefined && (
+										<div class="flex justify-between">
+											<dt class="text-[#86868b]">Subtotal (税抜)</dt>
+											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.subtotal, order.currency)}</dd>
+										</div>
+									)}
+									{order.tax_amount !== undefined && (
+										<div class="flex justify-between">
+											<dt class="text-[#86868b]">Tax (消費税)</dt>
+											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.tax_amount, order.currency)}</dd>
+										</div>
+									)}
+									{order.total_discount > 0 && (
+										<div class="flex justify-between">
+											<dt class="text-[#86868b]">Discount</dt>
+											<dd class="font-medium text-red-600 tabular-nums">-{formatCurrency(order.total_discount, order.currency)}</dd>
+										</div>
+									)}
+									{order.shipping_fee > 0 && (
+										<div class="flex justify-between">
+											<dt class="text-[#86868b]">Shipping</dt>
+											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.shipping_fee, order.currency)}</dd>
+										</div>
+									)}
+									<div class="flex justify-between pt-2 border-t border-gray-100">
+										<dt class="text-[#1d1d1f] font-semibold">Total (税込)</dt>
+										<dd class="font-bold text-[#1d1d1f] text-lg tabular-nums">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
+									</div>
+								</dl>
+							</div>
+						)}
 
 						{(order.provider_checkout_session_id || order.provider_payment_intent_id) && (
 							<div class="mt-4 pt-4 border-t border-gray-100">

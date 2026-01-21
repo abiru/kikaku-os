@@ -8,6 +8,7 @@ export type CartItem = {
 	price: number;
 	currency: string;
 	quantity: number;
+	taxRate?: number; // e.g., 0.10 for 10%
 };
 
 type CartState = Record<string, CartItem>;
@@ -85,6 +86,37 @@ export const $cartTotal = computed($cartArray, (items) =>
 export const $cartCurrency = computed($cartArray, (items) =>
 	items[0]?.currency || 'JPY'
 );
+
+// Tax calculation helper (client-side, matches server logic)
+const calculateItemTax = (price: number, quantity: number, taxRate: number) => {
+	const totalIncludingTax = price * quantity;
+	// Use integer arithmetic to avoid floating point precision issues
+	const taxRatePercent = Math.round(taxRate * 100);
+	const subtotal = Math.floor((totalIncludingTax * 100) / (100 + taxRatePercent));
+	const taxAmount = totalIncludingTax - subtotal;
+	return { subtotal, taxAmount };
+};
+
+// Computed: tax breakdown
+export const $cartTaxBreakdown = computed($cartArray, (items) => {
+	let totalSubtotal = 0;
+	let totalTax = 0;
+
+	items.forEach((item) => {
+		const taxRate = item.taxRate || 0.10; // Default to 10% if not set
+		const { subtotal, taxAmount } = calculateItemTax(item.price, item.quantity, taxRate);
+		totalSubtotal += subtotal;
+		totalTax += taxAmount;
+	});
+
+	return { subtotal: totalSubtotal, taxAmount: totalTax };
+});
+
+// Computed: cart subtotal (tax-exclusive)
+export const $cartSubtotal = computed($cartTaxBreakdown, (breakdown) => breakdown.subtotal);
+
+// Computed: cart tax amount
+export const $cartTaxAmount = computed($cartTaxBreakdown, (breakdown) => breakdown.taxAmount);
 
 export const addToCart = (
 	item: Omit<CartItem, 'quantity'>,

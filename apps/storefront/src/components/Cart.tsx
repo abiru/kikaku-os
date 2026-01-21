@@ -3,6 +3,8 @@ import {
 	$cartItems,
 	$cartArray,
 	$cartTotal,
+	$cartSubtotal,
+	$cartTaxAmount,
 	$cartCurrency,
 	$appliedCoupon,
 	$cartDiscount,
@@ -200,6 +202,8 @@ function CouponInput() {
 
 function OrderSummary({
 	subtotal,
+	taxAmount,
+	cartTotal,
 	discount,
 	shipping,
 	grandTotal,
@@ -208,6 +212,8 @@ function OrderSummary({
 	isProcessing
 }: {
 	subtotal: number;
+	taxAmount: number;
+	cartTotal: number;
 	discount: number;
 	shipping: number;
 	grandTotal: number;
@@ -216,7 +222,7 @@ function OrderSummary({
 	isProcessing: boolean;
 }) {
 	const shippingConfig = useStore($shippingConfig);
-	const remainingForFreeShipping = Math.max(0, shippingConfig.freeShippingThreshold - subtotal);
+	const remainingForFreeShipping = Math.max(0, shippingConfig.freeShippingThreshold - cartTotal);
 
 	return (
 		<section aria-labelledby="summary-heading" className="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
@@ -224,8 +230,13 @@ function OrderSummary({
 
 			<dl className="mt-6 space-y-4">
 				<div className="flex items-center justify-between">
-					<dt className="text-sm text-gray-600">Subtotal</dt>
+					<dt className="text-sm text-gray-600">Subtotal (税抜)</dt>
 					<dd className="text-sm font-medium text-gray-900">{formatPrice(subtotal, currency)}</dd>
+				</div>
+
+				<div className="flex items-center justify-between">
+					<dt className="text-sm text-gray-600">Tax (消費税)</dt>
+					<dd className="text-sm font-medium text-gray-900">{formatPrice(taxAmount, currency)}</dd>
 				</div>
 
 				{/* Coupon Input */}
@@ -256,7 +267,7 @@ function OrderSummary({
 
 				{/* Order Total */}
 				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
-					<dt className="text-base font-medium text-gray-900">Order total</dt>
+					<dt className="text-base font-medium text-gray-900">Order total (税込)</dt>
 					<dd className="text-base font-medium text-gray-900">{formatPrice(grandTotal, currency)}</dd>
 				</div>
 			</dl>
@@ -305,7 +316,9 @@ function OrderSummary({
 
 export default function Cart() {
 	const items = useStore($cartArray);
-	const subtotal = useStore($cartTotal);
+	const cartTotal = useStore($cartTotal);
+	const subtotal = useStore($cartSubtotal);
+	const taxAmount = useStore($cartTaxAmount);
 	const discount = useStore($cartDiscount);
 	const shipping = useStore($shippingFee);
 	const grandTotal = useStore($cartGrandTotal);
@@ -390,6 +403,8 @@ export default function Cart() {
 
 			<OrderSummary
 				subtotal={subtotal}
+				taxAmount={taxAmount}
+				cartTotal={cartTotal}
 				discount={discount}
 				shipping={shipping}
 				grandTotal={grandTotal}

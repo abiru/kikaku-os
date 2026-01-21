@@ -1,0 +1,157 @@
+---
+export const prerender = false;
+
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+
+type TaxRate = {
+	id: number;
+	name: string;
+	rate: number;
+	applicable_from: string;
+	applicable_to: string | null;
+	is_active: number;
+	description: string | null;
+	created_at: string;
+	updated_at: string;
+};
+
+let taxRates: TaxRate[] = [];
+let error = null;
+
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const res = await fetch(`${apiBase}/admin/tax-rates`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY
+			}
+		});
+
+		if (!res.ok) {
+			throw new Error(`API Error: ${res.status}`);
+		}
+
+		const data = await res.json();
+		taxRates = data || [];
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load tax rates. Please check your admin key.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing in server environment.';
+}
+
+const formatRate = (rate: number) => {
+	return `${(rate * 100).toFixed(1)}%`;
+};
+
+const formatDate = (dateStr: string | null) => {
+	if (!dateStr) return '-';
+	return new Date(dateStr).toLocaleDateString('ja-JP');
+};
+
+const isActive = (taxRate: TaxRate) => {
+	if (!taxRate.is_active) return false;
+	const now = new Date();
+	const from = new Date(taxRate.applicable_from);
+	if (from > now) return false;
+	if (taxRate.applicable_to) {
+		const to = new Date(taxRate.applicable_to);
+		if (to < now) return false;
+	}
+	return true;
+};
+---
+
+<AdminLayout title="Tax Rates - Admin">
+	<div class="space-y-6">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-4">
+				<h1 class="text-2xl font-semibold text-gray-900">Tax Rates</h1>
+				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{taxRates.length} items</span>
+			</div>
+			<Button href="/admin/tax-rates/new" size="sm" variant="primary">
+				+ New Tax Rate
+			</Button>
+		</div>
+
+		{error && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				{error}
+			</div>
+		)}
+
+		{/* Tax Rates Table */}
+		<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+			<div class="overflow-x-auto">
+				<table class="w-full text-left text-sm text-[#1d1d1f]">
+					<thead class="bg-gray-50 border-b border-gray-200">
+						<tr>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Name</th>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Rate</th>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Applicable From</th>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Applicable To</th>
+							<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-100">
+						{taxRates.length > 0 ? (
+							taxRates.map((taxRate) => (
+								<tr class="hover:bg-gray-50 transition-colors group">
+									<td class="px-6 py-4">
+										<div class="font-medium">{taxRate.name}</div>
+										{taxRate.description && (
+											<div class="text-xs text-[#86868b] mt-1">
+												{taxRate.description}
+											</div>
+										)}
+									</td>
+									<td class="px-6 py-4 font-medium tabular-nums text-lg">
+										{formatRate(taxRate.rate)}
+									</td>
+									<td class="px-6 py-4">
+										{isActive(taxRate) ? (
+											<Badge severity="info">Active</Badge>
+										) : taxRate.is_active ? (
+											<Badge severity="warn">Scheduled</Badge>
+										) : (
+											<Badge severity="secondary">Inactive</Badge>
+										)}
+									</td>
+									<td class="px-6 py-4 text-[#86868b] tabular-nums">
+										{formatDate(taxRate.applicable_from)}
+									</td>
+									<td class="px-6 py-4 text-[#86868b] tabular-nums">
+										{formatDate(taxRate.applicable_to)}
+									</td>
+									<td class="px-6 py-4 text-right">
+										<a href={`/admin/tax-rates/${taxRate.id}`} class="text-[#0071e3] hover:underline font-medium">Edit</a>
+									</td>
+								</tr>
+							))
+						) : (
+							<tr>
+								<td colspan="6" class="px-6 py-12 text-center text-[#86868b]">
+									No tax rates found.
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
+			<strong>Note:</strong> Tax rates are applied to products at checkout time. The current Japanese consumption tax rates are:
+			<ul class="mt-2 ml-4 list-disc">
+				<li>Standard Rate: 10% (since October 1, 2019)</li>
+				<li>Reduced Rate: 8% (for food and beverages)</li>
+			</ul>
+		</div>
+	</div>
+</AdminLayout>
