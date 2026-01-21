@@ -277,6 +277,16 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
     }).format(amount);
   };
 
+  const escapeHtml = (str) => {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
+
   const displayCartSummary = () => {
     const items = getCartItems();
     const cartItemsEl = document.getElementById('cart-items');
@@ -300,8 +310,8 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
     cartItemsEl.innerHTML = items.map(item => `
       <div class="cart-item">
         <div class="item-details">
-          <div class="item-title">${item.title}</div>
-          <div class="item-variant">${item.variantTitle}</div>
+          <div class="item-title">${escapeHtml(item.title)}</div>
+          <div class="item-variant">${escapeHtml(item.variantTitle)}</div>
         </div>
         <div style="display: flex; align-items: center;">
           <span class="item-quantity">数量: ${item.quantity}</span>
