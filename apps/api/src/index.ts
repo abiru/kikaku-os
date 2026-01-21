@@ -72,7 +72,11 @@ app.use('*', async (c, next) => {
   if (c.req.path.startsWith('/webhooks/stripe')) return next();
   if (c.req.path.startsWith('/stripe/webhook')) return next();
   if (c.req.path.startsWith('/checkout/session')) return next();
-  if (c.req.path.startsWith('/quotations')) return next();
+  // Public quotation endpoints (customer-facing)
+  if (c.req.method === 'POST' && c.req.path === '/quotations') return next();
+  if (c.req.method === 'GET' && /^\/quotations\/\d+$/.test(c.req.path)) return next();
+  if (c.req.method === 'GET' && /^\/quotations\/\d+\/html$/.test(c.req.path)) return next();
+  if (c.req.method === 'POST' && /^\/quotations\/\d+\/accept$/.test(c.req.path)) return next();
   if (c.req.method === 'GET' && c.req.path === '/dev/ping') return next();
   if (
     c.req.method === 'GET' &&

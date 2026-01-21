@@ -8,7 +8,7 @@ describe('renderQuotationHtml', () => {
     postal_code: '123-4567',
     address: 'Tokyo, Japan',
     phone: '03-1234-5678',
-    email: 'info@test.com'
+    email: 'info@test.com',
     logo_url: null
   };
 
@@ -118,7 +118,7 @@ describe('renderQuotationHtml', () => {
       postal_code: '123-4567<script>',
       address: 'Tokyo<img src=x onerror=alert(1)>',
       phone: '03-1234-5678">"><script>',
-      email: 'info@test.com<script>alert(3)</script>'
+      email: 'info@test.com<script>alert(3)</script>',
       logo_url: null
     };
 
