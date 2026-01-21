@@ -30,17 +30,24 @@ app.get(
   '/products',
   zValidator('query', productListQuerySchema, validationErrorHandler),
   async (c) => {
-    const { q, page, perPage } = c.req.valid('query');
+    const { q, status, page, perPage } = c.req.valid('query');
     const offset = (page - 1) * perPage;
 
     try {
-      let whereClause = '';
+      const conditions: string[] = [];
       const bindings: (string | number)[] = [];
 
       if (q) {
-        whereClause = 'WHERE title LIKE ? OR description LIKE ?';
+        conditions.push('(title LIKE ? OR description LIKE ?)');
         bindings.push(`%${q}%`, `%${q}%`);
       }
+
+      if (status !== 'all') {
+        conditions.push('status = ?');
+        bindings.push(status);
+      }
+
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const countQuery = `SELECT COUNT(*) as count FROM products ${whereClause}`;
       const countRes = await c.env.DB.prepare(countQuery).bind(...bindings).first<{ count: number }>();
@@ -185,6 +192,108 @@ app.put(
     } catch (e) {
       console.error(e);
       return jsonError(c, 'Failed to update product');
+    }
+  }
+);
+
+// DELETE /products/:id - Archive product
+app.delete(
+  '/products/:id',
+  zValidator('param', productIdParamSchema, validationErrorHandler),
+  async (c) => {
+    const { id } = c.req.valid('param');
+
+    try {
+      const existing = await c.env.DB.prepare(
+        'SELECT id, title, status FROM products WHERE id = ?'
+      ).bind(id).first<{ id: number; title: string; status: string }>();
+
+      if (!existing) {
+        return jsonError(c, 'Product not found', 404);
+      }
+
+      if (existing.status === 'archived') {
+        return jsonError(c, 'Product is already archived', 400);
+      }
+
+      // Check for existing orders (for audit metadata)
+      const orderCount = await c.env.DB.prepare(`
+        SELECT COUNT(DISTINCT oi.order_id) as count
+        FROM order_items oi
+        INNER JOIN variants v ON oi.variant_id = v.id
+        WHERE v.product_id = ?
+      `).bind(id).first<{ count: number }>();
+
+      // Archive by updating status
+      await c.env.DB.prepare(`
+        UPDATE products
+        SET status = 'archived', updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(id).run();
+
+      // Audit Log
+      await c.env.DB.prepare(
+        'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
+      ).bind(
+        getActor(c),
+        'archive_product',
+        `product:${id}`,
+        JSON.stringify({
+          title: existing.title,
+          previous_status: existing.status,
+          order_count: orderCount?.count || 0
+        })
+      ).run();
+
+      return jsonOk(c, { archived: true });
+    } catch (e) {
+      console.error(e);
+      return jsonError(c, 'Failed to archive product');
+    }
+  }
+);
+
+// POST /products/:id/restore - Restore archived product
+app.post(
+  '/products/:id/restore',
+  zValidator('param', productIdParamSchema, validationErrorHandler),
+  async (c) => {
+    const { id } = c.req.valid('param');
+
+    try {
+      const existing = await c.env.DB.prepare(
+        'SELECT id, title, status FROM products WHERE id = ?'
+      ).bind(id).first<{ id: number; title: string; status: string }>();
+
+      if (!existing) {
+        return jsonError(c, 'Product not found', 404);
+      }
+
+      if (existing.status !== 'archived') {
+        return jsonError(c, 'Product is not archived', 400);
+      }
+
+      // Restore to 'draft' status
+      await c.env.DB.prepare(`
+        UPDATE products
+        SET status = 'draft', updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(id).run();
+
+      // Audit Log
+      await c.env.DB.prepare(
+        'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
+      ).bind(
+        getActor(c),
+        'restore_product',
+        `product:${id}`,
+        JSON.stringify({ title: existing.title })
+      ).run();
+
+      return jsonOk(c, { restored: true });
+    } catch (e) {
+      console.error(e);
+      return jsonError(c, 'Failed to restore product');
     }
   }
 );
