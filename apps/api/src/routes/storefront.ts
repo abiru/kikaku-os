@@ -62,20 +62,65 @@ const extractImageUrl = (metadata: string | null): string | null => {
   }
 };
 
-const rowsToProducts = (rows: StorefrontRow[]): StorefrontProduct[] => {
+const buildR2Url = (r2Key: string, baseUrl: string): string => {
+  return `${baseUrl}/r2?key=${encodeURIComponent(r2Key)}`;
+};
+
+const rowsToProducts = (rows: StorefrontRow[], baseUrl: string): StorefrontProduct[] => {
   const products = new Map<number, StorefrontProduct>();
   const seenVariant = new Set<number>();
+  const productImages = new Map<number, Array<{ r2Key: string; position: number }>>();
 
+  // First pass: collect images
+  for (const row of rows) {
+    if (row.image_id && row.image_r2_key !== null && row.image_position !== null) {
+      if (!productImages.has(row.product_id)) {
+        productImages.set(row.product_id, []);
+      }
+      const existing = productImages.get(row.product_id)!;
+      // Avoid duplicates
+      if (!existing.some(img => img.r2Key === row.image_r2_key)) {
+        existing.push({
+          r2Key: row.image_r2_key,
+          position: row.image_position
+        });
+      }
+    }
+  }
+
+  // Second pass: build products
   for (const row of rows) {
     if (!products.has(row.product_id)) {
+      const fallbackImage = extractImageUrl(row.product_metadata);
+      const imageList = productImages.get(row.product_id) || [];
+
+      // Sort by position
+      const sortedImages = imageList.sort((a, b) => a.position - b.position);
+
+      // Generate R2 URLs
+      const imageUrls = sortedImages.map(img => buildR2Url(img.r2Key, baseUrl));
+
+      // Main image: first R2 image or fallback
+      const mainImage = imageUrls[0] || fallbackImage;
+
+      // All images array
+      const allImages = [...imageUrls];
+      if (fallbackImage && !imageUrls.length) {
+        allImages.push(fallbackImage);
+      }
+
       products.set(row.product_id, {
         id: row.product_id,
         title: row.product_title,
         description: row.product_description,
-        image: extractImageUrl(row.product_metadata),
+        image: fallbackImage,
+        mainImage: mainImage,
+        images: allImages,
         variants: []
       });
     }
+
+    // Variant handling (unchanged)
     if (seenVariant.has(row.variant_id)) continue;
     seenVariant.add(row.variant_id);
     products.get(row.product_id)?.variants.push({
