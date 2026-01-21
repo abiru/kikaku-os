@@ -1,0 +1,43 @@
+---
+import { Image } from "astro:assets";
+import naro from "../assets/logos/naro.png";
+import tsum from "../assets/logos/logo_tsumura.png";
+import kyushu from "../assets/logos/logo_kyushu.png";
+import kirishima from "../assets/logos/kirishima.svg";
+import ikedarika from "../assets/logos/ikedarika.png";
+import fukuyama from "../assets/logos/fukuyama.png";
+import hokkai from "../assets/logos/hokkaido.png";
+import ryukoku from "../assets/logos/ryukoku.png";
+import "../styles/stripe.css"
+---
+    <div class="bg-white">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <div class="-mx-6 grid grid-cols-2 gap-0.5 overflow-hidden sm:mx-0 sm:rounded-2xl md:grid-cols-3">
+
+        {
+          [
+            naro,
+            tsum,
+            kirishima,
+            ikedarika,
+            fukuyama,
+            kyushu,
+            hokkai,
+            ryukoku,
+          ].map((v) => {
+            return (
+          <div class="bg-gray-200/5 p-8 sm:p-10">
+              <Image
+              class="max-h-8 w-full object-contain"
+                src={v}
+                alt="Transistor"
+                width="158"
+                height="48"
+              />
+          </div>
+            );
+          })
+        }
+        </div>
+      </div>
+    </div>
