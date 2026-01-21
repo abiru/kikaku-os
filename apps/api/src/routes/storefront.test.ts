@@ -31,6 +31,8 @@ const createMockDb = (options: {
     quantity: number;
     unit_price: number;
   }>;
+  categoryRows?: Array<{ category: string | null }>;
+  priceRangeRow?: { minPrice: number | null; maxPrice: number | null };
 }) => {
   return {
     prepare: vi.fn((sql: string) => ({
@@ -42,11 +44,17 @@ const createMockDb = (options: {
           if (sql.includes('FROM order_items')) {
             return { results: options.orderItems || [] };
           }
+          if (sql.includes('DISTINCT category')) {
+            return { results: options.categoryRows || [] };
+          }
           return { results: [] };
         }),
         first: vi.fn(async () => {
           if (sql.includes('FROM orders')) {
             return options.orderRow ?? null;
+          }
+          if (sql.includes('MIN(pr.amount)')) {
+            return options.priceRangeRow ?? null;
           }
           return null;
         })
@@ -55,7 +63,16 @@ const createMockDb = (options: {
         if (sql.includes('FROM products')) {
           return { results: options.productRows || [] };
         }
+        if (sql.includes('DISTINCT category')) {
+          return { results: options.categoryRows || [] };
+        }
         return { results: [] };
+      }),
+      first: vi.fn(async () => {
+        if (sql.includes('MIN(pr.amount)')) {
+          return options.priceRangeRow ?? null;
+        }
+        return null;
       })
     }))
   };
@@ -330,6 +347,102 @@ describe('Storefront API', () => {
 
       expect(json.ok).toBe(true);
       expect(json.order).toBeNull();
+    });
+  });
+
+  describe('Product Status Filtering', () => {
+    it('filters products by active status in product list', async () => {
+      const db = createMockDb({ productRows: [] });
+      const { fetch } = createApp(db);
+
+      await fetch('/store/products');
+
+      // Verify SQL includes status filter
+      const prepareCall = vi.mocked(db.prepare).mock.calls[0];
+      const sql = prepareCall[0] as string;
+      expect(sql).toContain("p.status = ?");
+    });
+
+    it('verifies active status binding in product list', async () => {
+      const db = createMockDb({ productRows: [] });
+      const { fetch } = createApp(db);
+
+      await fetch('/store/products');
+
+      // Verify bind includes 'active'
+      const prepareResult = vi.mocked(db.prepare).mock.results[0];
+      const bindCall = prepareResult?.value?.bind?.mock?.calls[0];
+      expect(bindCall).toBeDefined();
+      expect(bindCall![0]).toBe('active');
+    });
+
+    it('filters products by active status in product detail', async () => {
+      const db = createMockDb({ productRows: [] });
+      const { fetch } = createApp(db);
+
+      await fetch('/store/products/123');
+
+      // Verify SQL includes status filter
+      const prepareCall = vi.mocked(db.prepare).mock.calls[0];
+      const sql = prepareCall[0] as string;
+      expect(sql).toContain("p.status = 'active'");
+    });
+
+    it('filters categories by active status', async () => {
+      const db = createMockDb({ productRows: [] });
+      const { fetch } = createApp(db);
+
+      await fetch('/store/products/filters');
+
+      // Verify category query includes status filter
+      const prepareCall = vi.mocked(db.prepare).mock.calls[0];
+      const sql = prepareCall[0] as string;
+      expect(sql).toContain("status = 'active'");
+    });
+
+    it('filters price range by active status', async () => {
+      const db = createMockDb({ productRows: [] });
+      const { fetch } = createApp(db);
+
+      await fetch('/store/products/filters');
+
+      // Verify price range query includes status filter
+      const prepareCall = vi.mocked(db.prepare).mock.calls[1];
+      const sql = prepareCall[0] as string;
+      expect(sql).toContain("p.status = 'active'");
+    });
+
+    it('combines status filter with search query', async () => {
+      const db = createMockDb({ productRows: [] });
+      const { fetch } = createApp(db);
+
+      await fetch('/store/products?q=LED');
+
+      // Verify both status and search filters are applied
+      const prepareCall = vi.mocked(db.prepare).mock.calls[0];
+      const sql = prepareCall[0] as string;
+      expect(sql).toContain("p.status = ?");
+      expect(sql).toContain("p.title LIKE ?");
+
+      const prepareResult = vi.mocked(db.prepare).mock.results[0];
+      const bindCall = prepareResult?.value?.bind?.mock?.calls[0];
+      expect(bindCall).toBeDefined();
+      expect(bindCall![0]).toBe('active');
+      expect(bindCall![1]).toBe('%LED%');
+    });
+
+    it('combines status filter with category filter', async () => {
+      const db = createMockDb({ productRows: [] });
+      const { fetch } = createApp(db);
+
+      await fetch('/store/products?category=electronics');
+
+      // Verify both status and category filters are applied
+      const prepareResult = vi.mocked(db.prepare).mock.results[0];
+      const bindCall = prepareResult?.value?.bind?.mock?.calls[0];
+      expect(bindCall).toBeDefined();
+      expect(bindCall![0]).toBe('active');
+      expect(bindCall![1]).toBe('electronics');
     });
   });
 });

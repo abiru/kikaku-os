@@ -126,7 +126,7 @@ checkout.post('/checkout/session', async (c) => {
      JOIN prices pr ON pr.variant_id = v.id
      LEFT JOIN product_images pi ON pi.product_id = p.id
        AND pi.position = (SELECT MIN(position) FROM product_images WHERE product_id = p.id)
-     WHERE v.id IN (${placeholders})
+     WHERE v.id IN (${placeholders}) AND p.status = 'active'
      ORDER BY pr.id DESC`
   ).bind(...variantIds).all<VariantPriceRow>();
 
