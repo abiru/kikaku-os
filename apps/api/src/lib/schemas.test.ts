@@ -124,7 +124,7 @@ describe('Product Schemas', () => {
     it('applies defaults for missing params', () => {
       const result = productListQuerySchema.safeParse({});
       expect(result.success).toBe(true);
-      expect(result.data).toEqual({ q: '', page: 1, perPage: 20 });
+      expect(result.data).toEqual({ q: '', status: 'all', page: 1, perPage: 20 });
     });
 
     it('parses page and perPage from strings', () => {
@@ -133,7 +133,7 @@ describe('Product Schemas', () => {
         perPage: '50'
       });
       expect(result.success).toBe(true);
-      expect(result.data).toEqual({ q: '', page: 2, perPage: 50 });
+      expect(result.data).toEqual({ q: '', status: 'all', page: 2, perPage: 50 });
     });
 
     it('caps perPage at 100', () => {
