@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // === Product Schemas ===
 
-export const productStatusSchema = z.enum(['active', 'draft']);
+export const productStatusSchema = z.enum(['active', 'draft', 'archived']);
 
 export const createProductSchema = z.object({
   title: z
@@ -56,7 +56,7 @@ export const productIdParamSchema = z.object({
 
 export const productListQuerySchema = z.object({
   q: z.string().max(100).optional().default(''),
-  status: z.enum(['all', 'active', 'archived']).optional().default('all'),
+  status: z.enum(['all', 'active', 'draft', 'archived']).optional().default('all'),
   page: z
     .string()
     .regex(/^\d+$/)
