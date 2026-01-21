@@ -54,8 +54,26 @@ const stripeRequest = async <T>(
 export const ensureStripeProduct = async (
   db: D1Database,
   stripeKey: string,
-  product: ProductInfo
+  product: ProductInfo,
+  imageUrl?: string | null
 ): Promise<string> => {
+  // Update existing product with image if provided
+  if (product.provider_product_id && imageUrl) {
+    const updateParams = new URLSearchParams();
+    updateParams.set('images[0]', imageUrl);
+
+    try {
+      await stripeRequest<StripeProductResponse>(
+        stripeKey,
+        `/products/${product.provider_product_id}`,
+        updateParams
+      );
+    } catch (err) {
+      console.error(`Failed to update Stripe product ${product.provider_product_id} with image:`, err);
+      // Continue without failing - image update is not critical
+    }
+  }
+
   if (product.provider_product_id) {
     return product.provider_product_id;
   }
@@ -64,6 +82,9 @@ export const ensureStripeProduct = async (
   params.set('name', product.title);
   if (product.description) {
     params.set('description', product.description);
+  }
+  if (imageUrl) {
+    params.set('images[0]', imageUrl);
   }
   params.set('metadata[local_product_id]', String(product.id));
 
@@ -123,7 +144,8 @@ export const ensureStripePrice = async (
 export const ensureStripePriceForVariant = async (
   db: D1Database,
   stripeKey: string,
-  variant: VariantPriceInfo
+  variant: VariantPriceInfo,
+  imageUrl?: string | null
 ): Promise<string> => {
   const product = await db
     .prepare(`SELECT id, title, description, provider_product_id FROM products WHERE id = ?`)
@@ -134,7 +156,7 @@ export const ensureStripePriceForVariant = async (
     throw new Error(`Product ${variant.product_id} not found`);
   }
 
-  const stripeProductId = await ensureStripeProduct(db, stripeKey, product);
+  const stripeProductId = await ensureStripeProduct(db, stripeKey, product, imageUrl);
   const stripePriceId = await ensureStripePrice(db, stripeKey, variant, stripeProductId);
 
   return stripePriceId;

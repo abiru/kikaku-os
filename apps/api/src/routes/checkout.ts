@@ -23,6 +23,7 @@ type VariantPriceRow = {
   currency: string;
   provider_price_id: string | null;
   provider_product_id: string | null;
+  image_r2_key: string | null;
 };
 
 type CheckoutItem = {
@@ -118,10 +119,13 @@ checkout.post('/checkout/session', async (c) => {
             pr.id as price_id,
             pr.amount as amount,
             pr.currency as currency,
-            pr.provider_price_id as provider_price_id
+            pr.provider_price_id as provider_price_id,
+            pi.r2_key as image_r2_key
      FROM variants v
      JOIN products p ON p.id = v.product_id
      JOIN prices pr ON pr.variant_id = v.id
+     LEFT JOIN product_images pi ON pi.product_id = p.id
+       AND pi.position = (SELECT MIN(position) FROM product_images WHERE product_id = p.id)
      WHERE v.id IN (${placeholders})
      ORDER BY pr.id DESC`
   ).bind(...variantIds).all<VariantPriceRow>();
@@ -142,7 +146,12 @@ checkout.post('/checkout/session', async (c) => {
     }
     if (!row.provider_price_id?.trim()) {
       try {
-        const stripePriceId = await ensureStripePriceForVariant(c.env.DB, stripeKey, row);
+        const baseUrl = c.env.STOREFRONT_BASE_URL || 'http://localhost:4321';
+        const imageUrl = row.image_r2_key
+          ? `${baseUrl}/r2?key=${encodeURIComponent(row.image_r2_key)}`
+          : null;
+
+        const stripePriceId = await ensureStripePriceForVariant(c.env.DB, stripeKey, row, imageUrl);
         variantMap.set(item.variantId, { ...row, provider_price_id: stripePriceId });
       } catch (err) {
         console.error(`Failed to create Stripe price for variant ${item.variantId}:`, err);
