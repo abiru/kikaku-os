@@ -127,19 +127,19 @@ adminReports.get('/documents/:id/download', async (c) => {
 
   try {
     const doc = await c.env.DB.prepare(
-      'SELECT r2_key, content_type FROM documents WHERE id = ?'
-    ).bind(id).first<{ r2_key: string; content_type: string }>();
+      'SELECT path, content_type FROM documents WHERE id = ?'
+    ).bind(id).first<{ path: string; content_type: string }>();
 
-    if (!doc || !doc.r2_key) {
+    if (!doc || !doc.path) {
       return jsonError(c, 'Document not found', 404);
     }
 
-    const object = await c.env.R2.get(doc.r2_key);
+    const object = await c.env.R2.get(doc.path);
     if (!object) {
       return jsonError(c, 'File not found in storage', 404);
     }
 
-    const filename = doc.r2_key.split('/').pop() || 'download';
+    const filename = doc.path.split('/').pop() || 'download';
     return new Response(object.body, {
       headers: {
         'Content-Type': doc.content_type || object.httpMetadata?.contentType || 'application/octet-stream',
