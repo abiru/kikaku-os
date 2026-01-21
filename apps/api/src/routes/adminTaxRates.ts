@@ -26,7 +26,7 @@ adminTaxRates.get('/', async (c) => {
        ORDER BY applicable_from DESC, rate DESC`
     ).all();
 
-    return jsonOk(c, result.results || []);
+    return c.json(result.results || []);
   } catch (error) {
     console.error('Failed to fetch tax rates:', error);
     return jsonError(c, 'Failed to fetch tax rates', 500);
@@ -123,7 +123,7 @@ adminTaxRates.post(
         JSON.stringify({ name: data.name, rate: data.rate })
       ).run();
 
-      return jsonOk(c, result, 201);
+      return c.json(result, 201);
     } catch (error) {
       console.error('Failed to create tax rate:', error);
       return jsonError(c, 'Failed to create tax rate', 500);
