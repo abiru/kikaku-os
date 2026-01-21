@@ -21,7 +21,7 @@ const createMockEnv = (overrides: any = {}) => {
         { id: 1, title: 'Low Stock Alert', severity: 'warning', kind: 'low_stock', created_at: '2026-01-20T09:00:00Z' }
       ]
     },
-    document: { r2_key: 'reports/2026-01-19/daily-close.html', content_type: 'text/html' },
+    document: { path: 'reports/2026-01-19/daily-close.html', content_type: 'text/html' },
     reportsCount: { count: 5 },
     reportsList: {
       results: [
@@ -66,7 +66,7 @@ const createMockEnv = (overrides: any = {}) => {
     if (sql.includes('FROM orders o') && sql.includes('COUNT(*)') && !sql.includes('LEFT JOIN customers')) {
       return defaultResults.unfulfilledOrders;
     }
-    if (sql.includes('r2_key') && sql.includes('documents')) {
+    if (sql.includes('path') && sql.includes('documents') && sql.includes('WHERE id = ?')) {
       return defaultResults.document;
     }
     if (sql.includes('COUNT(*)') && sql.includes("ref_type = 'daily_close'")) {
