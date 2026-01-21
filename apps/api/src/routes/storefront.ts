@@ -18,6 +18,8 @@ type StorefrontRow = {
   product_title: string;
   product_description: string | null;
   product_metadata: string | null;
+  tax_rate_id: number | null;
+  tax_rate: number | null;
   variant_id: number;
   variant_title: string;
   sku: string | null;
@@ -46,6 +48,7 @@ type StorefrontProduct = {
   id: number;
   title: string;
   description: string | null;
+  tax_rate: number | null;
   image: string | null;
   mainImage: string | null;
   images: string[];
@@ -113,6 +116,7 @@ const rowsToProducts = (rows: StorefrontRow[], baseUrl: string): StorefrontProdu
         id: row.product_id,
         title: row.product_title,
         description: row.product_description,
+        tax_rate: row.tax_rate,
         image: fallbackImage,
         mainImage: mainImage,
         images: allImages,
@@ -144,6 +148,8 @@ const baseQuery = `
          p.title as product_title,
          p.description as product_description,
          p.metadata as product_metadata,
+         p.tax_rate_id as tax_rate_id,
+         tr.rate as tax_rate,
          v.id as variant_id,
          v.title as variant_title,
          v.sku as sku,
@@ -157,6 +163,7 @@ const baseQuery = `
   FROM products p
   JOIN variants v ON v.product_id = p.id
   JOIN prices pr ON pr.variant_id = v.id
+  LEFT JOIN tax_rates tr ON tr.id = p.tax_rate_id
   LEFT JOIN product_images pi ON pi.product_id = p.id
 `;
 

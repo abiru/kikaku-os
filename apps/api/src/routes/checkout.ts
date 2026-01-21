@@ -3,6 +3,7 @@ import type { Context } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
 import { ensureStripePriceForVariant } from '../services/stripe';
+import { calculateOrderTax, type TaxCalculationInput } from '../services/tax';
 
 const checkout = new Hono<Env>();
 
@@ -24,6 +25,7 @@ type VariantPriceRow = {
   provider_price_id: string | null;
   provider_product_id: string | null;
   image_r2_key: string | null;
+  tax_rate: number | null;
 };
 
 type CheckoutItem = {
@@ -120,10 +122,12 @@ checkout.post('/checkout/session', async (c) => {
             pr.amount as amount,
             pr.currency as currency,
             pr.provider_price_id as provider_price_id,
-            pi.r2_key as image_r2_key
+            pi.r2_key as image_r2_key,
+            tr.rate as tax_rate
      FROM variants v
      JOIN products p ON p.id = v.product_id
      JOIN prices pr ON pr.variant_id = v.id
+     LEFT JOIN tax_rates tr ON tr.id = p.tax_rate_id
      LEFT JOIN product_images pi ON pi.product_id = p.id
        AND pi.position = (SELECT MIN(position) FROM product_images WHERE product_id = p.id)
      WHERE v.id IN (${placeholders}) AND p.status = 'active'
@@ -182,12 +186,27 @@ checkout.post('/checkout/session', async (c) => {
     }
   }
 
-  // Calculate total from all items
-  let totalNet = 0;
-  let currency = 'JPY';
-  for (const item of items) {
+  // Calculate tax for all items
+  const taxInputs: TaxCalculationInput[] = items.map((item) => {
     const row = variantMap.get(item.variantId)!;
-    totalNet += row.amount * item.quantity;
+    return {
+      unitPrice: row.amount,  // Tax-inclusive price
+      quantity: item.quantity,
+      taxRate: row.tax_rate || 0.10  // Default to 10% if not set
+    };
+  });
+
+  const taxCalculation = calculateOrderTax(taxInputs);
+
+  // Extract tax breakdown
+  const subtotal = taxCalculation.subtotal;       // Tax-exclusive subtotal
+  const taxAmount = taxCalculation.taxAmount;     // Total tax amount
+  const totalNet = taxCalculation.totalAmount;    // Tax-inclusive total (original cart total)
+
+  let currency = 'JPY';
+  // Get currency from first item
+  if (items.length > 0) {
+    const row = variantMap.get(items[0].variantId)!;
     currency = (row.currency || 'JPY').toUpperCase();
   }
 
@@ -253,37 +272,59 @@ checkout.post('/checkout/session', async (c) => {
   const freeThreshold = Number(c.env.FREE_SHIPPING_THRESHOLD || 5000);
   const actualShippingFee = totalNet >= freeThreshold ? 0 : shippingFee;
 
+  // Calculate final total: cart total - discount + shipping
+  const finalTotal = totalNet - discountAmount + actualShippingFee;
+
   // Create order
   const orderRes = await c.env.DB.prepare(
-    `INSERT INTO orders (customer_id, status, total_net, total_discount, shipping_fee, coupon_code, total_fee, currency, metadata, created_at, updated_at)
-     VALUES (?, 'pending', ?, ?, ?, ?, 0, ?, ?, datetime('now'), datetime('now'))`
+    `INSERT INTO orders (
+       customer_id, status,
+       subtotal, tax_amount, total_net,
+       total_discount, shipping_fee, total_amount,
+       coupon_code, total_fee, currency, metadata,
+       created_at, updated_at
+     )
+     VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, datetime('now'), datetime('now'))`
   ).bind(
     customerId,
-    totalNet,
+    subtotal,        // Tax-exclusive subtotal
+    taxAmount,       // Tax amount
+    totalNet,        // Tax-inclusive cart total (before discount/shipping)
     discountAmount,
     actualShippingFee,
+    finalTotal,      // Final total (after discount and shipping)
     couponCode || null,
     currency,
     JSON.stringify({
       source: 'storefront',
       email,
-      items: items.map((i) => ({ variant_id: i.variantId, quantity: i.quantity }))
+      items: items.map((i) => ({ variant_id: i.variantId, quantity: i.quantity })),
+      tax_breakdown: { subtotal, tax_amount: taxAmount }
     })
   ).run();
 
   const orderId = Number(orderRes.meta.last_row_id);
 
-  // Insert all order items
-  for (const item of items) {
+  // Insert all order items with tax details
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
     const row = variantMap.get(item.variantId)!;
+    const itemTax = taxCalculation.itemBreakdown[i];
+
     await c.env.DB.prepare(
-      `INSERT INTO order_items (order_id, variant_id, quantity, unit_price, metadata, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      `INSERT INTO order_items (
+         order_id, variant_id, quantity, unit_price,
+         tax_rate, tax_amount,
+         metadata, created_at, updated_at
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     ).bind(
       orderId,
       item.variantId,
       item.quantity,
       row.amount,
+      itemTax.taxRate,
+      itemTax.taxAmount,
       JSON.stringify({ product_id: row.product_id })
     ).run();
   }
@@ -327,6 +368,9 @@ checkout.post('/checkout/session', async (c) => {
 
   params.set('metadata[orderId]', String(orderId));
   params.set('metadata[order_id]', String(orderId));
+  params.set('metadata[subtotal]', String(subtotal));
+  params.set('metadata[taxAmount]', String(taxAmount));
+  params.set('metadata[totalAmount]', String(finalTotal));
   if (couponCode) {
     params.set('metadata[couponCode]', couponCode);
     params.set('metadata[discountAmount]', String(discountAmount));

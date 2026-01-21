@@ -36,8 +36,16 @@ type Product = {
 	category: string | null;
 	metadata: string | null;
 	status: string | null;
+	tax_rate_id: number | null;
 	created_at: string;
 	updated_at: string;
+};
+
+type TaxRate = {
+	id: number;
+	name: string;
+	rate: number;
+	is_active: number;
 };
 
 type ProductImage = {
@@ -61,6 +69,7 @@ let product: Product | null = null;
 let variants: Variant[] = [];
 let images: ProductImage[] = [];
 let categories: Category[] = [];
+let taxRates: TaxRate[] = [];
 let error: string | null = null;
 let successMessage: string | null = null;
 
@@ -72,6 +81,8 @@ if (Astro.request.method === 'POST' && apiKey) {
 		const description = formData.get('description')?.toString().trim() || '';
 		const status = formData.get('status')?.toString() || 'active';
 		const category = formData.get('category')?.toString().trim() || null;
+		const tax_rate_id_str = formData.get('tax_rate_id')?.toString() || null;
+		const tax_rate_id = tax_rate_id_str ? parseInt(tax_rate_id_str, 10) : null;
 
 		if (!title) {
 			error = 'Title is required';
@@ -82,7 +93,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 					'Content-Type': 'application/json',
 					'x-admin-key': apiKey
 				},
-				body: JSON.stringify({ title, description, status, category })
+				body: JSON.stringify({ title, description, status, category, tax_rate_id })
 			});
 
 			const data = await res.json();
@@ -168,6 +179,21 @@ if (apiKey) {
 		}
 	} catch (e) {
 		console.error('Failed to fetch categories:', e);
+	}
+}
+
+// Fetch tax rates for dropdown
+if (apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/admin/tax-rates`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+		if (res.ok) {
+			const data = await res.json();
+			taxRates = data.filter((tr: TaxRate) => tr.is_active) || [];
+		}
+	} catch (e) {
+		console.error('Failed to fetch tax rates:', e);
 	}
 }
 
@@ -299,6 +325,25 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 							))}
 						</datalist>
 						<p class="text-xs text-[#86868b] mt-1">Type to create a new category or select from existing ones.</p>
+					</div>
+
+					<div>
+						<label for="tax_rate_id" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							Tax Rate
+						</label>
+						<select
+							id="tax_rate_id"
+							name="tax_rate_id"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+						>
+							<option value="">Select tax rate...</option>
+							{taxRates.map((rate) => (
+								<option value={rate.id} selected={product.tax_rate_id === rate.id}>
+									{rate.name} ({(rate.rate * 100).toFixed(1)}%)
+								</option>
+							))}
+						</select>
+						<p class="text-xs text-[#86868b] mt-1">All prices are tax-inclusive (税込)</p>
 					</div>
 
 					<div class="pt-4 border-t border-gray-100">
