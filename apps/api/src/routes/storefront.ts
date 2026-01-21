@@ -25,6 +25,9 @@ type StorefrontRow = {
   amount: number;
   currency: string;
   provider_price_id: string | null;
+  image_id: number | null;
+  image_r2_key: string | null;
+  image_position: number | null;
 };
 
 type StorefrontVariant = {
@@ -44,6 +47,8 @@ type StorefrontProduct = {
   title: string;
   description: string | null;
   image: string | null;
+  mainImage: string | null;
+  images: string[];
   variants: StorefrontVariant[];
 };
 
@@ -100,10 +105,14 @@ const baseQuery = `
          pr.id as price_id,
          pr.amount as amount,
          pr.currency as currency,
-         pr.provider_price_id as provider_price_id
+         pr.provider_price_id as provider_price_id,
+         pi.id as image_id,
+         pi.r2_key as image_r2_key,
+         pi.position as image_position
   FROM products p
   JOIN variants v ON v.product_id = p.id
   JOIN prices pr ON pr.variant_id = v.id
+  LEFT JOIN product_images pi ON pi.product_id = p.id
 `;
 
 storefront.get('/products', zValidator('query', storeProductsQuerySchema), async (c) => {
@@ -136,14 +145,15 @@ storefront.get('/products', zValidator('query', storeProductsQuerySchema), async
     ? ` WHERE ${whereConditions.join(' AND ')}`
     : '';
 
-  const sql = baseQuery + whereClause + ` ORDER BY p.id, v.id, pr.id DESC`;
+  const sql = baseQuery + whereClause + ` ORDER BY p.id, v.id, pr.id DESC, pi.position ASC`;
 
   const stmt = bindings.length > 0
     ? c.env.DB.prepare(sql).bind(...bindings)
     : c.env.DB.prepare(sql);
 
   const res = await stmt.all<StorefrontRow>();
-  const products = rowsToProducts(res.results || []);
+  const baseUrl = new URL(c.req.url).origin;
+  const products = rowsToProducts(res.results || [], baseUrl);
   return jsonOk(c, {
     products,
     query: q || null,
@@ -187,9 +197,10 @@ storefront.get('/products/:id', async (c) => {
     return jsonOk(c, { product: null });
   }
   const res = await c.env.DB.prepare(
-    `${baseQuery} WHERE p.id=? ORDER BY p.id, v.id, pr.id DESC`
+    `${baseQuery} WHERE p.id=? ORDER BY p.id, v.id, pr.id DESC, pi.position ASC`
   ).bind(id).all<StorefrontRow>();
-  const products = rowsToProducts(res.results || []);
+  const baseUrl = new URL(c.req.url).origin;
+  const products = rowsToProducts(res.results || [], baseUrl);
   return jsonOk(c, { product: products[0] || null });
 });
 

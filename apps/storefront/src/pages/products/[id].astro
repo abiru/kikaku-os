@@ -195,8 +195,8 @@ const stockNote =
 						<div class="flex flex-col md:flex-row gap-12">
 							{/* Left: Product Recap */}
 							<div class="flex-1">
-								{product.image ? (
-									<img src={product.image} alt={product.title} class="aspect-square w-full rounded-2xl object-cover mb-6" />
+								{product.mainImage || product.image ? (
+									<img src={product.mainImage || product.image} alt={product.title} class="aspect-square w-full rounded-2xl object-cover mb-6" />
 								) : (
 									<div class="aspect-square w-full rounded-2xl bg-[#f5f5f7] mb-6"></div>
 								)}
@@ -353,6 +353,52 @@ const stockNote =
 					}
 				});
 			}
+		}
+
+		// 3. Gallery interaction
+		const mainImage = document.getElementById('main-image') as HTMLImageElement | null;
+		const thumbnails = document.querySelectorAll('.thumbnail');
+
+		if (mainImage && thumbnails.length > 0) {
+			// Set first thumbnail as active
+			thumbnails[0]?.classList.add('ring-[#0071e3]');
+
+			thumbnails.forEach((thumbnail) => {
+				thumbnail.addEventListener('click', (e) => {
+					const target = e.currentTarget as HTMLButtonElement;
+					const imageUrl = target.dataset.url;
+					const imageIndex = target.dataset.index;
+
+					if (imageUrl && mainImage) {
+						// Update main image
+						mainImage.src = imageUrl;
+						mainImage.alt = `Product - Image ${Number(imageIndex) + 1}`;
+
+						// Update active thumbnail
+						thumbnails.forEach(t => t.classList.remove('ring-[#0071e3]'));
+						target.classList.add('ring-[#0071e3]');
+					}
+				});
+			});
+
+			// Keyboard navigation
+			document.addEventListener('keydown', (e) => {
+				const activeThumbnail = document.querySelector('.thumbnail.ring-\\[\\#0071e3\\]');
+				if (!activeThumbnail) return;
+
+				let nextIndex = -1;
+				const currentIndex = Number((activeThumbnail as HTMLElement).dataset.index);
+
+				if (e.key === 'ArrowRight') {
+					nextIndex = (currentIndex + 1) % thumbnails.length;
+				} else if (e.key === 'ArrowLeft') {
+					nextIndex = (currentIndex - 1 + thumbnails.length) % thumbnails.length;
+				}
+
+				if (nextIndex >= 0) {
+					(thumbnails[nextIndex] as HTMLElement).click();
+				}
+			});
 		}
 	</script>
 </Layout>
