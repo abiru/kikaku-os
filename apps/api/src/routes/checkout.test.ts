@@ -19,6 +19,7 @@ const createMockDb = (
     currency: 'jpy',
     provider_price_id: 'price_test_123',
     provider_product_id: 'prod_test_123',
+    image_r2_key: null,
   };
   const baseProductRow = {
     id: 1,
@@ -312,5 +313,149 @@ describe('POST /checkout/session', () => {
     expect(json.error?.message).toContain('Variant');
     expect(json.error?.message).toContain('not found');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('creates Stripe product with image when image is present', async () => {
+    const app = new Hono();
+    app.route('/', checkout);
+
+    const steps: string[] = [];
+    let productCreateBody = '';
+    const fetchMock = vi.fn(async (url: string, options?: any) => {
+      // First call: create Stripe product (with image)
+      if (url === 'https://api.stripe.com/v1/products') {
+        productCreateBody = options?.body || '';
+        steps.push('stripe-create-product-with-image');
+        return {
+          ok: true,
+          json: async () => ({ id: 'prod_with_image_123', object: 'product' }),
+          text: async () => ''
+        } as Response;
+      }
+      // Second call: create Stripe price
+      if (url === 'https://api.stripe.com/v1/prices') {
+        steps.push('stripe-create-price');
+        return {
+          ok: true,
+          json: async () => ({ id: 'price_with_image_456', object: 'price' }),
+          text: async () => ''
+        } as Response;
+      }
+      // Third call: create checkout session
+      if (url === 'https://api.stripe.com/v1/checkout/sessions') {
+        steps.push('stripe-checkout');
+        return {
+          ok: true,
+          json: async () => ({ id: 'cs_test_123', url: 'https://checkout.stripe.test/session' }),
+          text: async () => ''
+        } as Response;
+      }
+      return { ok: false, text: async () => 'Unknown endpoint' } as Response;
+    });
+
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const env = {
+      DB: createMockDb(
+        steps,
+        {
+          provider_price_id: null,
+          provider_product_id: null,
+          image_r2_key: 'product-images/test-image-uuid.jpg'
+        },
+        true,
+        { provider_product_id: null }
+      ),
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STOREFRONT_BASE_URL: 'https://example.com'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/checkout/session',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ variantId: 10, quantity: 1 })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(steps).toContain('stripe-create-product-with-image');
+
+    // Verify image URL was included in Stripe product creation
+    const params = new URLSearchParams(productCreateBody);
+    expect(params.get('images[0]')).toBe('https://example.com/r2?key=product-images%2Ftest-image-uuid.jpg');
+  });
+
+  it('creates Stripe product without image when image is null', async () => {
+    const app = new Hono();
+    app.route('/', checkout);
+
+    const steps: string[] = [];
+    let productCreateBody = '';
+    const fetchMock = vi.fn(async (url: string, options?: any) => {
+      if (url === 'https://api.stripe.com/v1/products') {
+        productCreateBody = options?.body || '';
+        steps.push('stripe-create-product-no-image');
+        return {
+          ok: true,
+          json: async () => ({ id: 'prod_no_image_123', object: 'product' }),
+          text: async () => ''
+        } as Response;
+      }
+      if (url === 'https://api.stripe.com/v1/prices') {
+        return {
+          ok: true,
+          json: async () => ({ id: 'price_no_image_456', object: 'price' }),
+          text: async () => ''
+        } as Response;
+      }
+      if (url === 'https://api.stripe.com/v1/checkout/sessions') {
+        return {
+          ok: true,
+          json: async () => ({ id: 'cs_test_123', url: 'https://checkout.stripe.test/session' }),
+          text: async () => ''
+        } as Response;
+      }
+      return { ok: false, text: async () => 'Unknown endpoint' } as Response;
+    });
+
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    const env = {
+      DB: createMockDb(
+        steps,
+        {
+          provider_price_id: null,
+          provider_product_id: null,
+          image_r2_key: null  // No image
+        },
+        true,
+        { provider_product_id: null }
+      ),
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STOREFRONT_BASE_URL: 'https://example.com'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/checkout/session',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ variantId: 10, quantity: 1 })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.ok).toBe(true);
+
+    // Verify image URL was NOT included in Stripe product creation
+    const params = new URLSearchParams(productCreateBody);
+    expect(params.get('images[0]')).toBeNull();
   });
 });

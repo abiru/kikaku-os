@@ -1,4 +1,5 @@
 import { CompanyInfo } from '../lib/company';
+import { escapeHtml } from '../lib/html';
 
 export type QuotationData = {
   quotation: {
@@ -183,7 +184,7 @@ export const renderQuotationHtml = (data: QuotationData, company: CompanyInfo): 
       (item, index) => `
     <tr>
       <td class="center">${index + 1}</td>
-      <td>${item.product_title}${item.variant_title ? ` - ${item.variant_title}` : ''}</td>
+      <td>${escapeHtml(item.product_title)}${item.variant_title ? ` - ${escapeHtml(item.variant_title)}` : ''}</td>
       <td class="number">${item.quantity}</td>
       <td class="number">${formatCurrency(item.unit_price, quotation.currency)}</td>
       <td class="number">${formatCurrency(item.subtotal, quotation.currency)}</td>
@@ -197,32 +198,32 @@ export const renderQuotationHtml = (data: QuotationData, company: CompanyInfo): 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>御見積書 - ${quotation.quotation_number}</title>
+  <title>御見積書 - ${escapeHtml(quotation.quotation_number)}</title>
   <style>${style}</style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>御見積書</h1>
-      <div class="quotation-number">${quotation.quotation_number}</div>
+      <div class="quotation-number">${escapeHtml(quotation.quotation_number)}</div>
     </div>
 
     <div class="info-section">
       <div class="info-box customer">
         <h2>お客様情報</h2>
-        <p><strong>${quotation.customer_company} 様</strong></p>
-        <p>${quotation.customer_name} 様</p>
-        ${quotation.customer_email ? `<p>Email: ${quotation.customer_email}</p>` : ''}
-        ${quotation.customer_phone ? `<p>TEL: ${quotation.customer_phone}</p>` : ''}
+        <p><strong>${escapeHtml(quotation.customer_company)} 様</strong></p>
+        <p>${escapeHtml(quotation.customer_name)} 様</p>
+        ${quotation.customer_email ? `<p>Email: ${escapeHtml(quotation.customer_email)}</p>` : ''}
+        ${quotation.customer_phone ? `<p>TEL: ${escapeHtml(quotation.customer_phone)}</p>` : ''}
       </div>
 
       <div class="info-box company">
         <h2>発行元情報</h2>
-        <p><strong>${company.name}</strong></p>
-        ${company.postal_code ? `<p>〒${company.postal_code}</p>` : ''}
-        ${company.address ? `<p>${company.address}</p>` : ''}
-        ${company.phone ? `<p>TEL: ${company.phone}</p>` : ''}
-        ${company.email ? `<p>Email: ${company.email}</p>` : ''}
+        <p><strong>${escapeHtml(company.name)}</strong></p>
+        ${company.postal_code ? `<p>〒${escapeHtml(company.postal_code)}</p>` : ''}
+        ${company.address ? `<p>${escapeHtml(company.address)}</p>` : ''}
+        ${company.phone ? `<p>TEL: ${escapeHtml(company.phone)}</p>` : ''}
+        ${company.email ? `<p>Email: ${escapeHtml(company.email)}</p>` : ''}
       </div>
     </div>
 
@@ -264,7 +265,7 @@ export const renderQuotationHtml = (data: QuotationData, company: CompanyInfo): 
         ? `
     <div class="notes">
       <h3>備考</h3>
-      <p>${quotation.notes}</p>
+      <p>${escapeHtml(quotation.notes)}</p>
     </div>
     `
         : ''
