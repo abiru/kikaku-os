@@ -255,7 +255,7 @@ quotations.get('/quotations/:id/html', async (c) => {
   try {
     await putText(c.env.R2, path, html, 'text/html');
     await upsertDocument(
-      c.env.DB,
+      c.env,
       'quotation',
       quotation.quotation_number as string,
       path,
