@@ -1,0 +1,467 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+
+const { id } = Astro.params;
+const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
+
+if (!id || isNaN(Number(id))) {
+  return Astro.redirect('/products');
+}
+
+let quotationData: any = null;
+let error: string | null = null;
+
+try {
+  const response = await fetch(`${apiUrl}/quotations/${id}`);
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    error = data.message || '見積書が見つかりません';
+  } else {
+    quotationData = data;
+  }
+} catch (err) {
+  console.error('Error fetching quotation:', err);
+  error = '見積書の取得に失敗しました';
+}
+
+if (error || !quotationData) {
+  return Astro.redirect('/products');
+}
+
+const { quotation, items } = quotationData;
+
+const formatCurrency = (amount: number, currency: string = 'JPY') => {
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency: currency
+  }).format(amount);
+};
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return new Intl.DateTimeFormat('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(date);
+};
+
+const getStatusBadge = (status: string) => {
+  const badges: Record<string, { label: string; class: string }> = {
+    draft: { label: '下書き', class: 'bg-gray-100 text-gray-800' },
+    sent: { label: '送信済み', class: 'bg-blue-100 text-blue-800' },
+    accepted: { label: '承認済み', class: 'bg-green-100 text-green-800' },
+    expired: { label: '期限切れ', class: 'bg-red-100 text-red-800' },
+    cancelled: { label: 'キャンセル', class: 'bg-gray-100 text-gray-800' }
+  };
+  return badges[status] || badges.draft;
+};
+
+const statusBadge = getStatusBadge(quotation.status);
+const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
+---
+
+<Layout title={`見積書 - ${quotation.quotation_number}`}>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <h1>見積書</h1>
+        <p class="quotation-number">{quotation.quotation_number}</p>
+      </div>
+      <div class="header-right">
+        <span class={`status-badge ${statusBadge.class}`}>{statusBadge.label}</span>
+      </div>
+    </div>
+
+    <div class="info-cards">
+      <div class="info-card">
+        <h2>お客様情報</h2>
+        <p><strong>{quotation.customer_company}</strong></p>
+        <p>{quotation.customer_name} 様</p>
+        {quotation.customer_email && <p>Email: {quotation.customer_email}</p>}
+        {quotation.customer_phone && <p>TEL: {quotation.customer_phone}</p>}
+      </div>
+
+      <div class="info-card">
+        <h2>見積情報</h2>
+        <p><strong>発行日:</strong> {formatDate(quotation.created_at)}</p>
+        <p><strong>有効期限:</strong> {formatDate(quotation.valid_until)}</p>
+        <p><strong>通貨:</strong> {quotation.currency}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>明細</h2>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>No.</th>
+            <th>品名</th>
+            <th>数量</th>
+            <th>単価</th>
+            <th>小計</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item: any, index: number) => (
+            <tr>
+              <td class="center">{index + 1}</td>
+              <td>
+                {item.product_title}
+                {item.variant_title && ` - ${item.variant_title}`}
+              </td>
+              <td class="center">{item.quantity}</td>
+              <td class="right">{formatCurrency(item.unit_price, quotation.currency)}</td>
+              <td class="right">{formatCurrency(item.subtotal, quotation.currency)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div class="summary">
+        <div class="summary-row">
+          <span>小計</span>
+          <span>{formatCurrency(quotation.subtotal, quotation.currency)}</span>
+        </div>
+        <div class="summary-row">
+          <span>消費税 (10%)</span>
+          <span>{formatCurrency(quotation.tax_amount, quotation.currency)}</span>
+        </div>
+        <div class="summary-row total">
+          <span>合計金額</span>
+          <span>{formatCurrency(quotation.total_amount, quotation.currency)}</span>
+        </div>
+      </div>
+    </div>
+
+    {quotation.notes && (
+      <div class="card notes">
+        <h2>備考</h2>
+        <p>{quotation.notes}</p>
+      </div>
+    )}
+
+    <div class="actions">
+      <button id="download-pdf-btn" class="btn btn-secondary">
+        PDFダウンロード
+      </button>
+      {canAccept && (
+        <button id="accept-btn" class="btn btn-primary">
+          この見積で注文する
+        </button>
+      )}
+      {quotation.status === 'accepted' && quotation.converted_order_id && (
+        <a href={`/admin/orders/${quotation.converted_order_id}`} class="btn btn-secondary">
+          注文を表示
+        </a>
+      )}
+    </div>
+
+    <div id="error-message" class="error-message" style="display: none;"></div>
+  </div>
+</Layout>
+
+<style>
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .quotation-number {
+    color: #666;
+    font-size: 1.125rem;
+  }
+
+  .status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .info-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .info-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  .info-card h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f3f4f6;
+  }
+
+  .info-card p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+  }
+
+  .card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f3f4f6;
+  }
+
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+  }
+
+  .items-table th,
+  .items-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .items-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+
+  .items-table td.center,
+  .items-table th:first-child,
+  .items-table th:nth-child(3) {
+    text-align: center;
+  }
+
+  .items-table td.right,
+  .items-table th:nth-child(4),
+  .items-table th:nth-child(5) {
+    text-align: right;
+  }
+
+  .summary {
+    margin-top: 1.5rem;
+    max-width: 400px;
+    margin-left: auto;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .summary-row.total {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid #e5e7eb;
+    border-bottom: none;
+  }
+
+  .notes {
+    background: #f9fafb;
+  }
+
+  .notes p {
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+  }
+
+  .btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+
+  .btn-secondary:hover {
+    background: #f9fafb;
+  }
+
+  .error-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #dc2626;
+  }
+</style>
+
+<script define:vars={{ apiUrl, quotation: quotationData.quotation }}>
+  const handleDownloadPDF = async () => {
+    const btn = document.getElementById('download-pdf-btn');
+    const errorMessageEl = document.getElementById('error-message');
+
+    if (!btn) return;
+
+    btn.disabled = true;
+    btn.textContent = 'PDF生成中...';
+    errorMessageEl.style.display = 'none';
+
+    try {
+      // Fetch HTML
+      const response = await fetch(`${apiUrl}/quotations/${quotation.id}/html`);
+      if (!response.ok) {
+        throw new Error('HTMLの取得に失敗しました');
+      }
+
+      const html = await response.text();
+
+      // Load html2pdf.js dynamically
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = () => {
+        // Create temporary container
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        document.body.appendChild(container);
+
+        // Generate PDF
+        const opt = {
+          margin: 10,
+          filename: `見積書_${quotation.quotation_number}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        window.html2pdf().set(opt).from(container).save().then(() => {
+          document.body.removeChild(container);
+          btn.disabled = false;
+          btn.textContent = 'PDFダウンロード';
+        });
+      };
+      script.onerror = () => {
+        throw new Error('PDFライブラリの読み込みに失敗しました');
+      };
+      document.head.appendChild(script);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      errorMessageEl.textContent = error.message || 'PDFのダウンロードに失敗しました';
+      errorMessageEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'PDFダウンロード';
+    }
+  };
+
+  const handleAccept = async () => {
+    const btn = document.getElementById('accept-btn');
+    const errorMessageEl = document.getElementById('error-message');
+
+    if (!btn || !confirm('この見積で注文を作成しますか？')) return;
+
+    btn.disabled = true;
+    btn.textContent = '処理中...';
+    errorMessageEl.style.display = 'none';
+
+    try {
+      const response = await fetch(`${apiUrl}/quotations/${quotation.id}/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || '見積の承認に失敗しました');
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error('チェックアウトURLが取得できませんでした');
+      }
+    } catch (error) {
+      console.error('Error accepting quotation:', error);
+      errorMessageEl.textContent = error.message || '見積の承認に失敗しました';
+      errorMessageEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'この見積で注文する';
+    }
+  };
+
+  // Attach event listeners
+  const downloadBtn = document.getElementById('download-pdf-btn');
+  const acceptBtn = document.getElementById('accept-btn');
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', handleDownloadPDF);
+  }
+
+  if (acceptBtn) {
+    acceptBtn.addEventListener('click', handleAccept);
+  }
+</script>

@@ -14,5 +14,11 @@ export type Env = {
     RESEND_API_KEY?: string;
     RESEND_FROM_EMAIL?: string;
     CLERK_SECRET_KEY: string;
+    COMPANY_NAME?: string;
+    COMPANY_POSTAL_CODE?: string;
+    COMPANY_ADDRESS?: string;
+    COMPANY_PHONE?: string;
+    COMPANY_EMAIL?: string;
+    COMPANY_LOGO_URL?: string;
   };
 };

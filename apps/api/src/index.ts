@@ -26,6 +26,7 @@ import fulfillments from './routes/fulfillments';
 import stripe from './routes/stripe';
 import checkout from './routes/checkout';
 import storefront from './routes/storefront';
+import quotations from './routes/quotations';
 import { generateDailyReport } from './services/dailyReport';
 import { generateStripeEvidence } from './services/stripeEvidence';
 import { renderDailyCloseHtml } from './services/renderDailyCloseHtml';
@@ -71,6 +72,11 @@ app.use('*', async (c, next) => {
   if (c.req.path.startsWith('/webhooks/stripe')) return next();
   if (c.req.path.startsWith('/stripe/webhook')) return next();
   if (c.req.path.startsWith('/checkout/session')) return next();
+  // Public quotation endpoints (customer-facing)
+  if (c.req.method === 'POST' && c.req.path === '/quotations') return next();
+  if (c.req.method === 'GET' && /^\/quotations\/\d+$/.test(c.req.path)) return next();
+  if (c.req.method === 'GET' && /^\/quotations\/\d+\/html$/.test(c.req.path)) return next();
+  if (c.req.method === 'POST' && /^\/quotations\/\d+\/accept$/.test(c.req.path)) return next();
   if (c.req.method === 'GET' && c.req.path === '/dev/ping') return next();
   if (
     c.req.method === 'GET' &&
@@ -105,6 +111,7 @@ app.route('/', fulfillments);
 app.route('/', stripe);
 app.route('/', checkout);
 app.route('/store', storefront);
+app.route('/', quotations);
 
 app.get('/r2', async (c) => {
   const key = c.req.query('key');
