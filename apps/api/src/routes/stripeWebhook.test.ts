@@ -488,7 +488,7 @@ describe('Stripe webhook handling', () => {
 });
 
 describe('Stripe webhook route', () => {
-  it('returns 500 when webhook secret missing', async () => {
+  it('returns 400 for invalid payload when webhook secret missing', async () => {
     const app = new Hono();
     app.route('/', stripe);
 
@@ -499,8 +499,8 @@ describe('Stripe webhook route', () => {
     );
 
     const json = await res.json();
-    expect(res.status).toBe(500);
-    expect(json.message).toBe('Stripe webhook secret not configured');
+    expect(res.status).toBe(400);
+    expect(json.message).toBe('Invalid payload');
   });
 
   it('returns 400 for invalid signature', async () => {

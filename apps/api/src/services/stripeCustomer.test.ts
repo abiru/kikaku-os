@@ -44,8 +44,11 @@ describe('stripeCustomer', () => {
 
       mockDb._mocks.mockFirst.mockResolvedValueOnce(existingCustomer);
 
-      // Mock fetch as a spy (even though we expect it not to be called)
-      const fetchSpy = vi.fn();
+      // Mock fetch to verify the customer exists in Stripe
+      const fetchSpy = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'cus_existing123' })
+      });
       global.fetch = fetchSpy as any;
 
       const result = await ensureStripeCustomer(
@@ -60,8 +63,12 @@ describe('stripeCustomer', () => {
         'SELECT id, email, stripe_customer_id FROM customers WHERE id = ?'
       );
       expect(mockDb._mocks.mockBind).toHaveBeenCalledWith(1);
-      // Should NOT create new Stripe Customer or update DB
-      expect(fetchSpy).not.toHaveBeenCalled();
+      // Should verify the customer exists in Stripe
+      expect(fetchSpy).toHaveBeenCalledOnce();
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://api.stripe.com/v1/customers/cus_existing123',
+        expect.objectContaining({ method: 'GET' })
+      );
     });
 
     it('should throw error if customer not found in database', async () => {
@@ -186,10 +193,19 @@ describe('stripeCustomer', () => {
       mockDb._mocks.mockFirst.mockResolvedValueOnce(customerBefore);
       mockDb._mocks.mockRun.mockResolvedValueOnce({ success: true });
 
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ id: 'cus_idempotent789', object: 'customer' })
-      });
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({
+          // First call: create new customer
+          ok: true,
+          json: async () => ({ id: 'cus_idempotent789', object: 'customer' })
+        })
+        .mockResolvedValueOnce({
+          // Second call: verify customer exists
+          ok: true,
+          json: async () => ({ id: 'cus_idempotent789', object: 'customer' })
+        });
+
+      global.fetch = fetchMock as any;
 
       const firstResult = await ensureStripeCustomer(
         mockDb,
@@ -199,9 +215,9 @@ describe('stripeCustomer', () => {
       );
 
       expect(firstResult).toBe('cus_idempotent789');
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
 
-      // Second call: stripe_customer_id now exists, returns immediately
+      // Second call: stripe_customer_id now exists, verifies and returns it
       const customerAfter: CustomerInfo = {
         id: 1,
         email: 'test@example.com',
@@ -218,8 +234,8 @@ describe('stripeCustomer', () => {
       );
 
       expect(secondResult).toBe('cus_idempotent789');
-      // Fetch should still only have been called once
-      expect(global.fetch).toHaveBeenCalledTimes(1);
+      // Fetch should have been called twice: once to create, once to verify
+      expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
     it('should store local_customer_id in Stripe metadata for reconciliation', async () => {
