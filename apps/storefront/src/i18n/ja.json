@@ -69,6 +69,8 @@
   },
   "cart": {
     "title": "ショッピングカート",
+    "pageTitle": "ショッピングカート - Led Kikaku",
+    "itemsInCart": "ショッピングカート内の商品",
     "empty": "カートは空です",
     "emptyDescription": "商品を追加して始めましょう。",
     "browseProducts": "商品を見る",
@@ -76,6 +78,10 @@
     "subtotal": "小計（税抜）",
     "tax": "消費税",
     "couponCode": "クーポンコード",
+    "couponPlaceholder": "クーポンコード",
+    "applyCoupon": "適用",
+    "removeCoupon": "削除",
+    "failedToApplyCoupon": "クーポンの適用に失敗しました",
     "discount": "割引",
     "shipping": "配送料",
     "orderTotal": "合計（税込）",
@@ -86,9 +92,12 @@
     "applying": "適用中...",
     "invalidCoupon": "無効なクーポンです",
     "processing": "処理中...",
-    "returnToCart": "カートに戻る"
+    "returnToCart": "カートに戻る",
+    "createQuotation": "見積書を作成"
   },
   "checkout": {
+    "canceledPageTitle": "チェックアウトキャンセル - Led Kikaku",
+    "successPageTitle": "ご注文確認 - Led Kikaku",
     "canceled": "チェックアウトをキャンセルしました。",
     "noCharges": "お客様のアカウントへの請求は発生していません。",
     "needHelp": "お困りですか？",
