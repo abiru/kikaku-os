@@ -54,9 +54,17 @@ function CartItem({ item }: { item: CartItem }) {
 	return (
 		<li className="flex py-6 sm:py-10">
 			<div className="shrink-0">
-				<div className="size-24 rounded-md bg-gray-100 flex items-center justify-center sm:size-48">
-					<span className="text-2xl font-bold text-gray-300 select-none sm:text-4xl">IMG</span>
-				</div>
+				{item.imageUrl ? (
+					<img
+						src={item.imageUrl}
+						alt={item.title}
+						className="size-24 rounded-md object-cover sm:size-48"
+					/>
+				) : (
+					<div className="size-24 rounded-md bg-gray-100 flex items-center justify-center sm:size-48">
+						<span className="text-2xl font-bold text-gray-300 select-none sm:text-4xl">IMG</span>
+					</div>
+				)}
 			</div>
 
 			<div className="ml-4 flex flex-1 flex-col justify-between sm:ml-6">
@@ -285,12 +293,6 @@ function OrderSummary({
 				</div>
 			</dl>
 
-			{/* Free Shipping Message */}
-			{shipping === 0 && subtotal >= shippingConfig.freeShippingThreshold && (
-				<div className="mt-4 text-sm text-green-600 text-center font-medium">
-					{t('cart.freeShippingQualified')}
-				</div>
-			)}
 			{remainingForFreeShipping > 0 && (
 				<div className="mt-4 text-sm text-gray-500 text-center">
 					{t('cart.addForFreeShipping', { amount: formatPrice(remainingForFreeShipping, currency) })}

@@ -97,6 +97,7 @@ const policies = [
 			data-price={variant?.price?.amount || 0}
 			data-currency={variant?.price?.currency || 'JPY'}
 			data-tax-rate={product.tax_rate || 0.10}
+			data-product-image={product.image || ''}
 			class="bg-white"
 		>
 			<div class="pt-6 pb-16 sm:pb-24">
@@ -361,6 +362,7 @@ const policies = [
 			const price = page.dataset.price ? Number(page.dataset.price) : 0;
 			const currency = page.dataset.currency || 'JPY';
 			const taxRate = page.dataset.taxRate ? Number(page.dataset.taxRate) : 0.10;
+			const imageUrl = page.dataset.productImage || '';
 
 			const buyButton = document.getElementById('buy-button');
 			const buyLabel = document.getElementById('buy-label');
@@ -408,7 +410,8 @@ const policies = [
 							variantTitle,
 							price,
 							currency,
-							taxRate
+							taxRate,
+							imageUrl: imageUrl || undefined
 						}, quantity);
 						showSuccess();
 					} catch (error) {

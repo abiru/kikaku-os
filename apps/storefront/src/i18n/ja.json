@@ -87,7 +87,6 @@
     "orderTotal": "合計（税込）",
     "checkout": "お支払いへ",
     "continueShopping": "買い物を続ける",
-    "freeShippingQualified": "🎉 送料無料が適用されました！",
     "addForFreeShipping": "送料無料まであと{amount}",
     "applying": "適用中...",
     "invalidCoupon": "無効なクーポンです",
