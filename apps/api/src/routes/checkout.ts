@@ -3,6 +3,7 @@ import type { Context } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
 import { ensureStripePriceForVariant } from '../services/stripe';
+import { ensureStripeCustomer } from '../services/stripeCustomer';
 import { calculateOrderTax, type TaxCalculationInput } from '../services/tax';
 
 const checkout = new Hono<Env>();
@@ -169,20 +170,28 @@ checkout.post('/checkout/session', async (c) => {
     }
   }
 
-  // Customer handling
+  // Customer handling - CREATE STRIPE CUSTOMER FOR BANK TRANSFER SUPPORT
   let customerId: number | null = null;
+  let stripeCustomerId: string | null = null;
+
   if (email) {
     const existingCustomer = await c.env.DB.prepare(
-      `SELECT id FROM customers WHERE email=?`
-    ).bind(email).first<{ id: number }>();
+      `SELECT id, stripe_customer_id FROM customers WHERE email=?`
+    ).bind(email).first<{ id: number; stripe_customer_id: string | null }>();
+
     if (existingCustomer?.id) {
       customerId = existingCustomer.id;
+      // Ensure Stripe Customer exists (required for bank transfer reconciliation)
+      stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
     } else {
+      // Create new local customer
       const res = await c.env.DB.prepare(
         `INSERT INTO customers (name, email, created_at, updated_at)
          VALUES (?, ?, datetime('now'), datetime('now'))`
       ).bind('Storefront Customer', email).run();
       customerId = Number(res.meta.last_row_id);
+      // Create Stripe Customer
+      stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
     }
   }
 
@@ -342,6 +351,20 @@ checkout.post('/checkout/session', async (c) => {
   params.set('success_url', successUrl);
   params.set('cancel_url', cancelUrl);
 
+  // Configure payment methods
+  const enableBankTransfer = c.env.ENABLE_BANK_TRANSFER === 'true';
+
+  if (enableBankTransfer) {
+    // Explicitly enable card and bank transfer
+    params.set('payment_method_types[0]', 'card');
+    params.set('payment_method_types[1]', 'customer_balance');
+
+    // Configure bank transfer options for Japan
+    params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
+    params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
+    params.set('payment_method_options[customer_balance][bank_transfer][requested_address_types][0]', 'zengin');
+  }
+
   // Add line items for each cart item
   items.forEach((item, index) => {
     const row = variantMap.get(item.variantId)!;
@@ -379,7 +402,14 @@ checkout.post('/checkout/session', async (c) => {
   params.set('metadata[shippingFee]', String(actualShippingFee));
   params.set('payment_intent_data[metadata][orderId]', String(orderId));
   params.set('payment_intent_data[metadata][order_id]', String(orderId));
-  if (email) params.set('customer_email', email);
+
+  // CRITICAL: Associate Stripe Customer (required for bank transfer reconciliation)
+  if (stripeCustomerId) {
+    params.set('customer', stripeCustomerId);
+  } else if (email) {
+    // Fallback: Let Stripe create Customer (card-only flow)
+    params.set('customer_email', email);
+  }
 
   const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
