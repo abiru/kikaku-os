@@ -28,12 +28,12 @@ const navigation = [
 	<div class="bg-[#f5f5f7]">
 		<section class="relative w-full pt-20 pb-24 text-center lg:py-10">
 			<div class="mx-auto max-w-[980px] px-6">
-				<h1 class="text-5xl font-semibold tracking-tight text-[#1d1d1f] md:text-7xl">
+				<h1 class="text-5xl font-black tracking-tight md:text-7xl gradient-text">
           {h1[0]}
-          <span class="text-[#6e6e73]">{h1[1]}</span>
+          <span>{h1[1]}</span>
 				</h1>
-				<p class="mx-auto mt-6 max-w-2xl text-xl font-medium text-[#1d1d1f] md:text-2xl">
-        {copy}
+				<p class="mx-auto mt-4 max-w-2xl text-base font-medium text-[#1d1d1f] md:text-lg embossed-text">
+        最新テクノロジーで、栽培パフォーマンスを最大化。<br class="hidden md:block" />大学・研究機関が採用する、プロ仕様の植物育成ライト。
 				</p>
 				<!-- <div class="mt-10 flex items-center justify-center gap-4"> -->
 				<!-- 	<Button href="/products" size="lg">Buy</Button> -->
@@ -43,3 +43,61 @@ const navigation = [
 
 		</section>
     </div>
+
+<style>
+  .gradient-text {
+    background: linear-gradient(
+      90deg,
+      #dc2626 0%,
+      #ef4444 10%,
+      #1a1a1a 20%,
+      #f59e0b 35%,
+      #dc2626 45%,
+      #0f172a 55%,
+      #8b5cf6 70%,
+      #dc2626 80%,
+      #3b82f6 90%,
+      #dc2626 100%
+    );
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 60s ease-in-out infinite;
+    line-height: 1.2;
+    padding-bottom: 0.1em;
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% center;
+    }
+    15% {
+      background-position: 80% center;
+    }
+    30% {
+      background-position: 35% center;
+    }
+    45% {
+      background-position: 95% center;
+    }
+    60% {
+      background-position: 20% center;
+    }
+    75% {
+      background-position: 65% center;
+    }
+    90% {
+      background-position: 45% center;
+    }
+    100% {
+      background-position: 0% center;
+    }
+  }
+
+  .embossed-text {
+    text-shadow:
+      1px 1px 0 rgba(255, 255, 255, 0.8),
+      -1px -1px 0 rgba(0, 0, 0, 0.15);
+  }
+</style>
