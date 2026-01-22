@@ -11,7 +11,8 @@ const checkout = new Hono<Env>();
 checkout.get('/checkout/config', async (c) => {
   return jsonOk(c, {
     shippingFee: Number(c.env.SHIPPING_FEE_AMOUNT || 500),
-    freeShippingThreshold: Number(c.env.FREE_SHIPPING_THRESHOLD || 5000)
+    freeShippingThreshold: Number(c.env.FREE_SHIPPING_THRESHOLD || 5000),
+    enableBankTransfer: c.env.ENABLE_BANK_TRANSFER === 'true'
   });
 });
 
@@ -156,6 +157,12 @@ checkout.post('/checkout/session', async (c) => {
   const email = normalizeEmail(body?.email);
   if (email && !isValidEmail(email)) {
     return jsonError(c, 'Invalid email', 400);
+  }
+
+  // Validate email requirement for bank transfer
+  const enableBankTransfer = c.env.ENABLE_BANK_TRANSFER === 'true';
+  if (enableBankTransfer && !email) {
+    return jsonError(c, 'Bank transfer requires email address', 400);
   }
 
   // Support both single item (backward compat) and multiple items
@@ -426,8 +433,6 @@ checkout.post('/checkout/session', async (c) => {
   params.set('cancel_url', cancelUrl);
 
   // Configure payment methods
-  const enableBankTransfer = c.env.ENABLE_BANK_TRANSFER === 'true';
-
   if (enableBankTransfer) {
     // Explicitly enable card and bank transfer
     params.set('payment_method_types[0]', 'card');
