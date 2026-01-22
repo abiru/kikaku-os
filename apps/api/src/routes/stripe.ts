@@ -607,12 +607,14 @@ const handleWebhook = async (c: Context<Env>) => {
   const signature = c.req.header('stripe-signature') ?? null;
   const payload = await c.req.text();
 
-  // Skip signature verification in local dev if secret is not configured
+  // Verify signature (required in production, optional in dev)
   if (secret) {
     const valid = await verifyStripeSignature(payload, signature, secret, { toleranceSeconds: 300 });
     if (!valid) return jsonError(c, 'Invalid signature', 400);
-  } else {
+  } else if (c.env.DEV_MODE === 'true') {
     console.warn('⚠️  STRIPE_WEBHOOK_SECRET not set - skipping signature verification (DEV ONLY)');
+  } else {
+    return jsonError(c, 'Stripe webhook secret not configured', 500);
   }
 
   let event: any;

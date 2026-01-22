@@ -7,13 +7,14 @@ type CheckoutFormProps = {
 	clientSecret: string | null;
 	orderId: number | null;
 	publishableKey: string;
+	initialEmail: string;
 };
 
-function CheckoutFormInner({ orderId }: { orderId: number | null }) {
+function CheckoutFormInner({ orderId, initialEmail }: { orderId: number | null; initialEmail: string }) {
 	const { t } = useTranslation();
 	const stripe = useStripe();
 	const elements = useElements();
-	const [email, setEmail] = useState('');
+	const [email] = useState(initialEmail);
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -73,8 +74,6 @@ function CheckoutFormInner({ orderId }: { orderId: number | null }) {
 	};
 
 	const onExpressCheckoutConfirm = async (event: any) => {
-		console.log('[Express Checkout] Payment confirmed', event);
-
 		// Extract shipping address if available
 		let shippingData = null;
 		if (event.shippingAddress) {
@@ -147,8 +146,8 @@ function CheckoutFormInner({ orderId }: { orderId: number | null }) {
 					id="email"
 					required
 					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-					className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 border"
+					readOnly
+					className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 border bg-gray-50"
 					placeholder="your@email.com"
 				/>
 			</div>
@@ -200,7 +199,8 @@ function CheckoutFormInner({ orderId }: { orderId: number | null }) {
 export default function CheckoutForm({
 	clientSecret,
 	orderId,
-	publishableKey
+	publishableKey,
+	initialEmail
 }: CheckoutFormProps) {
 	const { t } = useTranslation();
 	const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
@@ -243,7 +243,7 @@ export default function CheckoutForm({
 					locale: 'ja'
 				}}
 			>
-				<CheckoutFormInner orderId={orderId} />
+				<CheckoutFormInner orderId={orderId} initialEmail={initialEmail} />
 			</Elements>
 		</div>
 	);

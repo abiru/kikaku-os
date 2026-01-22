@@ -94,8 +94,6 @@ app.use('*', async (c, next) => {
   ) {
     return next();
   }
-  // Public order status endpoint for polling
-  if (c.req.method === 'GET' && /^\/orders\/\d+$/.test(c.req.path)) return next();
   return clerkAuth(c, next);
 });
 

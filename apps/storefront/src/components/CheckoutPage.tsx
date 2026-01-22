@@ -44,14 +44,16 @@ export default function CheckoutPage() {
 	const [clientSecret, setClientSecret] = useState<string | null>(null);
 	const [orderId, setOrderId] = useState<number | null>(null);
 	const [publishableKey, setPublishableKey] = useState<string>('');
+	const [email, setEmail] = useState<string>('');
+	const [emailSubmitted, setEmailSubmitted] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		initializeCheckout();
+		initializeQuote();
 	}, []);
 
-	const initializeCheckout = async (couponCode?: string) => {
+	const initializeQuote = async (couponCode?: string) => {
 		try {
 			setLoading(true);
 			setError(null);
@@ -87,15 +89,38 @@ export default function CheckoutPage() {
 			setQuoteId(quoteData.quoteId);
 			setBreakdown(quoteData.breakdown);
 
-			// Automatically create payment intent with placeholder email
+			setLoading(false);
+		} catch (err) {
+			console.error('Checkout initialization error:', err);
+			setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
+			setLoading(false);
+		}
+	};
+
+	const createQuote = async (couponCode?: string) => {
+		await initializeQuote(couponCode);
+	};
+
+	const handleEmailSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		if (!email.trim() || !quoteId) {
+			return;
+		}
+
+		try {
+			setLoading(true);
+			setError(null);
+
+			// Create payment intent with real email
 			const intentData = await fetchJson<PaymentIntentResponse>(
 				`${getApiBase()}/payments/intent`,
 				{
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
 					body: JSON.stringify({
-						quoteId: quoteData.quoteId,
-						email: 'customer@checkout.pending'
+						quoteId,
+						email: email.trim()
 					})
 				}
 			);
@@ -113,17 +138,13 @@ export default function CheckoutPage() {
 				throw new Error('Stripe publishable key is not configured');
 			}
 			setPublishableKey(pubKey);
-
+			setEmailSubmitted(true);
 			setLoading(false);
 		} catch (err) {
-			console.error('Checkout initialization error:', err);
-			setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
+			console.error('Payment intent creation error:', err);
+			setError(err instanceof Error ? err.message : 'Failed to create payment intent');
 			setLoading(false);
 		}
-	};
-
-	const createQuote = async (couponCode?: string) => {
-		await initializeCheckout(couponCode);
 	};
 
 	if (loading) {
@@ -168,6 +189,80 @@ export default function CheckoutPage() {
 		);
 	}
 
+	// Show email collection form before creating payment intent
+	if (!emailSubmitted && breakdown) {
+		return (
+			<div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+				<h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-8">
+					{t('checkout.title')}
+				</h1>
+
+				{error && (
+					<div className="mb-6 rounded-md bg-red-50 p-4">
+						<p className="text-sm text-red-800">{error}</p>
+					</div>
+				)}
+
+				<div className="bg-white rounded-lg shadow-sm p-6">
+					<h2 className="text-lg font-medium text-gray-900 mb-4">
+						{t('checkout.enterEmail')}
+					</h2>
+					<form onSubmit={handleEmailSubmit} className="space-y-4">
+						<div>
+							<label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
+								{t('checkout.email')}
+							</label>
+							<input
+								type="email"
+								id="checkout-email"
+								required
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 border"
+								placeholder="your@email.com"
+							/>
+							<p className="mt-2 text-sm text-gray-500">
+								{t('checkout.emailHelp')}
+							</p>
+						</div>
+
+						<button
+							type="submit"
+							disabled={!email.trim()}
+							className="w-full rounded-md bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+						>
+							{t('checkout.continue')}
+						</button>
+					</form>
+
+					{breakdown && (
+						<div className="mt-6 border-t border-gray-200 pt-6">
+							<h3 className="text-sm font-medium text-gray-900 mb-4">{t('cart.orderSummary')}</h3>
+							<dl className="space-y-3">
+								<div className="flex justify-between text-sm">
+									<dt className="text-gray-600">{t('cart.subtotal')}</dt>
+									<dd className="text-gray-900">{new Intl.NumberFormat('ja-JP', { style: 'currency', currency: breakdown.currency }).format(breakdown.subtotal)}</dd>
+								</div>
+								<div className="flex justify-between text-sm">
+									<dt className="text-gray-600">{t('cart.tax')}</dt>
+									<dd className="text-gray-900">{new Intl.NumberFormat('ja-JP', { style: 'currency', currency: breakdown.currency }).format(breakdown.taxAmount)}</dd>
+								</div>
+								<div className="flex justify-between text-sm">
+									<dt className="text-gray-600">{t('cart.shipping')}</dt>
+									<dd className="text-gray-900">{breakdown.shippingFee === 0 ? t('common.free') : new Intl.NumberFormat('ja-JP', { style: 'currency', currency: breakdown.currency }).format(breakdown.shippingFee)}</dd>
+								</div>
+								<div className="flex justify-between text-base font-medium border-t border-gray-200 pt-3">
+									<dt>{t('cart.orderTotal')}</dt>
+									<dd>{new Intl.NumberFormat('ja-JP', { style: 'currency', currency: breakdown.currency }).format(breakdown.grandTotal)}</dd>
+								</div>
+							</dl>
+						</div>
+					)}
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 			<h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-8">
@@ -187,6 +282,7 @@ export default function CheckoutPage() {
 						clientSecret={clientSecret}
 						orderId={orderId}
 						publishableKey={publishableKey}
+						initialEmail={email}
 					/>
 				</div>
 
