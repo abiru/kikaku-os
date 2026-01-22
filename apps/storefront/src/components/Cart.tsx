@@ -120,6 +120,7 @@ function CartItem({ item }: { item: CartItem }) {
 }
 
 function CouponInput() {
+	const { t } = useTranslation();
 	const [code, setCode] = useState('');
 	const [isApplying, setIsApplying] = useState(false);
 	const [error, setError] = useState('');
@@ -147,10 +148,10 @@ function CouponInput() {
 				applyCoupon(data.coupon);
 				setCode('');
 			} else {
-				setError(data.message || 'Invalid coupon');
+				setError(data.message || t('cart.invalidCoupon'));
 			}
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Failed to apply coupon');
+			setError(err instanceof Error ? err.message : t('cart.failedToApplyCoupon'));
 		} finally {
 			setIsApplying(false);
 		}
@@ -171,7 +172,7 @@ function CouponInput() {
 					onClick={removeCoupon}
 					className="text-sm text-green-700 hover:text-green-900"
 				>
-					Remove
+					{t('cart.removeCoupon')}
 				</button>
 			</div>
 		);
@@ -184,7 +185,7 @@ function CouponInput() {
 					type="text"
 					value={code}
 					onChange={(e) => setCode(e.target.value.toUpperCase())}
-					placeholder="Coupon code"
+					placeholder={t('cart.couponPlaceholder')}
 					className="flex-1 rounded-md border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
 					disabled={isApplying}
 				/>
@@ -193,7 +194,7 @@ function CouponInput() {
 					disabled={isApplying || !code.trim()}
 					className="px-4 py-2 bg-gray-100 text-sm font-medium rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 				>
-					{isApplying ? 'Applying...' : 'Apply'}
+					{isApplying ? t('cart.applying') : t('cart.applyCoupon')}
 				</button>
 			</div>
 			{error && (
@@ -301,7 +302,7 @@ function OrderSummary({
 					href="/quotations/new"
 					className="w-full block rounded-md border border-gray-300 bg-white px-4 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors text-center"
 				>
-					見積書を作成
+					{t('cart.createQuotation')}
 				</a>
 			</div>
 
@@ -319,6 +320,7 @@ function OrderSummary({
 }
 
 export default function Cart() {
+	const { t } = useTranslation();
 	const items = useStore($cartArray);
 	const cartTotal = useStore($cartTotal);
 	const subtotal = useStore($cartSubtotal);
@@ -380,12 +382,12 @@ export default function Cart() {
 				// Don't clear cart here - will be cleared on success page
 				window.location.href = data.url;
 			} else {
-				throw new Error(data.message || 'Checkout failed');
+				throw new Error(data.message || t('errors.checkoutFailed'));
 			}
 		} catch (err) {
 			console.error('Checkout error:', err);
-			const message = err instanceof Error ? err.message : 'Unknown error';
-			alert(`Failed to start checkout: ${message}`);
+			const message = err instanceof Error ? err.message : t('errors.unknownError');
+			alert(`${t('errors.checkoutFailed')}: ${message}`);
 			setIsProcessing(false);
 		}
 	};
@@ -397,7 +399,7 @@ export default function Cart() {
 	return (
 		<div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
 			<section aria-labelledby="cart-heading" className="lg:col-span-7">
-				<h2 id="cart-heading" className="sr-only">Items in your shopping cart</h2>
+				<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
 				<ul role="list" className="divide-y divide-gray-200 border-t border-b border-gray-200">
 					{items.map((item) => (
 						<CartItem key={item.variantId} item={item} />
