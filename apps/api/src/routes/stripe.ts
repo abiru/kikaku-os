@@ -361,21 +361,23 @@ const insertRefundRecord = async (
  * Returns 'card', 'customer_balance', or other method type.
  */
 const extractPaymentMethod = (dataObject: any): string => {
-  // Check payment_method_types array (from checkout.session.completed)
-  if (dataObject.payment_method_types) {
-    const types = dataObject.payment_method_types;
-    if (Array.isArray(types) && types.length > 0) {
-      // Prefer customer_balance if present (multi-method sessions)
-      return types.includes('customer_balance') ? 'customer_balance' : types[0];
-    }
-  }
-
-  // Check charges data (from payment_intent.succeeded)
+  // CRITICAL: Check ACTUAL payment method used first (from charges)
+  // This is what the customer actually selected, not what was available
   if (dataObject.charges?.data?.[0]?.payment_method_details?.type) {
     return dataObject.charges.data[0].payment_method_details.type;
   }
 
-  // Fallback to card for backward compatibility
+  // Fallback: Check payment_method_types array (what was available)
+  // Only used if charges data is not available (e.g., early webhook events)
+  if (dataObject.payment_method_types) {
+    const types = dataObject.payment_method_types;
+    if (Array.isArray(types) && types.length > 0) {
+      // Return first available type (will be 'card' when both are enabled)
+      return types[0];
+    }
+  }
+
+  // Final fallback to card for backward compatibility
   return 'card';
 };
 
