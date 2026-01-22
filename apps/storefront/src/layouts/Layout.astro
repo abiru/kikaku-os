@@ -1,6 +1,7 @@
 ---
 import Container from '../components/Container.astro';
 import SearchModal from '../components/SearchModal';
+import { t } from '../i18n';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
@@ -37,19 +38,19 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 
 					{/* Desktop Nav - Centered & Subtle */}
 					<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-[#1d1d1f]/80 overflow-x-auto whitespace-nowrap">
-						<a href="/" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/' ? 'text-[#1d1d1f] font-medium' : ''}`}>Store</a>
-						<a href="/products" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/products') ? 'text-[#1d1d1f] font-medium' : ''}`}>Products</a>
-						<a href="/terms" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/terms' ? 'text-[#1d1d1f] font-medium' : ''}`}>Support</a>
+						<a href="/" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/' ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.store')}</a>
+						<a href="/products" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/products') ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.products')}</a>
+						<a href="/terms" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/terms' ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.support')}</a>
 					</nav>
 
 					{/* Utilities: Search & Cart */}
 					<div class="flex items-center gap-6">
 						<button id="search-btn" type="button" class="text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
-							<span class="sr-only">Search</span>
+							<span class="sr-only">{t('common.search')}</span>
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 						</button>
 						<a href="/cart" id="cart-link" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
-							<span class="sr-only">Open cart</span>
+							<span class="sr-only">{t('nav.openCart')}</span>
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
 							<span id="cart-badge" class="hidden absolute -top-2 -right-2 h-4 w-4 rounded-full bg-[#0071e3] text-[10px] font-medium text-white flex items-center justify-center">0</span>
 						</a>
@@ -65,45 +66,45 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 				<Container>
 					<div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5 mb-8">
 						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">Shop and Learn</h3>
+							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.shopAndLearn')}</h3>
 							<ul class="space-y-2">
-								<li><a href="/products" class="hover:underline">Store</a></li>
-								<li><a href="#" class="hover:underline">Mac</a></li>
-								<li><a href="#" class="hover:underline">iPad</a></li>
+								<li><a href="/products" class="hover:underline">{t('footer.store')}</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.mac')}</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.ipad')}</a></li>
 							</ul>
 						</div>
 						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">Account</h3>
+							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.account')}</h3>
 							<ul class="space-y-2">
-								<li><a href="#" class="hover:underline">Manage Your ID</a></li>
-								<li><a href="#" class="hover:underline">Store Account</a></li>
-								<li><a href="#" class="hover:underline">iCloud.com</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.manageYourId')}</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.storeAccount')}</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.iCloud')}</a></li>
 							</ul>
 						</div>
 						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">Values</h3>
+							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.values')}</h3>
 							<ul class="space-y-2">
-								<li><a href="#" class="hover:underline">Accessibility</a></li>
-								<li><a href="#" class="hover:underline">Education</a></li>
-								<li><a href="#" class="hover:underline">Environment</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.accessibility')}</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.education')}</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.environment')}</a></li>
 							</ul>
 						</div>
 						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">About</h3>
+							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.about')}</h3>
 							<ul class="space-y-2">
-								<li><a href="#" class="hover:underline">Newsroom</a></li>
-								<li><a href="#" class="hover:underline">Leadership</a></li>
-								<li><a href="#" class="hover:underline">Investors</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.newsroom')}</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.leadership')}</a></li>
+								<li><a href="#" class="hover:underline">{t('footer.investors')}</a></li>
 							</ul>
 						</div>
 					</div>
 
 					<div class="pt-4 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-						<p>Copyright © 2024 Led Kikaku Inc. All rights reserved.</p>
+						<p>{t('footer.copyright')}</p>
 						<div class="flex gap-4">
-							<a href="/privacy" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">Privacy Policy</a>
-							<a href="/terms" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">Terms of Use</a>
-							<a href="/refund" class="hover:underline">Sales and Refunds</a>
+							<a href="/privacy" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">{t('footer.privacyPolicy')}</a>
+							<a href="/terms" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">{t('footer.termsOfUse')}</a>
+							<a href="/refund" class="hover:underline">{t('footer.salesAndRefunds')}</a>
 						</div>
 					</div>
 				</Container>

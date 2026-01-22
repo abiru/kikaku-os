@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getApiBase } from '../lib/api';
+import { useTranslation } from '../i18n';
 
 type SearchResult = {
 	id: number;
@@ -23,6 +24,7 @@ const formatPrice = (amount: number, currency: string) => {
 };
 
 export default function SearchModal() {
+	const { t } = useTranslation();
 	const [isOpen, setIsOpen] = useState(false);
 	const [query, setQuery] = useState('');
 	const [results, setResults] = useState<SearchResult[]>([]);
@@ -142,7 +144,7 @@ export default function SearchModal() {
 							ref={inputRef}
 							type="text"
 							className="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
-							placeholder="Search products..."
+							placeholder={t('common.searchProducts')}
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
 						/>
@@ -209,7 +211,7 @@ export default function SearchModal() {
 										/>
 									</svg>
 									<p className="mt-2 text-sm text-gray-500">
-										No products found for "{query}"
+										{t('common.noResults')}
 									</p>
 									<p className="mt-1 text-xs text-gray-400">
 										Try a different search term
