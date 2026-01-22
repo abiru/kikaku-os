@@ -69,17 +69,19 @@ const insertPayment = async (env: Env['Bindings'], payload: {
   orderId: number | null;
   amount: number;
   currency: string;
+  method: string;
   providerPaymentId: string;
   eventId: string;
 }) => {
   try {
     await env.DB.prepare(
       `INSERT INTO payments (order_id, status, amount, fee, currency, method, provider, provider_payment_id, metadata, created_at, updated_at)
-       VALUES (?, 'succeeded', ?, 0, ?, 'card', 'stripe', ?, ?, datetime('now'), datetime('now'))`
+       VALUES (?, 'succeeded', ?, 0, ?, ?, 'stripe', ?, ?, datetime('now'), datetime('now'))`
     ).bind(
       payload.orderId,
       payload.amount,
       payload.currency,
+      payload.method,
       payload.providerPaymentId,
       JSON.stringify({ stripe_event: payload.eventId })
     ).run();
@@ -150,6 +152,7 @@ const handleCheckoutSessionCompleted = async (
         orderId,
         amount: dataObject.amount_total || dataObject.amount_subtotal || 0,
         currency: (dataObject.currency || 'jpy').toUpperCase(),
+        method: extractPaymentMethod(dataObject),
         providerPaymentId: paymentIntentId,
         eventId: event.id
       })
@@ -268,6 +271,7 @@ const handlePaymentIntentSucceeded = async (
     orderId,
     amount: dataObject.amount_received || dataObject.amount || 0,
     currency: (dataObject.currency || 'jpy').toUpperCase(),
+    method: extractPaymentMethod(dataObject),
     providerPaymentId,
     eventId: event.id
   });
@@ -350,6 +354,29 @@ const insertRefundRecord = async (
     }
     throw err;
   }
+};
+
+/**
+ * Extracts payment method type from Stripe event data.
+ * Returns 'card', 'customer_balance', or other method type.
+ */
+const extractPaymentMethod = (dataObject: any): string => {
+  // Check payment_method_types array (from checkout.session.completed)
+  if (dataObject.payment_method_types) {
+    const types = dataObject.payment_method_types;
+    if (Array.isArray(types) && types.length > 0) {
+      // Prefer customer_balance if present (multi-method sessions)
+      return types.includes('customer_balance') ? 'customer_balance' : types[0];
+    }
+  }
+
+  // Check charges data (from payment_intent.succeeded)
+  if (dataObject.charges?.data?.[0]?.payment_method_details?.type) {
+    return dataObject.charges.data[0].payment_method_details.type;
+  }
+
+  // Fallback to card for backward compatibility
+  return 'card';
 };
 
 const updateOrderAfterRefund = async (
@@ -453,6 +480,56 @@ export const handleStripeEvent = async (env: Env['Bindings'], event: StripeEvent
 
   if (REFUND_EVENT_TYPES.includes(eventType)) {
     return handleRefundEvents(env, event, dataObject);
+  }
+
+  // Bank transfer specific events (audit trail and monitoring)
+  if (eventType === 'payment_intent.processing') {
+    // Bank transfer initiated but not yet completed
+    const orderId = extractOrderId(dataObject.metadata);
+    if (orderId) {
+      await env.DB.prepare(
+        `INSERT INTO events (type, payload, stripe_event_id, created_at)
+         VALUES ('bank_transfer_processing', ?, ?, datetime('now'))`
+      ).bind(
+        JSON.stringify({ order_id: orderId, payment_intent: dataObject.id }),
+        event.id
+      ).run();
+    }
+    return { received: true };
+  }
+
+  if (eventType === 'payment_intent.requires_action') {
+    // Customer needs to complete bank transfer
+    // dataObject.next_action contains bank transfer instructions
+    const orderId = extractOrderId(dataObject.metadata);
+    if (orderId) {
+      await env.DB.prepare(
+        `INSERT INTO events (type, payload, stripe_event_id, created_at)
+         VALUES ('bank_transfer_requires_action', ?, ?, datetime('now'))`
+      ).bind(
+        JSON.stringify({
+          order_id: orderId,
+          payment_intent: dataObject.id,
+          next_action: dataObject.next_action
+        }),
+        event.id
+      ).run();
+
+      // Future: Send customer email with bank transfer instructions
+      // Bank transfer details are in dataObject.next_action.display_bank_transfer_instructions
+    }
+    return { received: true };
+  }
+
+  if (eventType === 'customer_balance.transaction.created' ||
+      eventType === 'customer_balance.transaction.updated') {
+    // Bank transfer transaction lifecycle tracking
+    // These events fire when Stripe receives the actual bank deposit
+    await env.DB.prepare(
+      `INSERT INTO events (type, payload, stripe_event_id, created_at)
+       VALUES (?, ?, ?, datetime('now'))`
+    ).bind(eventType, JSON.stringify(dataObject), event.id).run();
+    return { received: true };
   }
 
   return { received: true };
