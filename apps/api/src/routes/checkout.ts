@@ -14,6 +14,80 @@ checkout.get('/checkout/config', async (c) => {
   });
 });
 
+checkout.post('/checkout/validate-coupon', async (c) => {
+  try {
+    const body = await c.req.json<{ code: string; cartTotal: number }>();
+    const { code, cartTotal } = body;
+
+    if (!code) {
+      return jsonError(c, 'Coupon code is required', 400);
+    }
+
+    const coupon = await c.env.DB.prepare(
+      `SELECT id, code, discount_type, discount_value, min_purchase, max_uses, used_count, valid_from, valid_until, active
+       FROM coupons
+       WHERE code = ? AND active = 1`
+    )
+      .bind(code.toUpperCase())
+      .first<{
+        id: number;
+        code: string;
+        discount_type: string;
+        discount_value: number;
+        min_purchase: number | null;
+        max_uses: number | null;
+        used_count: number;
+        valid_from: string | null;
+        valid_until: string | null;
+        active: number;
+      }>();
+
+    if (!coupon) {
+      return jsonOk(c, { valid: false, message: 'Invalid coupon code' });
+    }
+
+    const now = new Date();
+    if (coupon.valid_from && new Date(coupon.valid_from) > now) {
+      return jsonOk(c, { valid: false, message: 'Coupon not yet valid' });
+    }
+    if (coupon.valid_until && new Date(coupon.valid_until) < now) {
+      return jsonOk(c, { valid: false, message: 'Coupon has expired' });
+    }
+
+    if (coupon.max_uses !== null && coupon.used_count >= coupon.max_uses) {
+      return jsonOk(c, { valid: false, message: 'Coupon usage limit reached' });
+    }
+
+    if (coupon.min_purchase !== null && cartTotal < coupon.min_purchase) {
+      return jsonOk(c, {
+        valid: false,
+        message: `Minimum purchase of ¥${coupon.min_purchase.toLocaleString()} required`
+      });
+    }
+
+    let discountAmount = 0;
+    if (coupon.discount_type === 'percentage') {
+      discountAmount = Math.floor((cartTotal * coupon.discount_value) / 100);
+    } else if (coupon.discount_type === 'fixed') {
+      discountAmount = coupon.discount_value;
+    }
+
+    return jsonOk(c, {
+      valid: true,
+      coupon: {
+        id: coupon.id,
+        code: coupon.code,
+        discountType: coupon.discount_type,
+        discountValue: coupon.discount_value,
+        discountAmount
+      }
+    });
+  } catch (err) {
+    console.error('Coupon validation error:', err);
+    return jsonError(c, 'Failed to validate coupon', 500);
+  }
+});
+
 type VariantPriceRow = {
   variant_id: number;
   variant_title: string;
