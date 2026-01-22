@@ -1,8 +1,11 @@
 
 ---
-const h1 = "LED Lights for Better Plant Growth";
+const h1 = ["Better Light.","Better Grow."];
 const copy =
-  "最新LEDテクノロジーで、植物の成長を劇的にサポート。プロフェッショナルも信頼する、大学・研究機関採用の実績が証明する高性能育成ライト。";
+  // "最新LEDテクノロジーで、植物の成長を劇的にサポート。プロフェッショナルも信頼する、大学・研究機関採用の実績が証明する高性能育成ライト。";
+  // "最新LEDテクノロジーで、栽培のパフォーマンスを最大化。大学・研究機関でも採用されるプロも仕様の植物育成ライト。"
+  // "最新テクノロジーで、植物の成長をより速く、より強く。大学・研究機関が採用する、プロ仕様の植物育成LED。"
+  "最新テクノロジーで、栽培パフォーマンスを最大化。大学・研究機関が採用する、プロ仕様の植物育成ライト。"
 
 import sf1000 from "../assets/sf1000.png";
 import { Image } from "astro:assets";
@@ -26,8 +29,8 @@ const navigation = [
 		<section class="relative w-full pt-20 pb-24 text-center lg:py-10">
 			<div class="mx-auto max-w-[980px] px-6">
 				<h1 class="text-5xl font-semibold tracking-tight text-[#1d1d1f] md:text-7xl">
-					LED Lights<br />
-					<span class="text-[#6e6e73]">for Better Grow.</span>
+          {h1[0]}
+          <span class="text-[#6e6e73]">{h1[1]}</span>
 				</h1>
 				<p class="mx-auto mt-6 max-w-2xl text-xl font-medium text-[#1d1d1f] md:text-2xl">
         {copy}
