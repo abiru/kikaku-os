@@ -72,7 +72,10 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
   if (c.req.path.startsWith('/webhooks/stripe')) return next();
   if (c.req.path.startsWith('/stripe/webhook')) return next();
+  // Public checkout endpoints
   if (c.req.path.startsWith('/checkout/session')) return next();
+  if (c.req.method === 'GET' && c.req.path === '/checkout/config') return next();
+  if (c.req.method === 'POST' && c.req.path === '/checkout/validate-coupon') return next();
   // Public quotation endpoints (customer-facing)
   if (c.req.method === 'POST' && c.req.path === '/quotations') return next();
   if (c.req.method === 'GET' && /^\/quotations\/\d+$/.test(c.req.path)) return next();
