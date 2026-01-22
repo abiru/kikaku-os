@@ -2,15 +2,18 @@
 import Button from '../../components/Button.astro';
 import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
-import { getOrderBySession } from '../../lib/api';
 import { t } from '../../i18n';
 
-const sessionId = Astro.url.searchParams.get('session_id');
+const orderId = Astro.url.searchParams.get('order_id');
 let order = null;
 
-if (sessionId) {
+if (orderId) {
 	try {
-		order = await getOrderBySession(sessionId);
+		const response = await fetch(`${import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787'}/orders/${orderId}`);
+		if (response.ok) {
+			const data = await response.json();
+			order = data.order || null;
+		}
 	} catch (e) {
 		console.error('Failed to fetch order:', e);
 	}
@@ -44,10 +47,12 @@ const formatPrice = (amount: number, currency: string) => {
 
 				{/* Order Details Card */}
 				{order ? (
-					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm">
+					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm" data-order-container data-order-status={order.status}>
 						<div class="flex items-center justify-between mb-6">
 							<p class="text-sm text-[#86868b]">{t('admin.order')} #{order.id}</p>
-							<span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+							<span class={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
+								order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+							}`}>
 								{order.status === 'paid' ? t('checkout.confirmed') : order.status}
 							</span>
 						</div>
@@ -83,6 +88,27 @@ const formatPrice = (amount: number, currency: string) => {
 								</p>
 							</div>
 						)}
+
+						{/* Shipping Address */}
+						{order.shipping && (
+							<div class="mt-6 border-t border-gray-100 pt-6">
+								<p class="text-sm font-medium text-[#1d1d1f] mb-2">{t('checkout.shippingAddress')}</p>
+								<div class="text-sm text-[#86868b]">
+									{order.shipping.name && <p>{order.shipping.name}</p>}
+									{order.shipping.address && (
+										<>
+											{order.shipping.address.postal_code && <p>〒{order.shipping.address.postal_code}</p>}
+											{order.shipping.address.state && order.shipping.address.city && (
+												<p>{order.shipping.address.state}{order.shipping.address.city}</p>
+											)}
+											{order.shipping.address.line1 && <p>{order.shipping.address.line1}</p>}
+											{order.shipping.address.line2 && <p>{order.shipping.address.line2}</p>}
+										</>
+									)}
+									{order.shipping.phone && <p>{t('checkout.phone')}: {order.shipping.phone}</p>}
+								</div>
+							</div>
+						)}
 					</div>
 				) : (
 					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm">
@@ -116,5 +142,66 @@ const formatPrice = (amount: number, currency: string) => {
 	// Clear sessionStorage backup
 	if (typeof sessionStorage !== 'undefined') {
 		sessionStorage.removeItem('led-kikaku-cart-backup');
+	}
+
+	// Polling logic for payment intent flow
+	const orderId = new URLSearchParams(window.location.search).get('order_id');
+
+	if (orderId) {
+		const orderStatusElement = document.querySelector('[data-order-status]');
+		const orderStatus = orderStatusElement?.getAttribute('data-order-status');
+
+		if (orderStatus === 'pending') {
+			let attempts = 0;
+			const maxAttempts = 6; // 1s, 2s, 4s, 8s, 16s, 32s ≈ 63s total
+
+			const pollOrder = async () => {
+				if (attempts >= maxAttempts) {
+					// Show processing message
+					const container = document.querySelector('[data-order-container]');
+					if (container) {
+						container.innerHTML = `
+							<div class="mt-10 rounded-3xl bg-white p-8 text-center shadow-sm">
+								<div class="mx-auto h-12 w-12 text-yellow-500 mb-4">
+									<svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+								</div>
+								<p class="text-lg text-gray-900 font-medium mb-2">Payment processing</p>
+								<p class="text-sm text-gray-600">Your payment is being processed. You'll receive a confirmation email shortly.</p>
+							</div>
+						`;
+					}
+					return;
+				}
+
+				const delay = Math.min(1000 * Math.pow(2, attempts), 32000);
+				await new Promise(resolve => setTimeout(resolve, delay));
+
+				try {
+					const apiBase = document.querySelector('meta[name="api-base"]')?.getAttribute('content') || window.location.origin;
+					const res = await fetch(`${apiBase}/orders/${orderId}?poll=true`);
+
+					if (res.status === 202) {
+						// Order still pending, continue polling
+						attempts++;
+						pollOrder();
+					} else if (res.ok) {
+						// Order updated, reload page to show updated status
+						window.location.reload();
+					} else {
+						console.error('Failed to fetch order status');
+					}
+				} catch (err) {
+					console.error('Polling error:', err);
+					attempts++;
+					if (attempts < maxAttempts) {
+						pollOrder();
+					}
+				}
+			};
+
+			pollOrder();
+		}
 	}
 </script>

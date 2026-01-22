@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CheckoutPage from '../components/CheckoutPage';
+import { t } from '../i18n';
+---
+
+<Layout title={t('checkout.pageTitle')}>
+	<div class="min-h-screen bg-gray-50">
+		<CheckoutPage client:load />
+	</div>
+</Layout>

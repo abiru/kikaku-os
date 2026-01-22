@@ -1,0 +1,250 @@
+import { useState, useEffect } from 'react';
+import { Elements, PaymentElement, AddressElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
+import { useTranslation } from '../i18n';
+
+type CheckoutFormProps = {
+	clientSecret: string | null;
+	orderId: number | null;
+	publishableKey: string;
+};
+
+function CheckoutFormInner({ orderId }: { orderId: number | null }) {
+	const { t } = useTranslation();
+	const stripe = useStripe();
+	const elements = useElements();
+	const [email, setEmail] = useState('');
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		if (!stripe || !elements || !orderId) {
+			return;
+		}
+
+		setIsProcessing(true);
+		setErrorMessage(null);
+
+		try {
+			// Get the address from AddressElement
+			const addressElement = elements.getElement('address');
+			let shippingData = null;
+
+			if (addressElement) {
+				const { complete, value } = await addressElement.getValue();
+				if (complete && value) {
+					shippingData = {
+						name: value.name,
+						address: {
+							line1: value.address.line1,
+							line2: value.address.line2 || undefined,
+							city: value.address.city,
+							state: value.address.state,
+							postal_code: value.address.postal_code,
+							country: value.address.country
+						},
+						phone: value.phone || undefined
+					};
+				}
+			}
+
+			const { error } = await stripe.confirmPayment({
+				elements,
+				confirmParams: {
+					return_url: `${window.location.origin}/checkout/success?order_id=${orderId}`,
+					receipt_email: email,
+					...(shippingData ? { shipping: shippingData } : {})
+				}
+			});
+
+			if (error) {
+				setErrorMessage(error.message || 'Payment failed');
+				setIsProcessing(false);
+			}
+			// If successful, user will be redirected by Stripe
+		} catch (err) {
+			console.error('Payment error:', err);
+			const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred';
+			setErrorMessage(errorMsg);
+			setIsProcessing(false);
+		}
+	};
+
+	const onExpressCheckoutConfirm = async (event: any) => {
+		console.log('[Express Checkout] Payment confirmed', event);
+
+		// Extract shipping address if available
+		let shippingData = null;
+		if (event.shippingAddress) {
+			shippingData = {
+				name: event.shippingAddress.recipient,
+				address: {
+					line1: event.shippingAddress.addressLine?.[0] || '',
+					line2: event.shippingAddress.addressLine?.[1] || undefined,
+					city: event.shippingAddress.city,
+					state: event.shippingAddress.region,
+					postal_code: event.shippingAddress.postalCode,
+					country: event.shippingAddress.country
+				},
+				phone: event.shippingAddress.phone || undefined
+			};
+		}
+
+		// Complete the payment
+		if (!stripe || !elements || !orderId) return;
+
+		try {
+			const { error } = await stripe.confirmPayment({
+				elements,
+				confirmParams: {
+					return_url: `${window.location.origin}/checkout/success?order_id=${orderId}`,
+					...(shippingData ? { shipping: shippingData } : {})
+				}
+			});
+
+			if (error) {
+				console.error('[Express Checkout] Error:', error);
+			}
+		} catch (err) {
+			console.error('[Express Checkout] Exception:', err);
+		}
+	};
+
+	return (
+		<form onSubmit={handleSubmit} className="space-y-6">
+			{/* Express Checkout (Apple Pay / Google Pay) */}
+			<div>
+				<ExpressCheckoutElement
+					onConfirm={onExpressCheckoutConfirm}
+					options={{
+						buttonType: {
+							applePay: 'buy',
+							googlePay: 'buy'
+						}
+					}}
+				/>
+			</div>
+
+			{/* Divider */}
+			<div className="relative">
+				<div className="absolute inset-0 flex items-center">
+					<div className="w-full border-t border-gray-300"></div>
+				</div>
+				<div className="relative flex justify-center text-sm">
+					<span className="px-2 bg-white text-gray-500">{t('common.or')}</span>
+				</div>
+			</div>
+
+			{/* Email input */}
+			<div>
+				<label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+					{t('checkout.email')}
+				</label>
+				<input
+					type="email"
+					id="email"
+					required
+					value={email}
+					onChange={(e) => setEmail(e.target.value)}
+					className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 border"
+					placeholder="your@email.com"
+				/>
+			</div>
+
+			{/* Address Element - shipping address */}
+			<div>
+				<label className="block text-sm font-medium text-gray-700 mb-2">
+					{t('checkout.shippingAddress')}
+				</label>
+				<AddressElement
+					options={{
+						mode: 'shipping',
+						allowedCountries: ['JP']
+					}}
+				/>
+			</div>
+
+			{/* Payment Element */}
+			<div>
+				<label className="block text-sm font-medium text-gray-700 mb-2">
+					{t('checkout.paymentDetails')}
+				</label>
+				<PaymentElement
+					options={{
+						layout: 'tabs'
+					}}
+				/>
+			</div>
+
+			{/* Error message */}
+			{errorMessage && (
+				<div className="rounded-md bg-red-50 p-4">
+					<p className="text-sm text-red-800">{errorMessage}</p>
+				</div>
+			)}
+
+			{/* Submit button */}
+			<button
+				type="submit"
+				disabled={!stripe || isProcessing}
+				className="w-full rounded-md bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+			>
+				{isProcessing ? t('checkout.processing') : t('checkout.payNow')}
+			</button>
+		</form>
+	);
+}
+
+export default function CheckoutForm({
+	clientSecret,
+	orderId,
+	publishableKey
+}: CheckoutFormProps) {
+	const { t } = useTranslation();
+	const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+
+	// Initialize Stripe
+	useEffect(() => {
+		if (publishableKey) {
+			setStripePromise(loadStripe(publishableKey));
+		}
+	}, [publishableKey]);
+
+	if (!clientSecret || !stripePromise) {
+		return (
+			<div className="bg-white rounded-lg shadow-sm p-6">
+				<div className="animate-pulse space-y-4">
+					<div className="h-4 bg-gray-200 rounded w-3/4"></div>
+					<div className="h-10 bg-gray-200 rounded"></div>
+					<div className="h-10 bg-gray-200 rounded"></div>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="bg-white rounded-lg shadow-sm p-6">
+			<h2 className="text-lg font-medium text-gray-900 mb-6">
+				{t('checkout.title')}
+			</h2>
+
+			<Elements
+				stripe={stripePromise}
+				options={{
+					clientSecret,
+					appearance: {
+						theme: 'stripe',
+						variables: {
+							colorPrimary: '#4f46e5'
+						}
+					},
+					locale: 'ja'
+				}}
+			>
+				<CheckoutFormInner orderId={orderId} />
+			</Elements>
+		</div>
+	);
+}

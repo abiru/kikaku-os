@@ -289,91 +289,132 @@ describe('Storefront API', () => {
     });
   });
 
-  describe('GET /store/orders/by-session/:sessionId', () => {
-    it('returns order by checkout session ID', async () => {
-      const db = createMockDb({
-        orderRow: {
-          id: 1,
-          status: 'paid',
-          total_net: 2500,
-          currency: 'JPY',
-          created_at: '2025-01-15T10:00:00Z',
-          customer_email: 'test@example.com'
-        },
-        orderItems: [
-          {
-            product_title: 'LED Light',
-            variant_title: 'Red',
-            quantity: 1,
-            unit_price: 2500
-          }
-        ]
-      });
-      const { fetch } = createApp(db);
+  describe('GET /orders/:id', () => {
+    it('returns order by ID with items and shipping', async () => {
+      const db = {
+        prepare: (sql: string) => {
+          let boundArgs: any[] = [];
+          return {
+            bind: (...args: any[]) => {
+              boundArgs = args;
+              return {
+                bind: (...args: any[]) => {
+                  boundArgs = args;
+                  return db.prepare(sql).bind(...args);
+                },
+                first: async () => {
+                  if (sql.includes('FROM orders')) {
+                    return {
+                      id: 123,
+                      status: 'paid',
+                      total_amount: 5500,
+                      currency: 'JPY',
+                      created_at: '2024-01-01T00:00:00Z',
+                      paid_at: '2024-01-01T00:05:00Z',
+                      customer_email: 'test@example.com',
+                      metadata: JSON.stringify({
+                        shipping: {
+                          name: 'Test User',
+                          address: {
+                            line1: '1-2-3 Test St',
+                            city: 'Tokyo',
+                            postal_code: '123-4567'
+                          }
+                        }
+                      })
+                    };
+                  }
+                  return null;
+                },
+                all: async () => {
+                  if (sql.includes('FROM order_items')) {
+                    return {
+                      results: [
+                        {
+                          product_title: 'Test Product',
+                          variant_title: 'Medium',
+                          quantity: 2,
+                          unit_price: 2500
+                        }
+                      ]
+                    };
+                  }
+                  return { results: [] };
+                }
+              };
+            },
+            first: async () => null,
+            all: async () => ({ results: [] })
+          };
+        }
+      };
 
-      const res = await fetch('/store/orders/by-session/cs_test_abc123xyz');
+      const { fetch } = createApp(db);
+      const res = await fetch('/store/orders/123');
       const json = await res.json();
 
       expect(json.ok).toBe(true);
-      expect(json.order).not.toBeNull();
-      expect(json.order.id).toBe(1);
+      expect(json.order.id).toBe(123);
       expect(json.order.status).toBe('paid');
-      expect(json.order.customer_email).toBe('test@example.com');
-      expect(json.order.items).toHaveLength(1);
-      expect(json.order.items[0].title).toBe('LED Light - Red');
+      expect(json.order.total_amount).toBe(5500);
+      expect(json.order.shipping).toBeDefined();
+      expect(json.order.shipping.name).toBe('Test User');
+      expect(json.order.items.length).toBe(1);
+      expect(json.order.items[0].title).toBe('Test Product - Medium');
     });
 
-    it('formats item title without variant when Default', async () => {
-      const db = createMockDb({
-        orderRow: {
-          id: 2,
-          status: 'paid',
-          total_net: 1000,
-          currency: 'JPY',
-          created_at: '2025-01-15T10:00:00Z',
-          customer_email: null
-        },
-        orderItems: [
-          {
-            product_title: 'Simple Product',
-            variant_title: 'Default',
-            quantity: 2,
-            unit_price: 500
-          }
-        ]
-      });
+    it('returns 202 when polling pending order', async () => {
+      const db = {
+        prepare: (sql: string) => ({
+          bind: (...args: any[]) => ({
+            first: async () => ({
+              id: 456,
+              status: 'pending',
+              total_amount: 3000,
+              currency: 'JPY',
+              created_at: '2024-01-01T00:00:00Z',
+              paid_at: null,
+              customer_email: 'pending@example.com',
+              metadata: null
+            }),
+            all: async () => ({ results: [] })
+          })
+        })
+      };
+
       const { fetch } = createApp(db);
+      const res = await fetch('/store/orders/456?poll=true');
 
-      const res = await fetch('/store/orders/by-session/cs_test_session');
+      expect(res.status).toBe(202);
       const json = await res.json();
-
-      expect(json.order.items[0].title).toBe('Simple Product');
-    });
-
-    it('returns null for short session ID', async () => {
-      const db = createMockDb({});
-      const { fetch } = createApp(db);
-
-      const res = await fetch('/store/orders/by-session/short');
-      const json = await res.json();
-
       expect(json.ok).toBe(true);
-      expect(json.order).toBeNull();
+      expect(json.status).toBe('pending');
     });
 
-    it('returns null for empty session ID', async () => {
-      const db = createMockDb({});
-      const { fetch } = createApp(db);
+    it('returns 404 for non-existent order', async () => {
+      const db = {
+        prepare: (sql: string) => ({
+          bind: (...args: any[]) => ({
+            first: async () => null,
+            all: async () => ({ results: [] })
+          })
+        })
+      };
 
-      const res = await fetch('/store/orders/by-session/');
+      const { fetch } = createApp(db);
+      const res = await fetch('/store/orders/999');
+
       expect(res.status).toBe(404);
+      const json = await res.json();
+      expect(json.ok).toBe(false);
+      expect(json.message).toContain('not found');
     });
 
-    it('returns null when order not found', async () => {
-      const db = createMockDb({ orderRow: null });
+    it('returns null for invalid order ID', async () => {
+      const db = createMockDb({ productRows: [] });
       const { fetch } = createApp(db);
 
-      const res = await fetch('/store/orders/by-session/cs_nonexistent_session');
+      const res = await fetch('/store/orders/invalid');
       const json = await res.json();
 
       expect(json.ok).toBe(true);
