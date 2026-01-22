@@ -2,12 +2,8 @@ import translations from './ja.json';
 
 export type TranslationKey = string;
 
-/**
- * 翻訳を取得する関数
- * @param key - ドット記法のキー (例: "nav.store", "cart.title")
- * @param params - 動的な値を置換するためのパラメータ（オプション）
- * @returns 翻訳されたテキスト
- */
+// 翻訳を取得する関数（ドット記法のキーをサポート、パラメータ置換可能）
+// 例: t('nav.store'), t('cart.addForFreeShipping', { amount: '¥5,000' })
 export function t(key: TranslationKey, params?: Record<string, string | number>): string {
   const keys = key.split('.');
   let value: unknown = translations;
@@ -37,10 +33,7 @@ export function t(key: TranslationKey, params?: Record<string, string | number>)
   return value;
 }
 
-/**
- * Reactコンポーネント用のカスタムフック
- * @returns t関数を含むオブジェクト
- */
+// Reactコンポーネント用のカスタムフック
 export function useTranslation() {
   return { t };
 }
