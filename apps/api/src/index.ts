@@ -120,6 +120,12 @@ app.route('/', quotations);
 app.get('/r2', async (c) => {
   const key = c.req.query('key');
   if (!key) return jsonError(c, 'key required', 400);
+
+  // Security: Only allow access to product images
+  if (!key.startsWith('products/') && !key.startsWith('product-images/')) {
+    return jsonError(c, 'Access denied', 403);
+  }
+
   try {
     const obj = await c.env.R2.get(key);
     if (!obj) return jsonError(c, 'not found', 404);
