@@ -8,6 +8,22 @@
 - Cloudflare R2
 - Storefront + Admin: Astro SSR
 
+## 主要機能
+
+### 決済システム
+- **Stripe Elements**: 埋め込み型チェックアウト（PaymentIntent API）
+- **銀行振込**: `ENABLE_BANK_TRANSFER`で有効化（Stripe jp_bank_transfer）
+- **カート**: LocalStorage永続化、複数商品対応
+
+### 日本対応
+- **消費税計算**: 税率マスタ（標準10%・軽減8%）、税込表示
+- **i18n**: 日本語UI（`src/i18n/ja.json`）
+
+### 運用機能
+- **Daily Close**: 日次売上集計・証跡生成・仕訳ドラフト
+- **Inbox**: 異常検知・承認フロー
+- **在庫管理**: しきい値アラート・入出庫記録
+
 ## ローカル開発
 依存は pnpm を推奨します。
 
@@ -17,8 +33,13 @@
   - `ADMIN_API_KEY`
   - `DEV_MODE`
   - `STRIPE_SECRET_KEY`
+  - `STRIPE_PUBLISHABLE_KEY`（Embedded Checkout用）
   - `STRIPE_WEBHOOK_SECRET`
   - `STOREFRONT_BASE_URL`
+- オプション変数:
+  - `ENABLE_BANK_TRANSFER`（銀行振込決済の有効化）
+  - `SHIPPING_FEE_AMOUNT`（送料、円）
+  - `FREE_SHIPPING_THRESHOLD`（送料無料閾値、円）
 - API: http://localhost:8787
 - Storefront + Admin: http://localhost:4321
 - CORS origin: http://localhost:4321 / http://127.0.0.1:4321
@@ -53,19 +74,35 @@ pnpm -C apps/storefront dev
 
 ## 主要エンドポイント
 
-* GET /reports/daily?date=YYYY-MM-DD
-* POST /daily-close/:date/artifacts
-* GET /daily-close/:date/documents
-* GET /r2?key=...
-* GET /ledger-entries?date=YYYY-MM-DD
-* GET /inbox?status=open&severity=&limit=
-* POST /inbox/:id/approve / POST /inbox/:id/reject
-* GET /inventory/low?limit=
-* POST /inventory/thresholds
-* POST /dev/seed (DEV_MODE=trueのみ)
-* POST /checkout/session
-* POST /webhooks/stripe / POST /stripe/webhook
-* GET /store/products / GET /store/products/:id
+### チェックアウト・決済
+* POST /checkout/session - Stripeチェックアウトセッション作成
+* POST /payments/create-intent - PaymentIntent作成（Embedded Checkout）
+* POST /payments/confirm - 支払い確定
+* GET /payments/:id - 支払い詳細取得
+* POST /webhooks/stripe - Stripeウェブフック
+
+### ストアフロント
+* GET /store/products - 商品一覧（ページネーション対応）
+* GET /store/products/:id - 商品詳細
+* GET /store/cart - カート情報取得
+* POST /store/cart - カート操作
+
+### レポート・会計
+* GET /reports/daily?date=YYYY-MM-DD - 日次売上レポート
+* POST /daily-close/:date/artifacts - 日次締め帳票生成
+* GET /daily-close/:date/documents - 日次ドキュメント取得
+* GET /ledger-entries?date=YYYY-MM-DD - 仕訳一覧
+* GET /r2?key=... - R2ファイル取得
+
+### 管理API
+* GET /inbox?status=open&severity=&limit= - インボックス一覧
+* POST /inbox/:id/approve / POST /inbox/:id/reject - 承認/却下
+* GET /inventory/low?limit= - 在庫不足一覧
+* POST /inventory/thresholds - 在庫閾値設定
+* GET/POST/PUT/DELETE /admin/tax-rates - 税率管理
+
+### 開発用
+* POST /dev/seed (DEV_MODE=trueのみ) - テストデータ投入
 
 ## Seed API
 
@@ -79,11 +116,14 @@ curl -X POST http://localhost:8787/dev/seed \
 ## 管理画面（/admin/*）
 
 * /admin/inbox: Open items の詳細と Approve/Reject
-* /admin/orders: 注文一覧・詳細（payments/refunds/events）
+* /admin/orders: 注文一覧・詳細（payments/refunds/events/fulfillments）
 * /admin/events: Stripe webhook ログ
-* /admin/products: 商品一覧
+* /admin/products: 商品一覧・詳細（バリアント・価格・在庫管理）
+* /admin/inventory: 在庫管理・しきい値設定
+* /admin/tax-rates: 消費税率管理（標準10%・軽減8%）
 * /admin/reports: 日次締めレポート
 * /admin/ledger: 仕訳一覧
+* /admin/customers: 顧客管理
 
 ## 動作確認手順（curl例）
 
@@ -113,7 +153,11 @@ Stripe CLI で Webhook を転送:
 stripe listen --forward-to http://localhost:8787/webhooks/stripe
 ```
 
-Checkout Session 作成（例）:
+### Embedded Checkout（Stripe Elements）
+ストアフロントの `/checkout` ページで埋め込み型決済フォームを表示。
+PaymentIntent APIを使用し、カード決済・銀行振込に対応。
+
+### Legacy: Checkout Session 作成（例）
 ```bash
 curl -X POST http://localhost:8787/checkout/session \
   -H "content-type: application/json" \

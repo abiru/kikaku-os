@@ -1,15 +1,17 @@
 # Implementation Plan - Led Kikaku OS
 
-## 現状サマリー (2026-01-19時点)
+## 現状サマリー (2026-01-22時点)
 
 | フェーズ | 項目 | 進捗 | 状態 |
 |---------|------|------|------|
 | P1-1 | D1スキーマ | 100% | ✅ 完了 |
-| P1-2 | Stripe決済 | 100% | ✅ 完了（E2E検証済み） |
-| P1-3 | Storefront | 100% | ✅ 完了（カート・複数商品チェックアウト対応） |
-| P1-4 | Admin基本 | 100% | ✅ 完了（Variants/Inventory/Fulfillment UI） |
+| P1-2 | Stripe決済 | 100% | ✅ 完了（Stripe Elements移行済み） |
+| P1-3 | Storefront | 100% | ✅ 完了（i18n・ページネーション対応） |
+| P1-4 | Admin基本 | 100% | ✅ 完了（税率管理追加） |
 | P1-5 | データ移行 | 100% | ✅ 完了（ドキュメント追加） |
 | - | Test/CI | 100% | ✅ 完了（GitHub Actions導入済み） |
+| - | 消費税対応 | 100% | ✅ 完了（税率マスタ・税込表示） |
+| - | 銀行振込 | 100% | ✅ 完了（Stripe jp_bank_transfer） |
 
 ---
 
@@ -210,13 +212,85 @@
 | #14 | feat(api): add daily close execution tracking and backfill support | 完了 |
 | #15 | feat(checkout): support multi-item cart checkout | 完了 |
 | #16 | feat(api): add idempotency for daily close operations | 完了 |
+| #83 | feat: Japanese consumption tax calculation system | 完了 |
+| #91 | feat: Stripe bank transfer integration | 完了 |
+| #94 | feat: Add i18n infrastructure and translate core UI to Japanese | 完了 |
+| #97 | fix: complete Japanese translation for cart and checkout pages | 完了 |
+| #98 | feat: Add pagination to storefront products listing | 完了 |
+| #100 | fix: Bank transfer checkout requires email address | 完了 |
+| #105 | feat: Migrate to Stripe Elements for embedded checkout | 完了 |
+
+---
+
+## Sprint 4: 決済・税・i18n ✅ 完了
+
+### 4.1 消費税計算システム ✅ 完了
+
+**PR**: #83
+
+**実装済み**:
+- [x] `tax_rates` マスタテーブル（標準10%・軽減8%）
+- [x] 商品への税率紐付け
+- [x] 注文の税額内訳保存
+- [x] `services/tax.ts` で切り捨て丸め計算
+- [x] 管理画面: 税率CRUD `/admin/tax-rates`
+- [x] ストアフロント: 税込表示・カート内訳
+
+---
+
+### 4.2 Stripe Elements移行 ✅ 完了
+
+**PR**: #105
+
+**実装済み**:
+- [x] Checkout SessionからPaymentIntent APIへ移行
+- [x] 埋め込み型チェックアウト（`/checkout`ページ）
+- [x] CheckoutForm.tsx / CheckoutPage.tsx コンポーネント
+- [x] `STRIPE_PUBLISHABLE_KEY` 環境変数追加
+- [x] 支払い確認フローの改善
+
+---
+
+### 4.3 銀行振込対応 ✅ 完了
+
+**PR**: #91, #100
+
+**実装済み**:
+- [x] `ENABLE_BANK_TRANSFER` フィーチャーフラグ
+- [x] Stripe jp_bank_transfer設定
+- [x] Stripe Customer管理（`stripe_customer_id`）
+- [x] 決済方法の動的検出
+- [x] 銀行振込用Webhookハンドラー
+
+---
+
+### 4.4 i18n基盤 ✅ 完了
+
+**PR**: #94, #97
+
+**実装済み**:
+- [x] `src/i18n/ja.json` 翻訳ファイル
+- [x] `t()` ヘルパー関数（パラメータ置換対応）
+- [x] Layout, Cart, SearchModal, Products の日本語化
+- [x] チェックアウト画面の日本語化
+
+---
+
+### 4.5 ページネーション ✅ 完了
+
+**PR**: #98
+
+**実装済み**:
+- [x] ストアフロント商品一覧のページネーション
+- [x] API側の `limit`/`offset` パラメータ対応
 
 ---
 
 ## 次のアクション
 
-Phase 1 完了、Sprint 2 完了、Sprint 3 ほぼ完了。次のステップ候補:
+Phase 1 完了、Sprint 2-4 完了。次のステップ候補:
 
 1. **本番デプロイ準備** - Cloudflare にデプロイして実運用テスト
 2. **Vectorize 調査** - AI意味検索のためのPOC (3.3)
 3. **追加通知チャネル** - Email (Resend)、汎用 Webhook 対応
+4. **管理画面i18n** - Admin画面の日本語化

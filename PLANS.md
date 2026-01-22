@@ -29,25 +29,40 @@ Shopify Premium相当以上の「マーケ自動化」「高度検索」「自�
 ---
 
 ## 2. 現状（As-is）
-### 2.1 できていること（v1 skeleton）
-- Daily Close:
+### 2.1 できていること（Phase 1 完了 + 拡張）
+- **Daily Close**:
   - /reports/daily 集計
   - /daily-close/:date/artifacts で report/evidence/html を R2 に出力
   - documents テーブルに紐付け
-- Stripe:
-  - Checkout Session 作成（/checkout/session）
+  - 冪等性保証（再実行可能）
+- **Stripe決済**:
+  - Stripe Elements埋め込みチェックアウト（PaymentIntent API）
+  - 銀行振込対応（jp_bank_transfer）
   - Webhook 受信で orders/payments/refunds を更新
   - fulfillments の自動作成 + events 記録
-- Ledger:
+- **消費税**:
+  - 税率マスタ（標準10%・軽減8%）
+  - 税込表示・内訳計算
+- **Ledger**:
   - daily close を元に ledger_entries を生成
-- Inbox:
+- **Inbox**:
   - open items の一覧 + approve/reject
-- Storefront:
-  - /store/products / /store/products/:id の取得
-- Dev seed:
+  - 異常検知ルール拡張（金額不一致、返金率、未発送アラート）
+- **Storefront**:
+  - 商品一覧（ページネーション対応）/ 商品詳細
+  - カート（LocalStorage永続化、複数商品対応）
+  - 日本語UI（i18n）
+- **Admin**:
+  - 商品/バリアント/価格管理
+  - 在庫管理・しきい値設定
+  - 税率管理
+  - 発送管理
+- **Dev seed**:
   - DEV_MODE=true のとき /dev/seed でローカルデータ投入
-- Cron:
+- **Cron**:
   - Daily Close 生成 + 在庫しきい値の監視を scheduled handler で実行
+- **通知**:
+  - Slack Webhook通知
 
 ### 2.2 完了済みの重要修正
 - ✅ Admin の Documents「開く」が 401 になる問題は解消済み
@@ -161,3 +176,10 @@ Shopify Premium相当以上の「マーケ自動化」「高度検索」「自�
 - 受注の正本（Stripeイベント vs 自前Orders）
 - Refine/Router/Kbar/Query のメジャー固定方針
 - 証跡の扱い（保持期間/命名規約/重要度/監査）
+
+### 2026-01 追記
+- **Stripe Elements採用** (#105): Checkout SessionからPaymentIntent + Stripe Elementsへ移行。埋め込み型チェックアウトでUX向上。
+- **銀行振込対応** (#91): `ENABLE_BANK_TRANSFER`フラグで日本銀行振込（jp_bank_transfer）を有効化可能に。
+- **消費税計算システム** (#83): 税率マスタ（`tax_rates`テーブル）導入。標準10%・軽減8%対応。税込表示。
+- **i18n基盤** (#94): `src/i18n/ja.json` + `t()`ヘルパーで日本語化。シンプルなJSONベース。
+- **ページネーション** (#98): ストアフロント商品一覧にページネーション追加。
