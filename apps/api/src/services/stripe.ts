@@ -80,9 +80,6 @@ export const ensureStripeProduct = async (
 
   const params = new URLSearchParams();
   params.set('name', product.title);
-  if (product.description) {
-    params.set('description', product.description);
-  }
   if (imageUrl) {
     params.set('images[0]', imageUrl);
   }

@@ -79,6 +79,8 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'GET' && /^\/quotations\/\d+\/html$/.test(c.req.path)) return next();
   if (c.req.method === 'POST' && /^\/quotations\/\d+\/accept$/.test(c.req.path)) return next();
   if (c.req.method === 'GET' && c.req.path === '/dev/ping') return next();
+  // Public R2 image endpoint for Stripe checkout
+  if (c.req.method === 'GET' && c.req.path === '/r2') return next();
   if (
     c.req.method === 'GET' &&
     (c.req.path === '/store' || c.req.path.startsWith('/store/'))
@@ -118,12 +120,20 @@ app.route('/', quotations);
 app.get('/r2', async (c) => {
   const key = c.req.query('key');
   if (!key) return jsonError(c, 'key required', 400);
+
+  // Security: Only allow access to product images
+  if (!key.startsWith('products/') && !key.startsWith('product-images/')) {
+    return jsonError(c, 'Access denied', 403);
+  }
+
   try {
     const obj = await c.env.R2.get(key);
     if (!obj) return jsonError(c, 'not found', 404);
     const headers = new Headers();
     obj.writeHttpMetadata(headers);
-    headers.set('cache-control', 'private, max-age=60');
+    headers.set('cache-control', 'public, max-age=31536000, immutable');
+    headers.set('access-control-allow-origin', '*');
+    headers.set('access-control-allow-methods', 'GET');
     if (obj.httpMetadata?.contentType) headers.set('content-type', obj.httpMetadata.contentType);
     return new Response(obj.body, { headers });
   } catch (err) {
