@@ -382,7 +382,8 @@ describe('Stripe webhook handling', () => {
     expect(updateCall?.bind[1]).toBe('pi_test_123');
     expect(updateCall?.bind[2]).toBe(123);
     expect(insertCall?.bind[0]).toBe(123);
-    expect(insertCall?.bind[3]).toBe('pi_test_123');
+    expect(insertCall?.bind[3]).toBe('card'); // Payment method
+    expect(insertCall?.bind[4]).toBe('pi_test_123'); // Provider payment ID
   });
 
   it('returns duplicate when payment insert hits unique constraint', async () => {
