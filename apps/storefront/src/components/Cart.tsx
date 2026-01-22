@@ -213,7 +213,11 @@ function OrderSummary({
 	grandTotal,
 	currency,
 	onCheckout,
-	isProcessing
+	isProcessing,
+	enableBankTransfer,
+	email,
+	setEmail,
+	emailError
 }: {
 	subtotal: number;
 	taxAmount: number;
@@ -224,6 +228,10 @@ function OrderSummary({
 	currency: string;
 	onCheckout: () => void;
 	isProcessing: boolean;
+	enableBankTransfer: boolean;
+	email: string;
+	setEmail: (email: string) => void;
+	emailError: string;
 }) {
 	const { t } = useTranslation();
 	const shippingConfig = useStore($shippingConfig);
@@ -289,6 +297,31 @@ function OrderSummary({
 				</div>
 			)}
 
+			{/* Email input for bank transfer */}
+			{enableBankTransfer && (
+				<div className="border-t border-gray-200 pt-4 space-y-2">
+					<label htmlFor="email" className="block text-sm text-gray-600">
+						メールアドレス
+						<span className="text-red-600 ml-1">*</span>
+					</label>
+					<input
+						id="email"
+						type="email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+						placeholder="your-email@example.com"
+						className="w-full rounded-md border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+						disabled={isProcessing}
+					/>
+					<p className="text-xs text-gray-500">
+						銀行振込をご利用の場合は必須です
+					</p>
+					{emailError && (
+						<p className="text-sm text-red-600">{emailError}</p>
+					)}
+				</div>
+			)}
+
 			<div className="mt-6 space-y-3">
 				<button
 					type="button"
@@ -331,16 +364,26 @@ export default function Cart() {
 	const currency = useStore($cartCurrency);
 	const appliedCoupon = useStore($appliedCoupon);
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [email, setEmail] = useState('');
+	const [emailError, setEmailError] = useState('');
+	const [enableBankTransfer, setEnableBankTransfer] = useState(false);
 
 	// Fetch shipping config on mount
 	useEffect(() => {
 		const fetchShippingConfig = async () => {
 			try {
-				const data = await fetchJson<{ shippingFee: number; freeShippingThreshold: number }>(
+				const data = await fetchJson<{
+					shippingFee: number;
+					freeShippingThreshold: number;
+					enableBankTransfer: boolean;
+				}>(
 					`${getApiBase()}/checkout/config`
 				);
 				if (data.shippingFee !== undefined && data.freeShippingThreshold !== undefined) {
 					setShippingConfig(data);
+				}
+				if (data.enableBankTransfer !== undefined) {
+					setEnableBankTransfer(data.enableBankTransfer);
 				}
 			} catch (err) {
 				console.error('Failed to fetch shipping config:', err);
@@ -353,6 +396,20 @@ export default function Cart() {
 
 	const handleCheckout = async () => {
 		if (items.length === 0) return;
+
+		// Validate email if bank transfer is enabled
+		if (enableBankTransfer) {
+			const trimmedEmail = email.trim();
+			if (!trimmedEmail) {
+				setEmailError('銀行振込をご利用の場合は、メールアドレスを入力してください');
+				return;
+			}
+			if (!trimmedEmail.includes('@')) {
+				setEmailError('有効なメールアドレスを入力してください');
+				return;
+			}
+			setEmailError('');
+		}
 
 		setIsProcessing(true);
 
@@ -367,7 +424,8 @@ export default function Cart() {
 							variantId: item.variantId,
 							quantity: item.quantity
 						})),
-						couponCode: appliedCoupon?.code || undefined
+						couponCode: appliedCoupon?.code || undefined,
+						email: enableBankTransfer ? email.trim() : undefined
 					})
 				}
 			);
@@ -417,6 +475,10 @@ export default function Cart() {
 				currency={currency}
 				onCheckout={handleCheckout}
 				isProcessing={isProcessing}
+				enableBankTransfer={enableBankTransfer}
+				email={email}
+				setEmail={setEmail}
+				emailError={emailError}
 			/>
 		</div>
 	);
