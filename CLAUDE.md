@@ -64,11 +64,24 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 - `.astro` ファイルでSSRページ
 - クライアントJSはインライン `<script>` タグ
 - コンポーネントは `src/components/` に配置
+- i18n: `src/i18n/ja.json` + `t()` ヘルパー関数で日本語化
 
 ## テスト
 
 - **テストフレームワーク**: Vitest
 - **命名**: `*_test.ts` または `*.test.ts`
+
+## 主要機能
+
+### 決済システム
+- **Stripe Elements**: 埋め込み型チェックアウト（PaymentIntent API使用）
+- **銀行振込**: `ENABLE_BANK_TRANSFER`フラグで有効化、Stripe jp_bank_transfer
+- **決済フロー**: カート → PaymentIntent作成 → Stripe Elements → 確定 → Webhook
+
+### 消費税計算
+- **税率マスタ**: `tax_rates`テーブル（標準10%、軽減8%）
+- **税込表示**: 商品価格は税込、カートで内訳表示
+- **計算ロジック**: `services/tax.ts`で切り捨て丸め（日本の慣例）
 
 ## 主要な設計方針
 
@@ -83,8 +96,13 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 - `ADMIN_API_KEY`: 管理者API認証キー
 - `DEV_MODE`: 開発モードフラグ
 - `STRIPE_SECRET_KEY`: Stripe秘密鍵
+- `STRIPE_PUBLISHABLE_KEY`: Stripe公開鍵（Embedded Checkout用）
 - `STRIPE_WEBHOOK_SECRET`: Stripeウェブフック署名検証用
 - `STOREFRONT_BASE_URL`: ストアフロントURL
+- `SHIPPING_FEE_AMOUNT`: 送料（円）
+- `FREE_SHIPPING_THRESHOLD`: 送料無料閾値（円）
+- `ENABLE_BANK_TRANSFER`: 銀行振込決済の有効化フラグ
+- `COMPANY_*`: 会社情報（名前、住所、電話、メール等）
 
 ローカル開発は `.dev.vars` に秘密情報を配置（gitignore済み）。
 
@@ -94,9 +112,19 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 D1スキーママイグレーション（SQL）。`0001_init.sql` から順番に適用。
 
 ### Key API Endpoints
+
+#### チェックアウト・決済
+- `POST /checkout/session` - Stripeチェックアウト作成
+- `POST /payments/create-intent` - PaymentIntent作成（Embedded Checkout）
+- `POST /payments/confirm` - 支払い確定
+- `GET /payments/:id` - 支払い詳細取得
+- `POST /webhooks/stripe` - Stripeウェブフック
+
+#### レポート・会計
 - `GET /reports/daily?date=YYYY-MM-DD` - 日次売上レポート
 - `POST /daily-close/:date/artifacts` - 日次締め帳票生成
 - `GET /ledger-entries?date=YYYY-MM-DD` - 仕訳一覧
+
+#### 管理API
 - `GET /inbox?status=open` - 未処理インボックス
-- `POST /checkout/session` - Stripeチェックアウト作成
-- `POST /webhooks/stripe` - Stripeウェブフック
+- `GET/POST/PUT/DELETE /admin/tax-rates` - 税率管理
