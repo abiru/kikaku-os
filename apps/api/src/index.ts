@@ -26,6 +26,7 @@ import adminTaxRates from './routes/adminTaxRates';
 import fulfillments from './routes/fulfillments';
 import stripe from './routes/stripe';
 import checkout from './routes/checkout';
+import payments from './routes/payments';
 import storefront from './routes/storefront';
 import quotations from './routes/quotations';
 import { generateDailyReport } from './services/dailyReport';
@@ -76,6 +77,9 @@ app.use('*', async (c, next) => {
   if (c.req.path.startsWith('/checkout/session')) return next();
   if (c.req.method === 'GET' && c.req.path === '/checkout/config') return next();
   if (c.req.method === 'POST' && c.req.path === '/checkout/validate-coupon') return next();
+  if (c.req.method === 'POST' && c.req.path === '/checkout/quote') return next();
+  // Public payment endpoints
+  if (c.req.method === 'POST' && c.req.path === '/payments/intent') return next();
   // Public quotation endpoints (customer-facing)
   if (c.req.method === 'POST' && c.req.path === '/quotations') return next();
   if (c.req.method === 'GET' && /^\/quotations\/\d+$/.test(c.req.path)) return next();
@@ -90,6 +94,8 @@ app.use('*', async (c, next) => {
   ) {
     return next();
   }
+  // Public order status endpoint for polling
+  if (c.req.method === 'GET' && /^\/orders\/\d+$/.test(c.req.path)) return next();
   return clerkAuth(c, next);
 });
 
@@ -117,6 +123,7 @@ app.route('/admin/tax-rates', adminTaxRates);
 app.route('/', fulfillments);
 app.route('/', stripe);
 app.route('/', checkout);
+app.route('/', payments);
 app.route('/store', storefront);
 app.route('/', quotations);
 

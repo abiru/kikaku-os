@@ -39,7 +39,26 @@ export const ensureStripeCustomer = async (
 
   // 2. Return existing Stripe Customer ID if already set (idempotent)
   if (customer.stripe_customer_id) {
-    return customer.stripe_customer_id;
+    // Verify that the customer still exists in Stripe
+    try {
+      const verifyRes = await fetch(`https://api.stripe.com/v1/customers/${customer.stripe_customer_id}`, {
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${stripeKey}`
+        }
+      });
+
+      if (verifyRes.ok) {
+        // Customer exists, return it
+        return customer.stripe_customer_id;
+      }
+
+      // Customer doesn't exist (404 or other error), create a new one
+      console.warn(`[StripeCustomer] Customer ${customer.stripe_customer_id} not found in Stripe, creating new one`);
+    } catch (err) {
+      console.error(`[StripeCustomer] Error verifying customer:`, err);
+      // Continue to create new customer
+    }
   }
 
   // 3. Create new Stripe Customer
@@ -48,6 +67,9 @@ export const ensureStripeCustomer = async (
     params.set('email', email);
   }
   params.set('metadata[local_customer_id]', String(customerId));
+
+  // Set customer address for bank transfer availability (Japan)
+  params.set('address[country]', 'JP');
 
   const response = await fetch('https://api.stripe.com/v1/customers', {
     method: 'POST',

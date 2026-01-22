@@ -1,12 +1,14 @@
 import { Hono } from 'hono';
-import type { Context } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
-import { ensureStripePriceForVariant } from '../services/stripe';
-import { ensureStripeCustomer } from '../services/stripeCustomer';
 import { calculateOrderTax, type TaxCalculationInput } from '../services/tax';
 
 const checkout = new Hono<Env>();
+
+// Generate UUID for quote ID
+const generateQuoteId = () => {
+  return crypto.randomUUID();
+};
 
 checkout.get('/checkout/config', async (c) => {
   return jsonOk(c, {
@@ -109,22 +111,6 @@ type CheckoutItem = {
   quantity: number;
 };
 
-const normalizeEmail = (value: unknown) => {
-  if (!value) return null;
-  const trimmed = String(value).trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
-
-const isValidEmail = (value: string) => {
-  if (value.length > 254) return false;
-  return value.includes('@');
-};
-
-const jsonErrorWithCode = (c: Context, code: string, message: string, status: number = 500) => {
-  console.error(message);
-  return c.json({ ok: false, message, error: { code, message } }, status as 400 | 500);
-};
-
 const validateItem = (item: unknown): CheckoutItem | null => {
   if (!item || typeof item !== 'object') return null;
   const obj = item as Record<string, unknown>;
@@ -135,18 +121,7 @@ const validateItem = (item: unknown): CheckoutItem | null => {
   return { variantId, quantity };
 };
 
-checkout.post('/checkout/session', async (c) => {
-  const stripeKey = c.env.STRIPE_SECRET_KEY ?? (c.env as any).STRIPE_API_KEY;
-  if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
-  if (stripeKey.startsWith('pk_')) {
-    return jsonErrorWithCode(
-      c,
-      'STRIPE_SECRET_KEY_INVALID',
-      'Stripe secret key looks like a publishable key (pk*). Use STRIPE_API_KEY with an sk* value.',
-      500
-    );
-  }
-
+checkout.post('/checkout/quote', async (c) => {
   let body: any;
   try {
     body = await c.req.json();
@@ -154,18 +129,7 @@ checkout.post('/checkout/session', async (c) => {
     return jsonError(c, 'Invalid JSON', 400);
   }
 
-  const email = normalizeEmail(body?.email);
-  if (email && !isValidEmail(email)) {
-    return jsonError(c, 'Invalid email', 400);
-  }
-
-  // Validate email requirement for bank transfer
-  const enableBankTransfer = c.env.ENABLE_BANK_TRANSFER === 'true';
-  if (enableBankTransfer && !email) {
-    return jsonError(c, 'Bank transfer requires email address', 400);
-  }
-
-  // Support both single item (backward compat) and multiple items
+  // Validate items
   let items: CheckoutItem[] = [];
   if (Array.isArray(body?.items)) {
     for (const rawItem of body.items) {
@@ -175,13 +139,6 @@ checkout.post('/checkout/session', async (c) => {
       }
       items.push(item);
     }
-  } else if (body?.variantId !== undefined) {
-    // Backward compatibility: single variantId
-    const item = validateItem({ variantId: body.variantId, quantity: body.quantity });
-    if (!item) {
-      return jsonError(c, 'Invalid variantId or quantity', 400);
-    }
-    items.push(item);
   }
 
   if (items.length === 0) {
@@ -216,7 +173,7 @@ checkout.post('/checkout/session', async (c) => {
      ORDER BY pr.id DESC`
   ).bind(...variantIds).all<VariantPriceRow>();
 
-  // Build map of variant_id -> price row (latest price per variant)
+  // Build map of variant_id -> price row
   const variantMap = new Map<number, VariantPriceRow>();
   for (const row of variantRows.results || []) {
     if (!variantMap.has(row.variant_id)) {
@@ -224,56 +181,11 @@ checkout.post('/checkout/session', async (c) => {
     }
   }
 
-  // Validate all variants exist and ensure Stripe prices are configured
+  // Validate all variants exist
   for (const item of items) {
     const row = variantMap.get(item.variantId);
     if (!row) {
-      return jsonErrorWithCode(c, 'VARIANT_NOT_FOUND', `Variant ${item.variantId} not found`, 404);
-    }
-    if (!row.provider_price_id?.trim()) {
-      try {
-        // Use API origin for R2 image URLs (not STOREFRONT_BASE_URL, as /r2 endpoint is on API)
-        const apiOrigin = new URL(c.req.url).origin;
-        const imageUrl = row.image_r2_key
-          ? `${apiOrigin}/r2?key=${encodeURIComponent(row.image_r2_key)}`
-          : null;
-
-        const stripePriceId = await ensureStripePriceForVariant(c.env.DB, stripeKey, row, imageUrl);
-        variantMap.set(item.variantId, { ...row, provider_price_id: stripePriceId });
-      } catch (err) {
-        console.error(`Failed to create Stripe price for variant ${item.variantId}:`, err);
-        return jsonErrorWithCode(
-          c,
-          'STRIPE_PRICE_CREATION_FAILED',
-          `Failed to create Stripe price for variant ${item.variantId}`,
-          500
-        );
-      }
-    }
-  }
-
-  // Customer handling - CREATE STRIPE CUSTOMER FOR BANK TRANSFER SUPPORT
-  let customerId: number | null = null;
-  let stripeCustomerId: string | null = null;
-
-  if (email) {
-    const existingCustomer = await c.env.DB.prepare(
-      `SELECT id, stripe_customer_id FROM customers WHERE email=?`
-    ).bind(email).first<{ id: number; stripe_customer_id: string | null }>();
-
-    if (existingCustomer?.id) {
-      customerId = existingCustomer.id;
-      // Ensure Stripe Customer exists (required for bank transfer reconciliation)
-      stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
-    } else {
-      // Create new local customer
-      const res = await c.env.DB.prepare(
-        `INSERT INTO customers (name, email, created_at, updated_at)
-         VALUES (?, ?, datetime('now'), datetime('now'))`
-      ).bind('Storefront Customer', email).run();
-      customerId = Number(res.meta.last_row_id);
-      // Create Stripe Customer
-      stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
+      return jsonError(c, `Variant ${item.variantId} not found`, 404);
     }
   }
 
@@ -281,21 +193,18 @@ checkout.post('/checkout/session', async (c) => {
   const taxInputs: TaxCalculationInput[] = items.map((item) => {
     const row = variantMap.get(item.variantId)!;
     return {
-      unitPrice: row.amount,  // Tax-inclusive price
+      unitPrice: row.amount,
       quantity: item.quantity,
-      taxRate: row.tax_rate || 0.10  // Default to 10% if not set
+      taxRate: row.tax_rate || 0.10
     };
   });
 
   const taxCalculation = calculateOrderTax(taxInputs);
-
-  // Extract tax breakdown
-  const subtotal = taxCalculation.subtotal;       // Tax-exclusive subtotal
-  const taxAmount = taxCalculation.taxAmount;     // Total tax amount
-  const totalNet = taxCalculation.totalAmount;    // Tax-inclusive total (original cart total)
+  const subtotal = taxCalculation.subtotal;
+  const taxAmount = taxCalculation.taxAmount;
+  const cartTotal = taxCalculation.totalAmount;
 
   let currency = 'JPY';
-  // Get currency from first item
   if (items.length > 0) {
     const row = variantMap.get(items[0].variantId)!;
     currency = (row.currency || 'JPY').toUpperCase();
@@ -340,7 +249,7 @@ checkout.post('/checkout/session', async (c) => {
       return jsonError(c, 'Coupon has expired', 400);
     }
 
-    if (coupon.min_order_amount && totalNet < coupon.min_order_amount) {
+    if (coupon.min_order_amount && cartTotal < coupon.min_order_amount) {
       return jsonError(c, `Minimum order amount of ${coupon.min_order_amount} required`, 400);
     }
 
@@ -350,9 +259,9 @@ checkout.post('/checkout/session', async (c) => {
 
     // Calculate discount
     if (coupon.type === 'percentage') {
-      discountAmount = Math.floor(totalNet * coupon.value / 100);
+      discountAmount = Math.floor(cartTotal * coupon.value / 100);
     } else {
-      discountAmount = Math.min(coupon.value, totalNet);
+      discountAmount = Math.min(coupon.value, cartTotal);
     }
 
     couponId = coupon.id;
@@ -361,161 +270,51 @@ checkout.post('/checkout/session', async (c) => {
   // Shipping fee calculation
   const shippingFee = Number(c.env.SHIPPING_FEE_AMOUNT || 500);
   const freeThreshold = Number(c.env.FREE_SHIPPING_THRESHOLD || 5000);
-  const actualShippingFee = totalNet >= freeThreshold ? 0 : shippingFee;
+  const actualShippingFee = cartTotal >= freeThreshold ? 0 : shippingFee;
 
-  // Calculate final total: cart total - discount + shipping
-  const finalTotal = totalNet - discountAmount + actualShippingFee;
+  // Calculate grand total
+  const grandTotal = cartTotal - discountAmount + actualShippingFee;
 
-  // Create order
-  const orderRes = await c.env.DB.prepare(
-    `INSERT INTO orders (
-       customer_id, status,
-       subtotal, tax_amount, total_net,
-       total_discount, shipping_fee, total_amount,
-       coupon_code, total_fee, currency, metadata,
-       created_at, updated_at
-     )
-     VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, datetime('now'), datetime('now'))`
-  ).bind(
-    customerId,
-    subtotal,        // Tax-exclusive subtotal
-    taxAmount,       // Tax amount
-    totalNet,        // Tax-inclusive cart total (before discount/shipping)
-    discountAmount,
-    actualShippingFee,
-    finalTotal,      // Final total (after discount and shipping)
-    couponCode || null,
-    currency,
-    JSON.stringify({
-      source: 'storefront',
-      email,
-      items: items.map((i) => ({ variant_id: i.variantId, quantity: i.quantity })),
-      tax_breakdown: { subtotal, tax_amount: taxAmount }
-    })
-  ).run();
-
-  const orderId = Number(orderRes.meta.last_row_id);
-
-  // Insert all order items with tax details
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const row = variantMap.get(item.variantId)!;
-    const itemTax = taxCalculation.itemBreakdown[i];
-
-    await c.env.DB.prepare(
-      `INSERT INTO order_items (
-         order_id, variant_id, quantity, unit_price,
-         tax_rate, tax_amount,
-         metadata, created_at, updated_at
-       )
-       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
-    ).bind(
-      orderId,
-      item.variantId,
-      item.quantity,
-      row.amount,
-      itemTax.taxRate,
-      itemTax.taxAmount,
-      JSON.stringify({ product_id: row.product_id })
-    ).run();
-  }
-
-  // NOTE: Coupon usage is NOT recorded here (would create phantom records for abandoned carts)
-  // Instead, it's recorded in the Stripe webhook handler after successful payment
-
-  // Build Stripe checkout session
-  const baseUrl = c.env.STOREFRONT_BASE_URL || 'http://localhost:4321';
-  const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${baseUrl}/checkout/cancel`;
-
-  const params = new URLSearchParams();
-  params.set('mode', 'payment');
-  params.set('success_url', successUrl);
-  params.set('cancel_url', cancelUrl);
-
-  // Configure payment methods
-  if (enableBankTransfer) {
-    // Explicitly enable card and bank transfer
-    params.set('payment_method_types[0]', 'card');
-    params.set('payment_method_types[1]', 'customer_balance');
-
-    // Configure bank transfer options for Japan
-    params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
-    params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
-    params.set('payment_method_options[customer_balance][bank_transfer][requested_address_types][0]', 'zengin');
-  }
-
-  // Add line items for each cart item
-  items.forEach((item, index) => {
-    const row = variantMap.get(item.variantId)!;
-    params.set(`line_items[${index}][price]`, row.provider_price_id!.trim());
-    params.set(`line_items[${index}][quantity]`, String(item.quantity));
-  });
-
-  let lineItemIndex = items.length;
-
-  // Add shipping fee line item
-  if (actualShippingFee > 0) {
-    params.set(`line_items[${lineItemIndex}][price_data][currency]`, currency.toLowerCase());
-    params.set(`line_items[${lineItemIndex}][price_data][product_data][name]`, '配送料');
-    params.set(`line_items[${lineItemIndex}][price_data][unit_amount]`, String(actualShippingFee));
-    params.set(`line_items[${lineItemIndex}][quantity]`, '1');
-  }
-
-  // NOTE: Discount is NOT added as negative line_item (Stripe rejects negative amounts)
-  // Instead, discount is recorded in order metadata and displayed in storefront
-
-  // Enable shipping address and phone number collection
-  params.set('shipping_address_collection[allowed_countries][0]', 'JP');
-  params.set('phone_number_collection[enabled]', 'true');
-
-  params.set('metadata[orderId]', String(orderId));
-  params.set('metadata[order_id]', String(orderId));
-  params.set('metadata[subtotal]', String(subtotal));
-  params.set('metadata[taxAmount]', String(taxAmount));
-  params.set('metadata[totalAmount]', String(finalTotal));
-  if (couponCode) {
-    params.set('metadata[couponCode]', couponCode);
-    params.set('metadata[discountAmount]', String(discountAmount));
-    params.set('metadata[couponId]', String(couponId));
-  }
-  params.set('metadata[shippingFee]', String(actualShippingFee));
-  params.set('payment_intent_data[metadata][orderId]', String(orderId));
-  params.set('payment_intent_data[metadata][order_id]', String(orderId));
-
-  // CRITICAL: Associate Stripe Customer (required for bank transfer reconciliation)
-  if (stripeCustomerId) {
-    params.set('customer', stripeCustomerId);
-  } else if (email) {
-    // Fallback: Let Stripe create Customer (card-only flow)
-    params.set('customer_email', email);
-  }
-
-  const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${stripeKey}`,
-      'content-type': 'application/x-www-form-urlencoded'
-    },
-    body: params.toString()
-  });
-
-  if (!stripeRes.ok) {
-    const text = await stripeRes.text();
-    console.error(text);
-    return jsonError(c, 'Failed to create checkout session', 500);
-  }
-
-  const session = await stripeRes.json<any>();
-  if (!session?.url || !session?.id) {
-    return jsonError(c, 'Invalid checkout session', 500);
-  }
+  // Generate quote ID and store quote
+  const quoteId = generateQuoteId();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
 
   await c.env.DB.prepare(
-    `UPDATE orders SET provider_checkout_session_id=?, updated_at=datetime('now') WHERE id=?`
-  ).bind(session.id, orderId).run();
+    `INSERT INTO checkout_quotes (
+       id, items_json, coupon_code, coupon_id,
+       subtotal, tax_amount, cart_total,
+       discount, shipping_fee, grand_total,
+       currency, expires_at
+     )
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(
+    quoteId,
+    JSON.stringify(items),
+    couponCode || null,
+    couponId,
+    subtotal,
+    taxAmount,
+    cartTotal,
+    discountAmount,
+    actualShippingFee,
+    grandTotal,
+    currency,
+    expiresAt
+  ).run();
 
-  return jsonOk(c, { url: session.url, orderId });
+  return jsonOk(c, {
+    quoteId,
+    breakdown: {
+      subtotal,
+      taxAmount,
+      cartTotal,
+      discount: discountAmount,
+      shippingFee: actualShippingFee,
+      grandTotal,
+      currency
+    },
+    expiresAt
+  });
 });
 
 export default checkout;

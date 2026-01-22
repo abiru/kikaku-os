@@ -317,15 +317,6 @@ storefront.get('/products/:id', async (c) => {
   return jsonOk(c, { product: products[0] || null });
 });
 
-type OrderBySessionRow = {
-  id: number;
-  status: string;
-  total_net: number;
-  currency: string;
-  created_at: string;
-  customer_email: string | null;
-};
-
 type OrderItemRow = {
   product_title: string;
   variant_title: string;
@@ -333,22 +324,41 @@ type OrderItemRow = {
   unit_price: number;
 };
 
-storefront.get('/orders/by-session/:sessionId', async (c) => {
-  const sessionId = c.req.param('sessionId');
-  if (!sessionId || sessionId.length < 10) {
+type OrderRow = {
+  id: number;
+  status: string;
+  total_amount: number;
+  currency: string;
+  created_at: string;
+  paid_at: string | null;
+  metadata: string | null;
+  customer_email: string | null;
+};
+
+storefront.get('/orders/:id', async (c) => {
+  const id = Number(c.req.param('id'));
+  if (!Number.isInteger(id) || id <= 0) {
     return jsonOk(c, { order: null });
   }
 
+  const poll = c.req.query('poll') === 'true';
+
   const order = await c.env.DB.prepare(`
-    SELECT o.id, o.status, o.total_net, o.currency, o.created_at,
+    SELECT o.id, o.status, o.total_amount, o.currency,
+           o.created_at, o.paid_at, o.metadata,
            c.email as customer_email
     FROM orders o
     LEFT JOIN customers c ON c.id = o.customer_id
-    WHERE o.provider_checkout_session_id = ?
-  `).bind(sessionId).first<OrderBySessionRow>();
+    WHERE o.id = ?
+  `).bind(id).first<OrderRow>();
 
   if (!order) {
-    return jsonOk(c, { order: null });
+    return c.json({ ok: false, message: 'Order not found' }, 404);
+  }
+
+  // If polling and order is still pending, return 202
+  if (poll && order.status === 'pending') {
+    return c.json({ ok: true, status: 'pending' }, 202);
   }
 
   const itemsRes = await c.env.DB.prepare(`
@@ -362,14 +372,27 @@ storefront.get('/orders/by-session/:sessionId', async (c) => {
     WHERE oi.order_id = ?
   `).bind(order.id).all<OrderItemRow>();
 
+  // Parse shipping info from metadata if available
+  let shipping = null;
+  if (order.metadata) {
+    try {
+      const metadata = JSON.parse(order.metadata);
+      shipping = metadata.shipping || null;
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
   return jsonOk(c, {
     order: {
       id: order.id,
       status: order.status,
-      total_net: order.total_net,
+      total_amount: order.total_amount,
       currency: order.currency,
       created_at: order.created_at,
+      paid_at: order.paid_at,
       customer_email: order.customer_email,
+      shipping,
       items: (itemsRes.results || []).map(item => ({
         title: item.variant_title !== 'Default'
           ? `${item.product_title} - ${item.variant_title}`

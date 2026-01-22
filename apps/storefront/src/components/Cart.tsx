@@ -394,60 +394,11 @@ export default function Cart() {
 		fetchShippingConfig();
 	}, []);
 
-	const handleCheckout = async () => {
+	const handleCheckout = () => {
 		if (items.length === 0) return;
 
-		// Validate email if bank transfer is enabled
-		if (enableBankTransfer) {
-			const trimmedEmail = email.trim();
-			if (!trimmedEmail) {
-				setEmailError('銀行振込をご利用の場合は、メールアドレスを入力してください');
-				return;
-			}
-			if (!trimmedEmail.includes('@')) {
-				setEmailError('有効なメールアドレスを入力してください');
-				return;
-			}
-			setEmailError('');
-		}
-
-		setIsProcessing(true);
-
-		try {
-			const data = await fetchJson<{ ok: boolean; url?: string; message?: string }>(
-				`${getApiBase()}/checkout/session`,
-				{
-					method: 'POST',
-					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({
-						items: items.map((item) => ({
-							variantId: item.variantId,
-							quantity: item.quantity
-						})),
-						couponCode: appliedCoupon?.code || undefined,
-						email: enableBankTransfer ? email.trim() : undefined
-					})
-				}
-			);
-
-			if (data.ok && data.url) {
-				// Save cart backup to sessionStorage before redirect
-				if (typeof sessionStorage !== 'undefined') {
-					const cartData = localStorage.getItem('led-kikaku-cart') || '{}';
-					sessionStorage.setItem('led-kikaku-cart-backup', cartData);
-				}
-
-				// Don't clear cart here - will be cleared on success page
-				window.location.href = data.url;
-			} else {
-				throw new Error(data.message || t('errors.checkoutFailed'));
-			}
-		} catch (err) {
-			console.error('Checkout error:', err);
-			const message = err instanceof Error ? err.message : t('errors.unknownError');
-			alert(`${t('errors.checkoutFailed')}: ${message}`);
-			setIsProcessing(false);
-		}
+		// Redirect to new checkout page with Payment Element
+		window.location.href = '/checkout';
 	};
 
 	if (items.length === 0) {
