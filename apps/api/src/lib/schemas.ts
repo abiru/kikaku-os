@@ -83,6 +83,26 @@ export const productListQuerySchema = z.object({
     .transform((v) => Math.min(100, Math.max(1, parseInt(v, 10)))),
 });
 
+// Storefront products query (public-facing, no status filter)
+export const storefrontProductsQuerySchema = z.object({
+  q: z.string().max(100).optional().default(''),
+  category: z.string().max(50).optional(),
+  minPrice: z.coerce.number().nonnegative().optional(),
+  maxPrice: z.coerce.number().nonnegative().optional(),
+  page: z
+    .string()
+    .regex(/^\d+$/)
+    .optional()
+    .default('1')
+    .transform((v) => Math.max(1, parseInt(v, 10))),
+  perPage: z
+    .string()
+    .regex(/^\d+$/)
+    .optional()
+    .default('20')
+    .transform((v) => Math.min(100, Math.max(1, parseInt(v, 10)))),
+});
+
 // === Order Schemas ===
 
 export const orderIdParamSchema = z.object({
@@ -216,6 +236,7 @@ export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type ProductIdParam = z.infer<typeof productIdParamSchema>;
 export type ProductListQuery = z.infer<typeof productListQuerySchema>;
+export type StorefrontProductsQuery = z.infer<typeof storefrontProductsQuerySchema>;
 export type OrderIdParam = z.infer<typeof orderIdParamSchema>;
 export type OrderListQuery = z.infer<typeof orderListQuerySchema>;
 export type CreateVariantInput = z.infer<typeof createVariantSchema>;

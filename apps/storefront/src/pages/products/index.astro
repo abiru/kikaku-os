@@ -93,6 +93,22 @@ const skeletonCards = Array.from({ length: 6 });
 							{/* Loaded Grid */}
 							<div id="product-grid" class="hidden grid grid-cols-1 gap-6 sm:grid-cols-2 xl:gap-8"></div>
 						</div>
+
+						{/* Pagination */}
+						<div id="pagination" class="hidden mt-12 flex items-center justify-between border-t border-gray-200 pt-6">
+							<div class="text-sm text-gray-600">
+								<span id="pagination-info"></span>
+							</div>
+							<div class="flex gap-2">
+								<a id="prev-page" href="#" class="hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+									← {t('admin.previous')}
+								</a>
+								<span id="current-page" class="px-4 py-2 text-sm font-medium text-gray-900"></span>
+								<a id="next-page" href="#" class="hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+									{t('admin.next')} →
+								</a>
+							</div>
+						</div>
 					</div>
 				</div>
 			</Container>
@@ -191,6 +207,46 @@ const skeletonCards = Array.from({ length: 6 });
 			});
 		};
 
+		const buildPageUrl = (newPage: number): string => {
+			const params = new URLSearchParams(window.location.search);
+			params.set('page', String(newPage));
+			return `?${params.toString()}`;
+		};
+
+		const renderPagination = (meta: any) => {
+			const pagination = document.getElementById('pagination');
+			const paginationInfo = document.getElementById('pagination-info');
+			const prevPage = document.getElementById('prev-page') as HTMLAnchorElement | null;
+			const nextPage = document.getElementById('next-page') as HTMLAnchorElement | null;
+			const currentPage = document.getElementById('current-page');
+
+			if (!meta || !pagination || !paginationInfo || !prevPage || !nextPage || !currentPage) return;
+
+			const { page, perPage, totalCount, totalPages } = meta;
+			const start = (page - 1) * perPage + 1;
+			const end = Math.min(page * perPage, totalCount);
+
+			paginationInfo.textContent = `Showing ${start}-${end} of ${totalCount} products`;
+			currentPage.textContent = `Page ${page} / ${totalPages}`;
+
+			// Show/hide prev/next buttons
+			if (page > 1) {
+				prevPage.classList.remove('hidden');
+				prevPage.href = buildPageUrl(page - 1);
+			} else {
+				prevPage.classList.add('hidden');
+			}
+
+			if (page < totalPages) {
+				nextPage.classList.remove('hidden');
+				nextPage.href = buildPageUrl(page + 1);
+			} else {
+				nextPage.classList.add('hidden');
+			}
+
+			pagination.classList.remove('hidden');
+		};
+
 		const loadProducts = async () => {
 			const apiBase = getApiBase();
 			setState('loading');
@@ -201,6 +257,7 @@ const skeletonCards = Array.from({ length: 6 });
 			const category = urlParams.get('category') || '';
 			const minPrice = urlParams.get('minPrice') || '';
 			const maxPrice = urlParams.get('maxPrice') || '';
+			const page = urlParams.get('page') || '1';
 
 			// Update UI for search
 			const searchInfo = document.getElementById('search-info');
@@ -242,6 +299,7 @@ const skeletonCards = Array.from({ length: 6 });
 				if (category) params.set('category', category);
 				if (minPrice) params.set('minPrice', minPrice);
 				if (maxPrice) params.set('maxPrice', maxPrice);
+				params.set('page', page);
 
 				const queryString = params.toString();
 				const url = buildStoreUrl(queryString ? `/products?${queryString}` : '/products', apiBase);
@@ -254,6 +312,7 @@ const skeletonCards = Array.from({ length: 6 });
 				}
 
 				renderProducts(products);
+				renderPagination(data?.meta);
 				setState('loaded');
 			} catch (error) {
 				setState('error');

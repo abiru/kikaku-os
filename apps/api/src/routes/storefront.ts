@@ -1,15 +1,8 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
 import type { Env } from '../env';
 import { jsonOk } from '../lib/http';
-
-const storeProductsQuerySchema = z.object({
-  q: z.string().max(100).optional().default(''),
-  category: z.string().max(50).optional(),
-  minPrice: z.coerce.number().int().min(0).optional(),
-  maxPrice: z.coerce.number().int().min(0).optional()
-});
+import { storefrontProductsQuerySchema } from '../lib/schemas';
 
 const storefront = new Hono<Env>();
 
@@ -167,8 +160,8 @@ const baseQuery = `
   LEFT JOIN product_images pi ON pi.product_id = p.id
 `;
 
-storefront.get('/products', zValidator('query', storeProductsQuerySchema), async (c) => {
-  const { q, category, minPrice, maxPrice } = c.req.valid('query');
+storefront.get('/products', zValidator('query', storefrontProductsQuerySchema), async (c) => {
+  const { q, category, minPrice, maxPrice, page, perPage } = c.req.valid('query');
 
   const whereConditions: string[] = [];
   const bindings: (string | number)[] = [];
@@ -201,15 +194,72 @@ storefront.get('/products', zValidator('query', storeProductsQuerySchema), async
     ? ` WHERE ${whereConditions.join(' AND ')}`
     : '';
 
-  const sql = baseQuery + whereClause + ` ORDER BY p.id, v.id, pr.id DESC, pi.position ASC`;
+  // Get total count of matching products (distinct products, not rows)
+  const countSql = `
+    SELECT COUNT(DISTINCT p.id) as total
+    FROM products p
+    JOIN variants v ON v.product_id = p.id
+    JOIN prices pr ON pr.variant_id = v.id
+    ${whereClause}
+  `;
 
-  const stmt = bindings.length > 0
-    ? c.env.DB.prepare(sql).bind(...bindings)
-    : c.env.DB.prepare(sql);
+  const countStmt = bindings.length > 0
+    ? c.env.DB.prepare(countSql).bind(...bindings)
+    : c.env.DB.prepare(countSql);
 
-  const res = await stmt.all<StorefrontRow>();
+  const countResult = await countStmt.first<{ total: number }>();
+  const totalCount = countResult?.total ?? 0;
+  const totalPages = Math.ceil(totalCount / perPage);
+
+  // Get paginated products
+  // Note: We need to get ALL rows for the products on this page due to the denormalized structure
+  // Then we'll filter to only the products for this page
+  const offset = (page - 1) * perPage;
+
+  // First, get the product IDs for this page
+  const productIdsSql = `
+    SELECT DISTINCT p.id
+    FROM products p
+    JOIN variants v ON v.product_id = p.id
+    JOIN prices pr ON pr.variant_id = v.id
+    ${whereClause}
+    ORDER BY p.created_at DESC
+    LIMIT ? OFFSET ?
+  `;
+
+  const productIdsStmt = bindings.length > 0
+    ? c.env.DB.prepare(productIdsSql).bind(...bindings, perPage, offset)
+    : c.env.DB.prepare(productIdsSql).bind(perPage, offset);
+
+  const productIdsResult = await productIdsStmt.all<{ id: number }>();
+  const productIds = productIdsResult.results?.map(r => r.id) || [];
+
+  if (productIds.length === 0) {
+    return jsonOk(c, {
+      products: [],
+      query: q || null,
+      filters: {
+        category: category || null,
+        minPrice: minPrice ?? null,
+        maxPrice: maxPrice ?? null
+      },
+      meta: {
+        page,
+        perPage,
+        totalCount,
+        totalPages
+      }
+    });
+  }
+
+  // Now get all data for these specific products
+  const placeholders = productIds.map(() => '?').join(',');
+  const sql = baseQuery + ` WHERE p.id IN (${placeholders}) ORDER BY p.created_at DESC, v.id, pr.id DESC, pi.position ASC`;
+  const res = await c.env.DB.prepare(sql).bind(...productIds).all<StorefrontRow>();
+
   const baseUrl = new URL(c.req.url).origin;
   const products = rowsToProducts(res.results || [], baseUrl);
+
   return jsonOk(c, {
     products,
     query: q || null,
@@ -217,6 +267,12 @@ storefront.get('/products', zValidator('query', storeProductsQuerySchema), async
       category: category || null,
       minPrice: minPrice ?? null,
       maxPrice: maxPrice ?? null
+    },
+    meta: {
+      page,
+      perPage,
+      totalCount,
+      totalPages
     }
   });
 });

@@ -33,11 +33,21 @@ const createMockDb = (options: {
   }>;
   categoryRows?: Array<{ category: string | null }>;
   priceRangeRow?: { minPrice: number | null; maxPrice: number | null };
+  totalCount?: number;
+  productIds?: Array<{ id: number }>;
 }) => {
   return {
     prepare: vi.fn((sql: string) => ({
       bind: vi.fn((..._args: unknown[]) => ({
         all: vi.fn(async () => {
+          if (sql.includes('COUNT(DISTINCT p.id)')) {
+            // Count query for pagination
+            return { results: [] };
+          }
+          if (sql.includes('SELECT DISTINCT p.id')) {
+            // Product IDs query for pagination
+            return { results: options.productIds || [] };
+          }
           if (sql.includes('FROM products')) {
             return { results: options.productRows || [] };
           }
@@ -50,6 +60,10 @@ const createMockDb = (options: {
           return { results: [] };
         }),
         first: vi.fn(async () => {
+          if (sql.includes('COUNT(DISTINCT p.id)')) {
+            // Count result for pagination
+            return { total: options.totalCount ?? 0 };
+          }
           if (sql.includes('FROM orders')) {
             return options.orderRow ?? null;
           }
@@ -60,6 +74,12 @@ const createMockDb = (options: {
         })
       })),
       all: vi.fn(async () => {
+        if (sql.includes('COUNT(DISTINCT p.id)')) {
+          return { results: [] };
+        }
+        if (sql.includes('SELECT DISTINCT p.id')) {
+          return { results: options.productIds || [] };
+        }
         if (sql.includes('FROM products')) {
           return { results: options.productRows || [] };
         }
@@ -69,6 +89,9 @@ const createMockDb = (options: {
         return { results: [] };
       }),
       first: vi.fn(async () => {
+        if (sql.includes('COUNT(DISTINCT p.id)')) {
+          return { total: options.totalCount ?? 0 };
+        }
         if (sql.includes('MIN(pr.amount)')) {
           return options.priceRangeRow ?? null;
         }
@@ -118,7 +141,11 @@ describe('Storefront API', () => {
         }
       ];
 
-      const db = createMockDb({ productRows: rows });
+      const db = createMockDb({
+        totalCount: 1,
+        productIds: [{ id: 1 }],
+        productRows: rows
+      });
       const { fetch } = createApp(db);
 
       const res = await fetch('/store/products');
@@ -173,7 +200,11 @@ describe('Storefront API', () => {
         }
       ];
 
-      const db = createMockDb({ productRows: rows });
+      const db = createMockDb({
+        totalCount: 1,
+        productIds: [{ id: 1 }],
+        productRows: rows
+      });
       const { fetch } = createApp(db);
 
       const res = await fetch('/store/products');
@@ -443,6 +474,146 @@ describe('Storefront API', () => {
       expect(bindCall).toBeDefined();
       expect(bindCall![0]).toBe('active');
       expect(bindCall![1]).toBe('electronics');
+    });
+  });
+
+  describe('Pagination', () => {
+    it('returns pagination metadata with default page 1 and perPage 20', async () => {
+      const rows: StorefrontRow[] = [
+        {
+          product_id: 1,
+          product_title: 'Product 1',
+          product_description: null,
+          variant_id: 10,
+          variant_title: 'Default',
+          sku: null,
+          price_id: 100,
+          amount: 1000,
+          currency: 'JPY',
+          provider_price_id: null
+        }
+      ];
+
+      const db = createMockDb({
+        totalCount: 45,
+        productIds: [{ id: 1 }],
+        productRows: rows
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/products');
+      const json = await res.json();
+
+      expect(json.ok).toBe(true);
+      expect(json.meta).toBeDefined();
+      expect(json.meta.page).toBe(1);
+      expect(json.meta.perPage).toBe(20);
+      expect(json.meta.totalCount).toBe(45);
+      expect(json.meta.totalPages).toBe(3); // ceil(45/20) = 3
+    });
+
+    it('respects page and perPage query parameters', async () => {
+      const db = createMockDb({
+        totalCount: 100,
+        productIds: [],
+        productRows: []
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/products?page=2&perPage=10');
+      const json = await res.json();
+
+      expect(json.meta.page).toBe(2);
+      expect(json.meta.perPage).toBe(10);
+      expect(json.meta.totalPages).toBe(10); // ceil(100/10) = 10
+    });
+
+    it('enforces maximum perPage of 100', async () => {
+      const db = createMockDb({
+        totalCount: 200,
+        productIds: [],
+        productRows: []
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/products?perPage=500');
+      const json = await res.json();
+
+      expect(json.meta.perPage).toBe(100); // Capped at max
+      expect(json.meta.totalPages).toBe(2); // ceil(200/100) = 2
+    });
+
+    it('enforces minimum page of 1', async () => {
+      const db = createMockDb({
+        totalCount: 50,
+        productIds: [],
+        productRows: []
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/products?page=0');
+      const json = await res.json();
+
+      expect(json.meta.page).toBe(1); // Minimum page
+    });
+
+    it('returns empty products array when no results on page', async () => {
+      const db = createMockDb({
+        totalCount: 5,
+        productIds: [],
+        productRows: []
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/products?page=10');
+      const json = await res.json();
+
+      expect(json.products).toEqual([]);
+      expect(json.meta.page).toBe(10);
+      expect(json.meta.totalCount).toBe(5);
+    });
+
+    it('calculates totalPages correctly for exact division', async () => {
+      const db = createMockDb({
+        totalCount: 40,
+        productIds: [],
+        productRows: []
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/products?perPage=20');
+      const json = await res.json();
+
+      expect(json.meta.totalPages).toBe(2); // 40/20 = 2 exactly
+    });
+
+    it('preserves filters with pagination', async () => {
+      const db = createMockDb({
+        totalCount: 10,
+        productIds: [{ id: 1 }],
+        productRows: [
+          {
+            product_id: 1,
+            product_title: 'Filtered Product',
+            product_description: null,
+            variant_id: 10,
+            variant_title: 'Default',
+            sku: null,
+            price_id: 100,
+            amount: 1500,
+            currency: 'JPY',
+            provider_price_id: null
+          }
+        ]
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/products?category=electronics&minPrice=1000&page=2');
+      const json = await res.json();
+
+      expect(json.filters.category).toBe('electronics');
+      expect(json.filters.minPrice).toBe(1000);
+      expect(json.meta.page).toBe(2);
     });
   });
 });
