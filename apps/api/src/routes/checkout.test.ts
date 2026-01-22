@@ -386,8 +386,9 @@ describe('POST /checkout/session', () => {
     expect(steps).toContain('stripe-create-product-with-image');
 
     // Verify image URL was included in Stripe product creation
+    // Image URL uses the API's origin (from request URL), not STOREFRONT_BASE_URL
     const params = new URLSearchParams(productCreateBody);
-    expect(params.get('images[0]')).toBe('https://example.com/r2?key=product-images%2Ftest-image-uuid.jpg');
+    expect(params.get('images[0]')).toBe('http://localhost/r2?key=product-images%2Ftest-image-uuid.jpg');
   });
 
   it('creates Stripe product without image when image is null', async () => {
