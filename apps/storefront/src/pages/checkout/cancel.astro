@@ -2,6 +2,7 @@
 import Button from '../../components/Button.astro';
 import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
+import { t } from '../../i18n';
 ---
 
 <Layout title="Checkout Canceled - Led Kikaku">
@@ -16,27 +17,27 @@ import Layout from '../../layouts/Layout.astro';
 				</div>
 
 				<h1 class="mt-8 text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
-					Checkout canceled.
+					{t('checkout.canceled')}
 				</h1>
 				<p class="mt-4 text-xl text-[#86868b]">
-					No charges were made to your account.
+					{t('checkout.noCharges')}
 				</p>
 
 				{/* Reassurance Card */}
 				<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm">
-					<p class="mb-2 text-sm text-[#86868b]">Need help?</p>
+					<p class="mb-2 text-sm text-[#86868b]">{t('checkout.needHelp')}</p>
 					<p class="text-lg text-[#1d1d1f]">
-						Your cart items are still saved. You can complete your purchase whenever you are ready, or contact our support team.
+						{t('checkout.cartItemsSaved')}
 					</p>
 				</div>
 
 				{/* Next Actions */}
 				<div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
 					<Button href="/cart" size="lg">
-						Return to cart
+						{t('cart.returnToCart')}
 					</Button>
 					<Button href="/products" variant="secondary" size="lg">
-						Continue shopping
+						{t('cart.continueShopping')}
 					</Button>
 				</div>
 			</div>

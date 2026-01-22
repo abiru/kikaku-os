@@ -3,6 +3,7 @@ import Button from '../../components/Button.astro';
 import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
 import { getOrderBySession } from '../../lib/api';
+import { t } from '../../i18n';
 
 const sessionId = Astro.url.searchParams.get('session_id');
 let order = null;
@@ -35,19 +36,19 @@ const formatPrice = (amount: number, currency: string) => {
 				</div>
 
 				<h1 class="mt-8 text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
-					Thank you.
+					{t('checkout.thankYou')}
 				</h1>
 				<p class="mt-4 text-xl text-[#86868b]">
-					Your order is confirmed.
+					{t('checkout.orderConfirmed')}
 				</p>
 
 				{/* Order Details Card */}
 				{order ? (
 					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm">
 						<div class="flex items-center justify-between mb-6">
-							<p class="text-sm text-[#86868b]">Order #{order.id}</p>
+							<p class="text-sm text-[#86868b]">{t('admin.order')} #{order.id}</p>
 							<span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
-								{order.status === 'paid' ? 'Confirmed' : order.status}
+								{order.status === 'paid' ? t('checkout.confirmed') : order.status}
 							</span>
 						</div>
 
@@ -57,7 +58,7 @@ const formatPrice = (amount: number, currency: string) => {
 								<div class="flex justify-between">
 									<div>
 										<p class="font-medium text-[#1d1d1f]">{item.title}</p>
-										<p class="text-sm text-[#86868b]">Qty: {item.quantity}</p>
+										<p class="text-sm text-[#86868b]">{t('checkout.quantity')}: {item.quantity}</p>
 									</div>
 									<p class="font-medium text-[#1d1d1f]">
 										{formatPrice(item.unit_price * item.quantity, order.currency)}
@@ -69,7 +70,7 @@ const formatPrice = (amount: number, currency: string) => {
 						{/* Total */}
 						<div class="mt-6 border-t border-gray-100 pt-6">
 							<div class="flex justify-between text-lg font-semibold">
-								<span>Total</span>
+								<span>{t('checkout.total')}</span>
 								<span>{formatPrice(order.total_net, order.currency)}</span>
 							</div>
 						</div>
@@ -78,16 +79,16 @@ const formatPrice = (amount: number, currency: string) => {
 						{order.customer_email && (
 							<div class="mt-6 border-t border-gray-100 pt-6">
 								<p class="text-sm text-[#86868b]">
-									Confirmation sent to: <span class="text-[#1d1d1f]">{order.customer_email}</span>
+									{t('checkout.confirmationSentTo')}: <span class="text-[#1d1d1f]">{order.customer_email}</span>
 								</p>
 							</div>
 						)}
 					</div>
 				) : (
 					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm">
-						<p class="mb-2 text-sm text-[#86868b]">Order confirmation</p>
+						<p class="mb-2 text-sm text-[#86868b]">{t('checkout.orderConfirmation')}</p>
 						<p class="text-lg text-[#1d1d1f]">
-							A confirmation email has been sent to your inbox with shipping details and tracking information.
+							{t('checkout.confirmationEmailSent')}
 						</p>
 					</div>
 				)}
@@ -95,10 +96,10 @@ const formatPrice = (amount: number, currency: string) => {
 				{/* Next Actions */}
 				<div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
 					<Button href="/products" size="lg">
-						Continue shopping
+						{t('cart.continueShopping')}
 					</Button>
 					<Button href="/" variant="link" size="lg">
-						Return to home
+						{t('checkout.returnToHome')}
 					</Button>
 				</div>
 			</div>

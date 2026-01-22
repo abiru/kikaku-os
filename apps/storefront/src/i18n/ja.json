@@ -85,7 +85,23 @@
     "addForFreeShipping": "送料無料まであと{amount}",
     "applying": "適用中...",
     "invalidCoupon": "無効なクーポンです",
-    "processing": "処理中..."
+    "processing": "処理中...",
+    "returnToCart": "カートに戻る"
+  },
+  "checkout": {
+    "canceled": "チェックアウトをキャンセルしました。",
+    "noCharges": "お客様のアカウントへの請求は発生していません。",
+    "needHelp": "お困りですか？",
+    "cartItemsSaved": "カート内の商品は保存されています。ご都合の良い時にご購入を完了いただくか、サポートチームにお問い合わせください。",
+    "thankYou": "ご注文ありがとうございます。",
+    "orderConfirmed": "ご注文を確認しました。",
+    "confirmed": "確認済み",
+    "quantity": "数量",
+    "total": "合計",
+    "confirmationSentTo": "確認メールの送信先",
+    "orderConfirmation": "注文確認",
+    "confirmationEmailSent": "確認メールが送信されました。配送の詳細と追跡情報が記載されています。",
+    "returnToHome": "ホームに戻る"
   },
   "admin": {
     "dashboard": "ダッシュボード",
