@@ -9,6 +9,7 @@ export type CartItem = {
 	currency: string;
 	quantity: number;
 	taxRate?: number; // e.g., 0.10 for 10%
+	imageUrl?: string;
 };
 
 type CartState = Record<string, CartItem>;
