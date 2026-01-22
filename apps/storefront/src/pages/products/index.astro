@@ -4,6 +4,7 @@ import Container from '../../components/Container.astro';
 import EmptyState from '../../components/EmptyState.astro';
 import Layout from '../../layouts/Layout.astro';
 import ProductFilters from '../../components/ProductFilters';
+import { t } from '../../i18n';
 
 const skeletonCards = Array.from({ length: 6 });
 ---
@@ -13,7 +14,7 @@ const skeletonCards = Array.from({ length: 6 });
 		<section class="pt-24 pb-12 sm:pt-32 border-b border-gray-200">
 			<Container>
 				<h1 class="text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
-					Store. <span class="text-[#86868b]">The best way to buy the products you love.</span>
+					{t('products.title')} <span class="text-[#86868b]">{t('products.subtitle')}</span>
 				</h1>
 			</Container>
 		</section>
@@ -23,31 +24,31 @@ const skeletonCards = Array.from({ length: 6 });
 				<div id="search-info" class="hidden mb-6">
 					<div class="flex items-center justify-between">
 						<p class="text-gray-600">
-							Showing results for "<span id="search-term"></span>"
+							{t('products.showingResultsFor')} "<span id="search-term"></span>"
 						</p>
 						<a href="/products" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-							Clear search
+							{t('products.clearSearch')}
 						</a>
 					</div>
 				</div>
 
 				<div id="filter-info" class="hidden mb-6">
 					<div class="flex items-center gap-2 flex-wrap">
-						<span class="text-gray-600">Active filters:</span>
+						<span class="text-gray-600">{t('products.activeFilters')}:</span>
 						<span id="active-filters" class="flex items-center gap-2"></span>
 					</div>
 				</div>
 
 				<div class="flex items-center justify-between mb-8">
-					<h2 id="section-title" class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">The latest.</h2>
-					<Badge severity="new">New Arrivals</Badge>
+					<h2 id="section-title" class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">{t('products.theLatest')}</h2>
+					<Badge severity="new">{t('products.newArrivals')}</Badge>
 				</div>
 
 				<div class="flex gap-8">
 					{/* Filter Sidebar */}
 					<aside class="hidden lg:block w-64 flex-shrink-0">
 						<div class="sticky top-20 bg-white rounded-2xl p-6 shadow-sm ring-1 ring-black/5">
-							<h2 class="text-lg font-semibold text-[#1d1d1f] mb-4">Filters</h2>
+							<h2 class="text-lg font-semibold text-[#1d1d1f] mb-4">{t('products.filters')}</h2>
 							<ProductFilters client:only="react" />
 						</div>
 					</aside>

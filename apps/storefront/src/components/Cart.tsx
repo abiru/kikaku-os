@@ -22,6 +22,7 @@ import {
 } from '../lib/cart';
 import { getApiBase, fetchJson } from '../lib/api';
 import { useState, useEffect } from 'react';
+import { useTranslation } from '../i18n';
 
 const formatPrice = (amount: number, currency: string) => {
 	return new Intl.NumberFormat('ja-JP', {
@@ -31,16 +32,17 @@ const formatPrice = (amount: number, currency: string) => {
 };
 
 function EmptyCart() {
+	const { t } = useTranslation();
 	return (
 		<div className="text-center py-16">
 			<svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
 				<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
 			</svg>
-			<h2 className="mt-4 text-lg font-medium text-gray-900">Your cart is empty</h2>
-			<p className="mt-2 text-sm text-gray-500">Add some products to get started.</p>
+			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('cart.empty')}</h2>
+			<p className="mt-2 text-sm text-gray-500">{t('cart.emptyDescription')}</p>
 			<div className="mt-6">
 				<a href="/products" className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-					Browse products
+					{t('cart.browseProducts')}
 				</a>
 			</div>
 		</div>
@@ -48,6 +50,7 @@ function EmptyCart() {
 }
 
 function CartItem({ item }: { item: CartItem }) {
+	const { t } = useTranslation();
 	return (
 		<li className="flex py-6 sm:py-10">
 			<div className="shrink-0">
@@ -96,7 +99,7 @@ function CartItem({ item }: { item: CartItem }) {
 								onClick={() => removeFromCart(item.variantId)}
 								className="-m-2 inline-flex p-2 text-gray-400 hover:text-gray-500"
 							>
-								<span className="sr-only">Remove</span>
+								<span className="sr-only">{t('common.remove')}</span>
 								<svg className="size-5" viewBox="0 0 20 20" fill="currentColor">
 									<path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
 								</svg>
@@ -109,7 +112,7 @@ function CartItem({ item }: { item: CartItem }) {
 					<svg className="size-5 shrink-0 text-green-500" viewBox="0 0 20 20" fill="currentColor">
 						<path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
 					</svg>
-					<span>In stock</span>
+					<span>{t('products.inStock')}</span>
 				</p>
 			</div>
 		</li>
@@ -221,44 +224,45 @@ function OrderSummary({
 	onCheckout: () => void;
 	isProcessing: boolean;
 }) {
+	const { t } = useTranslation();
 	const shippingConfig = useStore($shippingConfig);
 	const remainingForFreeShipping = Math.max(0, shippingConfig.freeShippingThreshold - cartTotal);
 
 	return (
 		<section aria-labelledby="summary-heading" className="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
-			<h2 id="summary-heading" className="text-lg font-medium text-gray-900">Order summary</h2>
+			<h2 id="summary-heading" className="text-lg font-medium text-gray-900">{t('cart.orderSummary')}</h2>
 
 			<dl className="mt-6 space-y-4">
 				<div className="flex items-center justify-between">
-					<dt className="text-sm text-gray-600">Subtotal (税抜)</dt>
+					<dt className="text-sm text-gray-600">{t('cart.subtotal')}</dt>
 					<dd className="text-sm font-medium text-gray-900">{formatPrice(subtotal, currency)}</dd>
 				</div>
 
 				<div className="flex items-center justify-between">
-					<dt className="text-sm text-gray-600">Tax (消費税)</dt>
+					<dt className="text-sm text-gray-600">{t('cart.tax')}</dt>
 					<dd className="text-sm font-medium text-gray-900">{formatPrice(taxAmount, currency)}</dd>
 				</div>
 
 				{/* Coupon Input */}
 				<div className="border-t border-gray-200 pt-4">
-					<dt className="text-sm text-gray-600 mb-2">Coupon code</dt>
+					<dt className="text-sm text-gray-600 mb-2">{t('cart.couponCode')}</dt>
 					<CouponInput />
 				</div>
 
 				{/* Discount Display */}
 				{discount > 0 && (
 					<div className="flex items-center justify-between text-green-600">
-						<dt className="text-sm">Discount</dt>
+						<dt className="text-sm">{t('cart.discount')}</dt>
 						<dd className="text-sm font-medium">-{formatPrice(discount, currency)}</dd>
 					</div>
 				)}
 
 				{/* Shipping */}
 				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
-					<dt className="text-sm text-gray-600">Shipping</dt>
+					<dt className="text-sm text-gray-600">{t('cart.shipping')}</dt>
 					<dd className="text-sm font-medium text-gray-900">
 						{shipping === 0 ? (
-							<span className="text-green-600 font-semibold">FREE</span>
+							<span className="text-green-600 font-semibold">{t('common.free').toUpperCase()}</span>
 						) : (
 							formatPrice(shipping, currency)
 						)}
@@ -267,7 +271,7 @@ function OrderSummary({
 
 				{/* Order Total */}
 				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
-					<dt className="text-base font-medium text-gray-900">Order total (税込)</dt>
+					<dt className="text-base font-medium text-gray-900">{t('cart.orderTotal')}</dt>
 					<dd className="text-base font-medium text-gray-900">{formatPrice(grandTotal, currency)}</dd>
 				</div>
 			</dl>
@@ -275,12 +279,12 @@ function OrderSummary({
 			{/* Free Shipping Message */}
 			{shipping === 0 && subtotal >= shippingConfig.freeShippingThreshold && (
 				<div className="mt-4 text-sm text-green-600 text-center font-medium">
-					🎉 You've qualified for free shipping!
+					{t('cart.freeShippingQualified')}
 				</div>
 			)}
 			{remainingForFreeShipping > 0 && (
 				<div className="mt-4 text-sm text-gray-500 text-center">
-					Add {formatPrice(remainingForFreeShipping, currency)} more for free shipping
+					{t('cart.addForFreeShipping', { amount: formatPrice(remainingForFreeShipping, currency) })}
 				</div>
 			)}
 
@@ -291,7 +295,7 @@ function OrderSummary({
 					disabled={isProcessing}
 					className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 				>
-					{isProcessing ? 'Processing...' : 'Checkout'}
+					{isProcessing ? t('cart.processing') : t('cart.checkout')}
 				</button>
 				<a
 					href="/quotations/new"
@@ -303,9 +307,9 @@ function OrderSummary({
 
 			<div className="mt-6 text-center text-sm">
 				<p>
-					or{' '}
+					{t('common.or')}{' '}
 					<a href="/products" className="font-medium text-indigo-600 hover:text-indigo-500">
-						Continue Shopping
+						{t('cart.continueShopping')}
 						<span aria-hidden="true"> &rarr;</span>
 					</a>
 				</p>
