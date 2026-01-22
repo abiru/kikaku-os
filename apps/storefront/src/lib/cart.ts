@@ -128,7 +128,7 @@ export const addToCart = (
 	const existing = current[key];
 
 	const newState = existing
-		? { ...current, [key]: { ...existing, quantity: existing.quantity + quantity } }
+		? { ...current, [key]: { ...existing, ...item, quantity: existing.quantity + quantity } }
 		: { ...current, [key]: { ...item, quantity } };
 
 	$cartItems.set(newState);
