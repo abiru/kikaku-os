@@ -29,6 +29,22 @@ type StripePriceResponse = {
   object: string;
 };
 
+/**
+ * Strip HTML tags from a string and normalize whitespace
+ * Returns plain text suitable for Stripe product descriptions
+ */
+const stripHtml = (html: string | null | undefined): string | null => {
+  if (!html) return null;
+  // Remove HTML tags
+  const text = html.replace(/<[^>]*>/g, ' ');
+  // Normalize whitespace (multiple spaces, newlines, tabs -> single space)
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  // Return null for empty result to avoid sending empty descriptions
+  if (normalized.length === 0) return null;
+  // Stripe description limit is 500 chars
+  return normalized.length > 500 ? normalized.slice(0, 497) + '...' : normalized;
+};
+
 const stripeRequest = async <T>(
   stripeKey: string,
   endpoint: string,
@@ -57,29 +73,42 @@ export const ensureStripeProduct = async (
   product: ProductInfo,
   imageUrl?: string | null
 ): Promise<string> => {
-  // Update existing product with image if provided
-  if (product.provider_product_id && imageUrl) {
-    const updateParams = new URLSearchParams();
-    updateParams.set('images[0]', imageUrl);
+  const plainDescription = stripHtml(product.description);
 
-    try {
-      await stripeRequest<StripeProductResponse>(
-        stripeKey,
-        `/products/${product.provider_product_id}`,
-        updateParams
-      );
-    } catch (err) {
-      console.error(`Failed to update Stripe product ${product.provider_product_id} with image:`, err);
-      // Continue without failing - image update is not critical
-    }
-  }
-
+  // Update existing product with image and description if provided
   if (product.provider_product_id) {
+    const updateParams = new URLSearchParams();
+    let needsUpdate = false;
+
+    if (imageUrl) {
+      updateParams.set('images[0]', imageUrl);
+      needsUpdate = true;
+    }
+    if (plainDescription) {
+      updateParams.set('description', plainDescription);
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      try {
+        await stripeRequest<StripeProductResponse>(
+          stripeKey,
+          `/products/${product.provider_product_id}`,
+          updateParams
+        );
+      } catch (err) {
+        console.error(`Failed to update Stripe product ${product.provider_product_id}:`, err);
+        // Continue without failing - update is not critical
+      }
+    }
     return product.provider_product_id;
   }
 
   const params = new URLSearchParams();
   params.set('name', product.title);
+  if (plainDescription) {
+    params.set('description', plainDescription);
+  }
   if (imageUrl) {
     params.set('images[0]', imageUrl);
   }

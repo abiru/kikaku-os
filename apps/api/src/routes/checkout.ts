@@ -225,9 +225,10 @@ checkout.post('/checkout/session', async (c) => {
     }
     if (!row.provider_price_id?.trim()) {
       try {
-        const baseUrl = c.env.STOREFRONT_BASE_URL || 'http://localhost:4321';
+        // Use API origin for R2 image URLs (not STOREFRONT_BASE_URL, as /r2 endpoint is on API)
+        const apiOrigin = new URL(c.req.url).origin;
         const imageUrl = row.image_r2_key
-          ? `${baseUrl}/r2?key=${encodeURIComponent(row.image_r2_key)}`
+          ? `${apiOrigin}/r2?key=${encodeURIComponent(row.image_r2_key)}`
           : null;
 
         const stripePriceId = await ensureStripePriceForVariant(c.env.DB, stripeKey, row, imageUrl);
