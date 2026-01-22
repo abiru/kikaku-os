@@ -1,19 +1,17 @@
 import { useStore } from '@nanostores/react';
 import {
-	$cartItems,
 	$cartArray,
 	$cartTotal,
 	$cartSubtotal,
 	$cartTaxAmount,
 	$cartCurrency,
-	$appliedCoupon,
 	$cartDiscount,
 	$shippingFee,
 	$shippingConfig,
 	$cartGrandTotal,
+	$appliedCoupon,
 	removeFromCart,
 	updateQuantity,
-	clearCart,
 	applyCoupon,
 	removeCoupon,
 	setShippingConfig,
@@ -212,12 +210,7 @@ function OrderSummary({
 	shipping,
 	grandTotal,
 	currency,
-	onCheckout,
-	isProcessing,
-	enableBankTransfer,
-	email,
-	setEmail,
-	emailError
+	onCheckout
 }: {
 	subtotal: number;
 	taxAmount: number;
@@ -227,11 +220,6 @@ function OrderSummary({
 	grandTotal: number;
 	currency: string;
 	onCheckout: () => void;
-	isProcessing: boolean;
-	enableBankTransfer: boolean;
-	email: string;
-	setEmail: (email: string) => void;
-	emailError: string;
 }) {
 	const { t } = useTranslation();
 	const shippingConfig = useStore($shippingConfig);
@@ -297,39 +285,13 @@ function OrderSummary({
 				</div>
 			)}
 
-			{/* Email input for bank transfer */}
-			{enableBankTransfer && (
-				<div className="border-t border-gray-200 pt-4 space-y-2">
-					<label htmlFor="email" className="block text-sm text-gray-600">
-						メールアドレス
-						<span className="text-red-600 ml-1">*</span>
-					</label>
-					<input
-						id="email"
-						type="email"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						placeholder="your-email@example.com"
-						className="w-full rounded-md border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-						disabled={isProcessing}
-					/>
-					<p className="text-xs text-gray-500">
-						銀行振込をご利用の場合は必須です
-					</p>
-					{emailError && (
-						<p className="text-sm text-red-600">{emailError}</p>
-					)}
-				</div>
-			)}
-
 			<div className="mt-6 space-y-3">
 				<button
 					type="button"
 					onClick={onCheckout}
-					disabled={isProcessing}
-					className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors"
 				>
-					{isProcessing ? t('cart.processing') : t('cart.checkout')}
+					{t('cart.checkout')}
 				</button>
 				<a
 					href="/quotations/new"
@@ -362,11 +324,6 @@ export default function Cart() {
 	const shipping = useStore($shippingFee);
 	const grandTotal = useStore($cartGrandTotal);
 	const currency = useStore($cartCurrency);
-	const appliedCoupon = useStore($appliedCoupon);
-	const [isProcessing, setIsProcessing] = useState(false);
-	const [email, setEmail] = useState('');
-	const [emailError, setEmailError] = useState('');
-	const [enableBankTransfer, setEnableBankTransfer] = useState(false);
 
 	// Fetch shipping config on mount
 	useEffect(() => {
@@ -375,15 +332,11 @@ export default function Cart() {
 				const data = await fetchJson<{
 					shippingFee: number;
 					freeShippingThreshold: number;
-					enableBankTransfer: boolean;
 				}>(
 					`${getApiBase()}/checkout/config`
 				);
 				if (data.shippingFee !== undefined && data.freeShippingThreshold !== undefined) {
 					setShippingConfig(data);
-				}
-				if (data.enableBankTransfer !== undefined) {
-					setEnableBankTransfer(data.enableBankTransfer);
 				}
 			} catch (err) {
 				console.error('Failed to fetch shipping config:', err);
@@ -425,11 +378,6 @@ export default function Cart() {
 				grandTotal={grandTotal}
 				currency={currency}
 				onCheckout={handleCheckout}
-				isProcessing={isProcessing}
-				enableBankTransfer={enableBankTransfer}
-				email={email}
-				setEmail={setEmail}
-				emailError={emailError}
 			/>
 		</div>
 	);

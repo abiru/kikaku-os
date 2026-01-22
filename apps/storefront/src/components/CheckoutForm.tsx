@@ -93,7 +93,7 @@ function CheckoutFormInner({ orderId }: { orderId: number | null }) {
 		}
 
 		// Complete the payment
-		if (!stripe || !orderId) return;
+		if (!stripe || !elements || !orderId) return;
 
 		try {
 			const { error } = await stripe.confirmPayment({
@@ -101,8 +101,7 @@ function CheckoutFormInner({ orderId }: { orderId: number | null }) {
 				confirmParams: {
 					return_url: `${window.location.origin}/checkout/success?order_id=${orderId}`,
 					...(shippingData ? { shipping: shippingData } : {})
-				},
-				redirect: 'if_required'
+				}
 			});
 
 			if (error) {
