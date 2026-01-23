@@ -55,10 +55,19 @@ if (Astro.request.method === 'POST') {
     const formData = await Astro.request.formData();
     const updates: { key: string; value: string }[] = [];
 
-    for (const [key, value] of formData.entries()) {
-      if (key.startsWith('setting_')) {
-        const settingKey = key.replace('setting_', '');
-        updates.push({ key: settingKey, value: value.toString() });
+    // Build updates from all settings (including unchecked checkboxes)
+    for (const category of Object.values(grouped)) {
+      for (const setting of category) {
+        const formKey = `setting_${setting.key}`;
+        const formValue = formData.get(formKey);
+
+        if (setting.data_type === 'boolean') {
+          // Checkbox: true if checked, false otherwise
+          updates.push({ key: setting.key, value: formValue === 'true' ? 'true' : 'false' });
+        } else if (formValue !== null) {
+          // Other types: only add if present in form
+          updates.push({ key: setting.key, value: formValue.toString() });
+        }
       }
     }
 
@@ -180,11 +189,6 @@ const formatValue = (value: string, dataType: string) => {
                     >{setting.value}</textarea>
                   ) : setting.data_type === 'boolean' ? (
                     <label class="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="hidden"
-                        name={`setting_${setting.key}`}
-                        value="false"
-                      />
                       <input
                         type="checkbox"
                         id={`setting_${setting.key}`}

@@ -10,9 +10,6 @@ export type CompanyInfo = {
   logo_url: string | null;
 };
 
-/**
- * Get company info from settings (DB) with environment variable fallback
- */
 export const getCompanyInfo = async (env: Env['Bindings']): Promise<CompanyInfo> => {
   try {
     return await getCompanyInfoFromSettings(env);

@@ -5,9 +5,6 @@ type SettingValue = {
   data_type: string;
 };
 
-/**
- * Get a setting value from database, with environment variable fallback
- */
 export async function getSetting(
   env: Env['Bindings'],
   key: string,
@@ -38,9 +35,6 @@ export async function getSetting(
   }
 }
 
-/**
- * Get setting as integer with fallback
- */
 export async function getSettingInt(
   env: Env['Bindings'],
   key: string,
@@ -53,9 +47,6 @@ export async function getSettingInt(
   return isNaN(parsed) ? fallback : parsed;
 }
 
-/**
- * Get setting as boolean with fallback
- */
 export async function getSettingBool(
   env: Env['Bindings'],
   key: string,
@@ -67,9 +58,6 @@ export async function getSettingBool(
   return ['true', '1', 'yes'].includes(value.toLowerCase());
 }
 
-/**
- * Get all settings grouped by category
- */
 export async function getAllSettings(env: Env['Bindings']): Promise<Record<string, any[]>> {
   try {
     const result = await env.DB.prepare(
@@ -95,9 +83,6 @@ export async function getAllSettings(env: Env['Bindings']): Promise<Record<strin
   }
 }
 
-/**
- * Get company information from settings with env fallback
- */
 export async function getCompanyInfoFromSettings(env: Env['Bindings']) {
   const logoUrl = await getSetting(env, 'company_logo_url', '');
   return {
@@ -110,9 +95,6 @@ export async function getCompanyInfoFromSettings(env: Env['Bindings']) {
   };
 }
 
-/**
- * Get shipping settings with env fallback
- */
 export async function getShippingSettings(env: Env['Bindings']) {
   return {
     shippingFee: await getSettingInt(env, 'shipping_fee_amount', 500),

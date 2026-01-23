@@ -14,10 +14,6 @@ import {
 
 const adminSettings = new Hono<Env>();
 
-/**
- * GET /admin/settings
- * List all active settings, grouped by category
- */
 adminSettings.get('/', async (c) => {
   try {
     const result = await c.env.DB.prepare(
@@ -46,10 +42,6 @@ adminSettings.get('/', async (c) => {
   }
 });
 
-/**
- * GET /admin/settings/:key
- * Get single setting by key
- */
 adminSettings.get(
   '/:key',
   validator('param', (value, c) => {
@@ -83,10 +75,6 @@ adminSettings.get(
   }
 );
 
-/**
- * PUT /admin/settings/:key
- * Update a single setting
- */
 adminSettings.put(
   '/:key',
   validator('param', (value, c) => {
@@ -162,10 +150,6 @@ adminSettings.put(
   }
 );
 
-/**
- * POST /admin/settings/bulk
- * Update multiple settings at once
- */
 adminSettings.post(
   '/bulk',
   validator('json', (value, c) => {
@@ -235,9 +219,23 @@ adminSettings.post(
   }
 );
 
-/**
- * Validate setting value based on data type and rules
- */
+function isSafeRegexPattern(pattern: string): boolean {
+  // Reject patterns with nested quantifiers that could cause catastrophic backtracking
+  const dangerousPatterns = [
+    /(\+|\*|\{[^}]*\})\s*(\+|\*|\{[^}]*\})/,  // Nested quantifiers: (a+)+, (a*)*
+    /\([^)]*(\+|\*).*\)\s*(\+|\*)/,            // Quantified groups with quantifiers inside
+    /(\+|\*)\s*\?/,                            // Possessive quantifiers
+  ];
+
+  for (const dangerous of dangerousPatterns) {
+    if (dangerous.test(pattern)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function validateSettingValue(
   value: string,
   dataType: string,
@@ -290,9 +288,20 @@ function validateSettingValue(
       }
 
       if (rules.pattern) {
-        const regex = new RegExp(rules.pattern);
-        if (!regex.test(value)) {
-          return { valid: false, error: rules.patternMessage || 'Invalid format' };
+        // Security: Prevent ReDoS attacks by validating pattern safety
+        if (typeof rules.pattern !== 'string' || rules.pattern.length > 100) {
+          console.warn('Skipping validation: Pattern too long or invalid');
+        } else if (isSafeRegexPattern(rules.pattern)) {
+          try {
+            const regex = new RegExp(rules.pattern);
+            if (!regex.test(value)) {
+              return { valid: false, error: rules.patternMessage || 'Invalid format' };
+            }
+          } catch (e) {
+            console.error('Invalid regex pattern:', e);
+          }
+        } else {
+          console.warn('Skipping validation: Potentially unsafe regex pattern');
         }
       }
     } catch (e) {
