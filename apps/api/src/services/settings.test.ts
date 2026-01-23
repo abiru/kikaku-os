@@ -4,21 +4,29 @@ import { getSetting, getSettingInt, getSettingBool, getAllSettings, getCompanyIn
 describe('Settings Service', () => {
   const mockEnv = {
     DB: {
-      prepare: (query: string) => ({
-        bind: (...args: any[]) => ({
-          first: async () => {
-            if (query.includes('app_settings') && query.includes('WHERE key')) {
-              const key = args[0];
-              if (key === 'shipping_fee_amount') return { value: '600' };
-              if (key === 'free_shipping_threshold') return { value: '6000' };
-              if (key === 'company_name') return { value: 'Test Company' };
-              if (key === 'maintenance_mode') return { value: 'true' };
+      prepare: (query: string) => {
+        const queryLower = query.toLowerCase();
+        const preparedQuery = {
+          bind: (...args: any[]) => ({
+            first: async () => {
+              if (queryLower.includes('app_settings') && queryLower.includes('where key')) {
+                const key = args[0];
+                if (key === 'shipping_fee_amount') return { value: '600' };
+                if (key === 'free_shipping_threshold') return { value: '6000' };
+                if (key === 'company_name') return { value: 'Test Company' };
+                if (key === 'maintenance_mode') return { value: 'true' };
+                if (key === 'company_postal_code') return { value: '' };
+                if (key === 'company_address') return { value: '' };
+                if (key === 'company_phone') return { value: '' };
+                if (key === 'company_email') return { value: '' };
+                if (key === 'company_logo_url') return { value: '' };
+                return null;
+              }
               return null;
             }
-            return null;
-          },
+          }),
           all: async () => {
-            if (query.includes('app_settings')) {
+            if (queryLower.includes('app_settings') && queryLower.includes('where is_active')) {
               return {
                 results: [
                   { key: 'shipping_fee_amount', value: '600', category: 'shipping', data_type: 'integer', description: '送料' },
@@ -29,8 +37,9 @@ describe('Settings Service', () => {
             }
             return { results: [] };
           }
-        })
-      })
+        };
+        return preparedQuery;
+      }
     },
     SHIPPING_FEE_AMOUNT: '500',
     FREE_SHIPPING_THRESHOLD: '5000',
