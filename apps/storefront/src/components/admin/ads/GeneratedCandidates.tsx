@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import type { AdCandidate } from '@repo/shared/types/ads';
+import type { AdCandidate } from '../../../types/ads';
 import { CharCount } from './CharCount';
 
 interface GeneratedCandidatesProps {

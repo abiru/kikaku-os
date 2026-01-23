@@ -802,20 +802,20 @@ export const createAdDraftSchema = z.object({
   tone: adToneSchema.optional().nullable(),
 
   last_prompt: z.string().optional().nullable(),
-  metadata: z.record(z.unknown()).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
 // Ad Draft Update Schema (all fields optional)
 export const updateAdDraftSchema = z.object({
-  campaign_name: z.string().min(1).max(255).optional().transform((v) => v?.trim()),
+  campaign_name: z.string().min(1).max(255).optional(),
   ad_type: adTypeSchema.optional(),
   status: adStatusSchema.optional(),
   language: adLanguageSchema.optional(),
 
   product_id: z.number().int().positive().optional().nullable(),
-  product_name: z.string().max(255).optional().nullable().transform((v) => v?.trim() || null),
-  product_description: z.string().max(5000).optional().nullable().transform((v) => v?.trim() || null),
-  target_audience: z.string().max(500).optional().nullable().transform((v) => v?.trim() || null),
+  product_name: z.string().max(255).optional().nullable(),
+  product_description: z.string().max(5000).optional().nullable(),
+  target_audience: z.string().max(500).optional().nullable(),
 
   headlines: z.array(z.string().max(30)).min(1).max(15).optional(),
   descriptions: z.array(z.string().max(90)).min(1).max(4).optional(),
@@ -826,7 +826,7 @@ export const updateAdDraftSchema = z.object({
   tone: adToneSchema.optional().nullable(),
 
   last_prompt: z.string().optional().nullable(),
-  metadata: z.record(z.unknown()).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
 // Ad Draft ID Param Schema

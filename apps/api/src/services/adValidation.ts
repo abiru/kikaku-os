@@ -1,4 +1,4 @@
-import type { Language, CharCountResult, ValidationResult } from '@repo/shared/types/ads';
+import type { Language, CharCountResult, ValidationResult } from '../types/ads';
 
 // Character limits for Google Ads
 const LIMITS = {
@@ -22,7 +22,7 @@ export function validateCharacterCount(
   type: 'headline' | 'description',
   language: Language
 ): CharCountResult {
-  const limit = LIMITS[language][type];
+  const limit = LIMITS[language as keyof typeof LIMITS][type];
   const length = text.length;
 
   if (length > limit) {

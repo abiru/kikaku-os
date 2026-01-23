@@ -1,5 +1,5 @@
 import { useState, type FC, type FormEvent } from 'react';
-import type { AdDraft, AdCandidate, AdType, AdStatus, Language, Tone } from '@repo/shared/types/ads';
+import type { AdDraft, AdCandidate, AdType, AdStatus, Language, Tone } from '../../../types/ads';
 import { CharCount } from './CharCount';
 
 interface AdDraftFormProps {

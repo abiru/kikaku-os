@@ -1,4 +1,4 @@
-import type { AdGenerateRequest, AdCandidate } from '@repo/shared/types/ads';
+import type { AdGenerateRequest, AdCandidate } from '../types/ads';
 
 const CLAUDE_MODEL = 'claude-sonnet-4-5-20250929';
 const MAX_RETRIES = 3;
