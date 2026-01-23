@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
-import dev from '../../../routes/dev';
+import dev from '../../../routes/system/dev';
 import worker from '../../../index';
 
 type StripeProvisionRow = {

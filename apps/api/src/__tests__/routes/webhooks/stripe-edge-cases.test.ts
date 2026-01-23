@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Hono } from 'hono';
-import stripe from '../../../routes/stripe';
+import stripe from '../../../routes/webhooks/stripe';
 import { createMockDb, buildStripeSignatureHeader } from './stripe.test.utils';
 
 describe('Stripe webhook route - Edge cases and error handling', () => {

@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { Env } from '../env';
-import { jsonOk, jsonError } from '../lib/http';
-import { validationErrorHandler } from '../lib/validation';
+import { Env } from '../../env';
+import { jsonOk, jsonError } from '../../lib/http';
+import { validationErrorHandler } from '../../lib/validation';
 import {
   emailTemplateSlugParamSchema,
   updateEmailTemplateSchema,
   previewEmailTemplateSchema,
-} from '../lib/schemas';
+} from '../../lib/schemas';
 import {
   getAllEmailTemplates,
   getEmailTemplate,
@@ -15,7 +15,7 @@ import {
   renderTemplate,
   sendEmail,
   EmailTemplate,
-} from '../services/email';
+} from '../../services/email';
 
 const app = new Hono<Env>();
 

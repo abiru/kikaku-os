@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { jsonError, jsonOk } from '../lib/http';
-import { createMovementSchema, updateThresholdSchema, thresholdParamSchema } from '../lib/schemas';
-import type { Env } from '../env';
-import { getActor } from '../middleware/clerkAuth';
-import { validationErrorHandler } from '../lib/validation';
+import { jsonError, jsonOk } from '../../lib/http';
+import { createMovementSchema, updateThresholdSchema, thresholdParamSchema } from '../../lib/schemas';
+import type { Env } from '../../env';
+import { getActor } from '../../middleware/clerkAuth';
+import { validationErrorHandler } from '../../lib/validation';
 
 const inventory = new Hono<Env>();
 

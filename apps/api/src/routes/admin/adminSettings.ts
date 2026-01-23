@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import type { Env } from '../env';
+import type { Env } from '../../env';
 import { validator } from 'hono/validator';
-import { jsonError, jsonOk } from '../lib/http';
-import { getActor } from '../middleware/clerkAuth';
+import { jsonError, jsonOk } from '../../lib/http';
+import { getActor } from '../../middleware/clerkAuth';
 import {
   settingKeyParamSchema,
   updateSettingSchema,
@@ -10,7 +10,7 @@ import {
   type SettingKeyParam,
   type UpdateSettingInput,
   type UpdateBulkSettingsInput
-} from '../lib/schemas';
+} from '../../lib/schemas';
 
 const adminSettings = new Hono<Env>();
 

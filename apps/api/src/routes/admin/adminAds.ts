@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { Env } from '../env';
-import { jsonOk, jsonError } from '../lib/http';
-import { getActor } from '../middleware/clerkAuth';
+import { Env } from '../../env';
+import { jsonOk, jsonError } from '../../lib/http';
+import { getActor } from '../../middleware/clerkAuth';
 import {
   adGenerateRequestSchema,
   createAdDraftSchema,
@@ -10,9 +10,9 @@ import {
   adDraftIdParamSchema,
   adDraftListQuerySchema,
   selectHistorySchema,
-} from '../lib/schemas';
-import { generateAdCopy } from '../services/claudeAds';
-import { validateAdCopy } from '../services/adValidation';
+} from '../../lib/schemas';
+import { generateAdCopy } from '../../services/claudeAds';
+import { validateAdCopy } from '../../services/adValidation';
 
 const app = new Hono<Env>();
 

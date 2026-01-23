@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { jsonError, jsonOk } from '../lib/http';
-import type { Env } from '../env';
-import { getActor } from '../middleware/clerkAuth';
+import { jsonError, jsonOk } from '../../lib/http';
+import type { Env } from '../../env';
+import { getActor } from '../../middleware/clerkAuth';
 
 const inbox = new Hono<Env>();
 
