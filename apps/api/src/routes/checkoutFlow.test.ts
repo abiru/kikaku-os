@@ -225,7 +225,6 @@ describe('Checkout Integration Flow', () => {
       DB: mockDb,
       STRIPE_SECRET_KEY: 'sk_test_integration',
       STRIPE_PUBLISHABLE_KEY: 'pk_test_integration',
-      ENABLE_BANK_TRANSFER: 'true',
       SHIPPING_FEE_AMOUNT: '500',
       FREE_SHIPPING_THRESHOLD: '5000'
     } as any;

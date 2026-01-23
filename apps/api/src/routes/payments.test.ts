@@ -159,8 +159,7 @@ describe('POST /payments/intent', () => {
         }
       }),
       STRIPE_SECRET_KEY: 'sk_test_123',
-      STRIPE_PUBLISHABLE_KEY: 'pk_test_123',
-      ENABLE_BANK_TRANSFER: 'true'
+      STRIPE_PUBLISHABLE_KEY: 'pk_test_123'
     } as any;
 
     const res = await app.request(

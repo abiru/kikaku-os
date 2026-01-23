@@ -75,7 +75,7 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 
 ### 決済システム
 - **Stripe Elements**: 埋め込み型チェックアウト（PaymentIntent API使用）
-- **銀行振込**: `ENABLE_BANK_TRANSFER`フラグで有効化、Stripe jp_bank_transfer
+- **銀行振込**: Stripe jp_bank_transfer（Stripeダッシュボードで有効化）
 - **決済フロー**: カート → PaymentIntent作成 → Stripe Elements → 確定 → Webhook
 
 ### 消費税計算
@@ -101,7 +101,6 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 - `STOREFRONT_BASE_URL`: ストアフロントURL
 - `SHIPPING_FEE_AMOUNT`: 送料（円）
 - `FREE_SHIPPING_THRESHOLD`: 送料無料閾値（円）
-- `ENABLE_BANK_TRANSFER`: 銀行振込決済の有効化フラグ
 - `COMPANY_*`: 会社情報（名前、住所、電話、メール等）
 
 ローカル開発は `.dev.vars` に秘密情報を配置（gitignore済み）。

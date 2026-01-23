@@ -13,8 +13,7 @@ const generateQuoteId = () => {
 checkout.get('/checkout/config', async (c) => {
   return jsonOk(c, {
     shippingFee: Number(c.env.SHIPPING_FEE_AMOUNT || 500),
-    freeShippingThreshold: Number(c.env.FREE_SHIPPING_THRESHOLD || 5000),
-    enableBankTransfer: c.env.ENABLE_BANK_TRANSFER === 'true'
+    freeShippingThreshold: Number(c.env.FREE_SHIPPING_THRESHOLD || 5000)
   });
 });
 
