@@ -247,7 +247,7 @@ quotations.get('/quotations/:id/html', async (c) => {
     items: items.results as any
   };
 
-  const company = getCompanyInfo(c.env);
+  const company = await getCompanyInfo(c.env);
   const html = renderQuotationHtml(data, company);
 
   // Save to R2
