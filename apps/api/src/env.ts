@@ -11,7 +11,6 @@ export type Env = {
     STOREFRONT_BASE_URL: string;
     SHIPPING_FEE_AMOUNT?: string;
     FREE_SHIPPING_THRESHOLD?: string;
-    ENABLE_BANK_TRANSFER?: string;
     SLACK_WEBHOOK_URL?: string;
     RESEND_API_KEY?: string;
     RESEND_FROM_EMAIL?: string;

@@ -85,12 +85,11 @@ const createMockDb = (
 };
 
 describe('GET /checkout/config', () => {
-  it('returns config with bank transfer setting', async () => {
+  it('returns config with shipping settings', async () => {
     const app = new Hono();
     app.route('/', checkout);
 
     const env = {
-      ENABLE_BANK_TRANSFER: 'true',
       SHIPPING_FEE_AMOUNT: '500',
       FREE_SHIPPING_THRESHOLD: '5000'
     } as any;
@@ -105,27 +104,6 @@ describe('GET /checkout/config', () => {
     expect(json.ok).toBe(true);
     expect(json.shippingFee).toBe(500);
     expect(json.freeShippingThreshold).toBe(5000);
-    expect(json.enableBankTransfer).toBe(true);
-  });
-
-  it('returns false when bank transfer disabled', async () => {
-    const app = new Hono();
-    app.route('/', checkout);
-
-    const env = {
-      ENABLE_BANK_TRANSFER: 'false',
-      SHIPPING_FEE_AMOUNT: '500',
-      FREE_SHIPPING_THRESHOLD: '5000'
-    } as any;
-
-    const res = await app.request(
-      'http://localhost/checkout/config',
-      { method: 'GET' },
-      env
-    );
-
-    const json = await res.json();
-    expect(json.ok).toBe(true);
-    expect(json.enableBankTransfer).toBe(false);
+    expect(json.enableBankTransfer).toBeUndefined();
   });
 });
