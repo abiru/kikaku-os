@@ -27,6 +27,7 @@ import {
   FolderIcon,
   TicketIcon,
   EnvelopeIcon,
+  MegaphoneIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
@@ -56,6 +57,7 @@ const navigation: NavigationItem[] = [
   { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon },
   { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon },
   { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon },
+  { name: 'Google Ads', href: '/admin/ads', icon: MegaphoneIcon },
   { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
   { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
 ]

@@ -141,6 +141,47 @@ inbox.post('/inbox/:id/approve', async (c) => {
       }
     }
 
+    // Handle ad_generation kind
+    if (item.kind === 'ad_generation' && item.metadata) {
+      try {
+        const meta = JSON.parse(item.metadata);
+        const { request, candidates, promptUsed } = meta;
+
+        // Save to ad_generation_history
+        await c.env.DB.prepare(
+          `INSERT INTO ad_generation_history (draft_id, prompt, generated_content, selected, created_at)
+           VALUES (?, ?, ?, 1, datetime('now'))`
+        ).bind(
+          request.draftId || null,
+          promptUsed,
+          JSON.stringify({ candidates })
+        ).run();
+
+        // If draftId is provided, optionally update the draft with first candidate
+        // (Admin can manually select different candidate later)
+        if (request.draftId && candidates && candidates.length > 0) {
+          const firstCandidate = candidates[0];
+          await c.env.DB.prepare(
+            `UPDATE ad_drafts
+             SET headlines = ?,
+                 descriptions = ?,
+                 keywords = ?,
+                 last_prompt = ?,
+                 updated_at = datetime('now')
+             WHERE id = ?`
+          ).bind(
+            JSON.stringify(firstCandidate.headlines),
+            JSON.stringify(firstCandidate.descriptions),
+            JSON.stringify(firstCandidate.suggestedKeywords),
+            promptUsed,
+            request.draftId
+          ).run();
+        }
+      } catch (parseErr) {
+        console.error('Failed to process ad_generation inbox item:', parseErr);
+      }
+    }
+
     // Update inbox status
     await c.env.DB.prepare(
       `UPDATE inbox_items SET status='approved', decided_by=?, decided_at=datetime('now'), updated_at=datetime('now') WHERE id=?`

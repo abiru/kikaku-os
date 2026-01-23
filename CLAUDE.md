@@ -98,6 +98,7 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 - `STRIPE_SECRET_KEY`: Stripe秘密鍵
 - `STRIPE_PUBLISHABLE_KEY`: Stripe公開鍵（Embedded Checkout用）
 - `STRIPE_WEBHOOK_SECRET`: Stripeウェブフック署名検証用
+- `CLAUDE_API_KEY`: Claude API秘密鍵（Google Ads AI生成用）
 - `STOREFRONT_BASE_URL`: ストアフロントURL
 - `SHIPPING_FEE_AMOUNT`: 送料（円）
 - `FREE_SHIPPING_THRESHOLD`: 送料無料閾値（円）
