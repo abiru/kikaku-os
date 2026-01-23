@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env } from '../env';
 import { jsonError, jsonOk } from '../lib/http';
 import { calculateOrderTax, type TaxCalculationInput } from '../services/tax';
+import { getShippingSettings } from '../services/settings';
 
 const checkout = new Hono<Env>();
 
@@ -11,9 +12,10 @@ const generateQuoteId = () => {
 };
 
 checkout.get('/checkout/config', async (c) => {
+  const shippingSettings = await getShippingSettings(c.env);
   return jsonOk(c, {
-    shippingFee: Number(c.env.SHIPPING_FEE_AMOUNT || 500),
-    freeShippingThreshold: Number(c.env.FREE_SHIPPING_THRESHOLD || 5000)
+    shippingFee: shippingSettings.shippingFee,
+    freeShippingThreshold: shippingSettings.freeShippingThreshold
   });
 });
 
@@ -267,8 +269,9 @@ checkout.post('/checkout/quote', async (c) => {
   }
 
   // Shipping fee calculation
-  const shippingFee = Number(c.env.SHIPPING_FEE_AMOUNT || 500);
-  const freeThreshold = Number(c.env.FREE_SHIPPING_THRESHOLD || 5000);
+  const shippingSettings = await getShippingSettings(c.env);
+  const shippingFee = shippingSettings.shippingFee;
+  const freeThreshold = shippingSettings.freeShippingThreshold;
   const actualShippingFee = cartTotal >= freeThreshold ? 0 : shippingFee;
 
   // Calculate grand total
