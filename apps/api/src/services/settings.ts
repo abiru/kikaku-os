@@ -99,13 +99,14 @@ export async function getAllSettings(env: Env['Bindings']): Promise<Record<strin
  * Get company information from settings with env fallback
  */
 export async function getCompanyInfoFromSettings(env: Env['Bindings']) {
+  const logoUrl = await getSetting(env, 'company_logo_url', '');
   return {
-    name: await getSetting(env, 'company_name', '株式会社LED企画'),
-    postal_code: await getSetting(env, 'company_postal_code', ''),
-    address: await getSetting(env, 'company_address', ''),
-    phone: await getSetting(env, 'company_phone', ''),
-    email: await getSetting(env, 'company_email', ''),
-    logo_url: await getSetting(env, 'company_logo_url', null),
+    name: (await getSetting(env, 'company_name', '株式会社LED企画')) || '株式会社LED企画',
+    postal_code: (await getSetting(env, 'company_postal_code', '')) || '',
+    address: (await getSetting(env, 'company_address', '')) || '',
+    phone: (await getSetting(env, 'company_phone', '')) || '',
+    email: (await getSetting(env, 'company_email', '')) || '',
+    logo_url: logoUrl || null,
   };
 }
 
