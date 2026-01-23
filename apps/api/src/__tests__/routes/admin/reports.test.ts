@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import worker from '../index';
+import worker from '../../../index';
 
 const createMockEnv = (overrides: any = {}) => {
   const calls: { sql: string; bind: unknown[] }[] = [];

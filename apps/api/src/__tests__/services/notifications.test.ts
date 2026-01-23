@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { sendSlackNotification, buildSlackMessage, type NotificationPayload } from './notifications';
+import { sendSlackNotification, buildSlackMessage, type NotificationPayload } from '../../services/notifications';
 
 const createMockPayload = (overrides?: Partial<NotificationPayload>): NotificationPayload => ({
   inboxItemId: 1,

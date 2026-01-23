@@ -9,7 +9,7 @@ import {
   detectPaymentFailureRate,
   detectAOVAnomaly,
   runAllAnomalyChecks
-} from './anomalyRules';
+} from '../../../services/anomalyRules';
 
 const createMockDB = (mockResults: Record<string, any> = {}) => {
   return {

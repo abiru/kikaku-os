@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
-import checkout from './checkout';
-import payments from './payments';
+import checkout from '../../../routes/checkout';
+import payments from '../../../routes/payments';
 
 /**
  * Integration tests for the checkout flow:

@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
 import { getActor } from '../middleware/clerkAuth';
+import { validationErrorHandler } from '../lib/validation';
 import {
   couponIdParamSchema,
   couponListQuerySchema,
@@ -12,12 +13,6 @@ import {
 
 const app = new Hono<Env>();
 
-const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
-  if (!result.success) {
-    const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
-    return c.json({ ok: false, message: messages }, 400);
-  }
-};
 
 type CouponRow = {
   id: number;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ensureDate, jstYesterdayStringFromMs } from './date';
+import { ensureDate, jstYesterdayStringFromMs } from '../../lib/date';
 
 describe('ensureDate', () => {
   it('accepts YYYY-MM-DD', () => {

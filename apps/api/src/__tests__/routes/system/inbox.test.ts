@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Hono } from 'hono';
-import inbox from './inbox';
+import inbox from '../../../routes/inbox';
 
 const createMockDb = (items: Array<Record<string, unknown>>) => {
   const calls: { sql: string; bind: unknown[] }[] = [];

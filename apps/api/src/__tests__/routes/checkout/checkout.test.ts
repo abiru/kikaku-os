@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
-import checkout from './checkout';
+import checkout from '../../../routes/checkout';
 
 const createMockDb = (
   steps: string[],

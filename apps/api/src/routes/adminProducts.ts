@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
 import { getActor } from '../middleware/clerkAuth';
+import { validationErrorHandler } from '../lib/validation';
 import {
   createProductSchema,
   updateProductSchema,
@@ -16,14 +17,6 @@ import {
 } from '../lib/schemas';
 
 const app = new Hono<Env>();
-
-// Custom error handler for zod validation (zod v4 compatible)
-const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
-  if (!result.success) {
-    const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
-    return c.json({ ok: false, message: messages }, 400);
-  }
-};
 
 // GET /products - List products with pagination and search
 app.get(

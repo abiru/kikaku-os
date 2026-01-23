@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { renderQuotationHtml, QuotationData } from './renderQuotationHtml';
+import { renderQuotationHtml, QuotationData } from '../../services/renderQuotationHtml';
 import { CompanyInfo } from '../lib/company';
 
 describe('renderQuotationHtml', () => {

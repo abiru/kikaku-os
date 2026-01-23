@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ensureStripeCustomer, type CustomerInfo } from './stripeCustomer';
+import { ensureStripeCustomer, type CustomerInfo } from '../../services/stripeCustomer';
 import type { D1Database, D1PreparedStatement, D1Result } from '@cloudflare/workers-types';
 
 // Mock D1 database
