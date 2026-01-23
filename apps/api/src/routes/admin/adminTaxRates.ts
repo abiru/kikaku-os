@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import type { Env } from '../env';
+import type { Env } from '../../env';
 import { validator } from 'hono/validator';
-import { jsonError, jsonOk } from '../lib/http';
-import { getActor } from '../middleware/clerkAuth';
+import { jsonError, jsonOk } from '../../lib/http';
+import { getActor } from '../../middleware/clerkAuth';
 import {
   createTaxRateSchema,
   updateTaxRateSchema,
@@ -10,7 +10,7 @@ import {
   type CreateTaxRateInput,
   type UpdateTaxRateInput,
   type TaxRateIdParam
-} from '../lib/schemas';
+} from '../../lib/schemas';
 
 const adminTaxRates = new Hono<Env>();
 

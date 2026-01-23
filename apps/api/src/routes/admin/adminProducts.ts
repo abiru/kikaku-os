@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { Env } from '../env';
-import { jsonOk, jsonError } from '../lib/http';
-import { getActor } from '../middleware/clerkAuth';
-import { validationErrorHandler } from '../lib/validation';
+import { Env } from '../../env';
+import { jsonOk, jsonError } from '../../lib/http';
+import { getActor } from '../../middleware/clerkAuth';
+import { validationErrorHandler } from '../../lib/validation';
 import {
   createProductSchema,
   updateProductSchema,
@@ -14,7 +14,7 @@ import {
   productVariantParamSchema,
   variantIdParamSchema,
   updatePricesSchema,
-} from '../lib/schemas';
+} from '../../lib/schemas';
 
 const app = new Hono<Env>();
 

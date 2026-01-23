@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { jsonError, jsonOk } from '../lib/http';
-import type { Env } from '../env';
+import { jsonError, jsonOk } from '../../lib/http';
+import type { Env } from '../../env';
 
 const ai = new Hono<Env>();
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
-import quotations from '../../../routes/quotations';
+import quotations from '../../../routes/checkout/quotations';
 
 type VariantPriceRow = {
   variant_id: number;

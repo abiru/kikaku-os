@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import type { Env } from '../env';
-import { jsonError, jsonOk } from '../lib/http';
-import { ensureStripeCustomer } from '../services/stripeCustomer';
+import type { Env } from '../../env';
+import { jsonError, jsonOk } from '../../lib/http';
+import { ensureStripeCustomer } from '../../services/stripeCustomer';
 
 const payments = new Hono<Env>();
 

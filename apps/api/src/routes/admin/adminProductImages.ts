@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { Env } from '../env';
-import { jsonOk, jsonError } from '../lib/http';
-import { getActor } from '../middleware/clerkAuth';
-import { validationErrorHandler } from '../lib/validation';
-import { putImage, deleteKey } from '../lib/r2';
+import { Env } from '../../env';
+import { jsonOk, jsonError } from '../../lib/http';
+import { getActor } from '../../middleware/clerkAuth';
+import { validationErrorHandler } from '../../lib/validation';
+import { putImage, deleteKey } from '../../lib/r2';
 import {
   productIdParamSchema,
   productImageParamSchema,
@@ -12,7 +12,7 @@ import {
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGE_SIZE,
   MAX_IMAGES_PER_PRODUCT,
-} from '../lib/schemas';
+} from '../../lib/schemas';
 
 const app = new Hono<Env>();
 
