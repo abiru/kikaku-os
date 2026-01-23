@@ -25,6 +25,7 @@ const validationErrorHandler = (result: { success: boolean; error?: { issues: Ar
 };
 
 // POST /admin/ads/generate - Generate AI ad copy candidates
+// Following Inbox Pattern: AI output requires human approval
 app.post(
   '/generate',
   zValidator('json', adGenerateRequestSchema, validationErrorHandler),
@@ -38,27 +39,34 @@ app.post(
       }
 
       // Generate ad copy with Claude
-      const { candidates, promptUsed, rawResponse } = await generateAdCopy(request, apiKey);
+      const { candidates, promptUsed } = await generateAdCopy(request, apiKey);
 
-      // Save to generation history
-      const historyId = await c.env.DB.prepare(
-        `INSERT INTO ad_generation_history (draft_id, prompt, generated_content)
-         VALUES (?, ?, ?)
+      // Following "AIは信頼しない" principle: Save to inbox for human approval
+      const inboxItem = await c.env.DB.prepare(
+        `INSERT INTO inbox_items (title, body, severity, status, kind, metadata, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
          RETURNING id`
       ).bind(
-        request.draftId || null,
-        promptUsed,
-        JSON.stringify({ candidates })
+        `AI Ad Copy Generated for ${request.productName}`,
+        `Generated ${candidates.length} candidate variations for ${request.adType} ad`,
+        'info',
+        'open',
+        'ad_generation',
+        JSON.stringify({
+          request,
+          candidates,
+          promptUsed,
+          generatedAt: new Date().toISOString(),
+        })
       ).first<{ id: number }>();
 
-      if (!historyId) {
-        return jsonError(c, 'Failed to save generation history', 500);
+      if (!inboxItem) {
+        return jsonError(c, 'Failed to create inbox item', 500);
       }
 
       return jsonOk(c, {
-        candidates,
-        promptUsed,
-        historyId: historyId.id,
+        inboxItemId: inboxItem.id,
+        message: 'Ad copy generated successfully. Please review in inbox.',
       });
 
     } catch (error) {
