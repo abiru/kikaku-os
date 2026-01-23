@@ -4,6 +4,7 @@ import { jsonError, jsonOk } from '../lib/http';
 import { createMovementSchema, updateThresholdSchema, thresholdParamSchema } from '../lib/schemas';
 import type { Env } from '../env';
 import { getActor } from '../middleware/clerkAuth';
+import { validationErrorHandler } from '../lib/validation';
 
 const inventory = new Hono<Env>();
 
@@ -54,12 +55,6 @@ inventory.post('/inventory/thresholds', async (c) => {
 // =====================
 
 // Custom error handler for zod validation (zod v4 compatible)
-const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
-  if (!result.success) {
-    const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
-    return c.json({ ok: false, message: messages }, 400);
-  }
-};
 
 type InventoryRow = {
   variant_id: number;

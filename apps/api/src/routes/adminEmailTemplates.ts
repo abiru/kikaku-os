@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
+import { validationErrorHandler } from '../lib/validation';
 import {
   emailTemplateSlugParamSchema,
   updateEmailTemplateSchema,
@@ -18,15 +19,6 @@ import {
 
 const app = new Hono<Env>();
 
-const validationErrorHandler = (
-  result: { success: boolean; error?: { issues: Array<{ message: string }> } },
-  c: any
-) => {
-  if (!result.success) {
-    const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
-    return c.json({ ok: false, message: messages }, 400);
-  }
-};
 
 // GET /email-templates - List all email templates
 app.get('/email-templates', async (c) => {
