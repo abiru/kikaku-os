@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { escapeHtml } from './html';
+import { escapeHtml } from '../../../services/html';
 
 describe('escapeHtml', () => {
   test('escapes basic HTML tags', () => {

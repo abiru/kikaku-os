@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
-import payments from './payments';
+import payments from '../../../services/payments';
 
 type MockDbResult = {
   results?: any[];

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
-import storefront from './storefront';
+import storefront from '../../../services/storefront';
 
 type StorefrontRow = {
   product_id: number;

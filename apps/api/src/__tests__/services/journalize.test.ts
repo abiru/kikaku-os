@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { journalizeDailyClose, type JournalizeResult } from './journalize';
-import type { DailyReport } from './dailyReport';
+import { journalizeDailyClose, type JournalizeResult } from '../../../services/journalize';
+import type { DailyReport } from '../../../services/dailyReport';
 
 const createMockReport = (overrides?: Partial<DailyReport>): DailyReport => ({
   date: '2025-01-15',

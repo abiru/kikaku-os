@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
-import dev from './dev';
-import worker from '../index';
+import dev from '../../../services/dev';
+import worker from '../../../../index';
 
 type StripeProvisionRow = {
   variant_id: number;

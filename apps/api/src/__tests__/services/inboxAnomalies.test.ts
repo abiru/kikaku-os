@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { enqueueDailyCloseAnomaly } from './inboxAnomalies';
-import type { DailyReport } from './dailyReport';
+import { enqueueDailyCloseAnomaly } from '../../../services/inboxAnomalies';
+import type { DailyReport } from '../../../services/dailyReport';
 
 const buildReport = (level: DailyReport['anomalies']['level']): DailyReport => ({
   date: '2026-01-15',
