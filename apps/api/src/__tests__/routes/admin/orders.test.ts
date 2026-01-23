@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import worker from '../../../../index';
+import worker from '../../../index';
 
 const createMockDb = (results: Array<{
   order_id: number;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeStripeSignature, parseStripeSignature, verifyStripeSignature } from '../../../services/stripe';
+import { computeStripeSignature, parseStripeSignature, verifyStripeSignature } from '../../lib/stripe';
 
 describe('stripe signature helpers', () => {
   it('parses signature header', () => {

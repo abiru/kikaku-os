@@ -4,7 +4,7 @@ import {
   getStatusChangeReason,
   type OrderStatusInput,
   type OrderStatus
-} from '../../../services/orderStatus';
+} from '../../services/orderStatus';
 
 describe('orderStatus', () => {
   describe('calculateOrderStatus', () => {

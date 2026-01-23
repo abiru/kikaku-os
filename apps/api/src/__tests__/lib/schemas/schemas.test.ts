@@ -22,7 +22,7 @@ import {
   orderFulfillmentParamSchema,
   createFulfillmentSchema,
   updateFulfillmentSchema
-} from '../../../services/schemas';
+} from '../../../lib/schemas';
 
 describe('Product Schemas', () => {
   describe('productStatusSchema', () => {

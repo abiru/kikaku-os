@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Hono } from 'hono';
-import stripe, { handleStripeEvent } from '../../../services/stripe';
-import { computeStripeSignature } from '../lib/stripe';
+import stripe, { handleStripeEvent } from '../../../routes/stripe';
+import { computeStripeSignature } from '../../../lib/stripe';
 
 type MockDbOptions = {
   duplicatePayment?: boolean;

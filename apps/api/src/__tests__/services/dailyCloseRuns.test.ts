@@ -4,7 +4,7 @@ import {
   completeDailyCloseRun,
   getLatestRunForDate,
   hasSuccessfulRunForDate
-} from '../../../services/dailyCloseRuns';
+} from '../../services/dailyCloseRuns';
 
 const createMockDB = () => {
   let lastInsertedId = 0;

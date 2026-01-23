@@ -5,7 +5,7 @@ import {
   formatPriceWithTax,
   getApplicableTaxRate,
   type TaxCalculationInput
-} from '../../../services/tax';
+} from '../../services/tax';
 
 describe('Tax Service', () => {
   describe('calculateLineItemTax', () => {
