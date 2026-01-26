@@ -23,12 +23,14 @@ type StorefrontRow = {
   image_id: number | null;
   image_r2_key: string | null;
   image_position: number | null;
+  on_hand: number;
 };
 
 type StorefrontVariant = {
   id: number;
   title: string;
   sku: string | null;
+  stock: number;
   price: {
     id: number;
     amount: number;
@@ -117,13 +119,14 @@ const rowsToProducts = (rows: StorefrontRow[], baseUrl: string): StorefrontProdu
       });
     }
 
-    // Variant handling (unchanged)
+    // Variant handling
     if (seenVariant.has(row.variant_id)) continue;
     seenVariant.add(row.variant_id);
     products.get(row.product_id)?.variants.push({
       id: row.variant_id,
       title: row.variant_title,
       sku: row.sku,
+      stock: row.on_hand,
       price: {
         id: row.price_id,
         amount: row.amount,
@@ -152,13 +155,17 @@ const baseQuery = `
          pr.provider_price_id as provider_price_id,
          pi.id as image_id,
          pi.r2_key as image_r2_key,
-         pi.position as image_position
+         pi.position as image_position,
+         COALESCE(SUM(inv.delta), 0) as on_hand
   FROM products p
   JOIN variants v ON v.product_id = p.id
   JOIN prices pr ON pr.variant_id = v.id
   LEFT JOIN tax_rates tr ON tr.id = p.tax_rate_id
   LEFT JOIN product_images pi ON pi.product_id = p.id
+  LEFT JOIN inventory_movements inv ON inv.variant_id = v.id
 `;
+
+const groupByClause = `GROUP BY p.id, v.id, pr.id, pi.id, tr.id`;
 
 storefront.get('/products', zValidator('query', storefrontProductsQuerySchema), async (c) => {
   const { q, category, minPrice, maxPrice, page, perPage } = c.req.valid('query');
@@ -254,7 +261,7 @@ storefront.get('/products', zValidator('query', storefrontProductsQuerySchema), 
 
   // Now get all data for these specific products
   const placeholders = productIds.map(() => '?').join(',');
-  const sql = baseQuery + ` WHERE p.id IN (${placeholders}) ORDER BY p.created_at DESC, v.id, pr.id DESC, pi.position ASC`;
+  const sql = baseQuery + ` WHERE p.id IN (${placeholders}) ${groupByClause} ORDER BY p.created_at DESC, v.id, pr.id DESC, pi.position ASC`;
   const res = await c.env.DB.prepare(sql).bind(...productIds).all<StorefrontRow>();
 
   const baseUrl = new URL(c.req.url).origin;
@@ -310,7 +317,7 @@ storefront.get('/products/:id', async (c) => {
     return jsonOk(c, { product: null });
   }
   const res = await c.env.DB.prepare(
-    `${baseQuery} WHERE p.id=? AND p.status = 'active' ORDER BY p.id, v.id, pr.id DESC, pi.position ASC`
+    `${baseQuery} WHERE p.id=? AND p.status = 'active' ${groupByClause} ORDER BY p.id, v.id, pr.id DESC, pi.position ASC`
   ).bind(id).all<StorefrontRow>();
   const baseUrl = new URL(c.req.url).origin;
   const products = rowsToProducts(res.results || [], baseUrl);
