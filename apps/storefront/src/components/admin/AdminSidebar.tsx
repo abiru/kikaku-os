@@ -28,6 +28,7 @@ import {
   TicketIcon,
   EnvelopeIcon,
   MegaphoneIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
@@ -52,6 +53,7 @@ const navigation: NavigationItem[] = [
   { name: 'Shipping', href: '/admin/shipping', icon: TruckIcon },
   { name: 'Events', href: '/admin/events', icon: CalendarIcon },
   { name: 'Products', href: '/admin/products', icon: CubeIcon },
+  { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon },
   { name: 'Categories', href: '/admin/categories', icon: FolderIcon },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },
   { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon },
