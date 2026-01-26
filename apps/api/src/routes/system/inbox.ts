@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { jsonError, jsonOk } from '../../lib/http';
 import type { Env } from '../../env';
 import { getActor } from '../../middleware/clerkAuth';
+import { executeBulkImageUpload, type ImageMapping } from '../../services/bulkImageUpload';
 
 const inbox = new Hono<Env>();
 
@@ -179,6 +180,49 @@ inbox.post('/inbox/:id/approve', async (c) => {
         }
       } catch (parseErr) {
         console.error('Failed to process ad_generation inbox item:', parseErr);
+      }
+    }
+
+    // Handle bulk_image_upload kind
+    if (item.kind === 'bulk_image_upload' && item.metadata) {
+      try {
+        const meta = JSON.parse(item.metadata);
+        const uploadItems: ImageMapping[] = meta.upload_items || [];
+
+        if (uploadItems.length > 0) {
+          const results = await executeBulkImageUpload(
+            c.env.DB,
+            c.env.R2,
+            uploadItems
+          );
+
+          // Log the results to audit_logs
+          await c.env.DB.prepare(
+            'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
+          ).bind(
+            getActor(c),
+            'bulk_image_upload_approved',
+            'image_upload',
+            JSON.stringify(results)
+          ).run();
+
+          // Update inbox item metadata with results
+          const updatedMeta = {
+            ...meta,
+            results,
+            executed_at: new Date().toISOString(),
+            executed_by: getActor(c)
+          };
+
+          await c.env.DB.prepare(
+            'UPDATE inbox_items SET metadata = ?, updated_at = datetime("now") WHERE id = ?'
+          ).bind(
+            JSON.stringify(updatedMeta),
+            id
+          ).run();
+        }
+      } catch (parseErr) {
+        console.error('Failed to process bulk_image_upload inbox item:', parseErr);
       }
     }
 

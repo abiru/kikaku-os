@@ -4,6 +4,7 @@ import type { Env } from '../env';
 // Admin routes
 import adminAds from './admin/adminAds';
 import adminAnalytics from './admin/adminAnalytics';
+import adminBulkImageUpload from './admin/adminBulkImageUpload';
 import adminCategories from './admin/adminCategories';
 import adminCoupons from './admin/adminCoupons';
 import adminCustomers from './admin/adminCustomers';
@@ -54,6 +55,7 @@ export function registerRoutes(app: Hono<Env>) {
   app.route('/admin', adminStripeEvents);
   app.route('/admin', adminCustomers);
   app.route('/admin', adminProductImages);
+  app.route('/admin/bulk-image-upload', adminBulkImageUpload);
   app.route('/admin', adminCategories);
   app.route('/admin', adminCoupons);
   app.route('/admin', adminPages);
@@ -94,6 +96,7 @@ export {
   // Admin
   adminAds,
   adminAnalytics,
+  adminBulkImageUpload,
   adminCategories,
   adminCoupons,
   adminCustomers,
