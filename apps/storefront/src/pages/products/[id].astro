@@ -80,8 +80,20 @@ const productDetails = product?.details || [
 ];
 
 // Policies
+const shippingPolicy = stockValue !== null && stockValue > 0
+	? {
+		name: '国内発送',
+		icon: 'globe',
+		description: '2〜3日でお届け'
+	}
+	: {
+		name: '海外発送',
+		icon: 'globe',
+		description: '10日程度でお届け'
+	};
+
 const policies = [
-	{ name: 'Free Shipping', icon: 'globe', description: 'Free shipping on all orders' },
+	shippingPolicy,
 	{ name: 'Secure Payment', icon: 'currency', description: 'Safe checkout via Stripe' },
 ];
 ---
