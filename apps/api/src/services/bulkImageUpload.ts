@@ -1,4 +1,3 @@
-import { D1Database, R2Bucket } from '@cloudflare/workers-types';
 import { putImage, deleteKey } from '../lib/r2';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE, MAX_IMAGES_PER_PRODUCT } from '../lib/schemas/product';
 
