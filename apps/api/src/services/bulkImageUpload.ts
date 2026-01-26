@@ -36,10 +36,24 @@ type JSONEntry = {
   image_urls: string[];
 };
 
+const BLOCKED_HOSTNAMES = ['localhost', '127.0.0.1', '::1', 'metadata.google.internal'];
+const BLOCKED_IP_RANGES = [
+  /^10\./,                        // 10.0.0.0/8
+  /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
+  /^192\.168\./,                  // 192.168.0.0/16
+  /^169\.254\./,                  // 169.254.0.0/16 (link-local, includes AWS/GCP metadata)
+];
+
 const isValidUrl = (url: string): boolean => {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+
+    const hostname = parsed.hostname.toLowerCase();
+    if (BLOCKED_HOSTNAMES.includes(hostname)) return false;
+    if (BLOCKED_IP_RANGES.some(regex => regex.test(hostname))) return false;
+
+    return true;
   } catch {
     return false;
   }
@@ -392,6 +406,7 @@ export const executeBulkImageUpload = async (
             await db.prepare(
               'DELETE FROM product_images WHERE r2_key = ?'
             ).bind(key).run();
+            imagesAdded--; // Decrement counter for rolled back image
           } catch (rollbackError) {
             console.error(`Failed to rollback ${key}:`, rollbackError);
           }

@@ -186,6 +186,12 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			}
 		});
 
+		function escapeHtml(text) {
+			const div = document.createElement('div');
+			div.textContent = text;
+			return div.innerHTML;
+		}
+
 		function showParseStatus(type, message) {
 			parseStatus.className = `mt-4 px-4 py-3 rounded-lg ${
 				type === 'success'
@@ -222,7 +228,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<div class="border border-gray-200 rounded-lg p-4 space-y-2">
 						<div class="flex items-center justify-between">
 							<p class="font-medium text-gray-900">
-								✓ ${mapping.product_title} <span class="text-gray-500 text-sm">(ID: ${mapping.product_id})</span>
+								✓ ${escapeHtml(mapping.product_title)} <span class="text-gray-500 text-sm">(ID: ${mapping.product_id})</span>
 							</p>
 							<span class="text-sm text-gray-600">
 								📷 ${mapping.image_urls.length} image${mapping.image_urls.length !== 1 ? 's' : ''} |
@@ -233,7 +239,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							${mapping.image_urls.map(url => `
 								<div class="flex-shrink-0">
 									<img
-										src="${url}"
+										src="${escapeHtml(url)}"
 										alt="Preview"
 										class="w-20 h-20 object-cover rounded border border-gray-300"
 										onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect fill=%22%23ddd%22 width=%2280%22 height=%2280%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22%3EError%3C/text%3E%3C/svg%3E'"
@@ -244,7 +250,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<details class="text-xs text-gray-600">
 							<summary class="cursor-pointer hover:text-gray-900">View URLs</summary>
 							<ul class="mt-2 space-y-1 pl-4">
-								${mapping.image_urls.map(url => `<li class="truncate">• ${url}</li>`).join('')}
+								${mapping.image_urls.map(url => `<li class="truncate">• ${escapeHtml(url)}</li>`).join('')}
 							</ul>
 						</details>
 					</div>
@@ -259,7 +265,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<ul class="space-y-1">
 						${data.errors.map(err => `
 							<li class="text-sm text-red-600">
-								${err.row > 0 ? `Row ${err.row}: ` : ''}${err.error}
+								${err.row > 0 ? `Row ${err.row}: ` : ''}${escapeHtml(err.error)}
 							</li>
 						`).join('')}
 					</ul>
@@ -277,7 +283,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 
 			resultSection.innerHTML = `
 				<div class="${type === 'success' ? 'text-green-800' : 'text-red-800'}">
-					<p class="font-medium">${message}</p>
+					<p class="font-medium">${escapeHtml(message)}</p>
 					${inboxId ? `
 						<a
 							href="/admin/inbox/${inboxId}"
