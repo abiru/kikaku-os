@@ -92,8 +92,8 @@ const isExpired = (coupon: Coupon) => {
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-gray-900">Coupons</h1>
-				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				<h1 class="text-2xl font-semibold text-zinc-900">Coupons</h1>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
 			</div>
 			<Button href="/admin/coupons/new" size="sm" variant="primary">
 				+ New Coupon
@@ -107,11 +107,11 @@ const isExpired = (coupon: Coupon) => {
 						name="q"
 						value={q}
 						placeholder="Search by code..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 					/>
 					<input type="hidden" name="status" value={status} />
 					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -122,19 +122,19 @@ const isExpired = (coupon: Coupon) => {
 				<div class="flex gap-2">
 					<a
 						href={`?q=${q}&status=all`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						All
 					</a>
 					<a
 						href={`?q=${q}&status=active`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'active' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'active' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Active
 					</a>
 					<a
 						href={`?q=${q}&status=inactive`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'inactive' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'inactive' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Inactive
 					</a>
@@ -148,28 +148,28 @@ const isExpired = (coupon: Coupon) => {
 			)}
 
 			{/* Coupon Table */}
-			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+			<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-[#1d1d1f]">
-						<thead class="bg-gray-50 border-b border-gray-200">
+					<table class="w-full text-left text-sm text-zinc-900">
+						<thead class="bg-zinc-50 border-b border-zinc-200">
 							<tr>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Code</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Type</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Value</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Usage</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Expires</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Code</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Type</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Value</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Usage</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Expires</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Action</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-100">
+						<tbody class="divide-y divide-zinc-100">
 							{coupons.length > 0 ? (
 								coupons.map((coupon) => (
-									<tr class="hover:bg-gray-50 transition-colors group">
+									<tr class="hover:bg-zinc-50 transition-colors group">
 										<td class="px-6 py-4">
 											<div class="font-mono font-medium">{coupon.code}</div>
 											{coupon.min_order_amount > 0 && (
-												<div class="text-xs text-[#86868b]">
+												<div class="text-xs text-zinc-500">
 													Min: {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: coupon.currency, minimumFractionDigits: 0 }).format(coupon.min_order_amount)}
 												</div>
 											)}
@@ -191,20 +191,20 @@ const isExpired = (coupon: Coupon) => {
 												<Badge severity="secondary">Inactive</Badge>
 											)}
 										</td>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+										<td class="px-6 py-4 text-zinc-500 tabular-nums">
 											{coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ''}
 										</td>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+										<td class="px-6 py-4 text-zinc-500 tabular-nums">
 											{formatDate(coupon.expires_at)}
 										</td>
 										<td class="px-6 py-4 text-right">
-											<a href={`/admin/coupons/${coupon.id}`} class="text-[#0071e3] hover:underline font-medium">Edit</a>
+											<a href={`/admin/coupons/${coupon.id}`} class="text-emerald-500 hover:underline font-medium">Edit</a>
 										</td>
 									</tr>
 								))
 							) : (
 								<tr>
-									<td colspan="7" class="px-6 py-12 text-center text-[#86868b]">
+									<td colspan="7" class="px-6 py-12 text-center text-zinc-500">
 										No coupons found.
 									</td>
 								</tr>
@@ -214,8 +214,8 @@ const isExpired = (coupon: Coupon) => {
 				</div>
 
 				{/* Pagination */}
-				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-[#86868b]">
+				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+					<div class="text-xs text-zinc-500">
 						Page {page} of {meta.totalPages}
 					</div>
 					<div class="flex gap-2">

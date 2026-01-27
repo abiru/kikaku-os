@@ -74,8 +74,8 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 <AdminLayout title="Stripe Events - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-gray-900">Stripe Events</h1>
-			<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} total</span>
+			<h1 class="text-2xl font-semibold text-zinc-900">Stripe Events</h1>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} total</span>
 		</div>
 			{/* Filter Tabs */}
 			<div class="mb-6 flex gap-2 flex-wrap">
@@ -83,7 +83,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 					href={buildFilterUrl('')}
 					class:list={[
 						"px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-						!status ? "bg-[#1d1d1f] text-white" : "bg-white border border-gray-200 text-[#1d1d1f] hover:bg-gray-50"
+						!status ? "bg-zinc-900 text-white" : "bg-white border border-zinc-200 text-zinc-900 hover:bg-zinc-50"
 					]}
 				>
 					All
@@ -92,7 +92,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 					href={buildFilterUrl('completed')}
 					class:list={[
 						"px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-						status === 'completed' ? "bg-[#1d1d1f] text-white" : "bg-white border border-gray-200 text-[#1d1d1f] hover:bg-gray-50"
+						status === 'completed' ? "bg-zinc-900 text-white" : "bg-white border border-zinc-200 text-zinc-900 hover:bg-zinc-50"
 					]}
 				>
 					Completed
@@ -101,7 +101,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 					href={buildFilterUrl('pending')}
 					class:list={[
 						"px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-						status === 'pending' ? "bg-[#1d1d1f] text-white" : "bg-white border border-gray-200 text-[#1d1d1f] hover:bg-gray-50"
+						status === 'pending' ? "bg-zinc-900 text-white" : "bg-white border border-zinc-200 text-zinc-900 hover:bg-zinc-50"
 					]}
 				>
 					Pending
@@ -127,28 +127,28 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 			)}
 
 			{/* Events Table */}
-			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+			<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-[#1d1d1f]">
-						<thead class="bg-gray-50 border-b border-gray-200">
+					<table class="w-full text-left text-sm text-zinc-900">
+						<thead class="bg-zinc-50 border-b border-zinc-200">
 							<tr>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Received</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Event ID</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Type</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Error</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Processed</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Received</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Event ID</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Type</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Error</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Processed</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-100">
+						<tbody class="divide-y divide-zinc-100">
 							{events.length > 0 ? (
 								events.map((e) => (
-									<tr class:list={["hover:bg-gray-50 transition-colors", e.processing_status === 'failed' && "bg-red-50/50"]}>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums whitespace-nowrap">
+									<tr class:list={["hover:bg-zinc-50 transition-colors", e.processing_status === 'failed' && "bg-red-50/50"]}>
+										<td class="px-6 py-4 text-zinc-500 tabular-nums whitespace-nowrap">
 											{formatDate(e.received_at)}
 										</td>
 										<td class="px-6 py-4 font-mono text-xs">
-											<span class="bg-gray-100 px-1.5 py-0.5 rounded">{e.event_id}</span>
+											<span class="bg-zinc-100 px-1.5 py-0.5 rounded">{e.event_id}</span>
 										</td>
 										<td class="px-6 py-4 font-mono text-xs">{e.event_type}</td>
 										<td class="px-6 py-4">
@@ -159,14 +159,14 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 												<span class="text-red-600 bg-red-50 px-2 py-1 rounded">{e.error}</span>
 											) : '-'}
 										</td>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums whitespace-nowrap">
+										<td class="px-6 py-4 text-zinc-500 tabular-nums whitespace-nowrap">
 											{formatDate(e.processed_at)}
 										</td>
 									</tr>
 								))
 							) : (
 								<tr>
-									<td colspan="6" class="px-6 py-12 text-center text-[#86868b]">
+									<td colspan="6" class="px-6 py-12 text-center text-zinc-500">
 										No events found.
 									</td>
 								</tr>
@@ -176,8 +176,8 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 				</div>
 
 				{/* Pagination */}
-				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-[#86868b]">
+				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+					<div class="text-xs text-zinc-500">
 						Page {page} of {meta.totalPages}
 					</div>
 					<div class="flex gap-2">

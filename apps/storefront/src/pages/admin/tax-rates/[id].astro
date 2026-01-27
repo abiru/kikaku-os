@@ -121,13 +121,13 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 <AdminLayout title={taxRate ? `Edit Tax Rate: ${taxRate.name}` : 'Tax Rate - Admin'}>
 	<div class="space-y-6 max-w-2xl">
 		<div class="flex items-center gap-4">
-			<a href="/admin/tax-rates" class="text-indigo-600 hover:text-indigo-500 text-sm flex items-center gap-1">
+			<a href="/admin/tax-rates" class="text-emerald-500 hover:text-emerald-500 text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 				Tax Rates
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">
+			<h1 class="text-2xl font-semibold text-zinc-900">
 				{taxRate ? `Edit: ${taxRate.name}` : 'Tax Rate'}
 			</h1>
 		</div>
@@ -146,10 +146,10 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 
 		{taxRate && (
 			<>
-				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+				<form method="POST" class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-6">
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div class="md:col-span-2">
-							<label for="name" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="name" class="block text-sm font-medium text-zinc-900 mb-2">
 								Name <span class="text-red-500">*</span>
 							</label>
 							<input
@@ -158,12 +158,12 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 								name="name"
 								required
 								value={taxRate.name}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 							/>
 						</div>
 
 						<div>
-							<label for="rate" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="rate" class="block text-sm font-medium text-zinc-900 mb-2">
 								Rate (decimal) <span class="text-red-500">*</span>
 							</label>
 							<input
@@ -175,13 +175,13 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 								min="0"
 								max="1"
 								value={taxRate.rate}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 							/>
-							<p class="text-xs text-[#86868b] mt-1">Current: {formatRate(taxRate.rate)}</p>
+							<p class="text-xs text-zinc-500 mt-1">Current: {formatRate(taxRate.rate)}</p>
 						</div>
 
 						<div>
-							<label for="applicable_from" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="applicable_from" class="block text-sm font-medium text-zinc-900 mb-2">
 								Applicable From <span class="text-red-500">*</span>
 							</label>
 							<input
@@ -190,12 +190,12 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 								name="applicable_from"
 								required
 								value={taxRate.applicable_from}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 							/>
 						</div>
 
 						<div>
-							<label for="applicable_to" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="applicable_to" class="block text-sm font-medium text-zinc-900 mb-2">
 								Applicable To
 							</label>
 							<input
@@ -203,20 +203,20 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 								id="applicable_to"
 								name="applicable_to"
 								value={taxRate.applicable_to || ''}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 							/>
-							<p class="text-xs text-[#86868b] mt-1">Leave empty for no end date</p>
+							<p class="text-xs text-zinc-500 mt-1">Leave empty for no end date</p>
 						</div>
 
 						<div class="md:col-span-2">
-							<label for="description" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="description" class="block text-sm font-medium text-zinc-900 mb-2">
 								Description
 							</label>
 							<textarea
 								id="description"
 								name="description"
 								rows="3"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 							>{taxRate.description || ''}</textarea>
 						</div>
 
@@ -227,14 +227,14 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 									name="is_active"
 									value="true"
 									checked={taxRate.is_active === 1}
-									class="w-5 h-5 text-[#0071e3] border-gray-300 rounded focus:ring-[#0071e3] focus:ring-2"
+									class="w-5 h-5 text-emerald-500 border-zinc-300 rounded focus:ring-emerald-500 focus:ring-2"
 								/>
-								<span class="text-sm font-medium text-[#1d1d1f]">Active</span>
+								<span class="text-sm font-medium text-zinc-900">Active</span>
 							</label>
 						</div>
 					</div>
 
-					<div class="flex gap-3 pt-4 border-t border-gray-200">
+					<div class="flex gap-3 pt-4 border-t border-zinc-200">
 						<Button type="submit" variant="primary" size="sm">
 							Save Changes
 						</Button>
@@ -244,9 +244,9 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 					</div>
 				</form>
 
-				<form method="POST" class="bg-white rounded-xl border border-red-200 shadow-sm p-6">
+				<form method="POST" class="bg-white rounded-lg border border-red-200 p-6">
 					<h3 class="text-lg font-semibold text-red-600 mb-3">Danger Zone</h3>
-					<p class="text-sm text-[#86868b] mb-4">
+					<p class="text-sm text-zinc-500 mb-4">
 						Deactivate this tax rate. It will no longer be assignable to products.
 					</p>
 					<input type="hidden" name="action" value="delete" />
@@ -260,14 +260,14 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 					</Button>
 				</form>
 
-				<div class="bg-gray-50 rounded-lg p-4 text-sm text-[#86868b]">
+				<div class="bg-zinc-50 rounded-lg p-4 text-sm text-zinc-500">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
-							<div class="font-medium text-[#1d1d1f]">Created</div>
+							<div class="font-medium text-zinc-900">Created</div>
 							<div>{new Date(taxRate.created_at).toLocaleString('ja-JP')}</div>
 						</div>
 						<div>
-							<div class="font-medium text-[#1d1d1f]">Updated</div>
+							<div class="font-medium text-zinc-900">Updated</div>
 							<div>{new Date(taxRate.updated_at).toLocaleString('ja-JP')}</div>
 						</div>
 					</div>

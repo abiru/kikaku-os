@@ -105,13 +105,13 @@ const formatDate = (dateStr: string) => {
 <AdminLayout title={template ? `${template.name} - Admin` : 'Email Template - Admin'}>
 	<div class="space-y-6 max-w-5xl">
 		<div class="flex items-center gap-4">
-			<a href="/admin/email-templates" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
+			<a href="/admin/email-templates" class="text-emerald-500 hover:underline text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 				Email Templates
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">
+			<h1 class="text-2xl font-semibold text-zinc-900">
 				{template ? template.name : 'Email Template'}
 			</h1>
 		</div>
@@ -123,7 +123,7 @@ const formatDate = (dateStr: string) => {
 		)}
 
 		{error && !template && (
-			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+			<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-8 text-center">
 				<div class="text-red-600 mb-4">{error}</div>
 				<Button href="/admin/email-templates" variant="secondary" size="sm">
 					Back to Templates
@@ -140,7 +140,7 @@ const formatDate = (dateStr: string) => {
 		{template && (
 			<form method="POST" class="space-y-6">
 				{/* Variables Info */}
-				<div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+				<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
 					<h3 class="text-sm font-medium text-blue-900 mb-2">Available Variables</h3>
 					<div class="flex flex-wrap gap-2">
 						{template.variables && template.variables.length > 0 ? (
@@ -154,8 +154,8 @@ const formatDate = (dateStr: string) => {
 				</div>
 
 				{/* Subject */}
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-[#86868b]">Email Subject</h2>
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-4">
+					<h2 class="text-sm font-medium text-zinc-500">Email Subject</h2>
 					<div>
 						<input
 							type="text"
@@ -163,21 +163,21 @@ const formatDate = (dateStr: string) => {
 							name="subject"
 							required
 							value={template.subject}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 						/>
-						<p class="mt-1 text-xs text-[#86868b]">Supports variables like {"{{customer_name}}"}</p>
+						<p class="mt-1 text-xs text-zinc-500">Supports variables like {"{{customer_name}}"}</p>
 					</div>
 				</div>
 
 				{/* HTML Body */}
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-4">
 					<div class="flex items-center justify-between">
-						<h2 class="text-sm font-medium text-[#86868b]">HTML Content</h2>
+						<h2 class="text-sm font-medium text-zinc-500">HTML Content</h2>
 						<div class="flex gap-2">
 							<button
 								type="button"
 								id="preview-html-btn"
-								class="text-sm text-[#0071e3] hover:underline"
+								class="text-sm text-emerald-500 hover:underline"
 							>
 								Preview
 							</button>
@@ -189,60 +189,60 @@ const formatDate = (dateStr: string) => {
 							id="body_html"
 							name="body_html"
 							rows="20"
-							class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+							class="w-full px-4 py-3 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
 						>{template.body_html}</textarea>
 					</div>
 
 					<div id="html-preview-container" class="hidden">
-						<div id="html-preview-content" class="min-h-[300px] border border-gray-200 rounded-lg bg-white overflow-auto">
+						<div id="html-preview-content" class="min-h-[300px] border border-zinc-200 rounded-lg bg-white overflow-auto">
 						</div>
 					</div>
 				</div>
 
 				{/* Text Body */}
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-[#86868b]">Plain Text Content (Fallback)</h2>
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-4">
+					<h2 class="text-sm font-medium text-zinc-500">Plain Text Content (Fallback)</h2>
 					<textarea
 						id="body_text"
 						name="body_text"
 						rows="10"
-						class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+						class="w-full px-4 py-3 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
 					>{template.body_text}</textarea>
-					<p class="text-xs text-[#86868b]">Used when HTML email cannot be displayed</p>
+					<p class="text-xs text-zinc-500">Used when HTML email cannot be displayed</p>
 				</div>
 
 				{/* Preview Email */}
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-[#86868b]">Send Test Email</h2>
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-4">
+					<h2 class="text-sm font-medium text-zinc-500">Send Test Email</h2>
 					<div class="flex gap-4">
 						<input
 							type="email"
 							id="preview-email"
 							placeholder="Enter email address..."
-							class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							class="flex-1 px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 						/>
 						<button
 							type="button"
 							id="send-preview-btn"
-							class="px-4 py-2 bg-[#1d1d1f] text-white text-sm font-medium rounded-lg hover:bg-[#333] transition-colors"
+							class="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-[#333] transition-colors"
 						>
 							Send Preview
 						</button>
 					</div>
-					<p class="text-xs text-[#86868b]">A test email will be sent with sample data</p>
+					<p class="text-xs text-zinc-500">A test email will be sent with sample data</p>
 					<div id="preview-result" class="hidden"></div>
 				</div>
 
 				{/* Meta Info */}
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6">
 					<dl class="grid grid-cols-2 gap-4 text-sm">
 						<div>
-							<dt class="text-[#86868b]">Created</dt>
-							<dd class="text-[#1d1d1f] tabular-nums">{formatDate(template.created_at)}</dd>
+							<dt class="text-zinc-500">Created</dt>
+							<dd class="text-zinc-900 tabular-nums">{formatDate(template.created_at)}</dd>
 						</div>
 						<div>
-							<dt class="text-[#86868b]">Updated</dt>
-							<dd class="text-[#1d1d1f] tabular-nums">{formatDate(template.updated_at)}</dd>
+							<dt class="text-zinc-500">Updated</dt>
+							<dd class="text-zinc-900 tabular-nums">{formatDate(template.updated_at)}</dd>
 						</div>
 					</dl>
 				</div>

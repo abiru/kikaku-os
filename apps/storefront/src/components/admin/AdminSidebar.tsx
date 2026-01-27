@@ -160,6 +160,58 @@ type Props = {
   children: React.ReactNode
 }
 
+function NavList({ isActive }: { isActive: (href: string) => boolean }) {
+  return (
+    <ul role="list" className="-mx-2 space-y-1">
+      {navigation.map((item) => (
+        <li key={item.name}>
+          <a
+            href={item.href}
+            className={classNames(
+              isActive(item.href)
+                ? 'border-l-2 border-emerald-500 bg-zinc-50 text-zinc-900 pl-[calc(0.5rem-2px)]'
+                : 'text-zinc-600 hover:bg-zinc-900/5 hover:text-zinc-900',
+              'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
+            )}
+          >
+            <item.icon
+              aria-hidden="true"
+              className={classNames(
+                isActive(item.href) ? 'text-emerald-500' : 'text-zinc-400 group-hover:text-zinc-600',
+                'size-6 shrink-0',
+              )}
+            />
+            {item.name}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function SettingsLink({ isActive }: { isActive: boolean }) {
+  return (
+    <a
+      href="/admin/settings"
+      className={classNames(
+        isActive
+          ? 'border-l-2 border-emerald-500 bg-zinc-50 text-zinc-900 pl-[calc(0.5rem-2px)]'
+          : 'text-zinc-600 hover:bg-zinc-900/5 hover:text-zinc-900',
+        'group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
+      )}
+    >
+      <Cog6ToothIcon
+        aria-hidden="true"
+        className={classNames(
+          isActive ? 'text-emerald-500' : 'text-zinc-400 group-hover:text-zinc-600',
+          'size-6 shrink-0',
+        )}
+      />
+      Settings
+    </a>
+  )
+}
+
 export default function AdminSidebar({ currentPath, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isLoaded, isSignedIn, user, signOut } = useClerkAuth()
@@ -173,10 +225,10 @@ export default function AdminSidebar({ currentPath, children }: Props) {
 
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600" />
-          <span className="text-sm text-gray-500">Authenticating...</span>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-emerald-500" />
+          <span className="text-sm text-zinc-500">Authenticating...</span>
         </div>
       </div>
     );
@@ -189,12 +241,14 @@ export default function AdminSidebar({ currentPath, children }: Props) {
     return currentPath.startsWith(href)
   }
 
+  const isSettingsActive = currentPath.startsWith('/admin/settings')
+
   return (
     <>
       <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-50 lg:hidden">
         <DialogBackdrop
           transition
-          className="fixed inset-0 bg-gray-900/80 transition-opacity duration-300 ease-linear data-closed:opacity-0"
+          className="fixed inset-0 bg-zinc-900/80 transition-opacity duration-300 ease-linear data-closed:opacity-0"
         />
 
         <div className="fixed inset-0 flex">
@@ -213,49 +267,17 @@ export default function AdminSidebar({ currentPath, children }: Props) {
 
             <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
               <div className="flex h-16 shrink-0 items-center">
-                <a href="/admin/" className="text-lg font-semibold text-gray-900">
+                <a href="/admin/" className="text-lg font-semibold text-zinc-900">
                   Led Kikaku OS
                 </a>
               </div>
               <nav className="flex flex-1 flex-col">
                 <ul role="list" className="flex flex-1 flex-col gap-y-7">
                   <li>
-                    <ul role="list" className="-mx-2 space-y-1">
-                      {navigation.map((item) => (
-                        <li key={item.name}>
-                          <a
-                            href={item.href}
-                            className={classNames(
-                              isActive(item.href)
-                                ? 'bg-gray-50 text-indigo-600'
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600',
-                              'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
-                            )}
-                          >
-                            <item.icon
-                              aria-hidden="true"
-                              className={classNames(
-                                isActive(item.href) ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600',
-                                'size-6 shrink-0',
-                              )}
-                            />
-                            {item.name}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
+                    <NavList isActive={isActive} />
                   </li>
                   <li className="mt-auto">
-                    <a
-                      href="/admin/settings"
-                      className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
-                    >
-                      <Cog6ToothIcon
-                        aria-hidden="true"
-                        className="size-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
-                      />
-                      Settings
-                    </a>
+                    <SettingsLink isActive={isSettingsActive} />
                   </li>
                 </ul>
               </nav>
@@ -266,51 +288,19 @@ export default function AdminSidebar({ currentPath, children }: Props) {
 
       {/* Static sidebar for desktop */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-zinc-900/10 bg-white px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
-            <a href="/admin/" className="text-lg font-semibold text-gray-900">
+            <a href="/admin/" className="text-lg font-semibold text-zinc-900">
               Led Kikaku OS
             </a>
           </div>
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
-                <ul role="list" className="-mx-2 space-y-1">
-                  {navigation.map((item) => (
-                    <li key={item.name}>
-                      <a
-                        href={item.href}
-                        className={classNames(
-                          isActive(item.href)
-                            ? 'bg-gray-50 text-indigo-600'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600',
-                          'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
-                        )}
-                      >
-                        <item.icon
-                          aria-hidden="true"
-                          className={classNames(
-                            isActive(item.href) ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-600',
-                            'size-6 shrink-0',
-                          )}
-                        />
-                        {item.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+                <NavList isActive={isActive} />
               </li>
               <li className="mt-auto">
-                <a
-                  href="/admin/settings"
-                  className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
-                >
-                  <Cog6ToothIcon
-                    aria-hidden="true"
-                    className="size-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
-                  />
-                  Settings
-                </a>
+                <SettingsLink isActive={isSettingsActive} />
               </li>
             </ul>
           </nav>
@@ -318,18 +308,18 @@ export default function AdminSidebar({ currentPath, children }: Props) {
       </div>
 
       <div className="lg:pl-72">
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-zinc-900/10 bg-white px-4 sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+            className="-m-2.5 p-2.5 text-zinc-700 lg:hidden"
           >
             <span className="sr-only">Open sidebar</span>
             <Bars3Icon aria-hidden="true" className="size-6" />
           </button>
 
           {/* Separator */}
-          <div aria-hidden="true" className="h-6 w-px bg-gray-200 lg:hidden" />
+          <div aria-hidden="true" className="h-6 w-px bg-zinc-900/10 lg:hidden" />
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
@@ -345,25 +335,25 @@ export default function AdminSidebar({ currentPath, children }: Props) {
                       className="size-8 rounded-full"
                     />
                   ) : (
-                    <span className="inline-flex size-8 items-center justify-center rounded-full bg-gray-500">
+                    <span className="inline-flex size-8 items-center justify-center rounded-full bg-zinc-600">
                       <span className="text-sm font-medium text-white">{getInitials(user)}</span>
                     </span>
                   )}
                   <span className="hidden lg:flex lg:items-center">
-                    <span aria-hidden="true" className="ml-4 text-sm font-semibold leading-6 text-gray-900">
+                    <span aria-hidden="true" className="ml-4 text-sm font-semibold leading-6 text-zinc-900">
                       {getDisplayName(user)}
                     </span>
-                    <ChevronDownIcon aria-hidden="true" className="ml-2 size-5 text-gray-400" />
+                    <ChevronDownIcon aria-hidden="true" className="ml-2 size-5 text-zinc-400" />
                   </span>
                 </MenuButton>
                 <MenuItems
                   transition
-                  className="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 transition focus:outline-none data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+                  className="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-zinc-900/5 transition focus:outline-none data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
                 >
                   <MenuItem>
                     <a
                       href="/"
-                      className="block px-3 py-1 text-sm leading-6 text-gray-900 data-focus:bg-gray-50"
+                      className="block px-3 py-1 text-sm leading-6 text-zinc-900 data-focus:bg-zinc-50"
                     >
                       View Store
                     </a>
@@ -372,7 +362,7 @@ export default function AdminSidebar({ currentPath, children }: Props) {
                     <button
                       type="button"
                       onClick={signOut}
-                      className="block w-full text-left px-3 py-1 text-sm leading-6 text-gray-900 data-focus:bg-gray-50"
+                      className="block w-full text-left px-3 py-1 text-sm leading-6 text-zinc-900 data-focus:bg-zinc-50"
                     >
                       Sign out
                     </button>

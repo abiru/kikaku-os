@@ -73,8 +73,8 @@ const formatDate = (dateStr: string | null) => {
 <AdminLayout title="Customers - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-gray-900">Customers</h1>
-			<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} customers</span>
+			<h1 class="text-2xl font-semibold text-zinc-900">Customers</h1>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} customers</span>
 		</div>
 			{/* Search Bar */}
 			<div class="mb-6">
@@ -84,10 +84,10 @@ const formatDate = (dateStr: string | null) => {
 						name="q"
 						value={q}
 						placeholder="Search by name or email..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 					/>
 					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -104,56 +104,56 @@ const formatDate = (dateStr: string | null) => {
 			)}
 
 			{/* Customer Table */}
-			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+			<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-[#1d1d1f]">
-						<thead class="bg-gray-50 border-b border-gray-200">
+					<table class="w-full text-left text-sm text-zinc-900">
+						<thead class="bg-zinc-50 border-b border-zinc-200">
 							<tr>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Name</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Email</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-center">Orders</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Total Spent</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Last Order</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Created</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Name</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Email</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 text-center">Orders</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Total Spent</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Last Order</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Created</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Action</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-100">
+						<tbody class="divide-y divide-zinc-100">
 							{customers.length > 0 ? (
 								customers.map((customer) => (
-									<tr class="hover:bg-gray-50 transition-colors group">
+									<tr class="hover:bg-zinc-50 transition-colors group">
 										<td class="px-6 py-4">
-											<a href={`/admin/customers/${customer.id}`} class="font-medium hover:text-[#0071e3] transition-colors">
+											<a href={`/admin/customers/${customer.id}`} class="font-medium hover:text-emerald-500 transition-colors">
 												{customer.name}
 											</a>
 										</td>
-										<td class="px-6 py-4 text-[#86868b]">
+										<td class="px-6 py-4 text-zinc-500">
 											{customer.email || <span class="italic">No email</span>}
 										</td>
 										<td class="px-6 py-4 text-center">
 											{customer.order_count > 0 ? (
 												<Badge severity="info">{customer.order_count}</Badge>
 											) : (
-												<span class="text-[#86868b]">0</span>
+												<span class="text-zinc-500">0</span>
 											)}
 										</td>
 										<td class="px-6 py-4 text-right tabular-nums">
 											{formatCurrency(customer.total_spent)}
 										</td>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+										<td class="px-6 py-4 text-zinc-500 tabular-nums">
 											{formatDate(customer.last_order_date)}
 										</td>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+										<td class="px-6 py-4 text-zinc-500 tabular-nums">
 											{formatDate(customer.created_at)}
 										</td>
 										<td class="px-6 py-4 text-right">
-											<a href={`/admin/customers/${customer.id}`} class="text-[#0071e3] hover:underline font-medium">View</a>
+											<a href={`/admin/customers/${customer.id}`} class="text-emerald-500 hover:underline font-medium">View</a>
 										</td>
 									</tr>
 								))
 							) : (
 								<tr>
-									<td colspan="7" class="px-6 py-12 text-center text-[#86868b]">
+									<td colspan="7" class="px-6 py-12 text-center text-zinc-500">
 										No customers found.
 									</td>
 								</tr>
@@ -163,8 +163,8 @@ const formatDate = (dateStr: string | null) => {
 				</div>
 
 				{/* Pagination */}
-				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-[#86868b]">
+				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+					<div class="text-xs text-zinc-500">
 						Page {page} of {meta.totalPages}
 					</div>
 					<div class="flex gap-2">

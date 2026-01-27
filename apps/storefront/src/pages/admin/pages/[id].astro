@@ -134,20 +134,20 @@ const canDelete = page && !isCorePage;
 <AdminLayout title={page ? `${page.title} - Admin` : 'Page - Admin'}>
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center gap-4">
-			<a href="/admin/pages" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
+			<a href="/admin/pages" class="text-emerald-500 hover:underline text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 				Pages
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">
+			<h1 class="text-2xl font-semibold text-zinc-900">
 				{page ? `Edit: ${page.title}` : 'Page'}
 			</h1>
 			{page && (
 				<a
 					href={`/${page.slug}`}
 					target="_blank"
-					class="text-xs text-[#86868b] hover:text-[#0071e3] flex items-center gap-1"
+					class="text-xs text-zinc-500 hover:text-emerald-500 flex items-center gap-1"
 				>
 					<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -163,7 +163,7 @@ const canDelete = page && !isCorePage;
 			)}
 
 			{error && !page && (
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-8 text-center">
 					<div class="text-red-600 mb-4">{error}</div>
 					<Button href="/admin/pages" variant="secondary" size="sm">
 						Back to Pages
@@ -180,7 +180,7 @@ const canDelete = page && !isCorePage;
 			{page && (
 				<form method="POST" class="space-y-6">
 					{/* Status Card */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6">
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-4">
 								{page.status === 'published' ? (
@@ -189,7 +189,7 @@ const canDelete = page && !isCorePage;
 									<Badge severity="secondary">Draft</Badge>
 								)}
 								{isCorePage && (
-									<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded">Core page</span>
+									<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded">Core page</span>
 								)}
 							</div>
 							<div class="flex gap-2">
@@ -205,12 +205,12 @@ const canDelete = page && !isCorePage;
 					</div>
 
 					{/* Basic Info */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-						<h2 class="text-sm font-medium text-[#86868b]">Basic Information</h2>
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-6">
+						<h2 class="text-sm font-medium text-zinc-500">Basic Information</h2>
 
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div>
-								<label for="title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="title" class="block text-sm font-medium text-zinc-900 mb-2">
 									Title <span class="text-red-500">*</span>
 								</label>
 								<input
@@ -219,16 +219,16 @@ const canDelete = page && !isCorePage;
 									name="title"
 									required
 									value={page.title}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 								/>
 							</div>
 
 							<div>
-								<label for="slug" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="slug" class="block text-sm font-medium text-zinc-900 mb-2">
 									Slug <span class="text-red-500">*</span>
 								</label>
 								<div class="flex items-center gap-2">
-									<span class="text-sm text-[#86868b]">/</span>
+									<span class="text-sm text-zinc-500">/</span>
 									<input
 										type="text"
 										id="slug"
@@ -236,20 +236,20 @@ const canDelete = page && !isCorePage;
 										required
 										value={page.slug}
 										pattern="^[a-z0-9-]+$"
-										class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+										class="flex-1 px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 									/>
 								</div>
-								<p class="mt-1 text-xs text-[#86868b]">Only lowercase letters, numbers, and hyphens</p>
+								<p class="mt-1 text-xs text-zinc-500">Only lowercase letters, numbers, and hyphens</p>
 							</div>
 
 							<div>
-								<label for="status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="status" class="block text-sm font-medium text-zinc-900 mb-2">
 									Status
 								</label>
 								<select
 									id="status"
 									name="status"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+									class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
 								>
 									<option value="draft" selected={page.status === 'draft'}>Draft</option>
 									<option value="published" selected={page.status === 'published'}>Published</option>
@@ -259,12 +259,12 @@ const canDelete = page && !isCorePage;
 					</div>
 
 					{/* SEO */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-						<h2 class="text-sm font-medium text-[#86868b]">SEO Settings</h2>
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-6">
+						<h2 class="text-sm font-medium text-zinc-500">SEO Settings</h2>
 
 						<div class="space-y-6">
 							<div>
-								<label for="meta_title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="meta_title" class="block text-sm font-medium text-zinc-900 mb-2">
 									Meta Title
 								</label>
 								<input
@@ -274,13 +274,13 @@ const canDelete = page && !isCorePage;
 									value={page.meta_title || ''}
 									placeholder="Page Title - Site Name"
 									maxlength="255"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 								/>
-								<p class="mt-1 text-xs text-[#86868b]">Used as the browser tab title and in search results</p>
+								<p class="mt-1 text-xs text-zinc-500">Used as the browser tab title and in search results</p>
 							</div>
 
 							<div>
-								<label for="meta_description" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="meta_description" class="block text-sm font-medium text-zinc-900 mb-2">
 									Meta Description
 								</label>
 								<textarea
@@ -289,21 +289,21 @@ const canDelete = page && !isCorePage;
 									rows="2"
 									maxlength="500"
 									placeholder="Brief description of the page content..."
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+									class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none"
 								>{page.meta_description || ''}</textarea>
-								<p class="mt-1 text-xs text-[#86868b]">Displayed in search engine results</p>
+								<p class="mt-1 text-xs text-zinc-500">Displayed in search engine results</p>
 							</div>
 						</div>
 					</div>
 
 					{/* Content */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-6">
 						<div class="flex items-center justify-between">
-							<h2 class="text-sm font-medium text-[#86868b]">Page Content (Markdown)</h2>
+							<h2 class="text-sm font-medium text-zinc-500">Page Content (Markdown)</h2>
 							<button
 								type="button"
 								id="preview-toggle"
-								class="text-sm text-[#0071e3] hover:underline"
+								class="text-sm text-emerald-500 hover:underline"
 							>
 								Toggle Preview
 							</button>
@@ -330,30 +330,30 @@ const canDelete = page && !isCorePage;
 ```
 Code block
 ```"
-								class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+								class="w-full px-4 py-3 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
 							>{page.body}</textarea>
-							<p class="mt-2 text-xs text-[#86868b]">
+							<p class="mt-2 text-xs text-zinc-500">
 								Supports Markdown syntax. HTML is also valid within Markdown.
 							</p>
 						</div>
 
 						<div id="preview-container" class="hidden">
-							<div id="preview-content" class="prose prose-sm max-w-none min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white">
-								<p class="text-[#86868b]">Preview will appear here...</p>
+							<div id="preview-content" class="prose prose-sm max-w-none min-h-[300px] p-4 border border-zinc-200 rounded-lg bg-white">
+								<p class="text-zinc-500">Preview will appear here...</p>
 							</div>
 						</div>
 					</div>
 
 					{/* Meta Info */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6">
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
-								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(page.created_at)}</dd>
+								<dt class="text-zinc-500">Created</dt>
+								<dd class="text-zinc-900 tabular-nums">{formatDate(page.created_at)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#86868b]">Updated</dt>
-								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(page.updated_at)}</dd>
+								<dt class="text-zinc-500">Updated</dt>
+								<dd class="text-zinc-900 tabular-nums">{formatDate(page.updated_at)}</dd>
 							</div>
 						</dl>
 					</div>
@@ -370,7 +370,7 @@ Code block
 									Delete Page
 								</button>
 							) : isCorePage ? (
-								<span class="text-sm text-[#86868b]">Core pages cannot be deleted</span>
+								<span class="text-sm text-zinc-500">Core pages cannot be deleted</span>
 							) : null}
 						</div>
 						<div class="flex gap-3">
@@ -418,7 +418,7 @@ Code block
 			if (previewContent && bodyTextarea) {
 				const markdown = bodyTextarea.value;
 				if (!markdown || markdown.trim() === '') {
-					previewContent.innerHTML = '<p class="text-[#86868b]">No content to preview...</p>';
+					previewContent.innerHTML = '<p class="text-zinc-500">No content to preview...</p>';
 				} else {
 					try {
 						const html = await marked.parse(markdown);

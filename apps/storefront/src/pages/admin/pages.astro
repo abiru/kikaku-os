@@ -76,8 +76,8 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-gray-900">Pages</h1>
-				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				<h1 class="text-2xl font-semibold text-zinc-900">Pages</h1>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
 			</div>
 			<Button href="/admin/pages/new" size="sm" variant="primary">
 				+ New Page
@@ -91,11 +91,11 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 						name="q"
 						value={q}
 						placeholder="Search by title or slug..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 					/>
 					<input type="hidden" name="status" value={status} />
 					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -106,19 +106,19 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 				<div class="flex gap-2">
 					<a
 						href={`?q=${q}&status=all`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						All
 					</a>
 					<a
 						href={`?q=${q}&status=published`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'published' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'published' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Published
 					</a>
 					<a
 						href={`?q=${q}&status=draft`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-[#1d1d1f] text-white' : 'bg-white text-[#1d1d1f] border border-gray-200 hover:bg-gray-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Draft
 					</a>
@@ -132,30 +132,30 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 			)}
 
 			{/* Pages Table */}
-			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+			<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-[#1d1d1f]">
-						<thead class="bg-gray-50 border-b border-gray-200">
+					<table class="w-full text-left text-sm text-zinc-900">
+						<thead class="bg-zinc-50 border-b border-zinc-200">
 							<tr>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Slug</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Updated</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Title</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Slug</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Updated</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Action</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-100">
+						<tbody class="divide-y divide-zinc-100">
 							{pages.length > 0 ? (
 								pages.map((p) => (
-									<tr class="hover:bg-gray-50 transition-colors group">
+									<tr class="hover:bg-zinc-50 transition-colors group">
 										<td class="px-6 py-4">
 											<div class="font-medium">{p.title}</div>
 											{CORE_SLUGS.includes(p.slug) && (
-												<span class="text-xs text-[#86868b]">Core page</span>
+												<span class="text-xs text-zinc-500">Core page</span>
 											)}
 										</td>
 										<td class="px-6 py-4">
-											<code class="text-xs bg-gray-100 px-2 py-1 rounded">/{p.slug}</code>
+											<code class="text-xs bg-zinc-100 px-2 py-1 rounded">/{p.slug}</code>
 										</td>
 										<td class="px-6 py-4">
 											{p.status === 'published' ? (
@@ -164,17 +164,17 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 												<Badge severity="secondary">Draft</Badge>
 											)}
 										</td>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums">
+										<td class="px-6 py-4 text-zinc-500 tabular-nums">
 											{formatDate(p.updated_at)}
 										</td>
 										<td class="px-6 py-4 text-right">
-											<a href={`/admin/pages/${p.id}`} class="text-[#0071e3] hover:underline font-medium">Edit</a>
+											<a href={`/admin/pages/${p.id}`} class="text-emerald-500 hover:underline font-medium">Edit</a>
 										</td>
 									</tr>
 								))
 							) : (
 								<tr>
-									<td colspan="5" class="px-6 py-12 text-center text-[#86868b]">
+									<td colspan="5" class="px-6 py-12 text-center text-zinc-500">
 										No pages found.
 									</td>
 								</tr>
@@ -184,8 +184,8 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 				</div>
 
 				{/* Pagination */}
-				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-[#86868b]">
+				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+					<div class="text-xs text-zinc-500">
 						Page {page} of {meta.totalPages}
 					</div>
 					<div class="flex gap-2">

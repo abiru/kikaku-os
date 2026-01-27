@@ -136,8 +136,8 @@ const formatValue = (value: string, dataType: string) => {
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <h1 class="text-2xl font-semibold text-gray-900">Application Settings</h1>
-        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+        <h1 class="text-2xl font-semibold text-zinc-900">Application Settings</h1>
+        <span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">
           {Object.values(grouped).flat().length} settings
         </span>
       </div>
@@ -157,9 +157,9 @@ const formatValue = (value: string, dataType: string) => {
 
     <form method="POST" class="space-y-6">
       {Object.entries(grouped).map(([category, settings]) => (
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 class="text-lg font-semibold text-gray-900">
+        <div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
+          <div class="px-6 py-4 border-b border-zinc-200 bg-zinc-50">
+            <h2 class="text-lg font-semibold text-zinc-900">
               {categoryLabels[category] || category}
             </h2>
           </div>
@@ -168,10 +168,10 @@ const formatValue = (value: string, dataType: string) => {
             {settings.map((setting) => (
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                 <div class="md:col-span-1">
-                  <label for={`setting_${setting.key}`} class="block text-sm font-medium text-gray-900">
+                  <label for={`setting_${setting.key}`} class="block text-sm font-medium text-zinc-900">
                     {setting.description || setting.key}
                   </label>
-                  <p class="text-xs text-gray-500 mt-1">
+                  <p class="text-xs text-zinc-500 mt-1">
                     {setting.key}
                   </p>
                   <Badge severity="secondary" class="mt-2 text-xs">
@@ -185,7 +185,7 @@ const formatValue = (value: string, dataType: string) => {
                       id={`setting_${setting.key}`}
                       name={`setting_${setting.key}`}
                       rows={3}
-                      class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                     >{setting.value}</textarea>
                   ) : setting.data_type === 'boolean' ? (
                     <label class="flex items-center gap-3 cursor-pointer">
@@ -195,9 +195,9 @@ const formatValue = (value: string, dataType: string) => {
                         name={`setting_${setting.key}`}
                         value="true"
                         checked={formatValue(setting.value, setting.data_type)}
-                        class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+                        class="w-5 h-5 text-emerald-500 border-zinc-300 rounded focus:ring-emerald-500 focus:ring-2"
                       />
-                      <span class="text-sm text-gray-700">Enabled</span>
+                      <span class="text-sm text-zinc-700">Enabled</span>
                     </label>
                   ) : (
                     <input
@@ -206,7 +206,7 @@ const formatValue = (value: string, dataType: string) => {
                       name={`setting_${setting.key}`}
                       value={setting.value}
                       step={setting.data_type === 'integer' ? '1' : undefined}
-                      class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                      class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                     />
                   )}
                 </div>
@@ -216,7 +216,7 @@ const formatValue = (value: string, dataType: string) => {
         </div>
       ))}
 
-      <div class="flex gap-3 sticky bottom-4 bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
+      <div class="flex gap-3 sticky bottom-4 bg-white p-4 rounded-lg ring-1 ring-zinc-900/5 shadow-lg">
         <Button type="submit" variant="primary" size="sm">
           Save All Settings
         </Button>

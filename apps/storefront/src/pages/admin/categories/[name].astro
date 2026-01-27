@@ -75,16 +75,16 @@ const formatDate = (dateStr: string | null) => {
 <AdminLayout title={`${categoryName} - Categories - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<a href="/admin/categories" class="text-indigo-600 hover:text-indigo-500 text-sm flex items-center gap-1">
+			<a href="/admin/categories" class="text-emerald-500 hover:text-emerald-500 text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 				Categories
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">
+			<h1 class="text-2xl font-semibold text-zinc-900">
 				{categoryName}
 			</h1>
-			<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} products</span>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} products</span>
 		</div>
 			{/* Search Bar */}
 			<div class="mb-6">
@@ -94,10 +94,10 @@ const formatDate = (dateStr: string | null) => {
 						name="q"
 						value={q}
 						placeholder="Search products in this category..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 					/>
 					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -108,7 +108,7 @@ const formatDate = (dateStr: string | null) => {
 			</div>
 
 			{error && (
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-8 text-center">
 					<div class="text-red-600 mb-4">{error}</div>
 					<Button href="/admin/categories" variant="secondary" size="sm">
 						Back to Categories
@@ -117,24 +117,24 @@ const formatDate = (dateStr: string | null) => {
 			)}
 
 			{!error && (
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
 					<div class="overflow-x-auto">
-						<table class="w-full text-left text-sm text-[#1d1d1f]">
-							<thead class="bg-gray-50 border-b border-gray-200">
+						<table class="w-full text-left text-sm text-zinc-900">
+							<thead class="bg-zinc-50 border-b border-zinc-200">
 								<tr>
-									<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
-									<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-									<th class="px-6 py-3 font-medium text-[#86868b]">Updated</th>
-									<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+									<th class="px-6 py-3 font-medium text-zinc-500">Title</th>
+									<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+									<th class="px-6 py-3 font-medium text-zinc-500">Updated</th>
+									<th class="px-6 py-3 font-medium text-zinc-500 text-right">Action</th>
 								</tr>
 							</thead>
-							<tbody class="divide-y divide-gray-100">
+							<tbody class="divide-y divide-zinc-100">
 								{products.length > 0 ? (
 									products.map((product) => (
-										<tr class="hover:bg-gray-50 transition-colors group">
+										<tr class="hover:bg-zinc-50 transition-colors group">
 											<td class="px-6 py-4">
 												<div class="font-medium">{product.title}</div>
-												<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</div>
+												<div class="text-xs text-zinc-500 truncate max-w-xs">{product.description}</div>
 											</td>
 											<td class="px-6 py-4">
 												{product.status === 'draft' ? (
@@ -143,17 +143,17 @@ const formatDate = (dateStr: string | null) => {
 													<Badge severity="info">Active</Badge>
 												)}
 											</td>
-											<td class="px-6 py-4 text-[#86868b] tabular-nums">
+											<td class="px-6 py-4 text-zinc-500 tabular-nums">
 												{formatDate(product.updated_at)}
 											</td>
 											<td class="px-6 py-4 text-right">
-												<a href={`/admin/products/${product.id}`} class="text-[#0071e3] hover:underline font-medium">Edit</a>
+												<a href={`/admin/products/${product.id}`} class="text-emerald-500 hover:underline font-medium">Edit</a>
 											</td>
 										</tr>
 									))
 								) : (
 									<tr>
-										<td colspan="4" class="px-6 py-12 text-center text-[#86868b]">
+										<td colspan="4" class="px-6 py-12 text-center text-zinc-500">
 											No products found in this category.
 										</td>
 									</tr>
@@ -164,8 +164,8 @@ const formatDate = (dateStr: string | null) => {
 
 					{/* Pagination */}
 					{meta.totalPages > 1 && (
-						<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-							<div class="text-xs text-[#86868b]">
+						<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+							<div class="text-xs text-zinc-500">
 								Page {page} of {meta.totalPages}
 							</div>
 							<div class="flex gap-2">

@@ -101,13 +101,13 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 <AdminLayout title={`Order #${id} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<a href="/admin/orders" class="text-indigo-600 hover:underline text-sm flex items-center gap-1">
+			<a href="/admin/orders" class="text-emerald-500 hover:underline text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 				Orders
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">Order #{id}</h1>
+			<h1 class="text-2xl font-semibold text-zinc-900">Order #{id}</h1>
 			{order && <Badge severity={getStatusSeverity(order.status)}>{order.status}</Badge>}
 		</div>
 			{error && (
@@ -119,73 +119,73 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			{order && (
 				<div class="space-y-6">
 					{/* Order Summary */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-						<h2 class="text-base font-semibold text-[#1d1d1f] mb-4">Order Summary</h2>
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6">
+						<h2 class="text-base font-semibold text-zinc-900 mb-4">Order Summary</h2>
 						<dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 							<div>
-								<dt class="text-[#86868b]">Total</dt>
-								<dd class="font-semibold text-[#1d1d1f] text-lg">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
+								<dt class="text-zinc-500">Total</dt>
+								<dd class="font-semibold text-zinc-900 text-lg">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#86868b]">Customer</dt>
-								<dd class="text-[#1d1d1f]">{order.customer_email || 'Guest'}</dd>
+								<dt class="text-zinc-500">Customer</dt>
+								<dd class="text-zinc-900">{order.customer_email || 'Guest'}</dd>
 							</div>
 							<div>
-								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(order.created_at)}</dd>
+								<dt class="text-zinc-500">Created</dt>
+								<dd class="text-zinc-900 tabular-nums">{formatDate(order.created_at)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#86868b]">Paid At</dt>
-								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(order.paid_at)}</dd>
+								<dt class="text-zinc-500">Paid At</dt>
+								<dd class="text-zinc-900 tabular-nums">{formatDate(order.paid_at)}</dd>
 							</div>
 						</dl>
 
 						{/* Tax Breakdown */}
 						{(order.subtotal !== undefined || order.tax_amount !== undefined) && (
-							<div class="mt-4 pt-4 border-t border-gray-100">
-								<h3 class="text-xs font-medium text-[#86868b] uppercase tracking-wider mb-3">Price Breakdown</h3>
+							<div class="mt-4 pt-4 border-t border-zinc-100">
+								<h3 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Price Breakdown</h3>
 								<dl class="space-y-2 text-sm">
 									{order.subtotal !== undefined && (
 										<div class="flex justify-between">
-											<dt class="text-[#86868b]">Subtotal (税抜)</dt>
-											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.subtotal, order.currency)}</dd>
+											<dt class="text-zinc-500">Subtotal (税抜)</dt>
+											<dd class="font-medium text-zinc-900 tabular-nums">{formatCurrency(order.subtotal, order.currency)}</dd>
 										</div>
 									)}
 									{order.tax_amount !== undefined && (
 										<div class="flex justify-between">
-											<dt class="text-[#86868b]">Tax (消費税)</dt>
-											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.tax_amount, order.currency)}</dd>
+											<dt class="text-zinc-500">Tax (消費税)</dt>
+											<dd class="font-medium text-zinc-900 tabular-nums">{formatCurrency(order.tax_amount, order.currency)}</dd>
 										</div>
 									)}
 									{order.total_discount > 0 && (
 										<div class="flex justify-between">
-											<dt class="text-[#86868b]">Discount</dt>
+											<dt class="text-zinc-500">Discount</dt>
 											<dd class="font-medium text-red-600 tabular-nums">-{formatCurrency(order.total_discount, order.currency)}</dd>
 										</div>
 									)}
 									{order.shipping_fee > 0 && (
 										<div class="flex justify-between">
-											<dt class="text-[#86868b]">Shipping</dt>
-											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.shipping_fee, order.currency)}</dd>
+											<dt class="text-zinc-500">Shipping</dt>
+											<dd class="font-medium text-zinc-900 tabular-nums">{formatCurrency(order.shipping_fee, order.currency)}</dd>
 										</div>
 									)}
-									<div class="flex justify-between pt-2 border-t border-gray-100">
-										<dt class="text-[#1d1d1f] font-semibold">Total (税込)</dt>
-										<dd class="font-bold text-[#1d1d1f] text-lg tabular-nums">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
+									<div class="flex justify-between pt-2 border-t border-zinc-100">
+										<dt class="text-zinc-900 font-semibold">Total (税込)</dt>
+										<dd class="font-bold text-zinc-900 text-lg tabular-nums">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 									</div>
 								</dl>
 							</div>
 						)}
 
 						{(order.provider_checkout_session_id || order.provider_payment_intent_id) && (
-							<div class="mt-4 pt-4 border-t border-gray-100">
-								<h3 class="text-xs font-medium text-[#86868b] uppercase tracking-wider mb-2">Stripe IDs</h3>
-								<div class="text-xs text-[#1d1d1f] font-mono space-y-1">
+							<div class="mt-4 pt-4 border-t border-zinc-100">
+								<h3 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Stripe IDs</h3>
+								<div class="text-xs text-zinc-900 font-mono space-y-1">
 									{order.provider_checkout_session_id && (
-										<div>Checkout: <span class="bg-gray-100 px-1 py-0.5 rounded">{order.provider_checkout_session_id}</span></div>
+										<div>Checkout: <span class="bg-zinc-100 px-1 py-0.5 rounded">{order.provider_checkout_session_id}</span></div>
 									)}
 									{order.provider_payment_intent_id && (
-										<div>PaymentIntent: <span class="bg-gray-100 px-1 py-0.5 rounded">{order.provider_payment_intent_id}</span></div>
+										<div>PaymentIntent: <span class="bg-zinc-100 px-1 py-0.5 rounded">{order.provider_payment_intent_id}</span></div>
 									)}
 								</div>
 							</div>
@@ -193,17 +193,17 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					</div>
 
 					{/* Fulfillments */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
+						<div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
 							<div class="flex items-center gap-2">
-								<h2 class="text-base font-semibold text-[#1d1d1f]">Fulfillments</h2>
-								<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{fulfillments.length}</span>
+								<h2 class="text-base font-semibold text-zinc-900">Fulfillments</h2>
+								<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{fulfillments.length}</span>
 							</div>
 							{order.status === 'paid' && (
 								<button
 									type="button"
 									id="create-fulfillment-btn"
-									class="text-sm text-[#0071e3] hover:underline flex items-center gap-1"
+									class="text-sm text-emerald-500 hover:underline flex items-center gap-1"
 								>
 									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -213,28 +213,28 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							)}
 						</div>
 						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm text-[#1d1d1f]">
-								<thead class="bg-gray-50 border-b border-gray-200">
+							<table class="w-full text-left text-sm text-zinc-900">
+								<thead class="bg-zinc-50 border-b border-zinc-200">
 									<tr>
-										<th class="px-6 py-3 font-medium text-[#86868b]">ID</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Tracking Number</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Created</th>
-										<th class="px-6 py-3 font-medium text-[#86868b] text-right">Actions</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">ID</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Tracking Number</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Created</th>
+										<th class="px-6 py-3 font-medium text-zinc-500 text-right">Actions</th>
 									</tr>
 								</thead>
-								<tbody class="divide-y divide-gray-100">
+								<tbody class="divide-y divide-zinc-100">
 									{fulfillments.length > 0 ? (
 										fulfillments.map((f) => (
-											<tr class="hover:bg-gray-50 transition-colors">
+											<tr class="hover:bg-zinc-50 transition-colors">
 												<td class="px-6 py-4 font-medium">{f.id}</td>
 												<td class="px-6 py-4"><Badge severity={getFulfillmentStatusSeverity(f.status)}>{f.status}</Badge></td>
 												<td class="px-6 py-4 font-mono text-xs">{f.tracking_number || '-'}</td>
-												<td class="px-6 py-4 text-[#86868b] tabular-nums">{formatDate(f.created_at)}</td>
+												<td class="px-6 py-4 text-zinc-500 tabular-nums">{formatDate(f.created_at)}</td>
 												<td class="px-6 py-4 text-right">
 													<button
 														type="button"
-														class="edit-fulfillment-btn text-sm text-[#0071e3] hover:underline"
+														class="edit-fulfillment-btn text-sm text-emerald-500 hover:underline"
 														data-fulfillment={JSON.stringify(f)}
 													>
 														Edit
@@ -243,7 +243,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											</tr>
 										))
 									) : (
-										<tr><td colspan="5" class="px-6 py-8 text-center text-[#86868b]">No fulfillments</td></tr>
+										<tr><td colspan="5" class="px-6 py-8 text-center text-zinc-500">No fulfillments</td></tr>
 									)}
 								</tbody>
 							</table>
@@ -251,35 +251,35 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					</div>
 
 					{/* Payments */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-							<h2 class="text-base font-semibold text-[#1d1d1f]">Payments</h2>
-							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
+						<div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+							<h2 class="text-base font-semibold text-zinc-900">Payments</h2>
+							<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{payments.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm text-[#1d1d1f]">
-								<thead class="bg-gray-50 border-b border-gray-200">
+							<table class="w-full text-left text-sm text-zinc-900">
+								<thead class="bg-zinc-50 border-b border-zinc-200">
 									<tr>
-										<th class="px-6 py-3 font-medium text-[#86868b]">ID</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Amount</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Provider ID</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Date</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">ID</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Amount</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Provider ID</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Date</th>
 									</tr>
 								</thead>
-								<tbody class="divide-y divide-gray-100">
+								<tbody class="divide-y divide-zinc-100">
 									{payments.length > 0 ? (
 										payments.map((p) => (
-											<tr class="hover:bg-gray-50 transition-colors">
+											<tr class="hover:bg-zinc-50 transition-colors">
 												<td class="px-6 py-4 font-medium">{p.id}</td>
 												<td class="px-6 py-4"><Badge severity={getStatusSeverity(p.status)}>{p.status}</Badge></td>
 												<td class="px-6 py-4 tabular-nums">{formatCurrency(p.amount, p.currency)}</td>
 												<td class="px-6 py-4 font-mono text-xs">{p.provider_payment_id || '-'}</td>
-												<td class="px-6 py-4 text-[#86868b] tabular-nums">{formatDate(p.created_at)}</td>
+												<td class="px-6 py-4 text-zinc-500 tabular-nums">{formatDate(p.created_at)}</td>
 											</tr>
 										))
 									) : (
-										<tr><td colspan="5" class="px-6 py-8 text-center text-[#86868b]">No payments</td></tr>
+										<tr><td colspan="5" class="px-6 py-8 text-center text-zinc-500">No payments</td></tr>
 									)}
 								</tbody>
 							</table>
@@ -287,37 +287,37 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					</div>
 
 					{/* Refunds */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-							<h2 class="text-base font-semibold text-[#1d1d1f]">Refunds</h2>
-							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
+						<div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+							<h2 class="text-base font-semibold text-zinc-900">Refunds</h2>
+							<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{refunds.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm text-[#1d1d1f]">
-								<thead class="bg-gray-50 border-b border-gray-200">
+							<table class="w-full text-left text-sm text-zinc-900">
+								<thead class="bg-zinc-50 border-b border-zinc-200">
 									<tr>
-										<th class="px-6 py-3 font-medium text-[#86868b]">ID</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Amount</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Provider ID</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Reason</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Date</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">ID</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Amount</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Provider ID</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Reason</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Date</th>
 									</tr>
 								</thead>
-								<tbody class="divide-y divide-gray-100">
+								<tbody class="divide-y divide-zinc-100">
 									{refunds.length > 0 ? (
 										refunds.map((r) => (
-											<tr class="hover:bg-gray-50 transition-colors">
+											<tr class="hover:bg-zinc-50 transition-colors">
 												<td class="px-6 py-4 font-medium">{r.id}</td>
 												<td class="px-6 py-4"><Badge severity={getStatusSeverity(r.status)}>{r.status}</Badge></td>
 												<td class="px-6 py-4 tabular-nums">{formatCurrency(r.amount, r.currency)}</td>
 												<td class="px-6 py-4 font-mono text-xs">{r.provider_refund_id || '-'}</td>
-												<td class="px-6 py-4 text-[#86868b]">{r.reason || '-'}</td>
-												<td class="px-6 py-4 text-[#86868b] tabular-nums">{formatDate(r.created_at)}</td>
+												<td class="px-6 py-4 text-zinc-500">{r.reason || '-'}</td>
+												<td class="px-6 py-4 text-zinc-500 tabular-nums">{formatDate(r.created_at)}</td>
 											</tr>
 										))
 									) : (
-										<tr><td colspan="6" class="px-6 py-8 text-center text-[#86868b]">No refunds</td></tr>
+										<tr><td colspan="6" class="px-6 py-8 text-center text-zinc-500">No refunds</td></tr>
 									)}
 								</tbody>
 							</table>
@@ -325,35 +325,35 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					</div>
 
 					{/* Stripe Events */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-							<h2 class="text-base font-semibold text-[#1d1d1f]">Stripe Events</h2>
-							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
+					<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 overflow-hidden">
+						<div class="px-6 py-4 border-b border-zinc-200 flex items-center justify-between">
+							<h2 class="text-base font-semibold text-zinc-900">Stripe Events</h2>
+							<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm text-[#1d1d1f]">
-								<thead class="bg-gray-50 border-b border-gray-200">
+							<table class="w-full text-left text-sm text-zinc-900">
+								<thead class="bg-zinc-50 border-b border-zinc-200">
 									<tr>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Event ID</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Type</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Error</th>
-										<th class="px-6 py-3 font-medium text-[#86868b]">Received</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Event ID</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Type</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Error</th>
+										<th class="px-6 py-3 font-medium text-zinc-500">Received</th>
 									</tr>
 								</thead>
-								<tbody class="divide-y divide-gray-100">
+								<tbody class="divide-y divide-zinc-100">
 									{stripeEvents.length > 0 ? (
 										stripeEvents.map((e) => (
-											<tr class="hover:bg-gray-50 transition-colors">
+											<tr class="hover:bg-zinc-50 transition-colors">
 												<td class="px-6 py-4 font-mono text-xs">{e.event_id}</td>
 												<td class="px-6 py-4 font-mono text-xs">{e.event_type}</td>
 												<td class="px-6 py-4"><Badge severity={getStatusSeverity(e.processing_status)}>{e.processing_status}</Badge></td>
 												<td class="px-6 py-4 text-xs text-red-600">{e.error || '-'}</td>
-												<td class="px-6 py-4 text-[#86868b] tabular-nums">{formatDate(e.received_at)}</td>
+												<td class="px-6 py-4 text-zinc-500 tabular-nums">{formatDate(e.received_at)}</td>
 											</tr>
 										))
 									) : (
-										<tr><td colspan="5" class="px-6 py-8 text-center text-[#86868b]">No related events</td></tr>
+										<tr><td colspan="5" class="px-6 py-8 text-center text-zinc-500">No related events</td></tr>
 									)}
 								</tbody>
 							</table>
@@ -363,21 +363,21 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			)}
 
 			{/* Create Fulfillment Modal */}
-			<div id="create-fulfillment-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-				<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
-					<div class="p-6 border-b border-gray-100">
-						<h3 class="text-lg font-semibold text-[#1d1d1f]">Create Fulfillment</h3>
-						<p class="text-sm text-[#86868b] mt-1">Order #{id}</p>
+			<div id="create-fulfillment-modal" class="hidden fixed inset-0 bg-zinc-900/50 z-50 flex items-center justify-center p-4">
+				<div class="bg-white rounded-lg shadow-xl ring-1 ring-zinc-900/5 w-full max-w-md">
+					<div class="p-6 border-b border-zinc-100">
+						<h3 class="text-lg font-semibold text-zinc-900">Create Fulfillment</h3>
+						<p class="text-sm text-zinc-500 mt-1">Order #{id}</p>
 					</div>
 					<form id="create-fulfillment-form" class="p-6 space-y-4">
 						<div>
-							<label for="create-status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="create-status" class="block text-sm font-medium text-zinc-900 mb-2">
 								Status
 							</label>
 							<select
 								id="create-status"
 								name="status"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
 							>
 								<option value="pending">Pending</option>
 								<option value="processing">Processing</option>
@@ -387,31 +387,31 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						</div>
 
 						<div>
-							<label for="create-tracking" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="create-tracking" class="block text-sm font-medium text-zinc-900 mb-2">
 								Tracking Number
 							</label>
 							<input
 								type="text"
 								id="create-tracking"
 								name="tracking_number"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 								placeholder="Optional tracking number"
 							/>
 						</div>
 
 						<div id="create-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 
-						<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+						<div class="flex justify-end gap-3 pt-4 border-t border-zinc-100">
 							<button
 								type="button"
 								id="cancel-create-btn"
-								class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+								class="px-4 py-2 text-sm font-medium text-zinc-900 bg-zinc-100 rounded-lg hover:bg-zinc-200 transition-colors"
 							>
 								Cancel
 							</button>
 							<button
 								type="submit"
-								class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+								class="px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-700 transition-colors"
 							>
 								Create
 							</button>
@@ -421,23 +421,23 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			</div>
 
 			{/* Edit Fulfillment Modal */}
-			<div id="edit-fulfillment-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-				<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
-					<div class="p-6 border-b border-gray-100">
-						<h3 class="text-lg font-semibold text-[#1d1d1f]">Edit Fulfillment</h3>
-						<p id="edit-subtitle" class="text-sm text-[#86868b] mt-1"></p>
+			<div id="edit-fulfillment-modal" class="hidden fixed inset-0 bg-zinc-900/50 z-50 flex items-center justify-center p-4">
+				<div class="bg-white rounded-lg shadow-xl ring-1 ring-zinc-900/5 w-full max-w-md">
+					<div class="p-6 border-b border-zinc-100">
+						<h3 class="text-lg font-semibold text-zinc-900">Edit Fulfillment</h3>
+						<p id="edit-subtitle" class="text-sm text-zinc-500 mt-1"></p>
 					</div>
 					<form id="edit-fulfillment-form" class="p-6 space-y-4">
 						<input type="hidden" id="edit-fulfillment-id" name="fulfillmentId" />
 
 						<div>
-							<label for="edit-status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="edit-status" class="block text-sm font-medium text-zinc-900 mb-2">
 								Status
 							</label>
 							<select
 								id="edit-status"
 								name="status"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
 							>
 								<option value="pending">Pending</option>
 								<option value="processing">Processing</option>
@@ -448,31 +448,31 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						</div>
 
 						<div>
-							<label for="edit-tracking" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="edit-tracking" class="block text-sm font-medium text-zinc-900 mb-2">
 								Tracking Number
 							</label>
 							<input
 								type="text"
 								id="edit-tracking"
 								name="tracking_number"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 								placeholder="Optional tracking number"
 							/>
 						</div>
 
 						<div id="edit-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 
-						<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+						<div class="flex justify-end gap-3 pt-4 border-t border-zinc-100">
 							<button
 								type="button"
 								id="cancel-edit-btn"
-								class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+								class="px-4 py-2 text-sm font-medium text-zinc-900 bg-zinc-100 rounded-lg hover:bg-zinc-200 transition-colors"
 							>
 								Cancel
 							</button>
 							<button
 								type="submit"
-								class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+								class="px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-700 transition-colors"
 							>
 								Save
 							</button>

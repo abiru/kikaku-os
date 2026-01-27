@@ -81,13 +81,13 @@ if (!apiKey) {
 <AdminLayout title="New Page - Admin">
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center gap-4">
-			<a href="/admin/pages" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
+			<a href="/admin/pages" class="text-emerald-500 hover:underline text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 				Pages
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">New Page</h1>
+			<h1 class="text-2xl font-semibold text-zinc-900">New Page</h1>
 		</div>
 			{error && (
 				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
@@ -97,12 +97,12 @@ if (!apiKey) {
 
 			<form method="POST" class="space-y-6">
 				{/* Basic Info */}
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-					<h2 class="text-sm font-medium text-[#86868b]">Basic Information</h2>
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-6">
+					<h2 class="text-sm font-medium text-zinc-500">Basic Information</h2>
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div>
-							<label for="title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="title" class="block text-sm font-medium text-zinc-900 mb-2">
 								Title <span class="text-red-500">*</span>
 							</label>
 							<input
@@ -111,16 +111,16 @@ if (!apiKey) {
 								name="title"
 								required
 								placeholder="Page Title"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 							/>
 						</div>
 
 						<div>
-							<label for="slug" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="slug" class="block text-sm font-medium text-zinc-900 mb-2">
 								Slug <span class="text-red-500">*</span>
 							</label>
 							<div class="flex items-center gap-2">
-								<span class="text-sm text-[#86868b]">/</span>
+								<span class="text-sm text-zinc-500">/</span>
 								<input
 									type="text"
 									id="slug"
@@ -128,20 +128,20 @@ if (!apiKey) {
 									required
 									placeholder="page-slug"
 									pattern="^[a-z0-9-]+$"
-									class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="flex-1 px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 								/>
 							</div>
-							<p class="mt-1 text-xs text-[#86868b]">Only lowercase letters, numbers, and hyphens</p>
+							<p class="mt-1 text-xs text-zinc-500">Only lowercase letters, numbers, and hyphens</p>
 						</div>
 
 						<div>
-							<label for="status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="status" class="block text-sm font-medium text-zinc-900 mb-2">
 								Status
 							</label>
 							<select
 								id="status"
 								name="status"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white"
 							>
 								<option value="draft" selected>Draft</option>
 								<option value="published">Published</option>
@@ -151,12 +151,12 @@ if (!apiKey) {
 				</div>
 
 				{/* SEO */}
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-					<h2 class="text-sm font-medium text-[#86868b]">SEO Settings</h2>
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-6">
+					<h2 class="text-sm font-medium text-zinc-500">SEO Settings</h2>
 
 					<div class="space-y-6">
 						<div>
-							<label for="meta_title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="meta_title" class="block text-sm font-medium text-zinc-900 mb-2">
 								Meta Title
 							</label>
 							<input
@@ -165,13 +165,13 @@ if (!apiKey) {
 								name="meta_title"
 								placeholder="Page Title - Site Name"
 								maxlength="255"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
 							/>
-							<p class="mt-1 text-xs text-[#86868b]">Used as the browser tab title and in search results</p>
+							<p class="mt-1 text-xs text-zinc-500">Used as the browser tab title and in search results</p>
 						</div>
 
 						<div>
-							<label for="meta_description" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="meta_description" class="block text-sm font-medium text-zinc-900 mb-2">
 								Meta Description
 							</label>
 							<textarea
@@ -180,21 +180,21 @@ if (!apiKey) {
 								rows="2"
 								maxlength="500"
 								placeholder="Brief description of the page content..."
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+								class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-none"
 							></textarea>
-							<p class="mt-1 text-xs text-[#86868b]">Displayed in search engine results</p>
+							<p class="mt-1 text-xs text-zinc-500">Displayed in search engine results</p>
 						</div>
 					</div>
 				</div>
 
 				{/* Content */}
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+				<div class="bg-white rounded-lg ring-1 ring-zinc-900/5 p-6 space-y-6">
 					<div class="flex items-center justify-between">
-						<h2 class="text-sm font-medium text-[#86868b]">Page Content (Markdown)</h2>
+						<h2 class="text-sm font-medium text-zinc-500">Page Content (Markdown)</h2>
 						<button
 							type="button"
 							id="preview-toggle"
-							class="text-sm text-[#0071e3] hover:underline"
+							class="text-sm text-emerald-500 hover:underline"
 						>
 							Toggle Preview
 						</button>
@@ -221,16 +221,16 @@ if (!apiKey) {
 ```
 Code block
 ```"
-							class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+							class="w-full px-4 py-3 border border-zinc-200 rounded-lg text-sm text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all resize-y"
 						></textarea>
-						<p class="mt-2 text-xs text-[#86868b]">
+						<p class="mt-2 text-xs text-zinc-500">
 							Supports Markdown syntax. HTML is also valid within Markdown.
 						</p>
 					</div>
 
 					<div id="preview-container" class="hidden">
-						<div id="preview-content" class="min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white prose prose-sm max-w-none">
-							<p class="text-[#86868b]">Preview will appear here...</p>
+						<div id="preview-content" class="min-h-[300px] p-4 border border-zinc-200 rounded-lg bg-white prose prose-sm max-w-none">
+							<p class="text-zinc-500">Preview will appear here...</p>
 						</div>
 					</div>
 				</div>
@@ -269,7 +269,7 @@ Code block
 			if (previewContent && bodyTextarea) {
 				const markdown = bodyTextarea.value;
 				if (!markdown || markdown.trim() === '') {
-					previewContent.innerHTML = '<p class="text-[#86868b]">No content to preview...</p>';
+					previewContent.innerHTML = '<p class="text-zinc-500">No content to preview...</p>';
 				} else {
 					try {
 						const html = await marked.parse(markdown);

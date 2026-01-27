@@ -20,20 +20,15 @@ const {
 	...rest
 } = Astro.props;
 
-// Apple-style base: Pill shape, smooth font, refined transitions with subtle scale
 const base =
-	'inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+	'inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
 const variants = {
-	// Apple Blue for primary actions
-	primary: 'bg-[#0071e3] text-white hover:bg-[#0077ED]', 
-	// Standard dark for secondary
-	dark: 'bg-[#1d1d1f] text-white hover:bg-[#1d1d1f]/90',
-	// Minimalist outline/secondary
-	secondary: 'bg-white text-[#1d1d1f] hover:text-[#0071e3] shadow-sm',
-	// Ghost link style
-	link: 'text-[#0071e3] hover:underline underline-offset-4',
-    outline: 'border border-[#d2d2d7] bg-transparent text-[#1d1d1f] hover:border-[#86868b]'
+	primary: 'bg-zinc-900 text-white hover:bg-zinc-700',
+	dark: 'bg-zinc-900 text-white hover:bg-zinc-700',
+	secondary: 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200',
+	link: 'text-emerald-500 hover:text-emerald-600',
+	outline: 'border border-zinc-900/10 bg-transparent text-zinc-700 hover:bg-zinc-50'
 };
 
 const sizes = {
