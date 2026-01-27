@@ -4,6 +4,7 @@ export const prerender = false;
 import Container from '../components/Container.astro';
 import Layout from '../layouts/Layout.astro';
 import { getApiBase } from '../lib/api';
+import { parseMarkdown } from '../utils/markdown';
 
 type StaticPage = {
 	id: number;
@@ -66,7 +67,7 @@ const formatDate = (dateStr: string) => {
 		<section class="pb-24">
 			<Container class="max-w-3xl">
 				{page && page.body ? (
-					<div class="prose prose-lg max-w-none" set:html={page.body} />
+					<div class="prose prose-lg max-w-none" set:html={parseMarkdown(page.body)} />
 				) : error ? (
 					<div class="text-center py-12">
 						<p class="text-[#86868b]">{error}</p>
