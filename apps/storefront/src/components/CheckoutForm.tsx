@@ -9,13 +9,25 @@ type CheckoutFormProps = {
 	publishableKey: string;
 };
 
-function CheckoutFormInner({ orderId }: { orderId: number | null }) {
+function CheckoutFormInner({ orderId, email, onEmailChange }: { orderId: number | null; email: string; onEmailChange: (email: string) => void }) {
 	const { t } = useTranslation();
 	const stripe = useStripe();
 	const elements = useElements();
-	const [email, setEmail] = useState('');
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+	// Sync email to PaymentElement (for bank transfer email field)
+	useEffect(() => {
+		if (elements && email) {
+			elements.update({
+				defaultValues: {
+					billingDetails: {
+						email: email
+					}
+				}
+			});
+		}
+	}, [elements, email]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -147,8 +159,8 @@ function CheckoutFormInner({ orderId }: { orderId: number | null }) {
 					id="email"
 					required
 					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-					className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2 border"
+					onChange={(e) => onEmailChange(e.target.value)}
+					className="block w-full rounded-[5px] border border-[#e6e6e6] shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-3 py-3"
 					placeholder="your@email.com"
 				/>
 			</div>
@@ -204,6 +216,7 @@ export default function CheckoutForm({
 }: CheckoutFormProps) {
 	const { t } = useTranslation();
 	const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+	const [email, setEmail] = useState('');
 
 	// Initialize Stripe
 	useEffect(() => {
@@ -240,10 +253,15 @@ export default function CheckoutForm({
 							colorPrimary: '#4f46e5'
 						}
 					},
-					locale: 'ja'
+					locale: 'ja',
+					defaultValues: {
+						billingDetails: {
+							email: email || undefined
+						}
+					}
 				}}
 			>
-				<CheckoutFormInner orderId={orderId} />
+				<CheckoutFormInner orderId={orderId} email={email} onEmailChange={setEmail} />
 			</Elements>
 		</div>
 	);
