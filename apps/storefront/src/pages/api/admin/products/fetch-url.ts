@@ -169,42 +169,41 @@ const generateJapaneseTitle = (originalTitle: string, brand: string, specs: Reco
   return title;
 };
 
-const generateJapaneseDescription = (
+const generateJapaneseDescriptionMarkdownMarkdown = (
   originalTitle: string,
   brand: string,
   specs: Record<string, string>,
   originalDesc: string
 ): string => {
-  let html = `<h2>${originalTitle}</h2>\n\n`;
+  let md = `## ${originalTitle}\n\n`;
 
   // Intro
   const brandText = brand || 'プレミアム';
-  html += `<p><strong>プロも認める高効率フルスペクトラムLED</strong> - 室内栽培のパフォーマンスを最大化する${brandText}の最新グロウライト。苗から開花まで、すべての成長段階を強力にサポートします。</p>\n\n`;
+  md += `**プロも認める高効率フルスペクトラムLED** - 室内栽培のパフォーマンスを最大化する${brandText}の最新グロウライト。苗から開花まで、すべての成長段階を強力にサポートします。\n\n`;
 
   // Specs section
   const specsList: string[] = [];
-  if (specs.power) specsList.push(`<li><strong>消費電力:</strong> ${specs.power}</li>`);
-  if (specs.ppf) specsList.push(`<li><strong>光量子束(PPF):</strong> ${specs.ppf}</li>`);
-  if (specs.ppe) specsList.push(`<li><strong>効率(PPE):</strong> ${specs.ppe}</li>`);
-  if (specs.coverage) specsList.push(`<li><strong>カバレッジ:</strong> ${specs.coverage}</li>`);
-  if (specs.led) specsList.push(`<li><strong>LEDチップ:</strong> ${specs.led}</li>`);
-  if (specs.led_count) specsList.push(`<li><strong>LED数:</strong> ${specs.led_count}</li>`);
+  if (specs.power) specsList.push(`- **消費電力:** ${specs.power}`);
+  if (specs.ppf) specsList.push(`- **光量子束(PPF):** ${specs.ppf}`);
+  if (specs.ppe) specsList.push(`- **効率(PPE):** ${specs.ppe}`);
+  if (specs.coverage) specsList.push(`- **カバレッジ:** ${specs.coverage}`);
+  if (specs.led) specsList.push(`- **LEDチップ:** ${specs.led}`);
+  if (specs.led_count) specsList.push(`- **LED数:** ${specs.led_count}`);
 
   if (specsList.length > 0) {
-    html += `<h3>主要スペック</h3>\n<ul>\n${specsList.join('\n')}\n</ul>\n\n`;
+    md += `### 主要スペック\n\n${specsList.join('\n')}\n\n`;
   }
 
   // Features
-  html += `<h3>特徴</h3>\n<ul>\n`;
-  html += `<li><strong>フルスペクトラム:</strong> 自然光に近い光スペクトルで、すべての成長段階に対応</li>\n`;
-  html += `<li><strong>高効率設計:</strong> 従来のHPSライトと比較して電気代を大幅削減</li>\n`;
-  html += `<li><strong>静音設計:</strong> パッシブ冷却採用で静かな栽培環境を実現</li>\n`;
-  html += `<li><strong>調光機能:</strong> 植物の成長段階に合わせて光量を調整可能</li>\n`;
-  html += `</ul>\n\n`;
+  md += `### 特徴\n\n`;
+  md += `- **フルスペクトラム:** 自然光に近い光スペクトルで、すべての成長段階に対応\n`;
+  md += `- **高効率設計:** 従来のHPSライトと比較して電気代を大幅削減\n`;
+  md += `- **静音設計:** パッシブ冷却採用で静かな栽培環境を実現\n`;
+  md += `- **調光機能:** 植物の成長段階に合わせて光量を調整可能\n\n`;
 
-  html += `<p>初心者からプロまで、確かな品質と性能で室内栽培を成功に導きます。</p>`;
+  md += `初心者からプロまで、確かな品質と性能で室内栽培を成功に導きます。`;
 
-  return html;
+  return md;
 };
 
 export const POST: APIRoute = async ({ request }) => {
@@ -226,7 +225,7 @@ export const POST: APIRoute = async ({ request }) => {
         original_title: productName,
         original_description: manualDescription || undefined,
         generated_title: generateJapaneseTitle(productName, brand, manualSpecs),
-        generated_description: generateJapaneseDescription(productName, brand, manualSpecs, manualDescription || ''),
+        generated_description: generateJapaneseDescriptionMarkdown(productName, brand, manualSpecs, manualDescription || ''),
         specs: manualSpecs,
         source: 'manual_input'
       }), {
@@ -279,7 +278,7 @@ export const POST: APIRoute = async ({ request }) => {
       if (productName) {
         // Generate content even without fetching the page
         const generatedTitle = generateJapaneseTitle(productName, brand, {});
-        const generatedDescription = generateJapaneseDescription(productName, brand, {}, '');
+        const generatedDescription = generateJapaneseDescriptionMarkdown(productName, brand, {}, '');
 
         return new Response(JSON.stringify({
           success: true,
@@ -315,7 +314,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Generate Japanese content
     const generatedTitle = generateJapaneseTitle(originalTitle, brand, specs);
-    const generatedDescription = generateJapaneseDescription(originalTitle, brand, specs, originalDescription);
+    const generatedDescription = generateJapaneseDescriptionMarkdown(originalTitle, brand, specs, originalDescription);
 
     const result: FetchResult = {
       success: true,
