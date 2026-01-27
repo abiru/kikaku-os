@@ -16,19 +16,6 @@ function CheckoutFormInner({ orderId, email, onEmailChange }: { orderId: number 
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	// Sync email to PaymentElement (for bank transfer email field)
-	useEffect(() => {
-		if (elements && email) {
-			elements.update({
-				defaultValues: {
-					billingDetails: {
-						email: email
-					}
-				}
-			});
-		}
-	}, [elements, email]);
-
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -253,12 +240,7 @@ export default function CheckoutForm({
 							colorPrimary: '#4f46e5'
 						}
 					},
-					locale: 'ja',
-					defaultValues: {
-						billingDetails: {
-							email: email || undefined
-						}
-					}
+					locale: 'ja'
 				}}
 			>
 				<CheckoutFormInner orderId={orderId} email={email} onEmailChange={setEmail} />

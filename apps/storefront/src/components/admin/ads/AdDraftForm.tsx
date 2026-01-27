@@ -82,13 +82,6 @@ export const AdDraftForm: FC<AdDraftFormProps> = ({
     setKeywords(value.split(',').map((k) => k.trim()).filter((k) => k));
   };
 
-  const populateFromCandidate = (candidate: AdCandidate) => {
-    setHeadlines(candidate.headlines);
-    setDescriptions(candidate.descriptions);
-    setKeywords(candidate.suggestedKeywords);
-    setSuccess('Candidate loaded! You can now edit and save.');
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -371,7 +364,7 @@ export const AdDraftForm: FC<AdDraftFormProps> = ({
                 />
               </div>
               <div className="flex items-center gap-2">
-                <CharCount text={headline} limit={limits.headline} type="headline" />
+                <CharCount text={headline} limit={limits.headline} />
                 {headlines.length > 1 && (
                   <button
                     type="button"
@@ -424,7 +417,7 @@ export const AdDraftForm: FC<AdDraftFormProps> = ({
                 />
               </div>
               <div className="flex items-center gap-2">
-                <CharCount text={description} limit={limits.description} type="description" />
+                <CharCount text={description} limit={limits.description} />
                 {descriptions.length > 1 && (
                   <button
                     type="button"

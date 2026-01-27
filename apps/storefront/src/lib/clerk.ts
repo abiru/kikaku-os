@@ -1,27 +1,10 @@
 // Client-side Clerk helpers using the global Clerk instance
 // The Clerk Astro integration automatically loads Clerk on the client
 
-declare global {
-  interface Window {
-    Clerk?: {
-      loaded?: boolean;
-      session?: {
-        id: string;
-        getToken: () => Promise<string | null>;
-      } | null;
-      user?: {
-        id: string;
-        primaryEmailAddress?: { emailAddress: string };
-        firstName: string | null;
-        lastName: string | null;
-        imageUrl: string;
-      } | null;
-      signOut: () => Promise<void>;
-    };
-  }
-}
+// Type for window.Clerk is already defined by @clerk/astro
+// We don't need to redeclare it to avoid type conflicts
 
-const waitForClerk = (): Promise<NonNullable<Window['Clerk']>> => {
+const waitForClerk = (): Promise<any> => {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
       reject(new Error('Clerk is only available in the browser'));
