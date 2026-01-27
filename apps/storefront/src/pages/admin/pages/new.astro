@@ -190,7 +190,7 @@ if (!apiKey) {
 				{/* Content */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 					<div class="flex items-center justify-between">
-						<h2 class="text-sm font-medium text-[#86868b]">Page Content (HTML)</h2>
+						<h2 class="text-sm font-medium text-[#86868b]">Page Content (Markdown)</h2>
 						<button
 							type="button"
 							id="preview-toggle"
@@ -205,12 +205,27 @@ if (!apiKey) {
 							id="body"
 							name="body"
 							rows="20"
-							placeholder="<div class='prose'>
-  <h2>Section Title</h2>
-  <p>Your content here...</p>
-</div>"
+							placeholder="# Heading 1
+
+## Heading 2
+
+**Bold text** and *italic text*
+
+- List item 1
+- List item 2
+
+[Link text](https://example.com)
+
+> Blockquote
+
+```
+Code block
+```"
 							class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
 						></textarea>
+						<p class="mt-2 text-xs text-[#86868b]">
+							Supports Markdown syntax. HTML is also valid within Markdown.
+						</p>
 					</div>
 
 					<div id="preview-container" class="hidden">
@@ -233,7 +248,10 @@ if (!apiKey) {
 	</div>
 </AdminLayout>
 
-<script>
+<script type="module">
+	import { marked } from 'marked';
+	import DOMPurify from 'isomorphic-dompurify';
+
 	const previewToggle = document.getElementById('preview-toggle');
 	const editorContainer = document.getElementById('editor-container');
 	const previewContainer = document.getElementById('preview-container');
@@ -242,14 +260,31 @@ if (!apiKey) {
 
 	let showPreview = false;
 
-	previewToggle?.addEventListener('click', () => {
+	previewToggle?.addEventListener('click', async () => {
 		showPreview = !showPreview;
 
 		if (showPreview) {
 			editorContainer?.classList.add('hidden');
 			previewContainer?.classList.remove('hidden');
 			if (previewContent && bodyTextarea) {
-				previewContent.innerHTML = bodyTextarea.value || '<p class="text-[#86868b]">No content to preview...</p>';
+				const markdown = bodyTextarea.value;
+				if (!markdown || markdown.trim() === '') {
+					previewContent.innerHTML = '<p class="text-[#86868b]">No content to preview...</p>';
+				} else {
+					try {
+						const html = await marked.parse(markdown);
+						// Sanitize HTML to prevent XSS
+						const sanitized = DOMPurify.sanitize(html, {
+							ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'u', 's', 'a', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'div', 'span'],
+							ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'id'],
+							ALLOW_DATA_ATTR: false,
+						});
+						previewContent.innerHTML = sanitized;
+					} catch (error) {
+						console.error('Failed to parse markdown:', error);
+						previewContent.innerHTML = '<p class="text-red-500">Failed to parse markdown. Please check your syntax.</p>';
+					}
+				}
 			}
 			previewToggle.textContent = 'Edit';
 		} else {
