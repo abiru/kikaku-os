@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { renderMarkdown, getMarkdownPreviewClass } from '../lib/markdown';
+import { renderMarkdown, getMarkdownPreviewClass } from '../utils/markdown';
 
 interface MarkdownPreviewProps {
   value: string;

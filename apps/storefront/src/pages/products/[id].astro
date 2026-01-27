@@ -5,7 +5,7 @@ import Container from '../../components/Container.astro';
 import EmptyState from '../../components/EmptyState.astro';
 import Layout from '../../layouts/Layout.astro';
 import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
-import { renderMarkdown } from '../../lib/markdown';
+import { renderMarkdown } from '../../utils/markdown';
 
 const apiBase = getApiBase();
 const { id } = Astro.params;
