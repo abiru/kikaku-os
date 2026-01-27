@@ -27,6 +27,28 @@
 ## ローカル開発
 依存は pnpm を推奨します。
 
+### クイックスタート
+```bash
+pnpm install
+
+# .dev.vars を作成（例）
+cat <<'EOF' > .dev.vars
+ADMIN_API_KEY=CHANGE_ME
+DEV_MODE=true
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+STOREFRONT_BASE_URL=http://localhost:4321
+EOF
+
+cp apps/storefront/.env.example apps/storefront/.env
+
+# 初回スキーマ適用 (ローカル D1)
+pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
+
+# API + Storefront + Stripe Webhook を一括起動
+pnpm dev
+```
+
 ### 共通
 - 環境変数: Wrangler は `.dev.vars` を参照（ローカルでのみ使用・コミットしない）
 - 最低限必要な変数:
@@ -45,31 +67,9 @@
 - CORS origin: http://localhost:4321 / http://127.0.0.1:4321
 - ローカルseed: `DEV_MODE=true` のときのみ `/dev/seed` が有効
 
-### API
-```bash
-pnpm install --prefix apps/api
-# .dev.vars を作成（例）
-cat <<'EOF' > .dev.vars
-ADMIN_API_KEY=CHANGE_ME
-DEV_MODE=true
-STRIPE_SECRET_KEY=sk_test_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-STOREFRONT_BASE_URL=http://localhost:4321
-EOF
-pnpm -C apps/api dev -- --port 8787
-
-# 初回スキーマ適用 (ローカル D1)
-pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
-```
 Note: If the API shows up on 8788 (or smoke/dev seems odd), it usually means double-boot: another dev server is already listening on 8787.
 Check: `lsof -nP -iTCP:8787 -sTCP:LISTEN` then `kill <PID>`.
 
-### Storefront
-```bash
-pnpm install --prefix apps/storefront
-cp apps/storefront/.env.example apps/storefront/.env
-pnpm -C apps/storefront dev
-```
 環境変数: `PUBLIC_API_BASE`（デフォルトは http://localhost:8787）
 
 ## 主要エンドポイント

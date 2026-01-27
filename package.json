@@ -1,6 +1,11 @@
 {
+	"private": true,
+	"scripts": {
+		"dev": "concurrently -k -n api,store,stripe -c blue,green,yellow \"pnpm -C apps/api dev\" \"pnpm -C apps/storefront dev\" \"stripe listen --forward-to http://localhost:8787/webhooks/stripe\""
+	},
 	"devDependencies": {
 		"better-sqlite3": "^12.6.2",
+		"concurrently": "^9.1.2",
 		"playwright": "^1.57.0"
 	}
 }

@@ -5,9 +5,8 @@ See @README.md for project overview.
 ## 開発コマンド
 
 ```bash
-# 開発サーバー起動
-pnpm -C apps/api dev --port 8787        # API: http://localhost:8787
-pnpm -C apps/storefront dev              # Store + Admin: http://localhost:4321
+# 開発サーバー起動（API + Storefront + Stripe Webhook を一括起動）
+pnpm dev
 
 # テスト実行
 pnpm -C apps/api test
