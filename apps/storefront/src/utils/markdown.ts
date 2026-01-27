@@ -24,16 +24,35 @@ function escapeHtml(text: string): string {
 }
 
 /**
+ * Check if text contains HTML tags
+ */
+function isHtml(text: string): boolean {
+  return /<[^>]+>/g.test(text);
+}
+
+/**
  * Parse markdown content to HTML with XSS sanitization
- * @param content - Markdown string to parse
+ * Supports both Markdown and legacy HTML formats for backward compatibility
+ * @param content - Markdown or HTML string to parse
  * @returns Sanitized HTML string
  */
-export function parseMarkdown(content: string): string {
+export function parseMarkdown(content: string | null | undefined): string {
   if (!content || content.trim() === '') {
     return '';
   }
 
   try {
+    // Detect if content is HTML (backward compatibility)
+    if (isHtml(content)) {
+      // Sanitize existing HTML
+      const sanitized = DOMPurify.sanitize(content, {
+        ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'u', 's', 'a', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'div', 'span'],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'id'],
+        ALLOW_DATA_ATTR: false,
+      });
+      return sanitized;
+    }
+
     // Parse markdown to HTML
     const html = marked.parse(content, { async: false }) as string;
 
@@ -51,3 +70,15 @@ export function parseMarkdown(content: string): string {
     return `<p>${escapeHtml(content)}</p>`;
   }
 }
+
+/**
+ * Alias for backward compatibility with lib/markdown.ts
+ */
+export const renderMarkdown = parseMarkdown;
+
+/**
+ * Get CSS class name for markdown preview styling
+ */
+export const getMarkdownPreviewClass = (): string => {
+  return 'product-description';
+};
