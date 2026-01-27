@@ -26,6 +26,7 @@
     "@types/react-dom": "^19.2.3",
     "astro": "^5.16.10",
     "chart.js": "^4.5.1",
+    "isomorphic-dompurify": "^2.35.0",
     "marked": "^17.0.1",
     "nanostores": "^1.1.0",
     "react": "^19.2.3",

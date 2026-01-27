@@ -248,8 +248,9 @@ Code block
 	</div>
 </AdminLayout>
 
-<script>
+<script type="module">
 	import { marked } from 'marked';
+	import DOMPurify from 'isomorphic-dompurify';
 
 	const previewToggle = document.getElementById('preview-toggle');
 	const editorContainer = document.getElementById('editor-container');
@@ -272,7 +273,13 @@ Code block
 				} else {
 					try {
 						const html = await marked.parse(markdown);
-						previewContent.innerHTML = html;
+						// Sanitize HTML to prevent XSS
+						const sanitized = DOMPurify.sanitize(html, {
+							ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'u', 's', 'a', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'div', 'span'],
+							ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'id'],
+							ALLOW_DATA_ATTR: false,
+						});
+						previewContent.innerHTML = sanitized;
 					} catch (error) {
 						console.error('Failed to parse markdown:', error);
 						previewContent.innerHTML = '<p class="text-red-500">Failed to parse markdown. Please check your syntax.</p>';
