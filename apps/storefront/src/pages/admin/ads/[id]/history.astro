@@ -125,14 +125,14 @@ const formatDate = (dateStr: string) => {
 
               {/* Candidates */}
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {candidates.map((candidate, idx) => (
+                {candidates.map((candidate: any, idx: number) => (
                   <div class="border border-gray-200 rounded-lg p-4">
                     <h4 class="text-sm font-semibold text-gray-700 mb-2">Variation {idx + 1}</h4>
 
                     <div class="mb-3">
                       <p class="text-xs text-gray-500 mb-1">Headlines ({candidate.headlines?.length || 0})</p>
                       <div class="space-y-1">
-                        {(candidate.headlines || []).slice(0, 3).map((h) => (
+                        {(candidate.headlines || []).slice(0, 3).map((h: string) => (
                           <p class="text-xs text-gray-700">{h}</p>
                         ))}
                         {candidate.headlines?.length > 3 && (
@@ -144,7 +144,7 @@ const formatDate = (dateStr: string) => {
                     <div>
                       <p class="text-xs text-gray-500 mb-1">Descriptions ({candidate.descriptions?.length || 0})</p>
                       <div class="space-y-1">
-                        {(candidate.descriptions || []).slice(0, 2).map((d) => (
+                        {(candidate.descriptions || []).slice(0, 2).map((d: string) => (
                           <p class="text-xs text-gray-600">{d}</p>
                         ))}
                       </div>

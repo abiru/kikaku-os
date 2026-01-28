@@ -313,7 +313,7 @@ const skeletonCards = Array.from({ length: 6 });
 
 				const queryString = params.toString();
 				const url = buildStoreUrl(queryString ? `/products?${queryString}` : '/products', apiBase);
-				const data = await fetchJson(url);
+				const data = await fetchJson(url) as any;
 				const products = Array.isArray(data?.products) ? data.products.filter(isProduct) : [];
 
 				if (!products.length) {

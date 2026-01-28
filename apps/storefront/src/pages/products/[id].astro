@@ -9,14 +9,14 @@ import { renderMarkdown } from '../../utils/markdown';
 
 const apiBase = getApiBase();
 const { id } = Astro.params;
-const encodedId = encodeURIComponent(id);
+const encodedId = encodeURIComponent(id || '');
 export const prerender = false;
 
 let product: any = null;
 let loadState: 'ready' | 'not-found' | 'unavailable' = 'ready';
 
 try {
-	const data = await fetchJson(buildStoreUrl(`/products/${encodedId}`, apiBase));
+	const data = await fetchJson(buildStoreUrl(`/products/${encodedId}`, apiBase)) as any;
 	product = data?.product ?? null;
 	if (!product) {
 		loadState = 'not-found';

@@ -169,7 +169,7 @@ const generateJapaneseTitle = (originalTitle: string, brand: string, specs: Reco
   return title;
 };
 
-const generateJapaneseDescriptionMarkdownMarkdown = (
+const generateJapaneseDescriptionMarkdown = (
   originalTitle: string,
   brand: string,
   specs: Record<string, string>,
