@@ -265,7 +265,7 @@ const getStatusColor = (status: string) => {
 						<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden dark:bg-zinc-900 dark:border-zinc-800">
 							<div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between dark:border-zinc-800">
 								<h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Recent Orders</h2>
-								<Button client:only="react" href="/admin/orders" plain>View All</Button>
+								<Button client:load href="/admin/orders" plain>View All</Button>
 							</div>
 							<div class="divide-y divide-zinc-100 dark:divide-zinc-800">
 								{data.recentOrders.length > 0 ? (
@@ -281,7 +281,7 @@ const getStatusColor = (status: string) => {
 												<span class="text-sm font-medium text-zinc-950 tabular-nums dark:text-white">
 													{formatCurrency(order.total_net, order.currency)}
 												</span>
-												<Badge client:only="react" color={getStatusColor(order.status)}>
+												<Badge client:load color={getStatusColor(order.status)}>
 													{order.status}
 												</Badge>
 											</div>
@@ -299,14 +299,14 @@ const getStatusColor = (status: string) => {
 						<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden dark:bg-zinc-900 dark:border-zinc-800">
 							<div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between dark:border-zinc-800">
 								<h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Pending Inbox</h2>
-								<Button client:only="react" href="/admin/inbox" plain>View All</Button>
+								<Button client:load href="/admin/inbox" plain>View All</Button>
 							</div>
 							<div class="divide-y divide-zinc-100 dark:divide-zinc-800">
 								{data.recentInbox.length > 0 ? (
 									data.recentInbox.map((item) => (
 										<a href="/admin/inbox" class="flex items-center justify-between px-6 py-3 hover:bg-zinc-50 transition-colors dark:hover:bg-zinc-800/50">
 											<div class="flex items-center gap-3">
-												<Badge client:only="react" color={getSeverityColor(item.severity)}>
+												<Badge client:load color={getSeverityColor(item.severity)}>
 													{item.severity}
 												</Badge>
 												<span class="text-sm text-zinc-950 truncate max-w-[200px] dark:text-white">
