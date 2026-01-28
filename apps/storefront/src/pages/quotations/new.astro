@@ -268,16 +268,22 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
 <script>
   import { getCartItems, clearCart } from '../../lib/cart';
 
+  declare global {
+    interface Window {
+      __QUOTATION_API_URL__: string;
+    }
+  }
+
   const apiUrl = window.__QUOTATION_API_URL__;
 
-  const formatPrice = (amount, currency = 'JPY') => {
+  const formatPrice = (amount: number, currency = 'JPY') => {
     return new Intl.NumberFormat('ja-JP', {
       style: 'currency',
       currency: currency
     }).format(amount);
   };
 
-  const escapeHtml = (str) => {
+  const escapeHtml = (str: string | null | undefined) => {
     if (!str) return '';
     return String(str)
       .replace(/&/g, '&amp;')
@@ -294,6 +300,8 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
     const taxEl = document.getElementById('tax');
     const totalEl = document.getElementById('total');
 
+    if (!cartItemsEl || !subtotalEl || !taxEl || !totalEl) return;
+
     if (items.length === 0) {
       cartItemsEl.innerHTML = `
         <div class="empty-cart">
@@ -302,7 +310,8 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
           <p><a href="/products">商品を見る</a></p>
         </div>
       `;
-      document.getElementById('quotation-form').style.display = 'none';
+      const formEl = document.getElementById('quotation-form');
+      if (formEl) formEl.style.display = 'none';
       return;
     }
 
@@ -330,7 +339,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
     totalEl.textContent = formatPrice(total);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: Event) => {
     e.preventDefault();
 
     const items = getCartItems();
@@ -339,14 +348,16 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
       return;
     }
 
-    const submitBtn = document.getElementById('submit-btn');
+    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
     const errorMessageEl = document.getElementById('error-message');
+
+    if (!submitBtn || !errorMessageEl) return;
 
     submitBtn.disabled = true;
     submitBtn.textContent = '作成中...';
     errorMessageEl.style.display = 'none';
 
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.target as HTMLFormElement);
     const customerCompany = formData.get('customerCompany');
     const customerName = formData.get('customerName');
     const customerEmail = formData.get('customerEmail') || null;
@@ -385,7 +396,8 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
       window.location.href = `/quotations/${data.id}`;
     } catch (error) {
       console.error('Error creating quotation:', error);
-      errorMessageEl.textContent = error.message || '見積書の作成に失敗しました。もう一度お試しください。';
+      const errorMessage = error instanceof Error ? error.message : '見積書の作成に失敗しました。もう一度お試しください。';
+      errorMessageEl.textContent = errorMessage;
       errorMessageEl.style.display = 'block';
       submitBtn.disabled = false;
       submitBtn.textContent = '見積書を作成';
@@ -396,5 +408,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
   displayCartSummary();
 
   const form = document.getElementById('quotation-form');
-  form.addEventListener('submit', handleSubmit);
+  if (form) {
+    form.addEventListener('submit', handleSubmit);
+  }
 </script>

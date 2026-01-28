@@ -45,7 +45,6 @@ export const GeneratedCandidates: FC<GeneratedCandidatesProps> = ({
                       <CharCount
                         text={headline}
                         limit={limits.headline}
-                        type="headline"
                       />
                     </div>
                   </div>
@@ -71,7 +70,6 @@ export const GeneratedCandidates: FC<GeneratedCandidatesProps> = ({
                       <CharCount
                         text={description}
                         limit={limits.description}
-                        type="description"
                       />
                     </div>
                   </div>

@@ -3,10 +3,9 @@ import type { FC } from 'react';
 interface CharCountProps {
   text: string;
   limit: number;
-  type: 'headline' | 'description';
 }
 
-export const CharCount: FC<CharCountProps> = ({ text, limit, type }) => {
+export const CharCount: FC<CharCountProps> = ({ text, limit }) => {
   const length = text.length;
   const percentage = (length / limit) * 100;
 

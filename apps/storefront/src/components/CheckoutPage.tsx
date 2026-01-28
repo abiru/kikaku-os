@@ -2,8 +2,7 @@ import { useStore } from '@nanostores/react';
 import { useState, useEffect } from 'react';
 import {
 	$cartArray,
-	$appliedCoupon,
-	type CartItem
+	$appliedCoupon
 } from '../lib/cart';
 import { getApiBase, fetchJson } from '../lib/api';
 import { useTranslation } from '../i18n';
@@ -39,7 +38,6 @@ export default function CheckoutPage() {
 	const cartItems = useStore($cartArray);
 	const appliedCoupon = useStore($appliedCoupon);
 
-	const [quoteId, setQuoteId] = useState<string | null>(null);
 	const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
 	const [clientSecret, setClientSecret] = useState<string | null>(null);
 	const [orderId, setOrderId] = useState<number | null>(null);
@@ -84,7 +82,6 @@ export default function CheckoutPage() {
 				throw new Error('Failed to create quote');
 			}
 
-			setQuoteId(quoteData.quoteId);
 			setBreakdown(quoteData.breakdown);
 
 			// Automatically create payment intent with placeholder email

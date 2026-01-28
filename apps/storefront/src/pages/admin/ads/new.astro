@@ -2,9 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import Button from '../../../components/Button.astro';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
-import { GeneratedCandidates } from '../../../components/admin/ads/GeneratedCandidates';
 import { getApiBase } from '../../../lib/api';
 
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -250,8 +248,5 @@ const apiBase = getApiBase();
         generateBtn.disabled = false;
       }
     });
-        });
-      });
-    }
   </script>
 </AdminLayout>

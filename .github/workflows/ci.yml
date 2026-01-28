@@ -40,7 +40,6 @@ jobs:
       - name: Type check Storefront
         run: pnpm exec astro check
         working-directory: apps/storefront
-        continue-on-error: true  # TODO: Fix storefront type errors
 
   test-api:
     name: Test API

@@ -3,7 +3,11 @@
 import { getImage } from "astro:assets";
 import { CATEGORY_IMAGES } from "../data/categoryImages";
 
-const categories = [
+const categories: Array<{
+  key: keyof typeof CATEGORY_IMAGES;
+  title: string;
+  description: string;
+}> = [
   {
     key: "seasonal",
     title: "季節限定",
