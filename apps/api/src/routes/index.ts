@@ -42,12 +42,15 @@ import ai from './operations/ai';
 // System
 import inbox from './system/inbox';
 import dev from './system/dev';
+import health from './health';
 
 /**
  * Register all routes to the Hono app instance.
  * Organized by domain for better maintainability.
  */
 export function registerRoutes(app: Hono<Env>) {
+  // Health check (public, unauthenticated)
+  app.route('/', health);
   // Admin routes (requires Clerk auth via middleware)
   app.route('/', adminOrders);
   app.route('/admin', adminProducts);

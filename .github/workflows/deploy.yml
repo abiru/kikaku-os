@@ -1,0 +1,238 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual deployment
+
+jobs:
+  # Reuse CI jobs as dependencies
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Type check API
+        run: pnpm -C apps/api typecheck
+
+      - name: Type check Storefront
+        run: pnpm -C apps/storefront astro check
+
+  test-api:
+    name: Test API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run API tests
+        run: pnpm -C apps/api test
+
+  build-api:
+    name: Build API
+    runs-on: ubuntu-latest
+    needs: [typecheck, test-api]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build API
+        run: pnpm -C apps/api build
+
+  build-storefront:
+    name: Build Storefront
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --prefix apps/storefront
+
+      - name: Build storefront
+        run: pnpm -C apps/storefront build
+        env:
+          # NOTE: Update these URLs after custom domain setup
+          PUBLIC_API_BASE: https://kikaku-os-api.workers.dev
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+
+  deploy-api:
+    name: Deploy API to Cloudflare Workers
+    runs-on: ubuntu-latest
+    needs: [build-api]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Deploy API to Cloudflare Workers
+        run: pnpm exec wrangler deploy --config wrangler.toml
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Configure secrets
+        run: |
+          echo "${{ secrets.ADMIN_API_KEY }}" | pnpm exec wrangler secret put ADMIN_API_KEY
+          echo "${{ secrets.STRIPE_SECRET_KEY }}" | pnpm exec wrangler secret put STRIPE_SECRET_KEY
+          echo "${{ secrets.STRIPE_WEBHOOK_SECRET }}" | pnpm exec wrangler secret put STRIPE_WEBHOOK_SECRET
+          echo "${{ secrets.CLERK_SECRET_KEY }}" | pnpm exec wrangler secret put CLERK_SECRET_KEY
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "${{ secrets.SLACK_WEBHOOK_URL }}" | pnpm exec wrangler secret put SLACK_WEBHOOK_URL
+          fi
+          if [ -n "${{ secrets.RESEND_API_KEY }}" ]; then
+            echo "${{ secrets.RESEND_API_KEY }}" | pnpm exec wrangler secret put RESEND_API_KEY
+          fi
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Wait for deployment
+        run: sleep 10
+
+      - name: Verify API deployment
+        run: |
+          # NOTE: Update with your actual API domain after custom domain setup
+          API_URL="https://kikaku-os-api.workers.dev"
+          echo "Testing health endpoint: $API_URL/health"
+          curl -sf "$API_URL/health" | jq -e '.database == "ok"'
+
+  deploy-storefront:
+    name: Deploy Storefront to Cloudflare Pages
+    runs-on: ubuntu-latest
+    needs: [build-storefront, deploy-api]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --prefix apps/storefront
+
+      - name: Build storefront
+        run: pnpm -C apps/storefront build
+        env:
+          # NOTE: Update these URLs after custom domain setup
+          PUBLIC_API_BASE: https://kikaku-os-api.workers.dev
+          PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+
+      - name: Deploy to Cloudflare Pages
+        run: pnpm exec wrangler pages deploy dist --project-name=kikaku-storefront
+        working-directory: apps/storefront
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Verify storefront deployment
+        run: |
+          sleep 10
+          # NOTE: Update with your actual storefront domain after custom domain setup
+          STOREFRONT_URL="https://kikaku-storefront.pages.dev"
+          echo "Testing storefront: $STOREFRONT_URL"
+          curl -sf "$STOREFRONT_URL/" | grep -q "Led Kikaku" || echo "Warning: Could not verify storefront content"
+
+  smoke-test:
+    name: Production Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-api, deploy-storefront]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run smoke tests
+        run: |
+          # NOTE: Update these URLs after custom domain setup
+          API_URL="https://kikaku-os-api.workers.dev"
+
+          echo "🔍 Running production smoke tests..."
+
+          # Health check
+          echo "✓ Testing health endpoint"
+          curl -sf "$API_URL/health" | jq -e '.database == "ok" and .r2 == "ok"'
+
+          # API root
+          echo "✓ Testing API root"
+          curl -sf "$API_URL/" | jq -e '.message == "led kikaku os api"'
+
+          # Store products
+          echo "✓ Testing store products endpoint"
+          curl -sf "$API_URL/store/products" | jq -e '.ok == true'
+
+          # Auth protection (should return 401)
+          echo "✓ Testing auth protection"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/admin/products")
+          if [ "$STATUS" != "401" ]; then
+            echo "Error: Expected 401, got $STATUS"
+            exit 1
+          fi
+
+          echo "✅ All smoke tests passed!"
