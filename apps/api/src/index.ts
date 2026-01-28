@@ -39,7 +39,7 @@ app.onError((err, c) => {
 
 /**
  * Get allowed CORS origins based on environment.
- * Includes localhost for development and production storefront URL from env.
+ * Includes localhost for development and configured storefront URL.
  */
 const getAllowedOrigins = (env: Env['Bindings']): string[] => {
   const origins = [
@@ -49,8 +49,9 @@ const getAllowedOrigins = (env: Env['Bindings']): string[] => {
     'http://127.0.0.1:4321'
   ];
 
-  // Add production storefront URL if configured and not in dev mode
-  if (env.STOREFRONT_BASE_URL && env.DEV_MODE !== 'true') {
+  // Add configured storefront URL (works for both dev and production)
+  // Localhost origins above handle local dev, this handles production/staging
+  if (env.STOREFRONT_BASE_URL) {
     origins.push(env.STOREFRONT_BASE_URL);
   }
 

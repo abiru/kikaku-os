@@ -32,8 +32,9 @@ COMPANY_ADDRESS = "東京都渋谷区..."
 COMPANY_PHONE = "03-1234-5678"
 COMPANY_EMAIL = "info@led-kikaku.com"
 COMPANY_LOGO_URL = ""
-# UPDATE: Replace with your production Stripe publishable key
-STRIPE_PUBLISHABLE_KEY = "pk_test_51S0FjT2fSsJwZ14U2f41UmMWMLWLnFNzws5JbmvaNqeLRBTtj2YOFXA2wAmYeWm4G22Mg3RI2QPXXYs1AMSbpUCw001pbrAWk2"
+# IMPORTANT: Replace with your production Stripe publishable key (pk_live_...)
+# This is a public key, safe to commit, but must be your LIVE key for production
+STRIPE_PUBLISHABLE_KEY = "YOUR_STRIPE_PUBLISHABLE_KEY"
 
 # Secrets (configured via GitHub Actions or `wrangler secret put`):
 # - ADMIN_API_KEY
