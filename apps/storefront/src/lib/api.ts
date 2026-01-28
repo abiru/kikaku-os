@@ -15,7 +15,8 @@ export const getApiBase = () => {
 		return window.location.origin;
 	}
 
-	throw new Error('PUBLIC_API_BASE is not set and window is unavailable');
+	// Default for SSR build
+	return 'http://localhost:8787';
 };
 
 export const buildStoreUrl = (path: string, base: string = getApiBase()) => {

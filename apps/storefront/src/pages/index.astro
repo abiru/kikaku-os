@@ -5,24 +5,33 @@ import HomeCategoryGrid from "../components/HomeCategoryGrid.astro";
 import LogoGrid from "../components/LogoGrid.astro";
 import Copy from "../components/Copy.astro";
 import Research from "../components/Research.astro";
+import { getApiBase } from '../lib/api';
 
-const heroes = [
-  {
-    hero: "gift",
-    title: "スペシャルなギフト。お急ぎください。",
-    subtitle: "魔法みたいな瞬間をあの人に届けましょう。",
-  },
-  {
-    hero: "iphone",
-    title: "純米大吟醸",
-    subtitle: "華やかな香りで特別な一杯を。",
-  },
-  {
-    hero: "airpods",
-    title: "生酛仕込み",
-    subtitle: "しっとりとした旨味と奥行き。",
-  },
-];
+const apiBase = getApiBase();
+
+// SSR: Fetch hero sections from API
+let heroes: any[] = [];
+try {
+  const res = await fetch(`${apiBase}/store/home/heroes`);
+  if (res.ok) {
+    const data = await res.json();
+    heroes = data.heroes || [];
+  }
+} catch (error) {
+  console.error('Failed to fetch heroes:', error);
+}
+
+// SSR: Fetch featured products for category grid
+let featuredProducts: any[] = [];
+try {
+  const res = await fetch(`${apiBase}/store/home/featured-categories`);
+  if (res.ok) {
+    const data = await res.json();
+    featuredProducts = data.products || [];
+  }
+} catch (error) {
+  console.error('Failed to fetch featured products:', error);
+}
 ---
 
 <Layout title="Led Kikaku - Pro Growth">
@@ -34,11 +43,26 @@ const heroes = [
       <Copy />
 
     <LogoGrid />
-    {heroes.map((h) => (
-        <HomeHero {...h} />
-      ))}
+    {heroes.length > 0 ? (
+      heroes.map((hero) => (
+        <HomeHero
+          title={hero.title}
+          subtitle={hero.subtitle}
+          image={hero.image}
+          imageSmall={hero.imageSmall}
+          ctaPrimaryText={hero.cta_primary_text}
+          ctaPrimaryUrl={hero.cta_primary_url}
+          ctaSecondaryText={hero.cta_secondary_text}
+          ctaSecondaryUrl={hero.cta_secondary_url}
+        />
+      ))
+    ) : (
+      <div class="text-center py-12 text-gray-500">
+        ヒーローセクションを設定してください
+      </div>
+    )}
 
-      <HomeCategoryGrid />
+      <HomeCategoryGrid products={featuredProducts} />
       <Research />
     </div>
   </div>

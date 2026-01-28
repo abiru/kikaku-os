@@ -56,6 +56,12 @@ export const updateProductSchema = z.object({
     .positive('Tax rate ID must be a positive integer')
     .optional()
     .nullable(),
+  featured: z
+    .number()
+    .int()
+    .min(0)
+    .max(1)
+    .optional(),
 });
 
 export const productIdParamSchema = z.object({
