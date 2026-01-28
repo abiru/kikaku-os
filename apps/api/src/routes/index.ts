@@ -39,6 +39,10 @@ import fulfillments from './operations/fulfillments';
 import inventory from './operations/inventory';
 import ai from './operations/ai';
 
+// AI Automation
+import aiContent from './ai/aiContent';
+import aiWorkflows from './ai/aiWorkflows';
+
 // System
 import inbox from './system/inbox';
 import dev from './system/dev';
@@ -86,6 +90,10 @@ export function registerRoutes(app: Hono<Env>) {
   app.route('/', inventory);
   app.route('/ai', ai);
 
+  // AI Automation
+  app.route('/ai', aiContent);
+  app.route('/ai', aiWorkflows);
+
   // System
   app.route('/', inbox);
   app.route('/dev', dev);
@@ -125,6 +133,9 @@ export {
   fulfillments,
   inventory,
   ai,
+  // AI Automation
+  aiContent,
+  aiWorkflows,
   // System
   inbox,
   dev
