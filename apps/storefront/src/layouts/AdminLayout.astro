@@ -1,5 +1,5 @@
 ---
-import AdminSidebar from '../components/admin/AdminSidebar';
+import AdminLayoutComponent from '../components/admin/AdminLayout';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
@@ -17,7 +17,7 @@ const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
-<html lang="ja" class="h-full bg-white">
+<html lang="ja" class="h-full bg-white light">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -26,8 +26,8 @@ const currentPath = Astro.url.pathname;
 		<title>{title}</title>
 	</head>
 	<body class="h-full font-sans antialiased">
-		<AdminSidebar client:load currentPath={currentPath}>
+		<AdminLayoutComponent client:load currentPath={currentPath}>
 			<slot />
-		</AdminSidebar>
+		</AdminLayoutComponent>
 	</body>
 </html>
