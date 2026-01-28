@@ -327,6 +327,9 @@ const handlePaymentIntentSucceeded = async (
 /**
  * Updates order status after refund is processed
  * Recalculates status based on refunded amount and creates status history record
+ *
+ * CRITICAL: Uses atomic SQL operations to prevent race conditions
+ * CRITICAL: Validates refund amount does not exceed order total
  */
 const updateOrderAfterRefund = async (
   env: Env['Bindings'],
@@ -353,34 +356,89 @@ const updateOrderAfterRefund = async (
 
   const oldStatus = orderRow.status;
   const currentRefundedAmount = orderRow.refunded_amount || 0;
-  const newRefundedAmount = currentRefundedAmount + refundAmount;
+  const projectedRefundedAmount = currentRefundedAmount + refundAmount;
 
-  const refundCountRow = await env.DB.prepare(
-    `SELECT refund_count FROM orders WHERE id=?`
-  )
-    .bind(orderId)
-    .first<{ refund_count: number }>();
-  const newRefundCount = (refundCountRow?.refund_count || 0) + 1;
+  // Validation: Prevent over-refunding (CRITICAL)
+  if (projectedRefundedAmount > orderRow.total_net) {
+    const errorMsg = `Refund would exceed order total: ${projectedRefundedAmount} > ${orderRow.total_net}`;
+    console.error(`[Order ${orderId}] ${errorMsg}`);
 
-  const newStatus = calculateOrderStatus({
+    await env.DB.prepare(
+      `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)
+       VALUES (?, ?, 'critical', 'open', 'refund_anomaly', datetime('now'), datetime('now'))`
+    )
+      .bind(
+        `Refund Exceeds Order Total: Order #${orderId}`,
+        JSON.stringify({
+          orderId,
+          totalNet: orderRow.total_net,
+          currentRefunded: currentRefundedAmount,
+          attemptedRefund: refundAmount,
+          projectedTotal: projectedRefundedAmount,
+          stripeEventId: eventId,
+          error: errorMsg
+        })
+      )
+      .run();
+
+    throw new Error(errorMsg);
+  }
+
+  // Calculate projected status based on new refund amount
+  const projectedStatus = calculateOrderStatus({
     status: oldStatus,
     total_net: orderRow.total_net || 0,
-    refunded_amount: newRefundedAmount
+    refunded_amount: projectedRefundedAmount
   });
 
-  await env.DB.prepare(
-    `UPDATE orders SET status=?, refunded_amount=?, refund_count=?, updated_at=datetime('now') WHERE id=?`
+  // Atomic update with validation (prevents race conditions)
+  const updateResult = await env.DB.prepare(
+    `UPDATE orders
+     SET status = ?,
+         refunded_amount = refunded_amount + ?,
+         refund_count = refund_count + 1,
+         updated_at = datetime('now')
+     WHERE id = ?
+       AND status IN ('paid', 'partially_refunded')
+       AND (refunded_amount + ?) <= total_net`
   )
-    .bind(newStatus, newRefundedAmount, newRefundCount, orderRow.id)
+    .bind(projectedStatus, refundAmount, orderId, refundAmount)
     .run();
 
-  if (oldStatus !== newStatus) {
-    const reason = getStatusChangeReason(newStatus);
+  // Check if update succeeded (meta.changes > 0)
+  if (!updateResult.meta.changes || updateResult.meta.changes === 0) {
+    // Concurrent refund exceeded limit - create inbox alert
+    const concurrentErrorMsg = `Concurrent refund rejected: Order #${orderId} validation failed`;
+    console.error(`[Order ${orderId}] ${concurrentErrorMsg}`);
+
+    await env.DB.prepare(
+      `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)
+       VALUES (?, ?, 'critical', 'open', 'refund_anomaly', datetime('now'), datetime('now'))`
+    )
+      .bind(
+        `Concurrent Refund Rejected: Order #${orderId}`,
+        JSON.stringify({
+          orderId,
+          totalNet: orderRow.total_net,
+          currentRefunded: currentRefundedAmount,
+          attemptedRefund: refundAmount,
+          stripeEventId: eventId,
+          error: concurrentErrorMsg
+        })
+      )
+      .run();
+
+    throw new Error(concurrentErrorMsg);
+  }
+
+  // Record status change in history (only if status changed)
+  if (oldStatus !== projectedStatus) {
+    const reason = getStatusChangeReason(projectedStatus);
     await env.DB.prepare(
       `INSERT INTO order_status_history (order_id, old_status, new_status, reason, stripe_event_id, created_at)
        VALUES (?, ?, ?, ?, ?, datetime('now'))`
     )
-      .bind(orderId, oldStatus, newStatus, reason, eventId)
+      .bind(orderId, oldStatus, projectedStatus, reason, eventId)
       .run();
   }
 };

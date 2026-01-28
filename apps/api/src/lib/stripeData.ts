@@ -29,6 +29,9 @@ export type RefundData = {
   currency: string;
   paymentIntentId: string | null;
   metadataOrderId: number | null;
+  stripeReason: string | null;
+  receiptNumber: string | null;
+  status: string;
 };
 
 /**
@@ -148,8 +151,27 @@ export const insertPayment = async (
 };
 
 /**
+ * Maps Stripe refund reason to local reason code
+ */
+const mapStripeReasonToLocal = (stripeReason: string | null): string => {
+  if (!stripeReason) return 'stripe_refund';
+
+  const reasonMap: Record<string, string> = {
+    'duplicate': 'duplicate_charge',
+    'fraudulent': 'fraud',
+    'requested_by_customer': 'customer_request',
+    'expired_uncaptured_charge': 'expired',
+  };
+
+  return reasonMap[stripeReason] || stripeReason;
+};
+
+/**
  * Inserts a refund record into the database
  * Idempotent: returns duplicate flag if refund already exists
+ *
+ * Stores both Stripe-specific metadata (reason, receipt_number) and
+ * mapped local reason code for internal use
  */
 export const insertRefundRecord = async (
   env: Env['Bindings'],
@@ -159,14 +181,22 @@ export const insertRefundRecord = async (
 ): Promise<{ inserted: boolean; duplicate: boolean }> => {
   try {
     await env.DB.prepare(
-      `INSERT INTO refunds (payment_id, status, amount, currency, reason, provider_refund_id, metadata, created_at, updated_at)
-       VALUES (?, 'succeeded', ?, ?, 'stripe_refund', ?, ?, datetime('now'), datetime('now'))`
+      `INSERT INTO refunds (
+         payment_id, status, amount, currency, reason,
+         provider_refund_id, stripe_reason, receipt_number,
+         metadata, created_at, updated_at
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     )
       .bind(
         paymentId,
+        refund.status,
         refund.amount,
         refund.currency,
+        mapStripeReasonToLocal(refund.stripeReason),
         refund.refundId,
+        refund.stripeReason,
+        refund.receiptNumber,
         JSON.stringify({ stripe_event: eventId })
       )
       .run();
@@ -216,7 +246,10 @@ export const extractRefundsFromEvent = (
         dataObject.payment_intent ||
         dataObject.payment_intent_id ||
         null,
-      metadataOrderId: extractOrderId(refund.metadata ?? dataObject.metadata)
+      metadataOrderId: extractOrderId(refund.metadata ?? dataObject.metadata),
+      stripeReason: refund.reason || null,
+      receiptNumber: refund.receipt_number || null,
+      status: refund.status || 'succeeded'
     }));
 };
 

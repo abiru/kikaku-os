@@ -11,7 +11,7 @@ export type DailyReport = {
 export const generateDailyReport = async (env: Env['Bindings'], date: string): Promise<DailyReport> => {
   const ordersRow = await env.DB.prepare(
     `SELECT COUNT(*) as count, COALESCE(SUM(total_net),0) as totalNet, COALESCE(SUM(total_fee),0) as totalFee
-     FROM orders WHERE status IN ('paid','fulfilled','partial_refunded') AND substr(updated_at,1,10)=?`
+     FROM orders WHERE status IN ('paid','fulfilled','partially_refunded') AND substr(updated_at,1,10)=?`
   ).bind(date).first<{ count: number; totalNet: number; totalFee: number }>();
 
   const paymentsRow = await env.DB.prepare(
