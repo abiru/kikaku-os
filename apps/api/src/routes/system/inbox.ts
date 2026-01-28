@@ -226,6 +226,107 @@ inbox.post('/inbox/:id/approve', async (c) => {
       }
     }
 
+    // Handle ai_content_draft kind (AI-generated content approval)
+    if (item.kind === 'ai_content_draft' && item.metadata) {
+      try {
+        const meta = JSON.parse(item.metadata);
+        const { draftId, contentType, refType, refId } = meta;
+
+        if (draftId) {
+          // Fetch the draft content
+          const draft = await c.env.DB.prepare(
+            `SELECT generated_content FROM ai_content_drafts WHERE id = ?`
+          ).bind(draftId).first<{ generated_content: string }>();
+
+          if (draft) {
+            const generatedText = draft.generated_content;
+
+            // Apply content based on type
+            if (contentType === 'product_description' && refType === 'product' && refId) {
+              // Parse JSON if needed
+              let description = generatedText;
+              try {
+                const parsed = JSON.parse(generatedText);
+                description = parsed.description || generatedText;
+              } catch {
+                // Use as-is if not JSON
+              }
+
+              await c.env.DB.prepare(
+                `UPDATE products SET description = ?, updated_at = datetime('now') WHERE id = ?`
+              ).bind(description, refId).run();
+            }
+
+            // Mark draft as approved and applied
+            await c.env.DB.prepare(
+              `UPDATE ai_content_drafts
+               SET status = 'approved', approved_by = ?, approved_at = datetime('now'), applied_at = datetime('now'), updated_at = datetime('now')
+               WHERE id = ?`
+            ).bind(getActor(c), draftId).run();
+
+            // Audit log
+            await c.env.DB.prepare(
+              `INSERT INTO audit_logs (actor, action, target, metadata)
+               VALUES (?, ?, ?, ?)`
+            ).bind(
+              getActor(c),
+              'approve_ai_content',
+              contentType,
+              JSON.stringify({ draftId, refType, refId })
+            ).run();
+          }
+        }
+      } catch (parseErr) {
+        console.error('Failed to process ai_content_draft inbox item:', parseErr);
+      }
+    }
+
+    // Handle ai_email_draft kind (AI-generated email approval)
+    if (item.kind === 'ai_email_draft' && item.metadata) {
+      try {
+        const meta = JSON.parse(item.metadata);
+        const { orderId, customerEmail, subject, body } = meta;
+
+        // In a real implementation, you would send the email here via Resend
+        // For now, just log the approval
+        console.log(`Email approved for order ${orderId}: ${subject}`);
+
+        // Audit log
+        await c.env.DB.prepare(
+          `INSERT INTO audit_logs (actor, action, target, metadata)
+           VALUES (?, ?, ?, ?)`
+        ).bind(
+          getActor(c),
+          'approve_ai_email',
+          'email',
+          JSON.stringify({ orderId, customerEmail, subject })
+        ).run();
+      } catch (parseErr) {
+        console.error('Failed to process ai_email_draft inbox item:', parseErr);
+      }
+    }
+
+    // Handle ai_budget_alert kind (acknowledge budget alert)
+    if (item.kind === 'ai_budget_alert' && item.metadata) {
+      try {
+        const meta = JSON.parse(item.metadata);
+        console.log(`AI budget alert acknowledged: ${meta.percentage}% used`);
+
+        // Audit log
+        await c.env.DB.prepare(
+          `INSERT INTO audit_logs (actor, action, target, metadata)
+           VALUES (?, ?, ?, ?)`
+        ).bind(
+          getActor(c),
+          'acknowledge_ai_budget_alert',
+          'ai_usage',
+          JSON.stringify(meta)
+        ).run();
+      } catch (parseErr) {
+        console.error('Failed to process ai_budget_alert inbox item:', parseErr);
+      }
+    }
+
     // Update inbox status
     await c.env.DB.prepare(
       `UPDATE inbox_items SET status='approved', decided_by=?, decided_at=datetime('now'), updated_at=datetime('now') WHERE id=?`
