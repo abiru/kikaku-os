@@ -1,5 +1,5 @@
 ---
-import AdminLayout from '../components/admin/AdminLayout';
+import AdminLayoutComponent from '../components/admin/AdminLayout';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
@@ -26,8 +26,8 @@ const currentPath = Astro.url.pathname;
 		<title>{title}</title>
 	</head>
 	<body class="h-full font-sans antialiased">
-		<AdminLayout client:load currentPath={currentPath}>
+		<AdminLayoutComponent client:load currentPath={currentPath}>
 			<slot />
-		</AdminLayout>
+		</AdminLayoutComponent>
 	</body>
 </html>
