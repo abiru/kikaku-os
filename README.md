@@ -24,6 +24,33 @@
 - **Inbox**: 異常検知・承認フロー
 - **在庫管理**: しきい値アラート・入出庫記録
 
+## 本番デプロイ
+
+本番環境へのデプロイ手順は **[DEPLOYMENT.md](./DEPLOYMENT.md)** を参照してください。
+
+**クイックスタート**:
+```bash
+# 1. インフラ作成
+wrangler d1 create ledkikaku-os
+wrangler r2 bucket create ledkikaku-artifacts
+
+# 2. マイグレーション適用
+wrangler d1 migrations apply ledkikaku-os --remote
+
+# 3. GitHub Secretsを設定（docs/GITHUB_SECRETS.md参照）
+
+# 4. デプロイ
+git push origin main
+```
+
+**ドキュメント**:
+- [デプロイガイド](./DEPLOYMENT.md) - 完全な本番デプロイ手順
+- [GitHub Secrets設定](./docs/GITHUB_SECRETS.md) - 必須シークレットの設定
+- [Stripe Webhook設定](./docs/STRIPE_WEBHOOK_SETUP.md) - Webhook設定手順
+- [カスタムドメイン設定](./docs/CUSTOM_DOMAIN_SETUP.md) - 独自ドメイン設定
+- [検証チェックリスト](./docs/VERIFICATION_CHECKLIST.md) - デプロイ後の確認
+- [ロールバック手順](./docs/ROLLBACK_PROCEDURES.md) - 緊急時の手順
+
 ## ローカル開発
 依存は pnpm を推奨します。
 

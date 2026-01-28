@@ -4,18 +4,26 @@ compatibility_date = "2026-01-01"
 
 triggers = { crons = ["0 16 * * *"] }
 
+[observability]
+enabled = true
+
 [[d1_databases]]
 binding = "DB"
 database_name = "ledkikaku-os"
+# IMPORTANT: Replace with actual database_id after running:
+# wrangler d1 create ledkikaku-os
 database_id = "DUMMY_REPLACE"
 
 [[r2_buckets]]
 binding = "R2"
 bucket_name = "ledkikaku-artifacts"
 
+# NOTE: For local development, these values are overridden by .dev.vars
+# For production, DEV_MODE should be "false" and STOREFRONT_BASE_URL should be your actual domain
 [vars]
-DEV_MODE = "true"
-STOREFRONT_BASE_URL = "http://localhost:4321"
+DEV_MODE = "false"
+# UPDATE: Replace with your actual production storefront URL after custom domain setup
+STOREFRONT_BASE_URL = "https://kikaku-storefront.pages.dev"
 SHIPPING_FEE_AMOUNT = "500"
 FREE_SHIPPING_THRESHOLD = "5000"
 COMPANY_NAME = "株式会社LED企画"
@@ -24,10 +32,16 @@ COMPANY_ADDRESS = "東京都渋谷区..."
 COMPANY_PHONE = "03-1234-5678"
 COMPANY_EMAIL = "info@led-kikaku.com"
 COMPANY_LOGO_URL = ""
-STRIPE_PUBLISHABLE_KEY = "pk_test_51S0FjT2fSsJwZ14U2f41UmMWMLWLnFNzws5JbmvaNqeLRBTtj2YOFXA2wAmYeWm4G22Mg3RI2QPXXYs1AMSbpUCw001pbrAWk2"
+# IMPORTANT: Replace with your production Stripe publishable key (pk_live_...)
+# This is a public key, safe to commit, but must be your LIVE key for production
+STRIPE_PUBLISHABLE_KEY = "YOUR_STRIPE_PUBLISHABLE_KEY"
 
-
-[env.production.vars]
-  STRIPE_SECRET_KEY = "sk_live_..."
-  STRIPE_PUBLISHABLE_KEY = "pk_live_..."
+# Secrets (configured via GitHub Actions or `wrangler secret put`):
+# - ADMIN_API_KEY
+# - STRIPE_SECRET_KEY
+# - STRIPE_WEBHOOK_SECRET
+# - CLERK_SECRET_KEY
+# - SLACK_WEBHOOK_URL (optional)
+# - RESEND_API_KEY (optional)
+# - SENTRY_DSN (optional)
 

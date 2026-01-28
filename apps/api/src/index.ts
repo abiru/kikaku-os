@@ -3,6 +3,9 @@ import { cors } from 'hono/cors';
 import type { Env } from './env';
 import { jsonError, jsonOk } from './lib/http';
 import { clerkAuth } from './middleware/clerkAuth';
+import { requestLogger } from './middleware/logging';
+import { sendAlert } from './lib/alerts';
+import { captureException } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
 import { registerRoutes } from './routes';
 import { generateDailyReport } from './services/dailyReport';
@@ -20,23 +23,48 @@ const app = new Hono<Env>();
 // Global error handler - ensures all errors return JSON
 app.onError((err, c) => {
   console.error('Unhandled error:', err);
+
+  // Capture exception for error tracking (production only)
+  captureException(err, {
+    path: c.req.path,
+    method: c.req.method,
+    env: c.env
+  });
+
   return c.json(
     { ok: false, message: err.message || 'Internal Server Error' },
     500
   );
 });
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:4321',
-  'http://127.0.0.1:4321'
-];
+/**
+ * Get allowed CORS origins based on environment.
+ * Includes localhost for development and configured storefront URL.
+ */
+const getAllowedOrigins = (env: Env['Bindings']): string[] => {
+  const origins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:4321',
+    'http://127.0.0.1:4321'
+  ];
+
+  // Add configured storefront URL (works for both dev and production)
+  // Localhost origins above handle local dev, this handles production/staging
+  if (env.STOREFRONT_BASE_URL) {
+    origins.push(env.STOREFRONT_BASE_URL);
+  }
+
+  return origins;
+};
 
 app.use(
   '*',
   cors({
-    origin: (origin) => (origin && allowedOrigins.includes(origin) ? origin : undefined),
+    origin: (origin, c) => {
+      const allowed = getAllowedOrigins(c.env);
+      return origin && allowed.includes(origin) ? origin : undefined;
+    },
     allowHeaders: ['Content-Type', 'x-admin-key', 'Authorization'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     maxAge: 86400
@@ -45,8 +73,12 @@ app.use(
 
 app.options('*', (c) => c.body(null, 204));
 
+// Production request logging (after CORS, before auth)
+app.use('*', requestLogger);
+
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
+  if (c.req.path === '/health') return next();
   if (c.req.path.startsWith('/webhooks/stripe')) return next();
   if (c.req.path.startsWith('/stripe/webhook')) return next();
   // Public checkout endpoints
@@ -149,6 +181,14 @@ const runDailyCloseArtifacts = async (env: Env['Bindings'], date: string) => {
       errorMessage
     });
     console.error(`Daily close failed for ${date}: runId=${runId}`, err);
+
+    // Send critical alert for daily close failure
+    await sendAlert(env, 'critical', `Daily close failed for ${date}`, {
+      runId,
+      error: errorMessage,
+      date
+    });
+
     throw err;
   }
 };
