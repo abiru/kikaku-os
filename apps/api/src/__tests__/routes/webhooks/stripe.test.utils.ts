@@ -263,7 +263,29 @@ export const createMockDb = (options?: MockDbOptions) => {
               order.updated_at = nextNow();
             }
           }
-          if (sql.includes('UPDATE orders SET status=?, refunded_amount=?, refund_count=?')) {
+          // Atomic update pattern (new refund tracking)
+          if (sql.includes('refunded_amount = refunded_amount + ?') && sql.includes('refund_count = refund_count + 1')) {
+            const newStatus = String(args[0]);
+            const refundAmount = Number(args[1]);
+            const orderId = Number(args[2]);
+            const refundAmountCheck = Number(args[3]); // Same as refundAmount for validation
+            const order = getOrCreateOrder(orderId);
+
+            // Check validation condition
+            const canRefund = (order.status === 'paid' || order.status === 'partially_refunded') &&
+                             ((order.refunded_amount + refundAmount) <= order.total_net);
+
+            if (canRefund) {
+              order.status = newStatus;
+              order.refunded_amount += refundAmount;
+              order.refund_count += 1;
+              order.updated_at = nextNow();
+              return { meta: { last_row_id: 1, changes: 1 } };
+            } else {
+              // Validation failed - no update
+              return { meta: { last_row_id: 0, changes: 0 } };
+            }
+          } else if (sql.includes('UPDATE orders SET status=?, refunded_amount=?, refund_count=?')) {
             const newStatus = String(args[0]);
             const newRefundedAmount = Number(args[1]);
             const newRefundCount = Number(args[2]);
@@ -300,11 +322,16 @@ export const createMockDb = (options?: MockDbOptions) => {
             paymentsByProviderId.set(providerPaymentId, { id: paymentId, order_id: orderId });
           }
           if (sql.includes('INSERT INTO refunds')) {
+            // After refund tracking enhancements: [paymentId, status, amount, currency, reason, refundId, stripeReason, receiptNumber, metadata]
             const paymentIdValue = typeof args[0] === 'number' ? args[0] : null;
-            const amountValue = Number(args[1]);
-            const currencyValue = String(args[2] ?? 'JPY').toUpperCase();
-            const providerRefundId = String(args[3]);
-            const metadataValue = args[4];
+            const statusValue = String(args[1] ?? 'succeeded');
+            const amountValue = Number(args[2]);
+            const currencyValue = String(args[3] ?? 'JPY').toUpperCase();
+            const reasonValue = String(args[4] ?? 'stripe_refund');
+            const providerRefundId = String(args[5]);
+            const stripeReasonValue = args[6] != null ? String(args[6]) : null;
+            const receiptNumberValue = args[7] != null ? String(args[7]) : null;
+            const metadataValue = args[8];
 
             if (options?.duplicateRefund || refundsByProviderId.has(providerRefundId)) {
               throw new Error('UNIQUE constraint failed: refunds.provider_refund_id');
@@ -339,6 +366,11 @@ export const createMockDb = (options?: MockDbOptions) => {
               reason: String(args[3]),
               stripe_event_id: String(args[4])
             });
+          }
+          if (sql.includes('INSERT INTO inbox_items')) {
+            // Handle inbox item creation (for refund anomalies, etc.)
+            // No need to track state for tests, just acknowledge it
+            return { meta: { last_row_id: 1, changes: 1 } };
           }
           return { meta: { last_row_id: 1, changes: 1 } };
         }

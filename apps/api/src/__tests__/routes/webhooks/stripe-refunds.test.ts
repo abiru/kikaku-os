@@ -27,10 +27,11 @@ describe('Stripe webhook handling - Refund events', () => {
 
     expect(result.received).toBe(true);
     const refundInsert = mockDb.calls.find((call) => call.sql.includes('INSERT INTO refunds'));
-    expect(refundInsert?.bind[3]).toBe('re_123');
-    expect(refundInsert?.bind[1]).toBe(2500);
+    // After changes: bind params are [paymentId, status, amount, currency, reason, refundId, stripeReason, receiptNumber, metadata]
+    expect(refundInsert?.bind[5]).toBe('re_123');  // refundId is now at index 5
+    expect(refundInsert?.bind[2]).toBe(2500);      // amount is now at index 2
     const statusUpdate = mockDb.calls.find((call) =>
-      call.sql.includes('UPDATE orders SET status=?')
+      call.sql.includes('UPDATE orders')
     );
     expect(statusUpdate).toBeDefined();
     expect(statusUpdate?.bind[0]).toBe('refunded');
