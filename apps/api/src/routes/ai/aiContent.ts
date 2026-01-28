@@ -7,20 +7,28 @@ import { generateContent } from '../../services/ai/contentGeneration';
 
 const aiContent = new Hono<Env>();
 
+// Validation error handler
+const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
+  if (!result.success) {
+    const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
+    return c.json({ ok: false, message: messages }, 400);
+  }
+};
+
 // Validation schema for content generation
 const generateSchema = z.object({
   type: z.enum(['product_description', 'email', 'report_summary', 'marketing_copy']),
   refType: z.string().optional(),
   refId: z.number().optional(),
   prompt: z.string().min(1),
-  context: z.record(z.unknown()),
+  context: z.record(z.string(), z.unknown()),
   temperature: z.number().min(0).max(1).optional(),
 });
 
 // Validation schema for regenerate
 const regenerateSchema = z.object({
   modifiedPrompt: z.string().min(1).max(5000).optional(),
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -29,7 +37,7 @@ const regenerateSchema = z.object({
  */
 aiContent.post(
   '/content/generate',
-  zValidator('json', generateSchema),
+  zValidator('json', generateSchema, validationErrorHandler),
   async (c) => {
     try {
       const body = c.req.valid('json');
@@ -129,7 +137,7 @@ aiContent.get('/content/drafts/:id', async (c) => {
  */
 aiContent.post(
   '/content/drafts/:id/regenerate',
-  zValidator('json', regenerateSchema),
+  zValidator('json', regenerateSchema, validationErrorHandler),
   async (c) => {
     try {
       const id = Number(c.req.param('id'));

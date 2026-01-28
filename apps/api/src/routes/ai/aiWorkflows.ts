@@ -7,6 +7,14 @@ import { triageInboxItem, draftCustomerResponse } from '../../services/ai/workfl
 
 const aiWorkflows = new Hono<Env>();
 
+// Validation error handler
+const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
+  if (!result.success) {
+    const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
+    return c.json({ ok: false, message: messages }, 400);
+  }
+};
+
 /**
  * POST /ai/workflows/triage-inbox
  * Automatically triage an inbox item
@@ -15,7 +23,7 @@ aiWorkflows.post(
   '/workflows/triage-inbox',
   zValidator('json', z.object({
     inboxItemId: z.number(),
-  })),
+  }), validationErrorHandler),
   async (c) => {
     try {
       const { inboxItemId } = c.req.valid('json');
@@ -44,7 +52,7 @@ aiWorkflows.post(
   zValidator('json', z.object({
     orderId: z.number(),
     customerMessage: z.string().min(1),
-  })),
+  }), validationErrorHandler),
   async (c) => {
     try {
       const { orderId, customerMessage } = c.req.valid('json');
