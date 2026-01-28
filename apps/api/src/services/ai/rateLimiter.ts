@@ -6,17 +6,20 @@ type Bindings = {
 };
 
 /**
- * Check if request is within rate limit
+ * Check if request is within rate limit and daily budget
  */
 export async function checkRateLimit(
   db: D1Database,
   service: string,
   operation: string,
-  limitOverride?: number
-): Promise<{ allowed: boolean; remaining: number; limit: number }> {
+  limitOverride?: number,
+  budgetCentsOverride?: number
+): Promise<{ allowed: boolean; remaining: number; limit: number; budgetWarning?: string }> {
   const now = new Date();
   const hour = now.toISOString().substring(0, 13); // YYYY-MM-DDTHH
+  const date = now.toISOString().substring(0, 10); // YYYY-MM-DD
 
+  // Check hourly rate limit
   const usage = await db.prepare(
     `SELECT COALESCE(SUM(request_count), 0) as count
      FROM ai_usage_tracking
@@ -26,10 +29,24 @@ export async function checkRateLimit(
   const limit = limitOverride || 100; // Default 100 requests per hour
   const count = usage?.count || 0;
 
+  // Check daily budget
+  const budgetCents = budgetCentsOverride || 10000; // $100 default
+  const budgetCheck = await checkDailyBudget(db, date, budgetCents);
+
+  // Create budget alert if threshold exceeded (90%)
+  if (budgetCheck.percentage >= 90 && !budgetCheck.exceeded) {
+    await createBudgetAlert(db, date, budgetCheck.used, budgetCheck.budget, budgetCheck.percentage);
+  }
+
   return {
-    allowed: count < limit,
+    allowed: count < limit && !budgetCheck.exceeded,
     remaining: Math.max(0, limit - count),
     limit,
+    budgetWarning: budgetCheck.exceeded
+      ? `Daily budget exceeded: ${budgetCheck.used}/${budgetCheck.budget} cents`
+      : budgetCheck.percentage >= 90
+      ? `Daily budget at ${budgetCheck.percentage.toFixed(0)}%`
+      : undefined,
   };
 }
 

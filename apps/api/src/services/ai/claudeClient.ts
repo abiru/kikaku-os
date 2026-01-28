@@ -102,9 +102,15 @@ export async function callClaudeAPI(
         throw new Error('Invalid response structure: missing content');
       }
 
-      // Add total_tokens if not present
+      // Add total_tokens if not present (immutable pattern)
       if (data.usage && !data.usage.total_tokens) {
-        data.usage.total_tokens = data.usage.input_tokens + data.usage.output_tokens;
+        return {
+          ...data,
+          usage: {
+            ...data.usage,
+            total_tokens: data.usage.input_tokens + data.usage.output_tokens,
+          },
+        };
       }
 
       return data;

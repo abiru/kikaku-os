@@ -163,16 +163,20 @@ export async function generateContent(
   }
 
   // Build prompt based on content type
-  let systemPrompt = '';
+  let systemPrompt: string | undefined;
   let userPrompt = request.prompt;
 
   if (request.contentType === 'product_description' && request.context.productTitle) {
+    systemPrompt = 'あなたはプロのコピーライターです。魅力的で効果的な商品説明文を作成するエキスパートです。';
     userPrompt = buildProductDescriptionPrompt(request.context.productTitle as string, request.context);
   } else if (request.contentType === 'email') {
+    systemPrompt = 'あなたは経験豊富なカスタマーサポート担当者です。丁寧で親しみやすいメールを作成することができます。';
     userPrompt = buildEmailPrompt(request.context.emailType as string, request.context);
   } else if (request.contentType === 'report_summary') {
+    systemPrompt = 'あなたはデータ分析のエキスパートです。複雑なデータから重要なインサイトを抽出し、わかりやすく要約することができます。';
     userPrompt = buildReportSummaryPrompt(request.context);
   } else if (request.contentType === 'marketing_copy') {
+    systemPrompt = 'あなたはクリエイティブなマーケティングコピーライターです。記憶に残る魅力的な広告文を作成するプロフェッショナルです。';
     userPrompt = buildMarketingCopyPrompt(request.context.campaignType as string, request.context);
   }
 

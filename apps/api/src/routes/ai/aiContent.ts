@@ -17,6 +17,12 @@ const generateSchema = z.object({
   temperature: z.number().min(0).max(1).optional(),
 });
 
+// Validation schema for regenerate
+const regenerateSchema = z.object({
+  modifiedPrompt: z.string().min(1).max(5000).optional(),
+  context: z.record(z.unknown()).optional(),
+});
+
 /**
  * POST /ai/content/generate
  * Generate AI content with Inbox approval
@@ -121,10 +127,13 @@ aiContent.get('/content/drafts/:id', async (c) => {
  * POST /ai/content/drafts/:id/regenerate
  * Regenerate content with modified prompt
  */
-aiContent.post('/content/drafts/:id/regenerate', async (c) => {
-  try {
-    const id = Number(c.req.param('id'));
-    const body = await c.req.json<{ modifiedPrompt?: string; context?: Record<string, unknown> }>();
+aiContent.post(
+  '/content/drafts/:id/regenerate',
+  zValidator('json', regenerateSchema),
+  async (c) => {
+    try {
+      const id = Number(c.req.param('id'));
+      const body = c.req.valid('json');
 
     // Fetch original draft
     const originalDraft = await c.env.DB.prepare(
@@ -164,10 +173,11 @@ aiContent.post('/content/drafts/:id/regenerate', async (c) => {
       preview: result.preview,
       message: 'Content regenerated successfully. Check Inbox for approval.',
     });
-  } catch (err) {
-    console.error('Content regeneration failed:', err);
-    return jsonError(c, (err as Error).message, 500);
+    } catch (err) {
+      console.error('Content regeneration failed:', err);
+      return jsonError(c, (err as Error).message, 500);
+    }
   }
-});
+);
 
 export default aiContent;
