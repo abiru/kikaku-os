@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import Badge from '../../components/Badge.astro';
+import { Badge } from '../../components/catalyst/badge';
 import Button from '../../components/Button.astro';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
@@ -71,8 +71,8 @@ const isActive = (taxRate: TaxRate) => {
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-gray-900">Tax Rates</h1>
-				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{taxRates.length} items</span>
+				<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Tax Rates</h1>
+				<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{taxRates.length} items</span>
 			</div>
 			<Button href="/admin/tax-rates/new" size="sm" variant="primary">
 				+ New Tax Rate
@@ -86,27 +86,27 @@ const isActive = (taxRate: TaxRate) => {
 		)}
 
 		{/* Tax Rates Table */}
-		<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+		<div class="bg-white rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
 			<div class="overflow-x-auto">
 				<table class="w-full text-left text-sm text-[#1d1d1f]">
-					<thead class="bg-gray-50 border-b border-gray-200">
+					<thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
 						<tr>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Name</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Rate</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Applicable From</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Applicable To</th>
-							<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Name</th>
+							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Rate</th>
+							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Status</th>
+							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Applicable From</th>
+							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Applicable To</th>
+							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Action</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-gray-100">
+					<tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
 						{taxRates.length > 0 ? (
 							taxRates.map((taxRate) => (
-								<tr class="hover:bg-gray-50 transition-colors group">
+								<tr class="hover:bg-zinc-50 dark:bg-zinc-800/50 transition-colors group">
 									<td class="px-6 py-4">
 										<div class="font-medium">{taxRate.name}</div>
 										{taxRate.description && (
-											<div class="text-xs text-[#86868b] mt-1">
+											<div class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
 												{taxRate.description}
 											</div>
 										)}
@@ -116,27 +116,27 @@ const isActive = (taxRate: TaxRate) => {
 									</td>
 									<td class="px-6 py-4">
 										{isActive(taxRate) ? (
-											<Badge severity="info">Active</Badge>
+											<Badge color="lime" client:only="react">Active</Badge>
 										) : taxRate.is_active ? (
-											<Badge severity="warn">Scheduled</Badge>
+											<Badge color="amber" client:only="react">Scheduled</Badge>
 										) : (
-											<Badge severity="secondary">Inactive</Badge>
+											<Badge color="zinc" client:only="react">Inactive</Badge>
 										)}
 									</td>
-									<td class="px-6 py-4 text-[#86868b] tabular-nums">
+									<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums">
 										{formatDate(taxRate.applicable_from)}
 									</td>
-									<td class="px-6 py-4 text-[#86868b] tabular-nums">
+									<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums">
 										{formatDate(taxRate.applicable_to)}
 									</td>
 									<td class="px-6 py-4 text-right">
-										<a href={`/admin/tax-rates/${taxRate.id}`} class="text-[#0071e3] hover:underline font-medium">Edit</a>
+										<a href={`/admin/tax-rates/${taxRate.id}`} class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Edit</a>
 									</td>
 								</tr>
 							))
 						) : (
 							<tr>
-								<td colspan="6" class="px-6 py-12 text-center text-[#86868b]">
+								<td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
 									No tax rates found.
 								</td>
 							</tr>

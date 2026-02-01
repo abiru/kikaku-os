@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { Button } from '../../components/catalyst/button';
+import Button from '../../components/Button.astro';
 import { Badge } from '../../components/catalyst/badge';
 import { getApiBase } from '../../lib/api';
 
@@ -57,8 +57,8 @@ const formatDate = (dateStr: string | null) => {
 };
 
 const getStatusColor = (status: string) => {
-  if (status === 'ready') return 'info';
-  return 'secondary';
+  if (status === 'ready') return 'lime';
+  return 'zinc';
 };
 
 const hasPrev = page > 1;
@@ -203,7 +203,7 @@ const hasNext = page < totalPages;
                       <span class="text-gray-700 capitalize">{draft.ad_type}</span>
                     </td>
                     <td class="px-6 py-4">
-                      <Badge severity={getStatusColor(draft.status)}>
+                      <Badge color={getStatusColor(draft.status)} client:only="react">
                         {draft.status}
                       </Badge>
                     </td>
