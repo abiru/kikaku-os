@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import Badge from '../../../components/Badge.astro';
+import { Alert } from '../../../components/catalyst/alert-banner';
 import Button from '../../../components/Button.astro';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
@@ -85,7 +86,7 @@ const formatDate = (dateStr: string | null) => {
 				{categoryName}
 			</h1>
 			<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} products</span>
-		</div>
+		</Alert>
 			{/* Search Bar */}
 			<div class="mb-6">
 				<form method="get" class="relative max-w-md">
@@ -105,15 +106,15 @@ const formatDate = (dateStr: string | null) => {
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 					</svg>
 				</form>
-			</div>
+			</Alert>
 
 			{error && (
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-					<div class="text-red-600 mb-4">{error}</div>
+					<div class="text-red-600 mb-4">{error}</Alert>
 					<Button href="/admin/categories" variant="secondary" size="sm">
 						Back to Categories
 					</Button>
-				</div>
+				</Alert>
 			)}
 
 			{!error && (
@@ -133,8 +134,8 @@ const formatDate = (dateStr: string | null) => {
 									products.map((product) => (
 										<tr class="hover:bg-gray-50 transition-colors group">
 											<td class="px-6 py-4">
-												<div class="font-medium">{product.title}</div>
-												<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</div>
+												<div class="font-medium">{product.title}</Alert>
+												<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</Alert>
 											</td>
 											<td class="px-6 py-4">
 												{product.status === 'draft' ? (
@@ -160,14 +161,14 @@ const formatDate = (dateStr: string | null) => {
 								)}
 							</tbody>
 						</table>
-					</div>
+					</Alert>
 
 					{/* Pagination */}
 					{meta.totalPages > 1 && (
 						<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
 							<div class="text-xs text-[#86868b]">
 								Page {page} of {meta.totalPages}
-							</div>
+							</Alert>
 							<div class="flex gap-2">
 								<Button
 									href={hasPrev ? `?page=${page - 1}&q=${q}` : '#'}
@@ -185,10 +186,10 @@ const formatDate = (dateStr: string | null) => {
 								>
 									Next
 								</Button>
-							</div>
-						</div>
+							</Alert>
+						</Alert>
 					)}
-				</div>
+				</Alert>
 			)}
-	</div>
+	</Alert>
 </AdminLayout>

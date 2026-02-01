@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../../components/catalyst/alert-banner';
 import Button from '../../../components/Button.astro';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
@@ -133,15 +134,15 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 		</div>
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+			<Alert color="red" client:load>
 				{error}
-			</div>
+			</Alert>
 		)}
 
 		{success && (
-			<div class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
+			<Alert color="green" client:load>
 				{success}
-			</div>
+			</Alert>
 		)}
 
 		{taxRate && (

@@ -1,9 +1,11 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import Button from '../../components/Button.astro';
 import { Badge } from '../../components/catalyst/badge';
+import { Heading, Subheading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
@@ -136,7 +138,7 @@ const formatValue = (value: string, dataType: string) => {
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Application Settings</h1>
+        <Heading>Application Settings</Heading>
         <span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">
           {Object.values(grouped).flat().length} settings
         </span>
@@ -144,24 +146,24 @@ const formatValue = (value: string, dataType: string) => {
     </div>
 
     {error && (
-      <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+      <Alert color="red" client:load>
         {error}
-      </div>
+      </Alert>
     )}
 
     {success && (
-      <div class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
+      <Alert color="green" client:load>
         {success}
-      </div>
+      </Alert>
     )}
 
     <form method="POST" class="space-y-6">
       {Object.entries(grouped).map(([category, settings]) => (
         <div class="bg-white rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
-            <h2 class="text-lg font-semibold text-zinc-950 dark:text-white">
+            <Subheading>
               {categoryLabels[category] || category}
-            </h2>
+            </Subheading>
           </div>
 
           <div class="p-6 space-y-6">
@@ -226,8 +228,8 @@ const formatValue = (value: string, dataType: string) => {
       </div>
     </form>
 
-    <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
+    <Alert color="blue" client:load>
       <strong>Note:</strong> Settings apply immediately after saving. Secret keys (Stripe, Clerk) must be managed through environment variables.
-    </div>
+    </Alert>
   </div>
 </AdminLayout>

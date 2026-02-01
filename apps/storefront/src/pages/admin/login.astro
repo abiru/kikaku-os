@@ -2,6 +2,8 @@
 export const prerender = false;
 
 import '../../styles/global.css';
+import { Alert } from '../../components/catalyst/alert-banner';
+import { Heading } from '../../components/catalyst/heading';
 import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
 ---
 
@@ -16,13 +18,13 @@ import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
 	<body class="h-full font-sans antialiased">
 		<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 			<div class="sm:mx-auto sm:w-full sm:max-w-md">
-				<h1 class="text-center text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
+				<Heading class="text-center">
 					Led Kikaku OS
-				</h1>
+				</Heading>
 				<p class="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-400">
 					Admin Panel
 				</p>
-			</div>
+			</Alert>
 
 			<div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
 				<div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
@@ -32,7 +34,7 @@ import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
 								routing="hash"
 								forceRedirectUrl="/admin/"
 							/>
-						</div>
+						</Alert>
 					</SignedOut>
 					<SignedIn>
 						<div class="text-center">
@@ -43,10 +45,10 @@ import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
 							>
 								Go to Admin Dashboard
 							</a>
-						</div>
+						</Alert>
 					</SignedIn>
-				</div>
-			</div>
-		</div>
+				</Alert>
+			</Alert>
+		</Alert>
 	</body>
 </html>

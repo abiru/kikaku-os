@@ -1,9 +1,11 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 import { Badge } from '../../components/catalyst/badge';
+import { Heading } from '../../components/catalyst/heading';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -116,25 +118,19 @@ const getStatusLabel = (status: string) => {
 <AdminLayout title="Inventory - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Inventory</h1>
+			<Heading>Inventory</Heading>
 			<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{inventory.length} variants</span>
 		</div>
 			{error && (
-				<div class="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
+				<Alert color="red" client:load>
 					{error}
-				</div>
+				</Alert>
 			)}
 
 			{actionMessage && (
-				<div
-					class={`mb-6 px-4 py-3 rounded-lg text-sm border ${
-						(actionMessage as ActionMessage).type === 'success'
-							? 'bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
-							: 'bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
-					}`}
-				>
+				<Alert color={(actionMessage as ActionMessage).type === 'success' ? 'green' : 'red'} client:load>
 					{(actionMessage as ActionMessage).text}
-				</div>
+				</Alert>
 			)}
 
 			<!-- Filter Tabs -->
@@ -194,36 +190,36 @@ const getStatusLabel = (status: string) => {
 			<!-- Inventory Table -->
 			<div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
-						<thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
-							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Product</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Variant</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">SKU</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">On Hand</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Threshold</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Status</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Actions</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+					<Table client:load>
+						<TableHead>
+							<TableRow>
+								<TableHeader>Product</TableHeader>
+								<TableHeader>Variant</TableHeader>
+								<TableHeader>SKU</TableHeader>
+								<TableHeader>On Hand</TableHeader>
+								<TableHeader>Threshold</TableHeader>
+								<TableHeader>Status</TableHeader>
+								<TableHeader>Actions</TableHeader>
+							</TableRow>
+						</TableHead>
+						<TableBody>
 							{filteredInventory.length > 0 ? (
 								filteredInventory.map((item) => (
-									<tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors" data-variant-id={item.variant_id}>
-										<td class="px-6 py-4">
+									<TableRow data-variant-id={item.variant_id}>
+										<TableCell>
 											<a href={`/admin/products/${item.product_id}`} class="text-indigo-600 dark:text-indigo-400 hover:underline">
 												{item.product_title}
 											</a>
-										</td>
-										<td class="px-6 py-4 font-medium">{item.variant_title}</td>
-										<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 font-mono text-xs">{item.sku || '-'}</td>
-										<td class="px-6 py-4 text-right tabular-nums font-semibold">{item.on_hand}</td>
-										<td class="px-6 py-4 text-right tabular-nums text-zinc-500 dark:text-zinc-400">{item.threshold ?? '-'}</td>
-										<td class="px-6 py-4">
+										</TableCell>
+										<TableCell>{item.variant_title}</TableCell>
+										<TableCell className="text-zinc-500 dark:text-zinc-400 font-mono text-xs">{item.sku || '-'}</TableCell>
+										<TableCell className="tabular-nums font-semibold">{item.on_hand}</TableCell>
+										<TableCell className="tabular-nums text-zinc-500 dark:text-zinc-400">{item.threshold ?? '-'}</TableCell>
+										<TableCell>
 											<Badge color={getStatusColor(item.status)} client:only="react">{getStatusLabel(item.status)}</Badge>
-										</td>
-										<td class="px-6 py-4 text-right">
-											<div class="flex justify-end gap-2">
+										</TableCell>
+										<TableCell>
+											<div class="flex gap-2">
 												<button
 													type="button"
 													class="adjust-btn text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
@@ -244,18 +240,18 @@ const getStatusLabel = (status: string) => {
 													Threshold
 												</button>
 											</div>
-										</td>
-									</tr>
+										</TableCell>
+									</TableRow>
 								))
 							) : (
-								<tr>
-									<td colspan="7" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+								<TableRow>
+									<TableCell colSpan="7" className="text-center text-zinc-500 dark:text-zinc-400">
 										{inventory.length === 0 ? 'No variants found. Add variants to products first.' : 'No items match your filters.'}
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							)}
-						</tbody>
-					</table>
+						</TableBody>
+					</Table>
 				</div>
 			</div>
 
@@ -325,7 +321,9 @@ const getStatusLabel = (status: string) => {
 						</select>
 					</div>
 
-					<div id="adjust-error" class="hidden bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm"></div>
+					<div id="adjust-error" class="hidden">
+						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+					</div>
 
 					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
 						<button
@@ -373,7 +371,9 @@ const getStatusLabel = (status: string) => {
 						<p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Alert when stock falls below this number.</p>
 					</div>
 
-					<div id="threshold-error" class="hidden bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm"></div>
+					<div id="threshold-error" class="hidden">
+						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+					</div>
 
 					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
 						<button
@@ -448,8 +448,11 @@ const getStatusLabel = (status: string) => {
 	}
 
 	function showError(errorEl, message) {
-		errorEl.textContent = message;
-		errorEl.classList.remove('hidden');
+		const errorDiv = errorEl.querySelector('div');
+		if (errorDiv) {
+			errorDiv.textContent = message;
+			errorEl.classList.remove('hidden');
+		}
 	}
 
 	// Event listeners for Adjust buttons

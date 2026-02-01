@@ -20,8 +20,6 @@ import {
   MegaphoneIcon,
   PhotoIcon,
   ChevronDownIcon,
-  SunIcon,
-  MoonIcon,
 } from '@heroicons/react/24/outline'
 import { SidebarLayout } from '../catalyst/sidebar-layout'
 import {
@@ -168,30 +166,6 @@ type Props = {
 
 export default function AdminLayout({ currentPath, children }: Props) {
   const { isLoaded, isSignedIn, user, signOut } = useClerkAuth()
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem('theme') === 'dark'
-  })
-
-  useEffect(() => {
-    // Sync state with current dark mode
-    const currentTheme = localStorage.getItem('theme') || 'light'
-    const shouldBeDark = currentTheme === 'dark'
-    setIsDark(shouldBeDark)
-
-    // Ensure HTML class and color-scheme are in sync
-    if (shouldBeDark) {
-      document.documentElement.classList.add('dark')
-      document.documentElement.style.colorScheme = 'dark'
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.documentElement.style.colorScheme = 'light'
-    }
-
-    console.log('Theme initialized in React:', currentTheme)
-    console.log('HTML has dark class:', document.documentElement.classList.contains('dark'))
-    console.log('color-scheme:', document.documentElement.style.colorScheme)
-  }, [])
 
   useEffect(() => {
     // Redirect to login if not authenticated (after auth is loaded)
@@ -199,27 +173,6 @@ export default function AdminLayout({ currentPath, children }: Props) {
       window.location.href = '/admin/login'
     }
   }, [isLoaded, isSignedIn])
-
-  const toggleTheme = () => {
-    const newTheme = !isDark
-    setIsDark(newTheme)
-    const theme = newTheme ? 'dark' : 'light'
-
-    console.log('Toggling theme to:', theme)
-
-    localStorage.setItem('theme', theme)
-
-    if (newTheme) {
-      document.documentElement.classList.add('dark')
-      document.documentElement.style.colorScheme = 'dark'
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.documentElement.style.colorScheme = 'light'
-    }
-
-    console.log('After toggle, HTML classes:', document.documentElement.className)
-    console.log('After toggle, color-scheme:', document.documentElement.style.colorScheme)
-  }
 
   if (!isLoaded) {
     return (
@@ -252,7 +205,7 @@ export default function AdminLayout({ currentPath, children }: Props) {
         <Sidebar>
           <SidebarHeader>
             <a href="/admin/" className="flex items-center gap-2 px-2 py-2">
-              <span className="text-lg font-semibold text-zinc-950 dark:text-white">Led Kikaku OS</span>
+              <span className="text-lg font-semibold text-zinc-950">Led Kikaku OS</span>
             </a>
           </SidebarHeader>
 
@@ -276,10 +229,6 @@ export default function AdminLayout({ currentPath, children }: Props) {
               <SidebarItem href="/admin/settings" current={currentPath === '/admin/settings'}>
                 <Cog6ToothIcon data-slot="icon" />
                 <SidebarLabel>Settings</SidebarLabel>
-              </SidebarItem>
-              <SidebarItem onClick={toggleTheme}>
-                {isDark ? <SunIcon data-slot="icon" /> : <MoonIcon data-slot="icon" />}
-                <SidebarLabel>{isDark ? 'Light Mode' : 'Dark Mode'}</SidebarLabel>
               </SidebarItem>
             </SidebarSection>
           </SidebarBody>

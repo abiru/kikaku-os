@@ -2,7 +2,9 @@
 export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Alert } from '../../components/catalyst/alert-banner';
 import { getApiBase } from '../../lib/api';
+import { Heading } from '../../components/catalyst/heading';
 import CustomersTable from '../../components/admin/CustomersTable';
 
 const apiBase = getApiBase();
@@ -61,9 +63,9 @@ if (import.meta.env.ADMIN_API_KEY) {
 <AdminLayout title="Customers - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Customers</h1>
+			<Heading>Customers</Heading>
 			<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{meta.totalCount} customers</span>
-		</div>
+		</Alert>
 			{/* Search Bar */}
 			<div class="mb-6">
 				<form method="get" class="relative max-w-md">
@@ -83,12 +85,12 @@ if (import.meta.env.ADMIN_API_KEY) {
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 					</svg>
 				</form>
-			</div>
+			</Alert>
 
 			{error && (
 				<div class="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
 					{error}
-				</div>
+				</Alert>
 			)}
 
 			<CustomersTable
@@ -98,5 +100,5 @@ if (import.meta.env.ADMIN_API_KEY) {
 				searchQuery={q}
 				client:load
 			/>
-	</div>
+	</Alert>
 </AdminLayout>

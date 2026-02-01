@@ -1,8 +1,10 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import EmptyState from '../../components/EmptyState.astro';
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Heading, Subheading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
@@ -84,25 +86,21 @@ const getBadgeColor = (severity: string) => {
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Inbox</h1>
+				<Heading>Inbox</Heading>
 				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full dark:bg-zinc-800 dark:text-zinc-400">{items.length} pending</span>
 			</div>
 		</div>
 
 		{actionMessage && (
-			<div class={`px-4 py-3 rounded-lg text-sm border ${
-				actionMessage.type === 'success'
-					? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/10 dark:text-green-400 dark:border-green-800'
-					: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/10 dark:text-red-400 dark:border-red-800'
-			}`}>
+			<Alert color={actionMessage.type === 'success' ? 'green' : 'red'} client:load>
 				{actionMessage.text}
-			</div>
+			</Alert>
 		)}
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm dark:bg-red-900/10 dark:border-red-800 dark:text-red-400">
+			<Alert color="red" client:load>
 				{error}
-			</div>
+			</Alert>
 		)}
 
 		{items.length > 0 ? (
@@ -123,7 +121,7 @@ const getBadgeColor = (severity: string) => {
 									}`}>
 										{item.severity}
 									</span>
-									<h2 class="text-base font-semibold text-zinc-950 dark:text-white">{item.title}</h2>
+									<Subheading>{item.title}</Subheading>
 									<span class="text-xs text-zinc-500 ml-auto sm:ml-0 dark:text-zinc-400">
 										{new Date(item.created_at).toLocaleString('ja-JP')}
 									</span>
