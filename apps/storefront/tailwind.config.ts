@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 export default {
-  darkMode: 'selector', // Dark mode only when 'dark' class is present on html
+  darkMode: false, // Completely disable dark mode - all dark: classes will be ignored
   content: ['./src/**/*.{astro,html,js,jsx,ts,tsx,md,mdx}'],
   theme: {
     extend: {}
