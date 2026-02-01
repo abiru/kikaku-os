@@ -179,15 +179,18 @@ export default function AdminLayout({ currentPath, children }: Props) {
     const shouldBeDark = currentTheme === 'dark'
     setIsDark(shouldBeDark)
 
-    // Ensure HTML class is in sync
+    // Ensure HTML class and color-scheme are in sync
     if (shouldBeDark) {
       document.documentElement.classList.add('dark')
+      document.documentElement.style.colorScheme = 'dark'
     } else {
       document.documentElement.classList.remove('dark')
+      document.documentElement.style.colorScheme = 'light'
     }
 
     console.log('Theme initialized in React:', currentTheme)
     console.log('HTML has dark class:', document.documentElement.classList.contains('dark'))
+    console.log('color-scheme:', document.documentElement.style.colorScheme)
   }, [])
 
   useEffect(() => {
@@ -208,11 +211,14 @@ export default function AdminLayout({ currentPath, children }: Props) {
 
     if (newTheme) {
       document.documentElement.classList.add('dark')
+      document.documentElement.style.colorScheme = 'dark'
     } else {
       document.documentElement.classList.remove('dark')
+      document.documentElement.style.colorScheme = 'light'
     }
 
     console.log('After toggle, HTML classes:', document.documentElement.className)
+    console.log('After toggle, color-scheme:', document.documentElement.style.colorScheme)
   }
 
   if (!isLoaded) {
