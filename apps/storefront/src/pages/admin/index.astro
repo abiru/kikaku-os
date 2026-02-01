@@ -1,9 +1,9 @@
 ---
 export const prerender = false;
 
-import Badge from '../../components/Badge.astro';
-import Button from '../../components/Button.astro';
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Badge } from '../../components/catalyst/badge';
+import { Button } from '../../components/catalyst/button';
 import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
@@ -112,21 +112,21 @@ const formatDate = (dateStr: string) => {
 	});
 };
 
-const getSeverityVariant = (severity: string) => {
+const getSeverityColor = (severity: string) => {
 	switch (severity) {
-		case 'critical': return 'critical';
-		case 'warning': return 'warn';
-		default: return 'info';
+		case 'critical': return 'red' as const;
+		case 'warning': return 'amber' as const;
+		default: return 'blue' as const;
 	}
 };
 
-const getStatusVariant = (status: string) => {
+const getStatusColor = (status: string) => {
 	switch (status) {
-		case 'paid': return 'info';
-		case 'fulfilled': return 'secondary';
-		case 'partial_refunded': return 'warn';
-		case 'refunded': return 'critical';
-		default: return 'secondary';
+		case 'paid': return 'lime' as const;
+		case 'fulfilled': return 'lime' as const;
+		case 'partial_refunded': return 'amber' as const;
+		case 'refunded': return 'red' as const;
+		default: return 'zinc' as const;
 	}
 };
 ---
@@ -134,11 +134,11 @@ const getStatusVariant = (status: string) => {
 <AdminLayout title="Dashboard - Admin">
 	<div class="space-y-8">
 		<div>
-			<h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+			<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Dashboard</h1>
 		</div>
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm dark:bg-red-900/10 dark:border-red-800 dark:text-red-400">
 				{error}
 			</div>
 		)}
@@ -147,82 +147,82 @@ const getStatusVariant = (status: string) => {
 				<>
 					{/* KPI Cards */}
 					<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-						<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+						<div class="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
 							<div class="flex items-center gap-3 mb-2">
-								<div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-									<svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center dark:bg-indigo-900/20">
+									<svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
 									</svg>
 								</div>
-								<span class="text-xs text-[#86868b] font-medium">Today's Orders</span>
+								<span class="text-xs text-zinc-500 font-medium dark:text-zinc-400">Today's Orders</span>
 							</div>
-							<p class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{data.today.orders}</p>
+							<p class="text-2xl font-semibold text-zinc-950 tabular-nums dark:text-white">{data.today.orders}</p>
 						</div>
 
-						<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+						<div class="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
 							<div class="flex items-center gap-3 mb-2">
-								<div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
-									<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center dark:bg-green-900/20">
+									<svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
 								</div>
-								<span class="text-xs text-[#86868b] font-medium">Today's Revenue</span>
+								<span class="text-xs text-zinc-500 font-medium dark:text-zinc-400">Today's Revenue</span>
 							</div>
-							<p class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{formatCurrency(data.today.revenue)}</p>
+							<p class="text-2xl font-semibold text-zinc-950 tabular-nums dark:text-white">{formatCurrency(data.today.revenue)}</p>
 						</div>
 
-						<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+						<div class="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
 							<div class="flex items-center gap-3 mb-2">
-								<div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
-									<svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center dark:bg-amber-900/20">
+									<svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
 									</svg>
 								</div>
-								<span class="text-xs text-[#86868b] font-medium">Pending Inbox</span>
+								<span class="text-xs text-zinc-500 font-medium dark:text-zinc-400">Pending Inbox</span>
 							</div>
-							<p class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{data.pending.inbox}</p>
+							<p class="text-2xl font-semibold text-zinc-950 tabular-nums dark:text-white">{data.pending.inbox}</p>
 						</div>
 
-						<div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+						<div class="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
 							<div class="flex items-center gap-3 mb-2">
-								<div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
-									<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center dark:bg-purple-900/20">
+									<svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
 									</svg>
 								</div>
-								<span class="text-xs text-[#86868b] font-medium">Unfulfilled</span>
+								<span class="text-xs text-zinc-500 font-medium dark:text-zinc-400">Unfulfilled</span>
 							</div>
-							<p class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{data.pending.unfulfilled}</p>
+							<p class="text-2xl font-semibold text-zinc-950 tabular-nums dark:text-white">{data.pending.unfulfilled}</p>
 						</div>
 					</div>
 
 					{/* Sales Chart */}
 					{analyticsData && (
-						<div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+						<div class="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-								<h2 class="text-sm font-semibold text-[#1d1d1f]">Sales Trend (Past {periodLabels[period]})</h2>
+								<h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Sales Trend (Past {periodLabels[period]})</h2>
 								<div class="flex items-center gap-2">
-									<div class="flex rounded-lg border border-gray-200 p-0.5">
+									<div class="flex rounded-lg border border-zinc-200 p-0.5 dark:border-zinc-700">
 										{[7, 30, 90].map((p) => (
 											<a
 												href={`?period=${p}`}
 												class={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
 													period === p
-														? 'bg-indigo-600 text-white'
-														: 'text-gray-600 hover:bg-gray-100'
+														? 'bg-indigo-600 text-white dark:bg-indigo-500'
+														: 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800'
 												}`}
 											>
 												{p}D
 											</a>
 										))}
 									</div>
-									<div class="hidden sm:flex items-center gap-3 ml-4 text-xs text-[#86868b]">
+									<div class="hidden sm:flex items-center gap-3 ml-4 text-xs text-zinc-500 dark:text-zinc-400">
 										<span class="flex items-center gap-1">
-											<span class="w-3 h-0.5 bg-indigo-500 rounded"></span>
+											<span class="w-3 h-0.5 bg-indigo-500 rounded dark:bg-indigo-400"></span>
 											Revenue
 										</span>
 										<span class="flex items-center gap-1">
-											<span class="w-3 h-3 bg-emerald-500/80 rounded-sm"></span>
+											<span class="w-3 h-3 bg-emerald-500/80 rounded-sm dark:bg-emerald-400/80"></span>
 											Orders
 										</span>
 									</div>
@@ -233,7 +233,7 @@ const getStatusVariant = (status: string) => {
 									<canvas id="salesChart"></canvas>
 								</div>
 							) : (
-								<div class="h-64 flex items-center justify-center text-sm text-[#86868b]">
+								<div class="h-64 flex items-center justify-center text-sm text-zinc-500 dark:text-zinc-400">
 									No sales data for this period
 								</div>
 							)}
@@ -241,20 +241,20 @@ const getStatusVariant = (status: string) => {
 					)}
 
 					{/* Week Summary */}
-					<div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-						<h2 class="text-sm font-semibold text-[#1d1d1f] mb-4">This Week</h2>
+					<div class="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+						<h2 class="text-sm font-semibold text-zinc-950 mb-4 dark:text-white">This Week</h2>
 						<div class="grid grid-cols-3 gap-6">
 							<div>
-								<p class="text-xs text-[#86868b] mb-1">Orders</p>
-								<p class="text-xl font-semibold text-[#1d1d1f] tabular-nums">{data.week.orders}</p>
+								<p class="text-xs text-zinc-500 mb-1 dark:text-zinc-400">Orders</p>
+								<p class="text-xl font-semibold text-zinc-950 tabular-nums dark:text-white">{data.week.orders}</p>
 							</div>
 							<div>
-								<p class="text-xs text-[#86868b] mb-1">Revenue</p>
-								<p class="text-xl font-semibold text-[#1d1d1f] tabular-nums">{formatCurrency(data.week.revenue)}</p>
+								<p class="text-xs text-zinc-500 mb-1 dark:text-zinc-400">Revenue</p>
+								<p class="text-xl font-semibold text-zinc-950 tabular-nums dark:text-white">{formatCurrency(data.week.revenue)}</p>
 							</div>
 							<div>
-								<p class="text-xs text-[#86868b] mb-1">Refunds</p>
-								<p class="text-xl font-semibold text-red-600 tabular-nums">{formatCurrency(data.week.refunds)}</p>
+								<p class="text-xs text-zinc-500 mb-1 dark:text-zinc-400">Refunds</p>
+								<p class="text-xl font-semibold text-red-600 tabular-nums dark:text-red-400">{formatCurrency(data.week.refunds)}</p>
 							</div>
 						</div>
 					</div>
@@ -262,33 +262,33 @@ const getStatusVariant = (status: string) => {
 					{/* Recent Activity */}
 					<div class="grid lg:grid-cols-2 gap-6">
 						{/* Recent Orders */}
-						<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-							<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-								<h2 class="text-sm font-semibold text-[#1d1d1f]">Recent Orders</h2>
-								<Button href="/admin/orders" size="sm" variant="link">View All</Button>
+						<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden dark:bg-zinc-900 dark:border-zinc-800">
+							<div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between dark:border-zinc-800">
+								<h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Recent Orders</h2>
+								<Button client:load href="/admin/orders" plain>View All</Button>
 							</div>
-							<div class="divide-y divide-gray-100">
+							<div class="divide-y divide-zinc-100 dark:divide-zinc-800">
 								{data.recentOrders.length > 0 ? (
 									data.recentOrders.map((order) => (
-										<a href={`/admin/orders/${order.id}`} class="flex items-center justify-between px-6 py-3 hover:bg-gray-50 transition-colors">
+										<a href={`/admin/orders/${order.id}`} class="flex items-center justify-between px-6 py-3 hover:bg-zinc-50 transition-colors dark:hover:bg-zinc-800/50">
 											<div class="flex items-center gap-3">
-												<span class="text-sm font-medium text-[#1d1d1f]">#{order.id}</span>
-												<span class="text-xs text-[#86868b] truncate max-w-[120px]">
+												<span class="text-sm font-medium text-zinc-950 dark:text-white">#{order.id}</span>
+												<span class="text-xs text-zinc-500 truncate max-w-[120px] dark:text-zinc-400">
 													{order.customer_email || 'No email'}
 												</span>
 											</div>
 											<div class="flex items-center gap-3">
-												<span class="text-sm font-medium text-[#1d1d1f] tabular-nums">
+												<span class="text-sm font-medium text-zinc-950 tabular-nums dark:text-white">
 													{formatCurrency(order.total_net, order.currency)}
 												</span>
-												<Badge variant={getStatusVariant(order.status)} size="sm">
+												<Badge client:load color={getStatusColor(order.status)}>
 													{order.status}
 												</Badge>
 											</div>
 										</a>
 									))
 								) : (
-									<div class="px-6 py-8 text-center text-sm text-[#86868b]">
+									<div class="px-6 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
 										No recent orders
 									</div>
 								)}
@@ -296,30 +296,30 @@ const getStatusVariant = (status: string) => {
 						</div>
 
 						{/* Recent Inbox */}
-						<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-							<div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-								<h2 class="text-sm font-semibold text-[#1d1d1f]">Pending Inbox</h2>
-								<Button href="/admin/inbox" size="sm" variant="link">View All</Button>
+						<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden dark:bg-zinc-900 dark:border-zinc-800">
+							<div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between dark:border-zinc-800">
+								<h2 class="text-sm font-semibold text-zinc-950 dark:text-white">Pending Inbox</h2>
+								<Button client:load href="/admin/inbox" plain>View All</Button>
 							</div>
-							<div class="divide-y divide-gray-100">
+							<div class="divide-y divide-zinc-100 dark:divide-zinc-800">
 								{data.recentInbox.length > 0 ? (
 									data.recentInbox.map((item) => (
-										<a href="/admin/inbox" class="flex items-center justify-between px-6 py-3 hover:bg-gray-50 transition-colors">
+										<a href="/admin/inbox" class="flex items-center justify-between px-6 py-3 hover:bg-zinc-50 transition-colors dark:hover:bg-zinc-800/50">
 											<div class="flex items-center gap-3">
-												<Badge variant={getSeverityVariant(item.severity)} size="sm">
+												<Badge client:load color={getSeverityColor(item.severity)}>
 													{item.severity}
 												</Badge>
-												<span class="text-sm text-[#1d1d1f] truncate max-w-[200px]">
+												<span class="text-sm text-zinc-950 truncate max-w-[200px] dark:text-white">
 													{item.title}
 												</span>
 											</div>
-											<span class="text-xs text-[#86868b]">
+											<span class="text-xs text-zinc-500 dark:text-zinc-400">
 												{formatDate(item.created_at)}
 											</span>
 										</a>
 									))
 								) : (
-									<div class="px-6 py-8 text-center text-sm text-[#86868b]">
+									<div class="px-6 py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
 										No pending items
 									</div>
 								)}

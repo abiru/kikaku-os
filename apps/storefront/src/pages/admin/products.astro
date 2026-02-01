@@ -1,9 +1,9 @@
 ---
 export const prerender = false;
 
-import Badge from '../../components/Badge.astro';
-import Button from '../../components/Button.astro';
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import ProductsTable from '../../components/admin/ProductsTable';
+import { Button } from '../../components/catalyst/button';
 import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
@@ -46,19 +46,16 @@ if (import.meta.env.ADMIN_API_KEY) {
 } else {
 	error = 'ADMIN_API_KEY is missing in server environment.';
 }
-
-const hasNext = page < meta.totalPages;
-const hasPrev = page > 1;
 ---
 
 <AdminLayout title="Products - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-gray-900">Products</h1>
-				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Products</h1>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full dark:bg-zinc-800 dark:text-zinc-400">{meta.totalCount} items</span>
 			</div>
-			<Button href="/admin/products/new" size="sm" variant="primary">
+			<Button client:only="react" href="/admin/products/new">
 				+ New Product
 			</Button>
 		</div>
@@ -67,207 +64,83 @@ const hasPrev = page > 1;
 		<div class="flex gap-2">
 			<a
 				href="?status=all"
-				class={`px-4 py-2 text-sm rounded-lg ${status === 'all' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm rounded-lg transition-colors ${
+					status === 'all'
+						? 'bg-indigo-600 text-white dark:bg-indigo-500'
+						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700'
+				}`}
 			>
 				All
 			</a>
 			<a
 				href="?status=active"
-				class={`px-4 py-2 text-sm rounded-lg ${status === 'active' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm rounded-lg transition-colors ${
+					status === 'active'
+						? 'bg-indigo-600 text-white dark:bg-indigo-500'
+						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700'
+				}`}
 			>
 				Active
 			</a>
 			<a
 				href="?status=draft"
-				class={`px-4 py-2 text-sm rounded-lg ${status === 'draft' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm rounded-lg transition-colors ${
+					status === 'draft'
+						? 'bg-indigo-600 text-white dark:bg-indigo-500'
+						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700'
+				}`}
 			>
 				Draft
 			</a>
 			<a
 				href="?status=archived"
-				class={`px-4 py-2 text-sm rounded-lg ${status === 'archived' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm rounded-lg transition-colors ${
+					status === 'archived'
+						? 'bg-indigo-600 text-white dark:bg-indigo-500'
+						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700'
+				}`}
 			>
 				Archived
 			</a>
 		</div>
 
 		{/* Search Bar */}
-		<div class="mb-6">
+		<div>
 			<form method="get" class="relative max-w-md">
 				<input
 					type="search"
 					name="q"
 					value={q}
 					placeholder="Search by title..."
-					class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm dark:bg-zinc-900 dark:border-zinc-700 dark:text-white"
 				/>
 				<svg
-					class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
 					fill="none"
 					stroke="currentColor"
 					viewBox="0 0 24 24"
 				>
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 				</svg>
+				<input type="hidden" name="status" value={status} />
 			</form>
 		</div>
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm dark:bg-red-900/10 dark:border-red-800 dark:text-red-400">
 				{error}
 			</div>
 		)}
 
-		{/* Product Table */}
-		<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm text-[#1d1d1f]">
-					<thead class="bg-gray-50 border-b border-gray-200">
-						<tr>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Updated</th>
-							<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-gray-100">
-						{products.length > 0 ? (
-							products.map((product) => (
-								<tr class="hover:bg-gray-50 transition-colors group">
-									<td class="px-6 py-4">
-										<div class="font-medium">{product.title}</div>
-										<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</div>
-									</td>
-									<td class="px-6 py-4">
-										{product.status === 'draft' ? (
-											<Badge severity="secondary">Draft</Badge>
-										) : product.status === 'archived' ? (
-											<Badge severity="critical">Archived</Badge>
-										) : (
-											<Badge severity="info">Active</Badge>
-										)}
-									</td>
-									<td class="px-6 py-4 text-[#86868b] tabular-nums">
-										{new Date(product.updated_at).toLocaleDateString()}
-									</td>
-									<td class="px-6 py-4 text-right">
-										<div class="flex items-center justify-end gap-2">
-											<a href={`/admin/products/${product.id}`} class="text-[#0071e3] hover:underline font-medium">
-												Edit
-											</a>
-											{product.status !== 'archived' && (
-												<button
-													type="button"
-													class="archive-product-btn text-red-500 hover:underline text-sm"
-													data-product-id={product.id}
-													data-product-title={product.title}
-												>
-													Archive
-												</button>
-											)}
-											{product.status === 'archived' && (
-												<button
-													type="button"
-													class="restore-product-btn text-green-600 hover:underline text-sm"
-													data-product-id={product.id}
-													data-product-title={product.title}
-												>
-													Restore
-												</button>
-											)}
-										</div>
-									</td>
-								</tr>
-							))
-						) : (
-							<tr>
-								<td colspan="4" class="px-6 py-12 text-center text-[#86868b]">
-									No products found.
-								</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
-			</div>
-
-			{/* Pagination */}
-			<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-				<div class="text-xs text-[#86868b]">
-					Page {page} of {meta.totalPages}
-				</div>
-				<div class="flex gap-2">
-					<Button
-						href={hasPrev ? `?page=${page - 1}&q=${q}&status=${status}` : '#'}
-						disabled={!hasPrev}
-						size="sm"
-						variant="secondary"
-					>
-						Previous
-					</Button>
-					<Button
-						href={hasNext ? `?page=${page + 1}&q=${q}&status=${status}` : '#'}
-						disabled={!hasNext}
-						size="sm"
-						variant="secondary"
-					>
-						Next
-					</Button>
-				</div>
-			</div>
-		</div>
+		<ProductsTable
+			client:load
+			products={products}
+			currentPage={page}
+			totalPages={meta.totalPages}
+			searchQuery={q}
+			statusFilter={status}
+			apiBase={apiBase}
+			apiKey={import.meta.env.ADMIN_API_KEY}
+		/>
 	</div>
 </AdminLayout>
-
-<script define:vars={{ apiBase, apiKey: import.meta.env.ADMIN_API_KEY }}>
-	// Archive handler
-	document.addEventListener('click', async (e) => {
-		const archiveBtn = e.target.closest('.archive-product-btn');
-		if (archiveBtn) {
-			const productId = archiveBtn.dataset.productId;
-			const productTitle = archiveBtn.dataset.productTitle;
-
-			if (!confirm(`Archive "${productTitle}"?`)) return;
-
-			try {
-				const res = await fetch(`${apiBase}/admin/products/${productId}`, {
-					method: 'DELETE',
-					headers: { 'x-admin-key': apiKey }
-				});
-
-				if (res.ok) {
-					location.reload();
-				} else {
-					const data = await res.json();
-					alert(data.message || 'Failed to archive');
-				}
-			} catch (err) {
-				alert('Failed to archive product');
-			}
-		}
-
-		// Restore handler
-		const restoreBtn = e.target.closest('.restore-product-btn');
-		if (restoreBtn) {
-			const productId = restoreBtn.dataset.productId;
-			const productTitle = restoreBtn.dataset.productTitle;
-
-			if (!confirm(`Restore "${productTitle}"?`)) return;
-
-			try {
-				const res = await fetch(`${apiBase}/admin/products/${productId}/restore`, {
-					method: 'POST',
-					headers: { 'x-admin-key': apiKey }
-				});
-
-				if (res.ok) {
-					location.reload();
-				} else {
-					const data = await res.json();
-					alert(data.message || 'Failed to restore');
-				}
-			} catch (err) {
-				alert('Failed to restore product');
-			}
-		}
-	});
-</script>
