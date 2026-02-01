@@ -174,6 +174,23 @@ export default function AdminLayout({ currentPath, children }: Props) {
   })
 
   useEffect(() => {
+    // Sync state with current dark mode
+    const currentTheme = localStorage.getItem('theme') || 'light'
+    const shouldBeDark = currentTheme === 'dark'
+    setIsDark(shouldBeDark)
+
+    // Ensure HTML class is in sync
+    if (shouldBeDark) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+
+    console.log('Theme initialized in React:', currentTheme)
+    console.log('HTML has dark class:', document.documentElement.classList.contains('dark'))
+  }, [])
+
+  useEffect(() => {
     // Redirect to login if not authenticated (after auth is loaded)
     if (isLoaded && !isSignedIn) {
       window.location.href = '/admin/login'
@@ -184,8 +201,18 @@ export default function AdminLayout({ currentPath, children }: Props) {
     const newTheme = !isDark
     setIsDark(newTheme)
     const theme = newTheme ? 'dark' : 'light'
+
+    console.log('Toggling theme to:', theme)
+
     localStorage.setItem('theme', theme)
-    document.documentElement.classList.toggle('dark', newTheme)
+
+    if (newTheme) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+
+    console.log('After toggle, HTML classes:', document.documentElement.className)
   }
 
   if (!isLoaded) {

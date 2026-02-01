@@ -21,16 +21,28 @@ const currentPath = Astro.url.pathname;
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
+		<meta name="color-scheme" content="light dark" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<script is:inline>
 			// Initialize theme from localStorage or default to light
-			const theme = localStorage.getItem('theme') || 'light';
-			document.documentElement.classList.toggle('dark', theme === 'dark');
+			// IMPORTANT: This runs BEFORE page render to prevent flash
+			(function() {
+				const theme = localStorage.getItem('theme') || 'light';
+				console.log('Initializing theme:', theme);
+
+				if (theme === 'dark') {
+					document.documentElement.classList.add('dark');
+				} else {
+					document.documentElement.classList.remove('dark');
+				}
+
+				console.log('HTML classes after init:', document.documentElement.className);
+			})();
 		</script>
 	</head>
-	<body class="h-full font-sans antialiased">
+	<body class="h-full font-sans antialiased bg-white dark:bg-zinc-900 text-zinc-950 dark:text-white">
 		<AdminLayoutComponent client:load currentPath={currentPath}>
 			<slot />
 		</AdminLayoutComponent>
