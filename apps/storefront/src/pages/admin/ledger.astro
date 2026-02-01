@@ -48,46 +48,46 @@ const formatCurrency = (amount: number, currency: string) => {
 <AdminLayout title="Ledger - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-gray-900">Ledger</h1>
-			<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} entries</span>
+			<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Ledger</h1>
+			<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{meta.totalCount} entries</span>
 		</div>
 			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				<div class="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
 					{error}
 				</div>
 			)}
 
-			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+			<div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-[#1d1d1f]">
-						<thead class="bg-gray-50 border-b border-gray-200">
+					<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
+						<thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
 							<tr>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Date</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Ref</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Account</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Memo</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Debit</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Credit</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Date</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Ref</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Account</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Memo</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Debit</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Credit</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-gray-100 font-mono">
+						<tbody class="divide-y divide-zinc-100 dark:divide-zinc-800 font-mono">
 							{entries.length > 0 ? (
 								entries.map((entry) => (
-									<tr class="hover:bg-gray-50 transition-colors">
-										<td class="px-6 py-3 text-[#86868b] whitespace-nowrap font-sans">
+									<tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+										<td class="px-6 py-3 text-zinc-500 dark:text-zinc-400 whitespace-nowrap font-sans">
 											{new Date(entry.created_at).toLocaleDateString()}
                                             <div class="text-[10px]">{new Date(entry.created_at).toLocaleTimeString()}</div>
 										</td>
 										<td class="px-6 py-3 whitespace-nowrap font-sans">
-											<span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-[#424245]">
+											<span class="text-xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                                                 {entry.ref_type}
                                             </span>
-                                            <div class="text-[10px] text-[#86868b] mt-0.5 truncate max-w-[80px]">#{entry.ref_id}</div>
+                                            <div class="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate max-w-[80px]">#{entry.ref_id}</div>
 										</td>
-										<td class="px-6 py-3 font-semibold text-[#1d1d1f] font-sans">
+										<td class="px-6 py-3 font-semibold text-zinc-950 dark:text-white font-sans">
 											{entry.account_name}
 										</td>
-										<td class="px-6 py-3 text-[#424245] truncate max-w-xs font-sans">
+										<td class="px-6 py-3 text-zinc-700 dark:text-zinc-300 truncate max-w-xs font-sans">
 											{entry.memo || '-'}
 										</td>
 										<td class="px-6 py-3 text-right">
@@ -100,7 +100,7 @@ const formatCurrency = (amount: number, currency: string) => {
 								))
 							) : (
 								<tr>
-									<td colspan="6" class="px-6 py-12 text-center text-[#86868b] font-sans">
+									<td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400 font-sans">
 										No ledger entries found.
 									</td>
 								</tr>
@@ -110,23 +110,23 @@ const formatCurrency = (amount: number, currency: string) => {
 				</div>
 
 				{/* Pagination */}
-				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between font-sans">
-					<div class="text-xs text-[#86868b]">
+				<div class="border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between font-sans">
+					<div class="text-xs text-zinc-500 dark:text-zinc-400">
 						Page {page} of {meta.totalPages}
 					</div>
 					<div class="flex gap-2">
-						<Button 
-							href={hasPrev ? `?page=${page - 1}` : '#'} 
-							disabled={!hasPrev} 
-							size="sm" 
+						<Button
+							href={hasPrev ? `?page=${page - 1}` : '#'}
+							disabled={!hasPrev}
+							size="sm"
 							variant="secondary"
 						>
 							Previous
 						</Button>
-						<Button 
-							href={hasNext ? `?page=${page + 1}` : '#'} 
-							disabled={!hasNext} 
-							size="sm" 
+						<Button
+							href={hasNext ? `?page=${page + 1}` : '#'}
+							disabled={!hasNext}
+							size="sm"
 							variant="secondary"
 						>
 							Next
