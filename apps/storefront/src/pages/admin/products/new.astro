@@ -71,7 +71,7 @@ if (Astro.request.method === 'POST') {
 
 			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 				<div>
-					<label for="title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+					<label for="title" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 						Title <span class="text-red-500">*</span>
 					</label>
 					<input
@@ -80,32 +80,32 @@ if (Astro.request.method === 'POST') {
 						name="title"
 						required
 						value={formValues.title}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 						placeholder="Product title"
 					/>
 				</div>
 
 				<div>
-					<label for="description" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+					<label for="description" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 						Description
 					</label>
 					<textarea
 						id="description"
 						name="description"
 						rows="4"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
 						placeholder="Product description (optional)"
 					>{formValues.description}</textarea>
 				</div>
 
 				<div>
-					<label for="status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+					<label for="status" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 						Status
 					</label>
 					<select
 						id="status"
 						name="status"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
 					>
 						<option value="active" selected={formValues.status === 'active'}>Active</option>
 						<option value="draft" selected={formValues.status === 'draft'}>Draft</option>

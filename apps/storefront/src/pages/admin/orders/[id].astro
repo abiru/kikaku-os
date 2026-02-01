@@ -120,23 +120,23 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 				<div class="space-y-6">
 					{/* Order Summary */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-						<h2 class="text-base font-semibold text-[#1d1d1f] mb-4">Order Summary</h2>
+						<h2 class="text-base font-semibold text-zinc-950 dark:text-white mb-4">Order Summary</h2>
 						<dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 							<div>
 								<dt class="text-[#86868b]">Total</dt>
-								<dd class="font-semibold text-[#1d1d1f] text-lg">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
+								<dd class="font-semibold text-zinc-950 dark:text-white text-lg">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Customer</dt>
-								<dd class="text-[#1d1d1f]">{order.customer_email || 'Guest'}</dd>
+								<dd class="text-zinc-950 dark:text-white">{order.customer_email || 'Guest'}</dd>
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(order.created_at)}</dd>
+								<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(order.created_at)}</dd>
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Paid At</dt>
-								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(order.paid_at)}</dd>
+								<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(order.paid_at)}</dd>
 							</div>
 						</dl>
 
@@ -148,13 +148,13 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 									{order.subtotal !== undefined && (
 										<div class="flex justify-between">
 											<dt class="text-[#86868b]">Subtotal (税抜)</dt>
-											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.subtotal, order.currency)}</dd>
+											<dd class="font-medium text-zinc-950 dark:text-white tabular-nums">{formatCurrency(order.subtotal, order.currency)}</dd>
 										</div>
 									)}
 									{order.tax_amount !== undefined && (
 										<div class="flex justify-between">
 											<dt class="text-[#86868b]">Tax (消費税)</dt>
-											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.tax_amount, order.currency)}</dd>
+											<dd class="font-medium text-zinc-950 dark:text-white tabular-nums">{formatCurrency(order.tax_amount, order.currency)}</dd>
 										</div>
 									)}
 									{order.total_discount > 0 && (
@@ -166,12 +166,12 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 									{order.shipping_fee > 0 && (
 										<div class="flex justify-between">
 											<dt class="text-[#86868b]">Shipping</dt>
-											<dd class="font-medium text-[#1d1d1f] tabular-nums">{formatCurrency(order.shipping_fee, order.currency)}</dd>
+											<dd class="font-medium text-zinc-950 dark:text-white tabular-nums">{formatCurrency(order.shipping_fee, order.currency)}</dd>
 										</div>
 									)}
 									<div class="flex justify-between pt-2 border-t border-gray-100">
-										<dt class="text-[#1d1d1f] font-semibold">Total (税込)</dt>
-										<dd class="font-bold text-[#1d1d1f] text-lg tabular-nums">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
+										<dt class="text-zinc-950 dark:text-white font-semibold">Total (税込)</dt>
+										<dd class="font-bold text-zinc-950 dark:text-white text-lg tabular-nums">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 									</div>
 								</dl>
 							</div>
@@ -180,7 +180,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						{(order.provider_checkout_session_id || order.provider_payment_intent_id) && (
 							<div class="mt-4 pt-4 border-t border-gray-100">
 								<h3 class="text-xs font-medium text-[#86868b] uppercase tracking-wider mb-2">Stripe IDs</h3>
-								<div class="text-xs text-[#1d1d1f] font-mono space-y-1">
+								<div class="text-xs text-zinc-950 dark:text-white font-mono space-y-1">
 									{order.provider_checkout_session_id && (
 										<div>Checkout: <span class="bg-gray-100 px-1 py-0.5 rounded">{order.provider_checkout_session_id}</span></div>
 									)}
@@ -196,7 +196,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<div class="flex items-center gap-2">
-								<h2 class="text-base font-semibold text-[#1d1d1f]">Fulfillments</h2>
+								<h2 class="text-base font-semibold text-zinc-950 dark:text-white">Fulfillments</h2>
 								<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{fulfillments.length}</span>
 							</div>
 							{order.status === 'paid' && (
@@ -213,7 +213,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							)}
 						</div>
 						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm text-[#1d1d1f]">
+							<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
 								<thead class="bg-gray-50 border-b border-gray-200">
 									<tr>
 										<th class="px-6 py-3 font-medium text-[#86868b]">ID</th>
@@ -253,11 +253,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					{/* Payments */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-							<h2 class="text-base font-semibold text-[#1d1d1f]">Payments</h2>
+							<h2 class="text-base font-semibold text-zinc-950 dark:text-white">Payments</h2>
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm text-[#1d1d1f]">
+							<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
 								<thead class="bg-gray-50 border-b border-gray-200">
 									<tr>
 										<th class="px-6 py-3 font-medium text-[#86868b]">ID</th>
@@ -289,11 +289,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					{/* Refunds */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-							<h2 class="text-base font-semibold text-[#1d1d1f]">Refunds</h2>
+							<h2 class="text-base font-semibold text-zinc-950 dark:text-white">Refunds</h2>
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm text-[#1d1d1f]">
+							<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
 								<thead class="bg-gray-50 border-b border-gray-200">
 									<tr>
 										<th class="px-6 py-3 font-medium text-[#86868b]">ID</th>
@@ -327,11 +327,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					{/* Stripe Events */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-							<h2 class="text-base font-semibold text-[#1d1d1f]">Stripe Events</h2>
+							<h2 class="text-base font-semibold text-zinc-950 dark:text-white">Stripe Events</h2>
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<table class="w-full text-left text-sm text-[#1d1d1f]">
+							<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
 								<thead class="bg-gray-50 border-b border-gray-200">
 									<tr>
 										<th class="px-6 py-3 font-medium text-[#86868b]">Event ID</th>
@@ -366,18 +366,18 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			<div id="create-fulfillment-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
 				<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
 					<div class="p-6 border-b border-gray-100">
-						<h3 class="text-lg font-semibold text-[#1d1d1f]">Create Fulfillment</h3>
+						<h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Create Fulfillment</h3>
 						<p class="text-sm text-[#86868b] mt-1">Order #{id}</p>
 					</div>
 					<form id="create-fulfillment-form" class="p-6 space-y-4">
 						<div>
-							<label for="create-status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="create-status" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 								Status
 							</label>
 							<select
 								id="create-status"
 								name="status"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
 							>
 								<option value="pending">Pending</option>
 								<option value="processing">Processing</option>
@@ -387,14 +387,14 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						</div>
 
 						<div>
-							<label for="create-tracking" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="create-tracking" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 								Tracking Number
 							</label>
 							<input
 								type="text"
 								id="create-tracking"
 								name="tracking_number"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								placeholder="Optional tracking number"
 							/>
 						</div>
@@ -405,7 +405,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							<button
 								type="button"
 								id="cancel-create-btn"
-								class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+								class="px-4 py-2 text-sm font-medium text-zinc-950 dark:text-white bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
 							>
 								Cancel
 							</button>
@@ -424,20 +424,20 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			<div id="edit-fulfillment-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
 				<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
 					<div class="p-6 border-b border-gray-100">
-						<h3 class="text-lg font-semibold text-[#1d1d1f]">Edit Fulfillment</h3>
+						<h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Edit Fulfillment</h3>
 						<p id="edit-subtitle" class="text-sm text-[#86868b] mt-1"></p>
 					</div>
 					<form id="edit-fulfillment-form" class="p-6 space-y-4">
 						<input type="hidden" id="edit-fulfillment-id" name="fulfillmentId" />
 
 						<div>
-							<label for="edit-status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="edit-status" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 								Status
 							</label>
 							<select
 								id="edit-status"
 								name="status"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
 							>
 								<option value="pending">Pending</option>
 								<option value="processing">Processing</option>
@@ -448,14 +448,14 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						</div>
 
 						<div>
-							<label for="edit-tracking" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="edit-tracking" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 								Tracking Number
 							</label>
 							<input
 								type="text"
 								id="edit-tracking"
 								name="tracking_number"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								placeholder="Optional tracking number"
 							/>
 						</div>
@@ -466,7 +466,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							<button
 								type="button"
 								id="cancel-edit-btn"
-								class="px-4 py-2 text-sm font-medium text-[#1d1d1f] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+								class="px-4 py-2 text-sm font-medium text-zinc-950 dark:text-white bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
 							>
 								Cancel
 							</button>
