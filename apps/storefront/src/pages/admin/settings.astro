@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { Button } from '../../components/catalyst/button';
+import Button from '../../components/Button.astro';
 import { Badge } from '../../components/catalyst/badge';
 import { getApiBase } from '../../lib/api';
 
@@ -174,7 +174,7 @@ const formatValue = (value: string, dataType: string) => {
                   <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                     {setting.key}
                   </p>
-                  <Badge color="zinc" client:only="react" class="mt-2 text-xs">
+                  <Badge color="zinc" client:only="react" className="mt-2 text-xs">
                     {setting.data_type}
                   </Badge>
                 </div>
