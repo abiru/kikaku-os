@@ -11,6 +11,9 @@ importers:
       '@clerk/backend':
         specifier: ^2.29.3
         version: 2.29.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@cloudflare/playwright':
+        specifier: ^1.1.0
+        version: 1.1.0
       '@hono/zod-validator':
         specifier: ^0.7.6
         version: 0.7.6(hono@4.11.4)(zod@4.3.5)
@@ -89,6 +92,9 @@ packages:
   '@cloudflare/kv-asset-handler@0.4.1':
     resolution: {integrity: sha512-Nu8ahitGFFJztxUml9oD/DLb7Z28C8cd8F46IVQ7y5Btz575pvMY8AqZsXkX7Gds29eCKdMgIHjIvzskHgPSFg==}
     engines: {node: '>=18.0.0'}
+
+  '@cloudflare/playwright@1.1.0':
+    resolution: {integrity: sha512-Z5bveYS/wSAqI6mwtwjfdaeld0Y5JMI+iQxbooaXuCK3wW0C1sdrTcolNd8RgZNKXV7kmShST2OR/7N1froWuw==}
 
   '@cloudflare/unenv-preset@2.9.0':
     resolution: {integrity: sha512-99nEvuOTCGGGRNaIat8UVVXJ27aZK+U09SYDp0kVjQLwC9wyxcrQ28IqLwrQq2DjWLmBI1+UalGJzdPqYgPlRw==}
@@ -1418,6 +1424,8 @@ snapshots:
   '@cloudflare/kv-asset-handler@0.4.1':
     dependencies:
       mime: 3.0.0
+
+  '@cloudflare/playwright@1.1.0': {}
 
   '@cloudflare/unenv-preset@2.9.0(unenv@2.0.0-rc.24)(workerd@1.20260111.0)':
     dependencies:
