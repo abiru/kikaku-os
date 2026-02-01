@@ -52,6 +52,7 @@ coverage/
 **/.wrangler/
 .dev.vars
 .dev.vars.*
+!.dev.vars.example
 # D1 local sqlite files (wrangler creates these depending on version)
 *.sqlite
 *.sqlite3
