@@ -20,6 +20,8 @@ import {
   MegaphoneIcon,
   PhotoIcon,
   ChevronDownIcon,
+  SunIcon,
+  MoonIcon,
 } from '@heroicons/react/24/outline'
 import { SidebarLayout } from '../catalyst/sidebar-layout'
 import {
@@ -166,6 +168,10 @@ type Props = {
 
 export default function AdminLayout({ currentPath, children }: Props) {
   const { isLoaded, isSignedIn, user, signOut } = useClerkAuth()
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('theme') === 'dark'
+  })
 
   useEffect(() => {
     // Redirect to login if not authenticated (after auth is loaded)
@@ -173,6 +179,14 @@ export default function AdminLayout({ currentPath, children }: Props) {
       window.location.href = '/admin/login'
     }
   }, [isLoaded, isSignedIn])
+
+  const toggleTheme = () => {
+    const newTheme = !isDark
+    setIsDark(newTheme)
+    const theme = newTheme ? 'dark' : 'light'
+    localStorage.setItem('theme', theme)
+    document.documentElement.classList.toggle('dark', newTheme)
+  }
 
   if (!isLoaded) {
     return (
@@ -229,6 +243,10 @@ export default function AdminLayout({ currentPath, children }: Props) {
               <SidebarItem href="/admin/settings" current={currentPath === '/admin/settings'}>
                 <Cog6ToothIcon data-slot="icon" />
                 <SidebarLabel>Settings</SidebarLabel>
+              </SidebarItem>
+              <SidebarItem onClick={toggleTheme}>
+                {isDark ? <SunIcon data-slot="icon" /> : <MoonIcon data-slot="icon" />}
+                <SidebarLabel>{isDark ? 'Light Mode' : 'Dark Mode'}</SidebarLabel>
               </SidebarItem>
             </SidebarSection>
           </SidebarBody>
