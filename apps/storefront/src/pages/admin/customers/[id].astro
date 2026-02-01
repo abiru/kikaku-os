@@ -191,24 +191,24 @@ const getStatusBadge = (status: string) => {
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Total Orders</div>
-							<div class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{stats.total_orders}</div>
+							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{stats.total_orders}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Total Spent</div>
-							<div class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{formatCurrency(stats.total_spent)}</div>
+							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{formatCurrency(stats.total_spent)}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Avg. Order Value</div>
-							<div class="text-2xl font-semibold text-[#1d1d1f] tabular-nums">{formatCurrency(Math.round(stats.avg_order_value))}</div>
+							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{formatCurrency(Math.round(stats.avg_order_value))}</div>
 						</div>
 					</div>
 
 					{/* Edit Form */}
 					<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6 mb-8">
-						<h2 class="text-lg font-semibold text-[#1d1d1f]">Customer Details</h2>
+						<h2 class="text-lg font-semibold text-zinc-950 dark:text-white">Customer Details</h2>
 
 						<div>
-							<label for="name" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="name" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 								Name <span class="text-red-500">*</span>
 							</label>
 							<input
@@ -217,12 +217,12 @@ const getStatusBadge = (status: string) => {
 								name="name"
 								required
 								value={customer.name}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 							/>
 						</div>
 
 						<div>
-							<label for="email" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+							<label for="email" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 								Email
 							</label>
 							<input
@@ -230,7 +230,7 @@ const getStatusBadge = (status: string) => {
 								id="email"
 								name="email"
 								value={customer.email || ''}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								placeholder="customer@example.com"
 							/>
 						</div>
@@ -239,11 +239,11 @@ const getStatusBadge = (status: string) => {
 							<dl class="grid grid-cols-2 gap-4 text-sm">
 								<div>
 									<dt class="text-[#86868b]">Created</dt>
-									<dd class="text-[#1d1d1f] tabular-nums">{formatDate(customer.created_at)}</dd>
+									<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(customer.created_at)}</dd>
 								</div>
 								<div>
 									<dt class="text-[#86868b]">Updated</dt>
-									<dd class="text-[#1d1d1f] tabular-nums">{formatDate(customer.updated_at)}</dd>
+									<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(customer.updated_at)}</dd>
 								</div>
 							</dl>
 						</div>
@@ -260,7 +260,7 @@ const getStatusBadge = (status: string) => {
 
 					{/* Order History */}
 					<div>
-						<h2 class="text-lg font-semibold text-[#1d1d1f] mb-4">Order History</h2>
+						<h2 class="text-lg font-semibold text-zinc-950 dark:text-white mb-4">Order History</h2>
 
 						{orders.length === 0 ? (
 							<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
@@ -269,7 +269,7 @@ const getStatusBadge = (status: string) => {
 						) : (
 							<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 								<div class="overflow-x-auto">
-									<table class="w-full text-left text-sm text-[#1d1d1f]">
+									<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
 										<thead class="bg-gray-50 border-b border-gray-200">
 											<tr>
 												<th class="px-6 py-3 font-medium text-[#86868b]">Order ID</th>

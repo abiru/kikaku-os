@@ -20,20 +20,20 @@ const {
 	...rest
 } = Astro.props;
 
-// Apple-style base: Pill shape, smooth font, refined transitions with subtle scale
+// Catalyst-style base: Pill shape, smooth font, refined transitions with subtle scale
 const base =
-	'inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071e3] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+	'inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
 
 const variants = {
-	// Apple Blue for primary actions
-	primary: 'bg-[#0071e3] text-white hover:bg-[#0077ED]', 
+	// Indigo for primary actions (Catalyst primary color)
+	primary: 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600',
 	// Standard dark for secondary
-	dark: 'bg-[#1d1d1f] text-white hover:bg-[#1d1d1f]/90',
+	dark: 'bg-zinc-950 text-white hover:bg-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700',
 	// Minimalist outline/secondary
-	secondary: 'bg-white text-[#1d1d1f] hover:text-[#0071e3] shadow-sm',
+	secondary: 'bg-white text-zinc-950 hover:text-indigo-600 shadow-sm dark:bg-zinc-800 dark:text-white dark:hover:text-indigo-400',
 	// Ghost link style
-	link: 'text-[#0071e3] hover:underline underline-offset-4',
-    outline: 'border border-[#d2d2d7] bg-transparent text-[#1d1d1f] hover:border-[#86868b]'
+	link: 'text-indigo-600 hover:underline underline-offset-4 dark:text-indigo-400',
+    outline: 'border border-zinc-200 bg-transparent text-zinc-950 hover:border-zinc-400 dark:border-zinc-700 dark:text-white dark:hover:border-zinc-500'
 };
 
 const sizes = {
