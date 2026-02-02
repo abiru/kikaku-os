@@ -1,6 +1,22 @@
 const CLAUDE_MODEL = 'claude-sonnet-4-5-20250929';
 const MAX_RETRIES = 3;
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const DIRECT_CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+
+/**
+ * Build Claude API URL - uses AI Gateway if configured, otherwise direct API
+ */
+function buildClaudeAPIURL(env?: {
+  AI_GATEWAY_ACCOUNT_ID?: string;
+  AI_GATEWAY_ID?: string;
+}): string {
+  // Use AI Gateway if credentials are provided
+  if (env?.AI_GATEWAY_ACCOUNT_ID && env?.AI_GATEWAY_ID) {
+    return `https://gateway.ai.cloudflare.com/v1/${env.AI_GATEWAY_ACCOUNT_ID}/${env.AI_GATEWAY_ID}/anthropic/v1/messages`;
+  }
+
+  // Fallback to direct API
+  return DIRECT_CLAUDE_API_URL;
+}
 
 export interface ClaudeMessage {
   role: 'user' | 'assistant';
@@ -53,17 +69,22 @@ function sleep(ms: number): Promise<void> {
  */
 export async function callClaudeAPI(
   apiKey: string,
-  payload: ClaudeRequest
+  payload: ClaudeRequest,
+  env?: {
+    AI_GATEWAY_ACCOUNT_ID?: string;
+    AI_GATEWAY_ID?: string;
+  }
 ): Promise<ClaudeResponse> {
   if (!apiKey) {
     throw new Error('CLAUDE_API_KEY not configured');
   }
 
+  const apiURL = buildClaudeAPIURL(env);
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await fetch(CLAUDE_API_URL, {
+      const response = await fetch(apiURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -135,9 +156,13 @@ export async function callClaudeAPI(
  */
 export async function callClaudeAPIForJSON<T>(
   apiKey: string,
-  payload: ClaudeRequest
+  payload: ClaudeRequest,
+  env?: {
+    AI_GATEWAY_ACCOUNT_ID?: string;
+    AI_GATEWAY_ID?: string;
+  }
 ): Promise<{ data: T; rawText: string; usage: ClaudeResponse['usage'] }> {
-  const response = await callClaudeAPI(apiKey, payload);
+  const response = await callClaudeAPI(apiKey, payload, env);
   const rawText = response.content[0]?.text || '';
 
   // Extract JSON from potential markdown formatting

@@ -33,3 +33,11 @@ STOREFRONT_BASE_URL=http://localhost:4321
 
 # Optional: Email (Resend)
 # RESEND_API_KEY=re_xxx
+
+# Cloudflare AI Gateway (for Claude API proxy)
+# Get these values from: https://dash.cloudflare.com/?to=/:account/ai/ai-gateway
+AI_GATEWAY_ACCOUNT_ID=your_cloudflare_account_id
+AI_GATEWAY_ID=your_ai_gateway_id
+
+# Claude API Key (Anthropic)
+CLAUDE_API_KEY=sk-ant-xxx

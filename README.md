@@ -24,6 +24,11 @@
 - **Inbox**: 異常検知・承認フロー
 - **在庫管理**: しきい値アラート・入出庫記録
 
+### AI機能（オプション）
+- **Claude API統合**: コンテンツ生成・Inboxトリアージ・顧客対応下書き
+- **Cloudflare AI Gateway**: キャッシング・コスト削減・モニタリング・自動フォールバック
+- **Inboxパターン**: AI出力は必ず人間承認（信頼しない設計）
+
 ## 本番デプロイ
 
 本番環境へのデプロイ手順は **[DEPLOYMENT.md](./DEPLOYMENT.md)** を参照してください。
@@ -64,6 +69,9 @@ git push origin main
   - `STRIPE_WEBHOOK_SECRET`
   - `STOREFRONT_BASE_URL`
 - オプション変数:
+  - `CLAUDE_API_KEY`（AI機能用・Anthropic APIキー）
+  - `AI_GATEWAY_ACCOUNT_ID`（Cloudflare AI Gateway経由でClaude API呼び出し）
+  - `AI_GATEWAY_ID`（Cloudflare AI Gateway経由でClaude API呼び出し）
   - `ENABLE_BANK_TRANSFER`（銀行振込決済の有効化）
   - `SHIPPING_FEE_AMOUNT`（送料、円）
   - `FREE_SHIPPING_THRESHOLD`（送料無料閾値、円）
