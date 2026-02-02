@@ -1,8 +1,11 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import Button from '../../components/Button.astro';
+import { Heading } from '../../components/catalyst/heading';
+import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
+import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '../../components/catalyst/table';
 import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
@@ -48,65 +51,65 @@ const formatCurrency = (amount: number, currency: string) => {
 <AdminLayout title="Ledger - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Ledger</h1>
+			<Heading>Ledger</Heading>
 			<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{meta.totalCount} entries</span>
 		</div>
 			{error && (
-				<div class="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
+				<Alert color="red" client:load>
 					{error}
-				</div>
+				</Alert>
 			)}
 
 			<div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
-						<thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
-							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Date</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Ref</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Account</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Memo</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Debit</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Credit</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-zinc-100 dark:divide-zinc-800 font-mono">
+					<Table client:load>
+						<TableHead>
+							<TableRow>
+								<TableHeader>Date</TableHeader>
+								<TableHeader>Ref</TableHeader>
+								<TableHeader>Account</TableHeader>
+								<TableHeader>Memo</TableHeader>
+								<TableHeader>Debit</TableHeader>
+								<TableHeader>Credit</TableHeader>
+							</TableRow>
+						</TableHead>
+						<TableBody>
 							{entries.length > 0 ? (
 								entries.map((entry) => (
-									<tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-										<td class="px-6 py-3 text-zinc-500 dark:text-zinc-400 whitespace-nowrap font-sans">
+									<TableRow>
+										<TableCell className="text-zinc-500 dark:text-zinc-400 whitespace-nowrap font-sans">
 											{new Date(entry.created_at).toLocaleDateString()}
                                             <div class="text-[10px]">{new Date(entry.created_at).toLocaleTimeString()}</div>
-										</td>
-										<td class="px-6 py-3 whitespace-nowrap font-sans">
+										</TableCell>
+										<TableCell className="whitespace-nowrap font-sans">
 											<span class="text-xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                                                 {entry.ref_type}
                                             </span>
                                             <div class="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate max-w-[80px]">#{entry.ref_id}</div>
-										</td>
-										<td class="px-6 py-3 font-semibold text-zinc-950 dark:text-white font-sans">
+										</TableCell>
+										<TableCell className="font-semibold text-zinc-950 dark:text-white font-sans">
 											{entry.account_name}
-										</td>
-										<td class="px-6 py-3 text-zinc-700 dark:text-zinc-300 truncate max-w-xs font-sans">
+										</TableCell>
+										<TableCell className="text-zinc-700 dark:text-zinc-300 truncate max-w-xs font-sans">
 											{entry.memo || '-'}
-										</td>
-										<td class="px-6 py-3 text-right">
+										</TableCell>
+										<TableCell className="font-mono">
 											{entry.debit > 0 ? formatCurrency(entry.debit, entry.currency) : ''}
-										</td>
-                                        <td class="px-6 py-3 text-right">
+										</TableCell>
+                                        <TableCell className="font-mono">
 											{entry.credit > 0 ? formatCurrency(entry.credit, entry.currency) : ''}
-										</td>
-									</tr>
+										</TableCell>
+									</TableRow>
 								))
 							) : (
-								<tr>
-									<td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400 font-sans">
+								<TableRow>
+									<TableCell colSpan={6} className="text-center text-zinc-500 dark:text-zinc-400 font-sans">
 										No ledger entries found.
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							)}
-						</tbody>
-					</table>
+						</TableBody>
+					</Table>
 				</div>
 
 				{/* Pagination */}
@@ -114,24 +117,10 @@ const formatCurrency = (amount: number, currency: string) => {
 					<div class="text-xs text-zinc-500 dark:text-zinc-400">
 						Page {page} of {meta.totalPages}
 					</div>
-					<div class="flex gap-2">
-						<Button
-							href={hasPrev ? `?page=${page - 1}` : '#'}
-							disabled={!hasPrev}
-							size="sm"
-							variant="secondary"
-						>
-							Previous
-						</Button>
-						<Button
-							href={hasNext ? `?page=${page + 1}` : '#'}
-							disabled={!hasNext}
-							size="sm"
-							variant="secondary"
-						>
-							Next
-						</Button>
-					</div>
+					<Pagination client:load>
+						<PaginationPrevious href={hasPrev ? `?page=${page - 1}` : null} />
+						<PaginationNext href={hasNext ? `?page=${page + 1}` : null} />
+					</Pagination>
 				</div>
 			</div>
 	</div>

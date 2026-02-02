@@ -1,7 +1,9 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import { Badge } from '../../components/catalyst/badge';
+import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 
@@ -63,7 +65,7 @@ const templateLabels: Record<string, string> = {
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Email Templates</h1>
+				<Heading>Email Templates</Heading>
 				<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{templates.length} templates</span>
 			</div>
 		</div>
@@ -73,9 +75,9 @@ const templateLabels: Record<string, string> = {
 		</p>
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+			<Alert color="red" client:load>
 				{error}
-			</div>
+			</Alert>
 		)}
 
 		{/* Templates Grid */}
@@ -118,16 +120,16 @@ const templateLabels: Record<string, string> = {
 		</div>
 
 		{/* Help Section */}
-		<div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
-			<h3 class="font-semibold text-blue-900 mb-2">Using Template Variables</h3>
-			<p class="text-sm text-blue-800 mb-4">
+		<Alert color="blue" client:load>
+			<h3 class="font-semibold mb-2">Using Template Variables</h3>
+			<p class="text-sm mb-4">
 				Templates support dynamic variables that are replaced with actual data when emails are sent.
 				Use the format <code class="bg-blue-100 px-1.5 py-0.5 rounded text-xs">{"{{variable_name}}"}</code> in your templates.
 			</p>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
 				<div>
-					<h4 class="font-medium text-blue-900 mb-1">Order Confirmation</h4>
-					<ul class="text-blue-800 space-y-1">
+					<h4 class="font-medium mb-1">Order Confirmation</h4>
+					<ul class="space-y-1">
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{customer_name}}"}</code> - Customer name</li>
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_number}}"}</code> - Order ID</li>
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_date}}"}</code> - Order date</li>
@@ -135,13 +137,13 @@ const templateLabels: Record<string, string> = {
 					</ul>
 				</div>
 				<div>
-					<h4 class="font-medium text-blue-900 mb-1">Shipping Notification</h4>
-					<ul class="text-blue-800 space-y-1">
+					<h4 class="font-medium mb-1">Shipping Notification</h4>
+					<ul class="space-y-1">
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{carrier}}"}</code> - Shipping carrier</li>
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{tracking_number}}"}</code> - Tracking number</li>
 					</ul>
 				</div>
 			</div>
-		</div>
+		</Alert>
 	</div>
 </AdminLayout>

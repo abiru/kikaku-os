@@ -1,7 +1,8 @@
 ---
 export const prerender = false;
 
-import Button from '../../components/Button.astro';
+import { Button } from '../../components/catalyst/button';
+import { Heading, Subheading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 
@@ -12,15 +13,15 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 <AdminLayout title="Bulk Image Upload - Admin">
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center justify-between">
-			<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Bulk Image Upload from External URLs</h1>
-			<Button href="/admin/products" size="sm" variant="secondary">
+			<Heading>Bulk Image Upload from External URLs</Heading>
+			<Button href="/admin/products" outline client:load>
 				Back to Products
 			</Button>
 		</div>
 
 		<!-- Step 1: Upload File -->
 		<div class="bg-white rounded-lg shadow p-6 space-y-4">
-			<h2 class="text-lg font-semibold text-zinc-950 dark:text-white">Step 1: Upload CSV/JSON File</h2>
+			<Subheading>Step 1: Upload CSV/JSON File</Subheading>
 
 			<div class="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-2">
 				<p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Format Examples:</p>
@@ -71,7 +72,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 
 		<!-- Step 2: Preview -->
 		<div id="previewSection" class="hidden bg-white rounded-lg shadow p-6 space-y-4">
-			<h2 class="text-lg font-semibold text-zinc-950 dark:text-white">Step 2: Preview</h2>
+			<Subheading>Step 2: Preview</Subheading>
 			<div id="previewSummary" class="text-sm text-zinc-500 dark:text-zinc-400"></div>
 			<div id="previewContent" class="space-y-4"></div>
 			<div id="previewErrors" class="hidden space-y-2"></div>

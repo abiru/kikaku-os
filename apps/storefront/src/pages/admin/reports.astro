@@ -1,8 +1,11 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import Button from '../../components/Button.astro';
+import { Heading } from '../../components/catalyst/heading';
+import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
+import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '../../components/catalyst/table';
 import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
@@ -50,40 +53,40 @@ const getReportLink = (id: number) => {
 <AdminLayout title="Daily Reports - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Reports</h1>
+			<Heading>Reports</Heading>
 			<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{meta.totalCount} reports</span>
 		</div>
 			{error && (
-				<div class="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
+				<Alert color="red" client:load>
 					{error}
-				</div>
+				</Alert>
 			)}
 
 			<div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
-						<thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
-							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Date</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Type</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Generated At</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Action</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+					<Table client:load>
+						<TableHead>
+							<TableRow>
+								<TableHeader>Date</TableHeader>
+								<TableHeader>Type</TableHeader>
+								<TableHeader>Generated At</TableHeader>
+								<TableHeader>Action</TableHeader>
+							</TableRow>
+						</TableHead>
+						<TableBody>
 							{reports.length > 0 ? (
 								reports.map((report) => (
-									<tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-										<td class="px-6 py-4 font-medium">
+									<TableRow>
+										<TableCell>
 											{new Date(report.date).toLocaleDateString()}
-										</td>
-										<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400">
+										</TableCell>
+										<TableCell className="text-zinc-500 dark:text-zinc-400">
 											Daily Close
-										</td>
-										<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums">
+										</TableCell>
+										<TableCell className="text-zinc-500 dark:text-zinc-400 tabular-nums">
 											{new Date(report.created_at).toLocaleString()}
-										</td>
-										<td class="px-6 py-4 text-right">
+										</TableCell>
+										<TableCell>
 											<a
 												href={getReportLink(report.id)}
 												target="_blank"
@@ -92,18 +95,18 @@ const getReportLink = (id: number) => {
 											>
 												View Report
 											</a>
-										</td>
-									</tr>
+										</TableCell>
+									</TableRow>
 								))
 							) : (
-								<tr>
-									<td colspan="4" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+								<TableRow>
+									<TableCell colSpan={4} className="text-center text-zinc-500 dark:text-zinc-400">
 										No reports found.
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							)}
-						</tbody>
-					</table>
+						</TableBody>
+					</Table>
 				</div>
 
 				{/* Pagination */}
@@ -111,24 +114,10 @@ const getReportLink = (id: number) => {
 					<div class="text-xs text-zinc-500 dark:text-zinc-400">
 						Page {page} of {meta.totalPages}
 					</div>
-					<div class="flex gap-2">
-						<Button
-							href={hasPrev ? `?page=${page - 1}` : '#'}
-							disabled={!hasPrev}
-							size="sm"
-							variant="secondary"
-						>
-							Previous
-						</Button>
-						<Button
-							href={hasNext ? `?page=${page + 1}` : '#'}
-							disabled={!hasNext}
-							size="sm"
-							variant="secondary"
-						>
-							Next
-						</Button>
-					</div>
+					<Pagination client:load>
+						<PaginationPrevious href={hasPrev ? `?page=${page - 1}` : null} />
+						<PaginationNext href={hasNext ? `?page=${page + 1}` : null} />
+					</Pagination>
 				</div>
 			</div>
 	</div>

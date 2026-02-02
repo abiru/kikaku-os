@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import Button from '../../../components/Button.astro';
+import { Alert } from '../../../components/catalyst/alert-banner';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
@@ -88,11 +89,11 @@ if (!apiKey) {
 				Pages
 			</a>
 			<h1 class="text-2xl font-semibold text-gray-900">New Page</h1>
-		</div>
+		</Alert>
 			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				<Alert color="red" client:load>
 					{error}
-				</div>
+				</Alert>
 			)}
 
 			<form method="POST" class="space-y-6">
@@ -113,7 +114,7 @@ if (!apiKey) {
 								placeholder="Page Title"
 								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 							/>
-						</div>
+						</Alert>
 
 						<div>
 							<label for="slug" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
@@ -130,9 +131,9 @@ if (!apiKey) {
 									pattern="^[a-z0-9-]+$"
 									class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
-							</div>
+							</Alert>
 							<p class="mt-1 text-xs text-[#86868b]">Only lowercase letters, numbers, and hyphens</p>
-						</div>
+						</Alert>
 
 						<div>
 							<label for="status" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
@@ -146,9 +147,9 @@ if (!apiKey) {
 								<option value="draft" selected>Draft</option>
 								<option value="published">Published</option>
 							</select>
-						</div>
-					</div>
-				</div>
+						</Alert>
+					</Alert>
+				</Alert>
 
 				{/* SEO */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
@@ -168,7 +169,7 @@ if (!apiKey) {
 								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 							/>
 							<p class="mt-1 text-xs text-[#86868b]">Used as the browser tab title and in search results</p>
-						</div>
+						</Alert>
 
 						<div>
 							<label for="meta_description" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
@@ -183,9 +184,9 @@ if (!apiKey) {
 								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
 							></textarea>
 							<p class="mt-1 text-xs text-[#86868b]">Displayed in search engine results</p>
-						</div>
-					</div>
-				</div>
+						</Alert>
+					</Alert>
+				</Alert>
 
 				{/* Content */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
@@ -198,7 +199,7 @@ if (!apiKey) {
 						>
 							Toggle Preview
 						</button>
-					</div>
+					</Alert>
 
 					<div id="editor-container">
 						<textarea
@@ -226,14 +227,14 @@ Code block
 						<p class="mt-2 text-xs text-[#86868b]">
 							Supports Markdown syntax. HTML is also valid within Markdown.
 						</p>
-					</div>
+					</Alert>
 
 					<div id="preview-container" class="hidden">
 						<div id="preview-content" class="min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white prose prose-sm max-w-none">
 							<p class="text-[#86868b]">Preview will appear here...</p>
-						</div>
-					</div>
-				</div>
+						</Alert>
+					</Alert>
+				</Alert>
 
 				{/* Actions */}
 				<div class="flex justify-end gap-3">
@@ -243,9 +244,9 @@ Code block
 					<Button type="submit" variant="primary" size="sm">
 						Create Page
 					</Button>
-				</div>
+				</Alert>
 			</form>
-	</div>
+	</Alert>
 </AdminLayout>
 
 <script>

@@ -1,8 +1,11 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import { Badge } from '../../components/catalyst/badge';
-import Button from '../../components/Button.astro';
+import { Button } from '../../components/catalyst/button';
+import { Heading } from '../../components/catalyst/heading';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 
@@ -71,50 +74,50 @@ const isActive = (taxRate: TaxRate) => {
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Tax Rates</h1>
+				<Heading>Tax Rates</Heading>
 				<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{taxRates.length} items</span>
 			</div>
-			<Button href="/admin/tax-rates/new" size="sm" variant="primary">
+			<Button href="/admin/tax-rates/new" color="indigo" client:load>
 				+ New Tax Rate
 			</Button>
 		</div>
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+			<Alert color="red" client:load>
 				{error}
-			</div>
+			</Alert>
 		)}
 
 		{/* Tax Rates Table */}
 		<div class="bg-white rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
 			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
-					<thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
-						<tr>
-							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Name</th>
-							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Rate</th>
-							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Status</th>
-							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Applicable From</th>
-							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Applicable To</th>
-							<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Action</th>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+				<Table client:load>
+					<TableHead>
+						<TableRow>
+							<TableHeader>Name</TableHeader>
+							<TableHeader>Rate</TableHeader>
+							<TableHeader>Status</TableHeader>
+							<TableHeader>Applicable From</TableHeader>
+							<TableHeader>Applicable To</TableHeader>
+							<TableHeader>Action</TableHeader>
+						</TableRow>
+					</TableHead>
+					<TableBody>
 						{taxRates.length > 0 ? (
 							taxRates.map((taxRate) => (
-								<tr class="hover:bg-zinc-50 dark:bg-zinc-800/50 transition-colors group">
-									<td class="px-6 py-4">
+								<TableRow href={`/admin/tax-rates/${taxRate.id}`}>
+									<TableCell>
 										<div class="font-medium">{taxRate.name}</div>
 										{taxRate.description && (
 											<div class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
 												{taxRate.description}
 											</div>
 										)}
-									</td>
-									<td class="px-6 py-4 font-medium tabular-nums text-lg">
+									</TableCell>
+									<TableCell className="font-medium tabular-nums text-lg">
 										{formatRate(taxRate.rate)}
-									</td>
-									<td class="px-6 py-4">
+									</TableCell>
+									<TableCell>
 										{isActive(taxRate) ? (
 											<Badge color="lime" client:only="react">Active</Badge>
 										) : taxRate.is_active ? (
@@ -122,36 +125,36 @@ const isActive = (taxRate: TaxRate) => {
 										) : (
 											<Badge color="zinc" client:only="react">Inactive</Badge>
 										)}
-									</td>
-									<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums">
+									</TableCell>
+									<TableCell className="text-zinc-500 dark:text-zinc-400 tabular-nums">
 										{formatDate(taxRate.applicable_from)}
-									</td>
-									<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums">
+									</TableCell>
+									<TableCell className="text-zinc-500 dark:text-zinc-400 tabular-nums">
 										{formatDate(taxRate.applicable_to)}
-									</td>
-									<td class="px-6 py-4 text-right">
+									</TableCell>
+									<TableCell>
 										<a href={`/admin/tax-rates/${taxRate.id}`} class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Edit</a>
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							))
 						) : (
-							<tr>
-								<td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+							<TableRow>
+								<TableCell colSpan={6} className="text-center text-zinc-500 dark:text-zinc-400">
 									No tax rates found.
-								</td>
-							</tr>
+								</TableCell>
+							</TableRow>
 						)}
-					</tbody>
-				</table>
+					</TableBody>
+				</Table>
 			</div>
 		</div>
 
-		<div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
+		<Alert color="blue" client:load>
 			<strong>Note:</strong> Tax rates are applied to products at checkout time. The current Japanese consumption tax rates are:
 			<ul class="mt-2 ml-4 list-disc">
 				<li>Standard Rate: 10% (since October 1, 2019)</li>
 				<li>Reduced Rate: 8% (for food and beverages)</li>
 			</ul>
-		</div>
+		</Alert>
 	</div>
 </AdminLayout>
