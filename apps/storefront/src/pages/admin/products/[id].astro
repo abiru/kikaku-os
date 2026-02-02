@@ -1206,7 +1206,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 		applyTitleOnlyBtn?.addEventListener('click', () => {
 			if (!fetchedData) return;
 
-			const titleInput = document.getElementById('title') as HTMLInputElement;
+			const titleInput = document.getElementById('title');
 			if (titleInput && fetchedData.generated_title) {
 				titleInput.value = fetchedData.generated_title;
 			}
@@ -1220,7 +1220,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 		applyDescOnlyBtn?.addEventListener('click', () => {
 			if (!fetchedData) return;
 
-			const descHidden = document.getElementById('description-hidden') as HTMLInputElement;
+			const descHidden = document.getElementById('description-hidden');
 			if (descHidden && fetchedData.generated_description) {
 				descHidden.value = fetchedData.generated_description;
 			}
