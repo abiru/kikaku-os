@@ -1151,9 +1151,11 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 				return;
 			}
 
-			sendInboxBtn?.disabled = true;
-			applyAllBtn.disabled = true;
-			applyAllBtn.textContent = '送信中...';
+			if (sendInboxBtn) sendInboxBtn.disabled = true;
+			if (applyAllBtn) {
+				applyAllBtn.disabled = true;
+				applyAllBtn.textContent = '送信中...';
+			}
 
 			try {
 				// Create inbox item via API
@@ -1190,9 +1192,13 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			} catch (err) {
 				showFetchError('通信エラーが発生しました');
 			} finally {
-				sendInboxBtn.disabled = false;
-				applyAllBtn.disabled = false;
-				applyAllBtn.textContent = 'すべて適用';
+				if (sendInboxBtn) {
+					sendInboxBtn.disabled = false;
+				}
+				if (applyAllBtn) {
+					applyAllBtn.disabled = false;
+					applyAllBtn.textContent = 'すべて適用';
+				}
 			}
 		});
 
@@ -1225,7 +1231,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 		// Send to inbox for approval
 		sendInboxBtn?.addEventListener('click', async () => {
-			if (!fetchedData) return;
+			if (!fetchedData || !sendInboxBtn) return;
 
 			sendInboxBtn.disabled = true;
 			sendInboxBtn.textContent = '送信中...';
@@ -1265,8 +1271,10 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			} catch (err) {
 				showFetchError('通信エラーが発生しました');
 			} finally {
-				sendInboxBtn.disabled = false;
-				sendInboxBtn.textContent = 'Inboxに送信';
+				if (sendInboxBtn) {
+					sendInboxBtn.disabled = false;
+					sendInboxBtn.textContent = 'Inboxに送信';
+				}
 			}
 		});
 
