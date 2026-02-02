@@ -351,6 +351,53 @@ describe('Admin Home Heroes API', () => {
       expect(res.status).toBe(200);
       expect(json.ok).toBe(true);
     });
+
+    it('handles empty strings by converting to null', async () => {
+      const db = createMockDb({ hero: { id: 1 }, checkHero: { id: 1 } });
+      const { fetch } = createApp(db);
+
+      // Simulates form submission with empty string fields
+      const res = await fetch('/admin/home/heroes/1', {
+        method: 'PUT',
+        headers: {
+          'x-admin-key': ADMIN_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: 'Updated Title',
+          subtitle: '',  // Empty string should be converted to null
+          image_r2_key: '',
+          image_r2_key_small: '',
+          cta_primary_text: '',
+          cta_primary_url: '',
+          cta_secondary_text: '',
+          cta_secondary_url: ''
+        })
+      });
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.ok).toBe(true);
+      expect(json.message).toContain('updated');
+    });
+
+    it('rejects empty title string', async () => {
+      const db = createMockDb({ hero: { id: 1 }, checkHero: { id: 1 } });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/admin/home/heroes/1', {
+        method: 'PUT',
+        headers: {
+          'x-admin-key': ADMIN_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: ''  // Empty title should be rejected
+        })
+      });
+
+      expect(res.status).toBe(400);
+    });
   });
 
   describe('DELETE /admin/home/heroes/:id', () => {

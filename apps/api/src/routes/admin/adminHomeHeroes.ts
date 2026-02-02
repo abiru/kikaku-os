@@ -8,21 +8,36 @@ import { validationErrorHandler } from '../../lib/validation';
 
 const app = new Hono<Env>();
 
+// Helper to transform empty strings to null
+const emptyStringToNull = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((val) => (val === '' ? null : val), schema);
+
 // Validation schemas
 const createHeroSchema = z.object({
   title: z.string().min(1).max(255),
-  subtitle: z.string().max(500).optional(),
-  image_r2_key: z.string().max(500).optional(),
-  image_r2_key_small: z.string().max(500).optional(),
-  cta_primary_text: z.string().max(100).optional(),
-  cta_primary_url: z.string().max(500).optional(),
-  cta_secondary_text: z.string().max(100).optional(),
-  cta_secondary_url: z.string().max(500).optional(),
+  subtitle: emptyStringToNull(z.string().max(500).nullable().optional()),
+  image_r2_key: emptyStringToNull(z.string().max(500).nullable().optional()),
+  image_r2_key_small: emptyStringToNull(z.string().max(500).nullable().optional()),
+  cta_primary_text: emptyStringToNull(z.string().max(100).nullable().optional()),
+  cta_primary_url: emptyStringToNull(z.string().max(500).nullable().optional()),
+  cta_secondary_text: emptyStringToNull(z.string().max(100).nullable().optional()),
+  cta_secondary_url: emptyStringToNull(z.string().max(500).nullable().optional()),
   position: z.number().int().min(0).default(0),
   status: z.enum(['active', 'draft', 'archived']).default('active')
 });
 
-const updateHeroSchema = createHeroSchema.partial();
+const updateHeroSchema = z.object({
+  title: z.string().min(1).max(255).optional(),
+  subtitle: emptyStringToNull(z.string().max(500).nullable().optional()),
+  image_r2_key: emptyStringToNull(z.string().max(500).nullable().optional()),
+  image_r2_key_small: emptyStringToNull(z.string().max(500).nullable().optional()),
+  cta_primary_text: emptyStringToNull(z.string().max(100).nullable().optional()),
+  cta_primary_url: emptyStringToNull(z.string().max(500).nullable().optional()),
+  cta_secondary_text: emptyStringToNull(z.string().max(100).nullable().optional()),
+  cta_secondary_url: emptyStringToNull(z.string().max(500).nullable().optional()),
+  position: z.number().int().min(0).optional(),
+  status: z.enum(['active', 'draft', 'archived']).optional()
+});
 
 const heroIdParamSchema = z.object({
   id: z.string().transform(Number).pipe(z.number().int().positive())
