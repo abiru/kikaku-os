@@ -8,12 +8,21 @@
 ## 使用方法
 
 ```bash
-# 新機能開発を開始
+# 新機能開発を開始（フルワークフロー）
 /feature "product filtering for admin page"
 
-# 既存のissueから再開
+# 既存issueから作業開始（簡潔な形式）
+/feature 142
+
+# 既存issueから再開（明示的な形式）
 /feature --resume 142
 ```
+
+## 引数
+
+- `$ARGUMENTS` が文字列 → 新機能の説明（フルワークフロー）
+- `$ARGUMENTS` が数字のみ → Issue番号（Plan/Issueスキップ、Execから開始）
+- `--resume [number]` → Issue番号を明示的に指定（数字のみと同じ動作）
 
 ## ワークフロー概要
 
@@ -25,9 +34,54 @@
 6. **Test** - テスト実行（失敗時は自動修正試行）
 7. **PR** - Pull Request作成 → ユーザー確認
 
+## 引数処理
+
+コマンド実行時、最初に `$ARGUMENTS` を解析して動作モードを決定します：
+
+### 新機能開発モード
+```bash
+/feature "add product filtering"
+```
+- `$ARGUMENTS` が文字列（非数字）
+- フルワークフロー（Step 1-7）を実行
+- Plan作成 → Worktree作成 → Issue作成 → Exec → Typecheck → Test → PR
+
+### 既存Issue作業モード
+```bash
+/feature 142
+# または
+/feature --resume 142
+```
+- `$ARGUMENTS` が数字のみ、または `--resume [number]`
+- Issue #142が既に存在することを確認
+- Plan/Issueスキップ、Step 2（Worktree）から開始
+- Worktree作成 → Exec → Typecheck → Test → PR
+
+**検知ロジック**:
+```javascript
+if ($ARGUMENTS.match(/^\d+$/)) {
+  // 数字のみ → 既存Issue作業モード
+  issueNumber = $ARGUMENTS
+  skipPlan = true
+  skipIssue = true
+} else if ($ARGUMENTS.startsWith("--resume ")) {
+  // --resume フラグ → 既存Issue作業モード
+  issueNumber = $ARGUMENTS.split(" ")[1]
+  skipPlan = true
+  skipIssue = true
+} else {
+  // 文字列 → 新機能開発モード
+  description = $ARGUMENTS
+  skipPlan = false
+  skipIssue = false
+}
+```
+
 ## 実行フロー
 
 ### ステップ1: Plan
+
+**スキップ条件**: Issue番号が指定された場合（`/feature 142`）はこのステップをスキップ
 
 1. planner agentを起動:
    ```
@@ -70,6 +124,8 @@
    ```
 
 ### ステップ3: Issue
+
+**スキップ条件**: Issue番号が指定された場合（`/feature 142`）はこのステップをスキップ。指定されたIssueが存在することを確認。
 
 1. `create-issue` コマンドを使用してGitHub Issueを作成
 
