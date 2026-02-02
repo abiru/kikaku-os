@@ -1,15 +1,15 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../components/catalyst/alert-banner';
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { Heading } from '../../components/catalyst/heading';
-import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
-import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '../../components/catalyst/table';
-import { getApiBase } from '../../lib/api';
+import { Alert } from'../../components/catalyst/alert-banner';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import { Heading } from'../../components/catalyst/heading';
+import { Pagination, PaginationPrevious, PaginationNext } from'../../components/catalyst/pagination';
+import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from'../../components/catalyst/table';
+import { getApiBase } from'../../lib/api';
 
 const apiBase = getApiBase();
-const page = Number(Astro.url.searchParams.get('page') || '1');
+const page = Number(Astro.url.searchParams.get('page') ||'1');
 const perPage = 20;
 
 let reports: any[] = [];
@@ -24,7 +24,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		});
 		
 		const res = await fetch(`${apiBase}/admin/reports?${query}`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+			headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
 		});
 
 		if (!res.ok) throw new Error(`API Error: ${res.status}`);
@@ -34,10 +34,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load reports.';
+		error ='Failed to load reports.';
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing.';
+	error ='ADMIN_API_KEY is missing.';
 }
 
 const hasNext = page < meta.totalPages;
@@ -46,7 +46,7 @@ const hasPrev = page > 1;
 // Helper to construct secure download link (via document ID)
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const getReportLink = (id: number) => {
-	return `${apiBase}/admin/documents/${id}/download?x-admin-key=${encodeURIComponent(apiKey || '')}`;
+	return `${apiBase}/admin/documents/${id}/download?x-admin-key=${encodeURIComponent(apiKey ||'')}`;
 };
 ---
 

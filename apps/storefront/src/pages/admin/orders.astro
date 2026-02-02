@@ -1,15 +1,15 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { Alert } from '../../components/catalyst/alert-banner';
-import OrdersTable from '../../components/admin/OrdersTable';
-import { Heading } from '../../components/catalyst/heading';
-import { getApiBase } from '../../lib/api';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import { Alert } from'../../components/catalyst/alert-banner';
+import OrdersTable from'../../components/admin/OrdersTable';
+import { Heading } from'../../components/catalyst/heading';
+import { getApiBase } from'../../lib/api';
 
 const apiBase = getApiBase();
-const q = Astro.url.searchParams.get('q') || '';
-const page = Number(Astro.url.searchParams.get('page') || '1');
+const q = Astro.url.searchParams.get('q') ||'';
+const page = Number(Astro.url.searchParams.get('page') ||'1');
 const perPage = 20;
 
 let orders: any[] = [];
@@ -25,7 +25,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		});
 
 		const res = await fetch(`${apiBase}/admin/orders?${query}`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+			headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
 		});
 
 		if (!res.ok) throw new Error(`API Error: ${res.status}`);
@@ -35,10 +35,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load orders.';
+		error ='Failed to load orders.';
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing.';
+	error ='ADMIN_API_KEY is missing.';
 }
 ---
 

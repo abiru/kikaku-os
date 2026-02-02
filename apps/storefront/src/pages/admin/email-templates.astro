@@ -1,11 +1,11 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../components/catalyst/alert-banner';
-import { Badge } from '../../components/catalyst/badge';
-import { Heading } from '../../components/catalyst/heading';
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../lib/api';
+import { Alert } from'../../components/catalyst/alert-banner';
+import { Badge } from'../../components/catalyst/badge';
+import { Heading } from'../../components/catalyst/heading';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import { getApiBase } from'../../lib/api';
 
 const apiBase = getApiBase();
 
@@ -40,24 +40,24 @@ if (import.meta.env.ADMIN_API_KEY) {
 		templates = data.templates || [];
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load email templates. Please check your admin key.';
+		error ='Failed to load email templates. Please check your admin key.';
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error ='ADMIN_API_KEY is missing in server environment.';
 }
 
 const formatDate = (dateStr: string) => {
 	return new Date(dateStr).toLocaleDateString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit'
+		year:'numeric',
+		month:'2-digit',
+		day:'2-digit'
 	});
 };
 
 const templateLabels: Record<string, string> = {
-	'order-confirmation': 'Order Confirmation',
-	'shipping-notification': 'Shipping Notification',
-	'payment-failed': 'Payment Failed'
+	'order-confirmation':'Order Confirmation',
+	'shipping-notification':'Shipping Notification',
+	'payment-failed':'Payment Failed'
 };
 ---
 
