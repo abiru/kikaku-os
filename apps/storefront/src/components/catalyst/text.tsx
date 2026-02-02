@@ -1,6 +1,5 @@
 import clsx from 'clsx'
 import { Link } from './link'
-
 export function Text({ className, ...props }: React.ComponentPropsWithoutRef<'p'>) {
  return (
  <p
@@ -10,7 +9,6 @@ export function Text({ className, ...props }: React.ComponentPropsWithoutRef<'p'
  />
  )
 }
-
 export function TextLink({ className, ...props }: React.ComponentPropsWithoutRef<typeof Link>) {
  return (
  <Link
@@ -22,11 +20,9 @@ export function TextLink({ className, ...props }: React.ComponentPropsWithoutRef
  />
  )
 }
-
 export function Strong({ className, ...props }: React.ComponentPropsWithoutRef<'strong'>) {
  return <strong {...props} className={clsx(className, 'font-medium text-zinc-950')} />
 }
-
 export function Code({ className, ...props }: React.ComponentPropsWithoutRef<'code'>) {
  return (
  <code

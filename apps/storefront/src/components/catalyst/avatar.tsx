@@ -3,7 +3,6 @@ import clsx from 'clsx'
 import React, { forwardRef } from 'react'
 import { TouchTarget } from './button'
 import { Link } from './link'
-
 type AvatarProps = {
  src?: string | null
  square?: boolean
@@ -11,7 +10,6 @@ type AvatarProps = {
  alt?: string
  className?: string
 }
-
 export function Avatar({
  src = null,
  square = false,
@@ -49,7 +47,6 @@ export function Avatar({
  </span>
  )
 }
-
 export const AvatarButton = forwardRef(function AvatarButton(
  {
  src,
@@ -70,7 +67,6 @@ export const AvatarButton = forwardRef(function AvatarButton(
  square ? 'rounded-[20%]' : 'rounded-full',
  'relative inline-grid focus:not-data-focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500'
  )
-
  return typeof props.href === 'string' ? (
  <Link {...props} className={classes} ref={ref as React.ForwardedRef<HTMLAnchorElement>}>
  <TouchTarget>

@@ -142,12 +142,9 @@ const hasNext = page < totalPages;
         </div>
 
         <div class="flex gap-2">
-          <button
-            type="submit"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-[#0077ed] transition-colors"
-          >
+          <Button type="submit" color="indigo" client:load>
             Search
-          </button>
+          </Button>
           {(q || status !== 'all') && (
             <a
               href="/admin/ads"

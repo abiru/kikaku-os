@@ -104,14 +104,16 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											{formatCurrency(order.total)}
 										</td>
 										<td class="px-6 py-4 text-right">
-											<button
+											<Button
 												type="button"
-												class="ship-btn px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+												className="ship-btn"
+												color="indigo"
+												client:load
 												data-order-id={order.order_id}
 												data-fulfillment-id={order.fulfillment_id || ''}
 											>
 												Ship
-											</button>
+											</Button>
 										</td>
 									</tr>
 								))

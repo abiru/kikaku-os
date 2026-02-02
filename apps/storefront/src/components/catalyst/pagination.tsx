@@ -1,7 +1,6 @@
 import clsx from 'clsx'
 import type React from 'react'
 import { Button } from './button'
-
 export function Pagination({
  'aria-label': ariaLabel = 'Page navigation',
  className,
@@ -9,7 +8,6 @@ export function Pagination({
 }: React.ComponentPropsWithoutRef<'nav'>) {
  return <nav aria-label={ariaLabel} {...props} className={clsx(className, 'flex gap-x-2')} />
 }
-
 export function PaginationPrevious({
  href = null,
  className,
@@ -31,7 +29,6 @@ export function PaginationPrevious({
  </span>
  )
 }
-
 export function PaginationNext({
  href = null,
  className,
@@ -53,11 +50,9 @@ export function PaginationNext({
  </span>
  )
 }
-
 export function PaginationList({ className, ...props }: React.ComponentPropsWithoutRef<'span'>) {
  return <span {...props} className={clsx(className, 'hidden items-baseline gap-x-2 sm:flex')} />
 }
-
 export function PaginationPage({
  href,
  className,
@@ -80,7 +75,6 @@ export function PaginationPage({
  </Button>
  )
 }
-
 export function PaginationGap({
  className,
  children = <>&hellip;</>,

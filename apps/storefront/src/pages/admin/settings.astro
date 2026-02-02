@@ -3,7 +3,7 @@ export const prerender = false;
 
 import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import Button from '../../components/Button.astro';
+import { Button } from '../../components/catalyst/button';
 import { Badge } from '../../components/catalyst/badge';
 import { Heading, Subheading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
@@ -227,10 +227,10 @@ const formatBooleanValue = (value: string): boolean => {
       ))}
 
       <div class="flex gap-3 sticky bottom-4 bg-white p-4 rounded-xl border border-zinc-200 shadow-lg">
-        <Button type="submit" variant="primary" size="sm">
+        <Button type="submit" color="indigo" client:load>
           Save All Settings
         </Button>
-        <Button href="/admin/" variant="secondary" size="sm">
+        <Button href="/admin/" outline client:load>
           Cancel
         </Button>
       </div>

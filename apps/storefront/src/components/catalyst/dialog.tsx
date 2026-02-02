@@ -2,7 +2,6 @@ import * as Headless from '@headlessui/react'
 import clsx from 'clsx'
 import type React from 'react'
 import { Text } from './text'
-
 const sizes = {
  xs: 'sm:max-w-xs',
  sm: 'sm:max-w-sm',
@@ -14,7 +13,6 @@ const sizes = {
  '4xl': 'sm:max-w-4xl',
  '5xl': 'sm:max-w-5xl',
 }
-
 export function Dialog({
  size = 'lg',
  className,
@@ -30,7 +28,6 @@ export function Dialog({
  transition
  className="fixed inset-0 flex w-screen justify-center overflow-y-auto bg-zinc-950/25 px-2 py-2 transition duration-100 focus:outline-0 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in sm:px-6 sm:py-8 lg:px-8 lg:py-16"
  />
-
  <div className="fixed inset-0 w-screen overflow-y-auto pt-6 sm:pt-0">
  <div className="grid min-h-full grid-rows-[1fr_auto] justify-items-center sm:grid-rows-[1fr_auto_3fr] sm:p-4">
  <Headless.DialogPanel
@@ -49,7 +46,6 @@ export function Dialog({
  </Headless.Dialog>
  )
 }
-
 export function DialogTitle({
  className,
  ...props
@@ -61,18 +57,15 @@ export function DialogTitle({
  />
  )
 }
-
 export function DialogDescription({
  className,
  ...props
 }: { className?: string } & Omit<Headless.DescriptionProps<typeof Text>, 'as' | 'className'>) {
  return <Headless.Description as={Text} {...props} className={clsx(className, 'mt-2 text-pretty')} />
 }
-
 export function DialogBody({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
  return <div {...props} className={clsx(className, 'mt-6')} />
 }
-
 export function DialogActions({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
  return (
  <div

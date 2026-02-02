@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import { Alert } from '../../../components/catalyst/alert-banner';
-import Button from '../../../components/Button.astro';
+import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { Field, Label, Description } from '../../../components/catalyst/fieldset';
@@ -208,10 +208,10 @@ if (Astro.request.method === 'POST') {
 			</div>
 
 			<div class="flex gap-3 pt-4 border-t border-gray-200">
-				<Button type="submit" variant="primary" size="sm">
+				<Button type="submit" color="indigo" client:load >
 					Create Tax Rate
 				</Button>
-				<Button href="/admin/tax-rates" variant="secondary" size="sm">
+				<Button href="/admin/tax-rates" outline client:load >
 					Cancel
 				</Button>
 			</div>

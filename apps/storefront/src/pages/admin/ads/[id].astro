@@ -3,7 +3,7 @@ export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
-import Button from '../../../components/Button.astro';
+import { Button } from '../../../components/catalyst/button';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
 import { getApiBase } from '../../../lib/api';
 
@@ -67,7 +67,7 @@ if (apiKey && id) {
             </p>
           </Alert>
           <div class="flex gap-2">
-            <Button href={`/admin/ads/${id}/history`} variant="secondary" size="sm">
+            <Button href={`/admin/ads/${id}/history`} outline client:load>
               View History
             </Button>
           </Alert>

@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import Badge from '../../../components/Badge.astro';
+import { Badge } from '../../../components/catalyst/badge';
 import { Alert } from '../../../components/catalyst/alert-banner';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
@@ -189,9 +189,9 @@ const canDelete = page && !isCorePage;
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
 							{page.status === 'published' ? (
-								<Badge severity="info">Published</Badge>
+								<Badge color="blue" client:load>Published</Badge>
 							) : (
-								<Badge severity="secondary">Draft</Badge>
+								<Badge color="zinc" client:load>Draft</Badge>
 							)}
 							{isCorePage && (
 								<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded">Core page</span>
