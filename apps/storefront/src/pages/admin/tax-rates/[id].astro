@@ -154,6 +154,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div class="md:col-span-2">
+				<Fieldset client:load>
 							<Field>
 								<Label htmlFor="name">Name <span class="text-red-500">*</span></Label>
 								<Input client:load
@@ -232,6 +233,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 									<label for="is_active" class="text-base/6 text-zinc-950 select-none sm:text-sm/6">Active</label>
 								</div>
 							</Field>
+				</Fieldset>
 						</div>
 					</div>
 

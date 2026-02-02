@@ -85,6 +85,7 @@ if (Astro.request.method === 'POST') {
 
 		<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 			{/* Title */}
+				<Fieldset client:load>
 			<Field>
 				<Label>
 					Title <span class="text-red-500">*</span>
@@ -191,6 +192,7 @@ if (Astro.request.method === 'POST') {
 					<option value="active">Active</option>
 				</Select>
 			</Field>
+				</Fieldset>
 
 			{/* Submit Button */}
 			<div class="flex gap-3 pt-4">
