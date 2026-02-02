@@ -1,7 +1,13 @@
 ---
 export const prerender = false;
 
-import Button from '../../../components/Button.astro';
+import { Alert } from '../../../components/catalyst/alert-banner';
+import { Button } from '../../../components/catalyst/button';
+import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
+import { Heading } from '../../../components/catalyst/heading';
+import { Input } from '../../../components/catalyst/input';
+import { Select } from '../../../components/catalyst/select';
+import { Textarea } from '../../../components/catalyst/textarea';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
@@ -61,62 +67,40 @@ if (Astro.request.method === 'POST') {
 				</svg>
 				Products
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">New Product</h1>
+			<Heading>New Product</Heading>
 		</div>
 			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				<Alert color="red" client:load>
 					{error}
-				</div>
+				</Alert>
 			)}
 
 			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-				<div>
-					<label for="title" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-						Title <span class="text-red-500">*</span>
-					</label>
-					<input
-						type="text"
-						id="title"
-						name="title"
-						required
-						value={formValues.title}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-						placeholder="Product title"
-					/>
-				</div>
+				<Fieldset client:only="react">
+					<Field>
+						<Label>Title *</Label>
+						<Input type="text" name="title" required value={formValues.title} placeholder="Product title" />
+					</Field>
 
-				<div>
-					<label for="description" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-						Description
-					</label>
-					<textarea
-						id="description"
-						name="description"
-						rows="4"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
-						placeholder="Product description (optional)"
-					>{formValues.description}</textarea>
-				</div>
+					<Field>
+						<Label>Description</Label>
+						<Textarea name="description" rows={4} placeholder="Product description (optional)">{formValues.description}</Textarea>
+					</Field>
 
-				<div>
-					<label for="status" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
-						Status
-					</label>
-					<select
-						id="status"
-						name="status"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
-					>
-						<option value="active" selected={formValues.status === 'active'}>Active</option>
-						<option value="draft" selected={formValues.status === 'draft'}>Draft</option>
-					</select>
-				</div>
+					<Field>
+						<Label>Status</Label>
+						<Select name="status">
+							<option value="active" selected={formValues.status === 'active'}>Active</option>
+							<option value="draft" selected={formValues.status === 'draft'}>Draft</option>
+						</Select>
+					</Field>
+				</Fieldset>
 
 				<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-					<Button href="/admin/products" variant="secondary" size="sm">
+					<Button href="/admin/products" outline client:load>
 						Cancel
 					</Button>
-					<Button type="submit" variant="primary" size="sm">
+					<Button type="submit" color="indigo" client:load>
 						Create Product
 					</Button>
 				</div>

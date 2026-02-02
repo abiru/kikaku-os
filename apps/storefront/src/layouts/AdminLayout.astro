@@ -24,46 +24,8 @@ const currentPath = Astro.url.pathname;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
-		<script is:inline>
-			// Initialize theme from localStorage or default to light
-			// IMPORTANT: This runs BEFORE page render to prevent flash
-			(function() {
-				const theme = localStorage.getItem('theme') || 'light';
-				console.log('Initializing theme:', theme);
-
-				if (theme === 'dark') {
-					document.documentElement.classList.add('dark');
-					document.documentElement.style.colorScheme = 'dark';
-				} else {
-					document.documentElement.classList.remove('dark');
-					document.documentElement.style.colorScheme = 'light';
-				}
-
-				console.log('HTML classes after init:', document.documentElement.className);
-				console.log('color-scheme:', document.documentElement.style.colorScheme);
-			})();
-		</script>
-		<style>
-			/* Override browser prefers-color-scheme with our theme setting */
-			html:not(.dark) {
-				color-scheme: light !important;
-				background-color: white !important;
-			}
-			html:not(.dark) body {
-				background-color: white !important;
-				color: #18181b !important;
-			}
-			html.dark {
-				color-scheme: dark !important;
-				background-color: #18181b !important;
-			}
-			html.dark body {
-				background-color: #18181b !important;
-				color: white !important;
-			}
-		</style>
 	</head>
-	<body class="h-full font-sans antialiased bg-white dark:bg-zinc-900 text-zinc-950 dark:text-white">
+	<body class="h-full font-sans antialiased bg-white text-zinc-950">
 		<AdminLayoutComponent client:load currentPath={currentPath}>
 			<slot />
 		</AdminLayoutComponent>

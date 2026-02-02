@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { launch, type BrowserWorker } from '@cloudflare/playwright';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
+import { escapeHtml } from '../../lib/html';
 import { getActor } from '../../middleware/clerkAuth';
 import { validationErrorHandler } from '../../lib/validation';
 
@@ -23,10 +24,45 @@ const fetchProductSchema = z.object({
   productName: z.string().optional(),
 });
 
-const updateProductSchema = z.object({
-  url: z.string().url(),
-  productId: z.number().int().positive(),
-});
+// URL validation to prevent SSRF attacks
+const isUrlSafe = (urlString: string): boolean => {
+  try {
+    const url = new URL(urlString);
+
+    // Only allow http and https protocols
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return false;
+    }
+
+    // Block localhost and loopback addresses
+    const hostname = url.hostname.toLowerCase();
+    if (hostname === 'localhost' ||
+        hostname.startsWith('127.') ||
+        hostname === '[::1]' ||
+        hostname === '::1') {
+      return false;
+    }
+
+    // Block private IP ranges (simplified check)
+    // Note: This is a basic check. Production should use a more robust IP validation library
+    if (hostname.startsWith('10.') ||
+        hostname.startsWith('192.168.') ||
+        hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)) {
+      return false;
+    }
+
+    // Block cloud metadata endpoints
+    if (hostname === '169.254.169.254' || // AWS, Azure, GCP metadata
+        hostname.endsWith('.metadata.google.internal') ||
+        hostname === 'metadata.google.internal') {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 // Extract brand from URL hostname
 const extractBrandFromUrl = (url: string): string => {
@@ -112,6 +148,14 @@ const extractSpecs = (text: string): Record<string, string> => {
 
 // Generate Japanese title
 const generateJapaneseTitle = (originalTitle: string, brand: string, specs: Record<string, string>): string => {
+  // Escape external content first
+  const safeTitle = escapeHtml(originalTitle);
+  const safeBrand = escapeHtml(brand);
+  const safeSpecs = Object.entries(specs).reduce((acc, [key, value]) => {
+    acc[key] = escapeHtml(value);
+    return acc;
+  }, {} as Record<string, string>);
+
   const modelPatterns = [
     /\b(FC[-\s]?E?\d{3,})/i,
     /\b(TSL[-\s]?\d{3,})/i,
@@ -124,24 +168,27 @@ const generateJapaneseTitle = (originalTitle: string, brand: string, specs: Reco
 
   let model = '';
   for (const pattern of modelPatterns) {
+    // Match against original (unescaped) title for pattern matching
     const match = originalTitle.match(pattern);
     if (match) {
-      model = match[1].toUpperCase().replace(/\s+/g, '-');
+      // Escape the extracted model number
+      model = escapeHtml(match[1].toUpperCase().replace(/\s+/g, '-'));
       break;
     }
   }
 
   let title = '';
-  if (brand) title += `【${brand}】`;
+  if (safeBrand) title += `【${safeBrand}】`;
   if (model) title += `${model} `;
-  if (specs.power && !title.includes(specs.power)) title += `${specs.power} `;
+  if (safeSpecs.power && !title.includes(safeSpecs.power)) title += `${safeSpecs.power} `;
 
   title += 'LEDグロウライト';
 
-  if (specs.led) {
-    if (specs.led.includes('Samsung')) {
+  if (safeSpecs.led) {
+    // Note: These checks are safe - we're checking our escaped strings
+    if (safeSpecs.led.includes('Samsung')) {
       title += ' Samsung LED搭載';
-    } else if (specs.led.includes('Bridgelux')) {
+    } else if (safeSpecs.led.includes('Bridgelux')) {
       title += ' Bridgelux LED搭載';
     }
   }
@@ -157,26 +204,33 @@ const generateJapaneseDescription = (
   brand: string,
   specs: Record<string, string>
 ): string => {
-  let html = `<h2>${originalTitle}</h2>\n\n`;
-  const brandText = brand || 'プレミアム';
+  // Escape all external content to prevent XSS
+  const safeTitle = escapeHtml(originalTitle);
+  const safeBrand = escapeHtml(brand) || 'プレミアム';
+  const safeSpecs = Object.entries(specs).reduce((acc, [key, value]) => {
+    acc[key] = escapeHtml(value);
+    return acc;
+  }, {} as Record<string, string>);
 
-  const powerText = specs.power ? `${specs.power}の` : '';
-  const ledText = specs.led ? `${specs.led}チップ搭載、` : '';
-  html += `<p><strong>${brandText}の${powerText}高性能LEDグロウライト</strong> - ${ledText}室内栽培のパフォーマンスを最大化。苗から開花まで、すべての成長段階を強力にサポートします。</p>\n\n`;
+  let html = `<h2>${safeTitle}</h2>\n\n`;
+
+  const powerText = safeSpecs.power ? `${safeSpecs.power}の` : '';
+  const ledText = safeSpecs.led ? `${safeSpecs.led}チップ搭載、` : '';
+  html += `<p><strong>${safeBrand}の${powerText}高性能LEDグロウライト</strong> - ${ledText}室内栽培のパフォーマンスを最大化。苗から開花まで、すべての成長段階を強力にサポートします。</p>\n\n`;
 
   // Specs section
   const specsList: string[] = [];
-  if (specs.power) specsList.push(`<li><strong>消費電力:</strong> ${specs.power}</li>`);
-  if (specs.ppf) specsList.push(`<li><strong>光量子束(PPF):</strong> ${specs.ppf}</li>`);
-  if (specs.ppe) specsList.push(`<li><strong>効率(PPE):</strong> ${specs.ppe}</li>`);
-  if (specs.coverage) specsList.push(`<li><strong>カバレッジ:</strong> ${specs.coverage}</li>`);
-  if (specs.led) specsList.push(`<li><strong>LEDチップ:</strong> ${specs.led}</li>`);
-  if (specs.led_count) specsList.push(`<li><strong>LED数:</strong> ${specs.led_count}</li>`);
-  if (specs.lifespan) specsList.push(`<li><strong>寿命:</strong> ${specs.lifespan}</li>`);
-  if (specs.warranty) specsList.push(`<li><strong>保証:</strong> ${specs.warranty}</li>`);
-  if (specs.voltage) specsList.push(`<li><strong>電圧:</strong> ${specs.voltage}</li>`);
-  if (specs.size) specsList.push(`<li><strong>サイズ:</strong> ${specs.size}</li>`);
-  if (specs.weight) specsList.push(`<li><strong>重量:</strong> ${specs.weight}</li>`);
+  if (safeSpecs.power) specsList.push(`<li><strong>消費電力:</strong> ${safeSpecs.power}</li>`);
+  if (safeSpecs.ppf) specsList.push(`<li><strong>光量子束(PPF):</strong> ${safeSpecs.ppf}</li>`);
+  if (safeSpecs.ppe) specsList.push(`<li><strong>効率(PPE):</strong> ${safeSpecs.ppe}</li>`);
+  if (safeSpecs.coverage) specsList.push(`<li><strong>カバレッジ:</strong> ${safeSpecs.coverage}</li>`);
+  if (safeSpecs.led) specsList.push(`<li><strong>LEDチップ:</strong> ${safeSpecs.led}</li>`);
+  if (safeSpecs.led_count) specsList.push(`<li><strong>LED数:</strong> ${safeSpecs.led_count}</li>`);
+  if (safeSpecs.lifespan) specsList.push(`<li><strong>寿命:</strong> ${safeSpecs.lifespan}</li>`);
+  if (safeSpecs.warranty) specsList.push(`<li><strong>保証:</strong> ${safeSpecs.warranty}</li>`);
+  if (safeSpecs.voltage) specsList.push(`<li><strong>電圧:</strong> ${safeSpecs.voltage}</li>`);
+  if (safeSpecs.size) specsList.push(`<li><strong>サイズ:</strong> ${safeSpecs.size}</li>`);
+  if (safeSpecs.weight) specsList.push(`<li><strong>重量:</strong> ${safeSpecs.weight}</li>`);
 
   if (specsList.length > 0) {
     html += `<h3>主要スペック</h3>\n<ul>\n${specsList.join('\n')}\n</ul>\n\n`;
@@ -186,35 +240,37 @@ const generateJapaneseDescription = (
   html += `<h3>特徴</h3>\n<ul>\n`;
   html += `<li><strong>フルスペクトラム:</strong> 自然光に近い光スペクトルで、育苗から開花まで全成長段階に対応</li>\n`;
 
-  if (specs.led) {
-    if (specs.led.includes('Samsung')) {
+  if (safeSpecs.led) {
+    // Note: These checks are safe because we're checking the escaped string
+    // The strings "Samsung", "Bridgelux", "Osram" are our own constants, not user input
+    if (safeSpecs.led.includes('Samsung')) {
       html += `<li><strong>Samsung LED搭載:</strong> 業界最高クラスの発光効率を誇るサムスン製LEDチップを採用</li>\n`;
-    } else if (specs.led.includes('Bridgelux')) {
+    } else if (safeSpecs.led.includes('Bridgelux')) {
       html += `<li><strong>Bridgelux LED搭載:</strong> 高品質なブリッジラックス製LEDで安定した光出力を実現</li>\n`;
-    } else if (specs.led.includes('Osram')) {
+    } else if (safeSpecs.led.includes('Osram')) {
       html += `<li><strong>Osram LED搭載:</strong> ドイツの名門オスラム社製LEDで高い信頼性を確保</li>\n`;
     }
   }
 
-  if (specs.ppe) {
-    html += `<li><strong>高効率設計:</strong> ${specs.ppe}の高い発光効率で電気代を大幅削減</li>\n`;
+  if (safeSpecs.ppe) {
+    html += `<li><strong>高効率設計:</strong> ${safeSpecs.ppe}の高い発光効率で電気代を大幅削減</li>\n`;
   } else {
     html += `<li><strong>省エネ設計:</strong> 従来のHPSライトと比較して電気代を大幅削減</li>\n`;
   }
 
-  if (specs.ppf) {
-    html += `<li><strong>高い光量子束:</strong> ${specs.ppf}の豊富な光量で植物の光合成を促進</li>\n`;
+  if (safeSpecs.ppf) {
+    html += `<li><strong>高い光量子束:</strong> ${safeSpecs.ppf}の豊富な光量で植物の光合成を促進</li>\n`;
   }
 
-  if (specs.coverage) {
-    html += `<li><strong>広いカバレッジ:</strong> ${specs.coverage}の栽培エリアに対応</li>\n`;
+  if (safeSpecs.coverage) {
+    html += `<li><strong>広いカバレッジ:</strong> ${safeSpecs.coverage}の栽培エリアに対応</li>\n`;
   }
 
   html += `<li><strong>調光機能:</strong> 0-100%の無段階調光で成長段階に合わせた光量調整が可能</li>\n`;
   html += `<li><strong>静音設計:</strong> パッシブ冷却採用で静かな栽培環境を実現</li>\n`;
   html += `</ul>\n\n`;
 
-  html += `<p><strong>${brandText}</strong>の確かな品質と性能で、初心者からプロまで室内栽培を成功に導きます。</p>`;
+  html += `<p><strong>${safeBrand}</strong>の確かな品質と性能で、初心者からプロまで室内栽培を成功に導きます。</p>`;
 
   return html;
 };
@@ -354,6 +410,11 @@ app.post(
       return jsonError(c, 'Browser Rendering is not configured', 501);
     }
 
+    // Validate URL to prevent SSRF attacks
+    if (!isUrlSafe(url)) {
+      return jsonError(c, 'Invalid or unsafe URL. Private IPs and localhost are not allowed.', 400);
+    }
+
     try {
       const result = await fetchProductData(c.env.BROWSER, url, productName);
 
@@ -375,94 +436,8 @@ app.post(
   }
 );
 
-// POST /product-fetch/update - Fetch and update product
-app.post(
-  '/product-fetch/update',
-  zValidator('json', updateProductSchema, validationErrorHandler),
-  async (c) => {
-    const { url, productId } = c.req.valid('json');
-
-    if (!c.env.BROWSER) {
-      return jsonError(c, 'Browser Rendering is not configured', 501);
-    }
-
-    try {
-      // Check if product exists
-      const existing = await c.env.DB.prepare(
-        'SELECT id, title, metadata FROM products WHERE id = ?'
-      ).bind(productId).first();
-
-      if (!existing) {
-        return jsonError(c, 'Product not found', 404);
-      }
-
-      // Fetch product data
-      const result = await fetchProductData(c.env.BROWSER, url);
-
-      if (!result.success) {
-        return jsonError(c, 'Failed to fetch product data');
-      }
-
-      // Update product
-      const updates: string[] = [];
-      const bindings: (string | number)[] = [];
-
-      if (result.generated_title) {
-        updates.push('title = ?');
-        bindings.push(result.generated_title);
-      }
-
-      if (result.generated_description) {
-        updates.push('description = ?');
-        bindings.push(result.generated_description);
-      }
-
-      // Update metadata
-      let metadata: Record<string, unknown> = {};
-      try {
-        const existingMeta = (existing as { metadata?: string }).metadata;
-        if (existingMeta) {
-          metadata = JSON.parse(existingMeta);
-        }
-      } catch {
-        // ignore
-      }
-
-      if (result.image_url) metadata.image_url = result.image_url;
-      if (result.specs) metadata.specs = result.specs;
-      metadata.source = result.source;
-      metadata.fetched_at = new Date().toISOString();
-
-      updates.push('metadata = ?');
-      bindings.push(JSON.stringify(metadata));
-
-      updates.push('updated_at = datetime(\'now\')');
-      bindings.push(productId);
-
-      await c.env.DB.prepare(
-        `UPDATE products SET ${updates.join(', ')} WHERE id = ?`
-      ).bind(...bindings).run();
-
-      // Audit log
-      await c.env.DB.prepare(
-        'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
-      ).bind(
-        getActor(c),
-        'update_product_from_url',
-        `product:${productId}`,
-        JSON.stringify({ url, source: result.source })
-      ).run();
-
-      return jsonOk(c, {
-        message: 'Product updated successfully',
-        productId,
-        ...result,
-      });
-    } catch (e) {
-      const error = e instanceof Error ? e.message : 'Unknown error';
-      return jsonError(c, `Failed to update product: ${error}`);
-    }
-  }
-);
+// Note: /product-fetch/update endpoint removed to enforce Inbox pattern
+// All AI-generated content must go through human approval via Inbox
+// Use the /product-fetch endpoint to fetch data, then submit to Inbox for review
 
 export default app;

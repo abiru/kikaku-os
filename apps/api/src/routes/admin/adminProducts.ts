@@ -47,7 +47,7 @@ app.get(
       const totalCount = countRes?.count || 0;
 
       const dataQuery = `
-        SELECT id, title, description, category, metadata, status, tax_rate_id, created_at, updated_at
+        SELECT id, title, description, category, metadata, status, tax_rate_id, featured, created_at, updated_at
         FROM products
         ${whereClause}
         ORDER BY created_at DESC
@@ -92,7 +92,7 @@ app.get(
 
     try {
       const product = await c.env.DB.prepare(`
-        SELECT id, title, description, category, metadata, status, tax_rate_id, created_at, updated_at
+        SELECT id, title, description, category, metadata, status, tax_rate_id, featured, created_at, updated_at
         FROM products
         WHERE id = ?
       `).bind(id).first();
@@ -155,7 +155,7 @@ app.put(
   zValidator('json', updateProductSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
-    const { title, description, status, category, tax_rate_id } = c.req.valid('json');
+    const { title, description, status, category, tax_rate_id, featured } = c.req.valid('json');
 
     try {
       // Check exists
@@ -166,13 +166,13 @@ app.put(
 
       await c.env.DB.prepare(`
         UPDATE products
-        SET title = ?, description = ?, status = ?, category = ?, tax_rate_id = ?, updated_at = datetime('now')
+        SET title = ?, description = ?, status = ?, category = ?, tax_rate_id = ?, featured = ?, updated_at = datetime('now')
         WHERE id = ?
-      `).bind(title, description, status, category, tax_rate_id, id).run();
+      `).bind(title, description, status, category, tax_rate_id, featured ?? 0, id).run();
 
       // Fetch updated product
       const product = await c.env.DB.prepare(`
-        SELECT id, title, description, category, metadata, status, tax_rate_id, created_at, updated_at
+        SELECT id, title, description, category, metadata, status, tax_rate_id, featured, created_at, updated_at
         FROM products WHERE id = ?
       `).bind(id).first();
 

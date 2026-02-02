@@ -1,7 +1,9 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import { Badge } from '../../components/catalyst/badge';
+import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 
@@ -63,19 +65,19 @@ const templateLabels: Record<string, string> = {
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Email Templates</h1>
-				<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{templates.length} templates</span>
+				<Heading>Email Templates</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{templates.length} templates</span>
 			</div>
 		</div>
 
-		<p class="text-sm text-zinc-500 dark:text-zinc-400">
+		<p class="text-sm text-zinc-500">
 			Customize the email notifications sent to customers. Click on a template to edit its content.
 		</p>
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+			<Alert color="red" client:load>
 				{error}
-			</div>
+			</Alert>
 		)}
 
 		{/* Templates Grid */}
@@ -84,50 +86,50 @@ const templateLabels: Record<string, string> = {
 				templates.map((template) => (
 					<a
 						href={`/admin/email-templates/${template.slug}`}
-						class="bg-white rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 hover:shadow-md hover:border-indigo-600/30 transition-all group"
+						class="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 hover:shadow-md hover:border-indigo-600/30 transition-all group"
 					>
 						<div class="flex items-start justify-between mb-4">
 							<div class="w-10 h-10 rounded-lg bg-indigo-600/10 flex items-center justify-center">
-								<svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 								</svg>
 							</div>
-							<svg class="w-5 h-5 text-zinc-500 dark:text-zinc-400 group-hover:text-indigo-600 dark:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 text-zinc-500 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 							</svg>
 						</div>
-						<h3 class="font-semibold text-zinc-950 dark:text-white mb-1">{template.name}</h3>
-						<p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4 truncate">{template.subject}</p>
+						<h3 class="font-semibold text-zinc-950 mb-1">{template.name}</h3>
+						<p class="text-sm text-zinc-500 mb-4 truncate">{template.subject}</p>
 						<div class="flex items-center justify-between text-xs">
 							<Badge color="zinc" client:only="react">{templateLabels[template.slug] || template.slug}</Badge>
-							<span class="text-zinc-500 dark:text-zinc-400 tabular-nums">{formatDate(template.updated_at)}</span>
+							<span class="text-zinc-500 tabular-nums">{formatDate(template.updated_at)}</span>
 						</div>
 					</a>
 				))
 			) : !error && (
-				<div class="col-span-full bg-white rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-12 text-center">
-					<div class="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-4">
-						<svg class="w-8 h-8 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<div class="col-span-full bg-white rounded-xl border border-zinc-200 shadow-sm p-12 text-center">
+					<div class="w-16 h-16 rounded-full bg-zinc-100 flex items-center justify-center mx-auto mb-4">
+						<svg class="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 						</svg>
 					</div>
-					<h3 class="text-lg font-semibold text-zinc-950 dark:text-white mb-2">No email templates found</h3>
-					<p class="text-sm text-zinc-500 dark:text-zinc-400">Run database migrations to create default templates.</p>
+					<h3 class="text-lg font-semibold text-zinc-950 mb-2">No email templates found</h3>
+					<p class="text-sm text-zinc-500">Run database migrations to create default templates.</p>
 				</div>
 			)}
 		</div>
 
 		{/* Help Section */}
-		<div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
-			<h3 class="font-semibold text-blue-900 mb-2">Using Template Variables</h3>
-			<p class="text-sm text-blue-800 mb-4">
+		<Alert color="blue" client:load>
+			<h3 class="font-semibold mb-2">Using Template Variables</h3>
+			<p class="text-sm mb-4">
 				Templates support dynamic variables that are replaced with actual data when emails are sent.
 				Use the format <code class="bg-blue-100 px-1.5 py-0.5 rounded text-xs">{"{{variable_name}}"}</code> in your templates.
 			</p>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
 				<div>
-					<h4 class="font-medium text-blue-900 mb-1">Order Confirmation</h4>
-					<ul class="text-blue-800 space-y-1">
+					<h4 class="font-medium mb-1">Order Confirmation</h4>
+					<ul class="space-y-1">
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{customer_name}}"}</code> - Customer name</li>
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_number}}"}</code> - Order ID</li>
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_date}}"}</code> - Order date</li>
@@ -135,13 +137,13 @@ const templateLabels: Record<string, string> = {
 					</ul>
 				</div>
 				<div>
-					<h4 class="font-medium text-blue-900 mb-1">Shipping Notification</h4>
-					<ul class="text-blue-800 space-y-1">
+					<h4 class="font-medium mb-1">Shipping Notification</h4>
+					<ul class="space-y-1">
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{carrier}}"}</code> - Shipping carrier</li>
 						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{tracking_number}}"}</code> - Tracking number</li>
 					</ul>
 				</div>
 			</div>
-		</div>
+		</Alert>
 	</div>
 </AdminLayout>

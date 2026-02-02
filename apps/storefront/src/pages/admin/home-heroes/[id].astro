@@ -1,0 +1,275 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import Button from '../../../components/Button.astro';
+import Badge from '../../../components/Badge.astro';
+import { getApiBase } from '../../../lib/api';
+
+const { id } = Astro.params;
+const apiBase = getApiBase();
+
+let hero: any = null;
+let error = null;
+let success = false;
+
+// Fetch hero section data
+try {
+	const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+		headers: {
+			'x-admin-key': import.meta.env.ADMIN_API_KEY
+		}
+	});
+
+	if (!res.ok) {
+		throw new Error('Hero section not found');
+	}
+
+	const data = await res.json();
+	hero = data.hero;
+} catch (e: any) {
+	console.error(e);
+	error = e.message || 'Failed to load hero section';
+}
+
+// Handle form submission
+if (Astro.request.method === 'POST' && hero) {
+	try {
+		const formData = await Astro.request.formData();
+		const title = formData.get('title') as string;
+		const subtitle = formData.get('subtitle') as string;
+		const ctaPrimaryText = formData.get('cta_primary_text') as string;
+		const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
+		const ctaSecondaryText = formData.get('cta_secondary_text') as string;
+		const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
+		const position = Number(formData.get('position') || '0');
+		const status = formData.get('status') as string;
+
+		const body: any = {};
+
+		if (title !== hero.title) body.title = title;
+		if (subtitle !== hero.subtitle) body.subtitle = subtitle || null;
+		if (ctaPrimaryText !== hero.cta_primary_text) body.cta_primary_text = ctaPrimaryText || null;
+		if (ctaPrimaryUrl !== hero.cta_primary_url) body.cta_primary_url = ctaPrimaryUrl || null;
+		if (ctaSecondaryText !== hero.cta_secondary_text) body.cta_secondary_text = ctaSecondaryText || null;
+		if (ctaSecondaryUrl !== hero.cta_secondary_url) body.cta_secondary_url = ctaSecondaryUrl || null;
+		if (position !== hero.position) body.position = position;
+		if (status !== hero.status) body.status = status;
+
+		if (Object.keys(body).length > 0) {
+			const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': import.meta.env.ADMIN_API_KEY
+				},
+				body: JSON.stringify(body)
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.message || 'Failed to update hero section');
+			}
+
+			success = true;
+
+			// Reload hero data
+			const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+				headers: {
+					'x-admin-key': import.meta.env.ADMIN_API_KEY
+				}
+			});
+			const refreshData = await refreshRes.json();
+			hero = refreshData.hero;
+		}
+	} catch (e: any) {
+		console.error(e);
+		error = e.message || 'Failed to update hero section';
+	}
+}
+---
+
+<AdminLayout title={hero ? `Edit Hero: ${hero.title}` : 'Edit Hero Section'}>
+	<div class="max-w-3xl space-y-6">
+		<div class="flex items-center gap-4">
+			<a href="/admin/home-heroes" class="text-[#0071e3] hover:underline text-sm">
+				← Back to Hero Sections
+			</a>
+		</div>
+
+		{hero && (
+			<div class="flex items-center justify-between">
+				<h1 class="text-2xl font-semibold text-gray-900">Edit Hero Section</h1>
+				<div class="flex items-center gap-2">
+					{hero.status === 'draft' ? (
+						<Badge severity="secondary">Draft</Badge>
+					) : hero.status === 'archived' ? (
+						<Badge severity="critical">Archived</Badge>
+					) : (
+						<Badge severity="info">Active</Badge>
+					)}
+				</div>
+			</div>
+		)}
+
+		{error && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+				{error}
+			</div>
+		)}
+
+		{success && (
+			<div class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
+				Hero section updated successfully!
+			</div>
+		)}
+
+		{hero ? (
+			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+				{/* Title */}
+				<div>
+					<label for="title" class="block text-sm font-medium text-gray-900 mb-2">
+						Title <span class="text-red-500">*</span>
+					</label>
+					<input
+						type="text"
+						id="title"
+						name="title"
+						value={hero.title}
+						required
+						maxlength="255"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+					/>
+				</div>
+
+				{/* Subtitle */}
+				<div>
+					<label for="subtitle" class="block text-sm font-medium text-gray-900 mb-2">
+						Subtitle
+					</label>
+					<input
+						type="text"
+						id="subtitle"
+						name="subtitle"
+						value={hero.subtitle || ''}
+						maxlength="500"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+					/>
+				</div>
+
+				{/* Primary CTA */}
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<label for="cta_primary_text" class="block text-sm font-medium text-gray-900 mb-2">
+							Primary Button Text
+						</label>
+						<input
+							type="text"
+							id="cta_primary_text"
+							name="cta_primary_text"
+							value={hero.cta_primary_text || ''}
+							maxlength="100"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						/>
+					</div>
+					<div>
+						<label for="cta_primary_url" class="block text-sm font-medium text-gray-900 mb-2">
+							Primary Button URL
+						</label>
+						<input
+							type="text"
+							id="cta_primary_url"
+							name="cta_primary_url"
+							value={hero.cta_primary_url || ''}
+							maxlength="500"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						/>
+					</div>
+				</div>
+
+				{/* Secondary CTA */}
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<label for="cta_secondary_text" class="block text-sm font-medium text-gray-900 mb-2">
+							Secondary Button Text
+						</label>
+						<input
+							type="text"
+							id="cta_secondary_text"
+							name="cta_secondary_text"
+							value={hero.cta_secondary_text || ''}
+							maxlength="100"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						/>
+					</div>
+					<div>
+						<label for="cta_secondary_url" class="block text-sm font-medium text-gray-900 mb-2">
+							Secondary Button URL
+						</label>
+						<input
+							type="text"
+							id="cta_secondary_url"
+							name="cta_secondary_url"
+							value={hero.cta_secondary_url || ''}
+							maxlength="500"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						/>
+					</div>
+				</div>
+
+				{/* Position */}
+				<div>
+					<label for="position" class="block text-sm font-medium text-gray-900 mb-2">
+						Position (Display Order)
+					</label>
+					<input
+						type="number"
+						id="position"
+						name="position"
+						value={hero.position}
+						min="0"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+					/>
+					<p class="mt-1 text-xs text-gray-500">Lower numbers appear first on the homepage</p>
+				</div>
+
+				{/* Status */}
+				<div>
+					<label for="status" class="block text-sm font-medium text-gray-900 mb-2">
+						Status
+					</label>
+					<select
+						id="status"
+						name="status"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+					>
+						<option value="draft" selected={hero.status === 'draft'}>Draft</option>
+						<option value="active" selected={hero.status === 'active'}>Active</option>
+						<option value="archived" selected={hero.status === 'archived'}>Archived</option>
+					</select>
+				</div>
+
+				{/* Submit Button */}
+				<div class="flex gap-3 pt-4">
+					<Button type="submit" variant="primary">
+						Save Changes
+					</Button>
+					<Button href="/admin/home-heroes" variant="secondary">
+						Cancel
+					</Button>
+				</div>
+			</form>
+		) : (
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
+				<p class="text-gray-500">Hero section not found</p>
+			</div>
+		)}
+
+		{hero && (
+			<div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
+				<p class="font-medium mb-1">Image Upload:</p>
+				<p>Image upload functionality will be implemented in Phase 1.5 using the existing product image upload pattern.</p>
+			</div>
+		)}
+	</div>
+</AdminLayout>

@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../../components/catalyst/alert-banner';
 import Badge from '../../../components/Badge.astro';
 import Button from '../../../components/Button.astro';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
@@ -214,11 +215,11 @@ const canDelete = coupon && coupon.current_uses === 0;
 						<h2 class="text-sm font-medium text-[#86868b] mb-4">Usage Statistics</h2>
 						<div class="grid grid-cols-3 gap-6">
 							<div>
-								<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{stats.totalUsages}</div>
+								<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{stats.totalUsages}</div>
 								<div class="text-xs text-[#86868b]">Total Uses</div>
 							</div>
 							<div>
-								<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{formatCurrency(stats.totalDiscount, coupon.currency)}</div>
+								<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(stats.totalDiscount, coupon.currency)}</div>
 								<div class="text-xs text-[#86868b]">Total Discount</div>
 							</div>
 							<div>
@@ -240,7 +241,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 					<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div class="md:col-span-2">
-								<label for="code" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="code" class="block text-sm font-medium text-zinc-950 mb-2">
 									Coupon Code <span class="text-red-500">*</span>
 								</label>
 								<input
@@ -249,18 +250,18 @@ const canDelete = coupon && coupon.current_uses === 0;
 									name="code"
 									required
 									value={coupon.code}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 							</div>
 
 							<div>
-								<label for="type" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="type" class="block text-sm font-medium text-zinc-950 mb-2">
 									Discount Type <span class="text-red-500">*</span>
 								</label>
 								<select
 									id="type"
 									name="type"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
 								>
 									<option value="percentage" selected={coupon.type === 'percentage'}>Percentage (%)</option>
 									<option value="fixed" selected={coupon.type === 'fixed'}>Fixed Amount (JPY)</option>
@@ -268,7 +269,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 							</div>
 
 							<div>
-								<label for="value" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="value" class="block text-sm font-medium text-zinc-950 mb-2">
 									Value <span class="text-red-500">*</span>
 								</label>
 								<input
@@ -278,12 +279,12 @@ const canDelete = coupon && coupon.current_uses === 0;
 									required
 									min="1"
 									value={coupon.value}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 							</div>
 
 							<div>
-								<label for="min_order_amount" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="min_order_amount" class="block text-sm font-medium text-zinc-950 mb-2">
 									Minimum Order Amount (JPY)
 								</label>
 								<input
@@ -292,12 +293,12 @@ const canDelete = coupon && coupon.current_uses === 0;
 									name="min_order_amount"
 									min="0"
 									value={coupon.min_order_amount}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 							</div>
 
 							<div>
-								<label for="max_uses" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="max_uses" class="block text-sm font-medium text-zinc-950 mb-2">
 									Max Total Uses
 								</label>
 								<input
@@ -306,13 +307,13 @@ const canDelete = coupon && coupon.current_uses === 0;
 									name="max_uses"
 									min="1"
 									value={coupon.max_uses || ''}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 									placeholder="Unlimited"
 								/>
 							</div>
 
 							<div>
-								<label for="uses_per_customer" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="uses_per_customer" class="block text-sm font-medium text-zinc-950 mb-2">
 									Uses Per Customer
 								</label>
 								<input
@@ -321,18 +322,18 @@ const canDelete = coupon && coupon.current_uses === 0;
 									name="uses_per_customer"
 									min="1"
 									value={coupon.uses_per_customer}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 							</div>
 
 							<div>
-								<label for="status" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="status" class="block text-sm font-medium text-zinc-950 mb-2">
 									Status
 								</label>
 								<select
 									id="status"
 									name="status"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
 								>
 									<option value="active" selected={coupon.status === 'active'}>Active</option>
 									<option value="inactive" selected={coupon.status === 'inactive'}>Inactive</option>
@@ -340,7 +341,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 							</div>
 
 							<div>
-								<label for="starts_at" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="starts_at" class="block text-sm font-medium text-zinc-950 mb-2">
 									Start Date
 								</label>
 								<input
@@ -348,12 +349,12 @@ const canDelete = coupon && coupon.current_uses === 0;
 									id="starts_at"
 									name="starts_at"
 									value={formatDateForInput(coupon.starts_at)}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 							</div>
 
 							<div>
-								<label for="expires_at" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="expires_at" class="block text-sm font-medium text-zinc-950 mb-2">
 									Expiration Date
 								</label>
 								<input
@@ -361,7 +362,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 									id="expires_at"
 									name="expires_at"
 									value={formatDateForInput(coupon.expires_at)}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 							</div>
 						</div>
@@ -370,11 +371,11 @@ const canDelete = coupon && coupon.current_uses === 0;
 							<dl class="grid grid-cols-2 gap-4 text-sm">
 								<div>
 									<dt class="text-[#86868b]">Created</dt>
-									<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(coupon.created_at)}</dd>
+									<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.created_at)}</dd>
 								</div>
 								<div>
 									<dt class="text-[#86868b]">Updated</dt>
-									<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(coupon.updated_at)}</dd>
+									<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.updated_at)}</dd>
 								</div>
 							</dl>
 						</div>

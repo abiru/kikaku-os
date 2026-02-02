@@ -1,9 +1,11 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 import { Badge } from '../../components/catalyst/badge';
+import { Heading } from '../../components/catalyst/heading';
 
 const apiBase = getApiBase();
 
@@ -53,41 +55,41 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 <AdminLayout title="Shipping - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Shipping</h1>
+			<Heading>Shipping</Heading>
 			<span class="text-xs text-white bg-indigo-600 px-2 py-1 rounded-full font-medium">{orders.length} ready</span>
 		</div>
 			{error && (
-				<div class="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
+				<Alert color="red" client:load>
 					{error}
-				</div>
+				</Alert>
 			)}
 
-			<div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
-						<thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
+					<table class="w-full text-left text-sm text-zinc-950">
+						<thead class="bg-zinc-50 border-b border-zinc-200">
 							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Order</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Customer</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Paid At</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Status</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Total</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Actions</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Order</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Customer</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Paid At</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Total</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Actions</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+						<tbody class="divide-y divide-zinc-100">
 							{orders.length > 0 ? (
 								orders.map((order) => (
-									<tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+									<tr class="hover:bg-zinc-50 transition-colors">
 										<td class="px-6 py-4 font-medium">
-											<a href={`/admin/orders/${order.order_id}`} class="text-indigo-600 dark:text-indigo-400 hover:underline">
+											<a href={`/admin/orders/${order.order_id}`} class="text-indigo-600 hover:underline">
 												#{order.order_id}
 											</a>
 										</td>
 										<td class="px-6 py-4">
-											<div class="text-zinc-950 dark:text-white">{order.customer_email || 'Guest'}</div>
+											<div class="text-zinc-950">{order.customer_email || 'Guest'}</div>
 										</td>
-										<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums">
+										<td class="px-6 py-4 text-zinc-500 tabular-nums">
 											{formatDate(order.paid_at)}
 										</td>
 										<td class="px-6 py-4">
@@ -112,7 +114,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								))
 							) : (
 								<tr>
-									<td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+									<td colspan="6" class="px-6 py-12 text-center text-zinc-500">
 										No orders ready to ship.
 									</td>
 								</tr>
@@ -123,36 +125,36 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			</div>
 
 		<!-- Ship Modal -->
-		<div id="ship-modal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-			<div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800">
-				<div class="p-6 border-b border-zinc-200 dark:border-zinc-800">
-					<h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Ship Order</h3>
-					<p id="ship-subtitle" class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"></p>
+		<div id="ship-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
+				<div class="p-6 border-b border-zinc-200">
+					<h3 class="text-lg font-semibold text-zinc-950">Ship Order</h3>
+					<p id="ship-subtitle" class="text-sm text-zinc-500 mt-1"></p>
 				</div>
 				<form id="ship-form" class="p-6 space-y-4">
 					<input type="hidden" id="ship-order-id" name="orderId" />
 					<input type="hidden" id="ship-fulfillment-id" name="fulfillmentId" />
 
 					<div>
-						<label for="ship-tracking" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+						<label for="ship-tracking" class="block text-sm font-medium text-zinc-950 mb-2">
 							Tracking Number
 						</label>
 						<input
 							type="text"
 							id="ship-tracking"
 							name="tracking_number"
-							class="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-950 dark:text-white bg-white dark:bg-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
+							class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 bg-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
 							placeholder="Optional tracking number"
 						/>
 					</div>
 
-					<div id="ship-error" class="hidden bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm"></div>
+					<div id="ship-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 
-					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200">
 						<button
 							type="button"
 							id="cancel-ship-btn"
-							class="px-4 py-2 text-sm font-medium text-zinc-950 dark:text-white bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+							class="px-4 py-2 text-sm font-medium text-zinc-950 bg-zinc-100 rounded-lg hover:bg-zinc-200 transition-colors"
 						>
 							Cancel
 						</button>

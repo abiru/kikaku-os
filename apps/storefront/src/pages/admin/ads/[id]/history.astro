@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import { Alert } from '../../../../components/catalyst/alert-banner';
 import Badge from '../../../../components/Badge.astro';
 import Button from '../../../../components/Button.astro';
 import { getApiBase } from '../../../../lib/api';
@@ -64,23 +65,23 @@ const formatDate = (dateStr: string) => {
         </svg>
         Back to Draft
       </a>
-      <h1 class="text-3xl font-semibold text-zinc-950 dark:text-white">
+      <h1 class="text-3xl font-semibold text-zinc-950">
         Generation History
       </h1>
-    </div>
+    </Alert>
 
     {draft && (
       <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-6">
         <p class="text-sm text-gray-600">
           <span class="font-medium">Campaign:</span> {draft.campaign_name}
         </p>
-      </div>
+      </Alert>
     )}
 
     {error && (
-      <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
+      <Alert color="red" client:load>
         {error}
-      </div>
+      </Alert>
     )}
 
     {history.length === 0 ? (
@@ -92,7 +93,7 @@ const formatDate = (dateStr: string) => {
         <p class="mt-1 text-sm text-gray-500">
           No AI generations have been created for this draft yet.
         </p>
-      </div>
+      </Alert>
     ) : (
       <div class="space-y-4">
         {history.map((item) => {
@@ -113,15 +114,15 @@ const formatDate = (dateStr: string) => {
                     {item.selected === 1 && (
                       <Badge severity="info">Selected</Badge>
                     )}
-                  </div>
-                </div>
+                  </Alert>
+                </Alert>
                 <button
                   class="adopt-btn px-3 py-1 text-sm bg-[#0071e3] text-white rounded-lg hover:bg-[#0077ed] transition-colors"
                   data-history-id={item.id}
                 >
                   Adopt This Version
                 </button>
-              </div>
+              </Alert>
 
               {/* Candidates */}
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -138,8 +139,8 @@ const formatDate = (dateStr: string) => {
                         {candidate.headlines?.length > 3 && (
                           <p class="text-xs text-gray-400">+{candidate.headlines.length - 3} more...</p>
                         )}
-                      </div>
-                    </div>
+                      </Alert>
+                    </Alert>
 
                     <div>
                       <p class="text-xs text-gray-500 mb-1">Descriptions ({candidate.descriptions?.length || 0})</p>
@@ -147,17 +148,17 @@ const formatDate = (dateStr: string) => {
                         {(candidate.descriptions || []).slice(0, 2).map((d: string) => (
                           <p class="text-xs text-gray-600">{d}</p>
                         ))}
-                      </div>
-                    </div>
-                  </div>
+                      </Alert>
+                    </Alert>
+                  </Alert>
                 ))}
-              </div>
-            </div>
+              </Alert>
+            </Alert>
           );
         })}
-      </div>
+      </Alert>
     )}
-  </div>
+  </Alert>
 
   <script define:vars={{ apiKey, apiBase, id }}>
     document.querySelectorAll('.adopt-btn').forEach((btn) => {

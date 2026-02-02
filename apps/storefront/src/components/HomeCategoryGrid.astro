@@ -1,96 +1,82 @@
-
 ---
-import { getImage } from "astro:assets";
-import { CATEGORY_IMAGES } from "../data/categoryImages";
-
-const categories: Array<{
-  key: keyof typeof CATEGORY_IMAGES;
+interface FeaturedProduct {
+  id: number;
   title: string;
-  description: string;
-}> = [
-  {
-    key: "seasonal",
-    title: "季節限定",
-    description: "春の香りを閉じ込めた限定酒。",
-  },
-  {
-    key: "aged",
-    title: "熟成古酒",
-    description: "時間が育てた深いコク。",
-  },
-  {
-    key: "compare",
-    title: "飲み比べセット",
-    description: "味わいの違いを楽しむ3本。",
-  },
-  {
-    key: "kanzake",
-    title: "燗酒向き",
-    description: "食卓に寄り添うやさしい旨味。",
-  },
-  {
-    key: "gift",
-    title: "贈答用",
-    description: "上品な包装で贈りやすく。",
-  },
-  {
-    key: "standard",
-    title: "定番の一本",
-    description: "毎日の晩酌に寄り添います。",
-  },
-];
+  description: string | null;
+  category: string | null;
+  image: string | null;
+}
 
-const imageEntries = await Promise.all(
-  categories.map(async (c) => {
-    const images = CATEGORY_IMAGES[c.key];
-    return {
-      ...c,
-      bgLarge: (await getImage({ src: images.large })).src,
-      bgSmall: (await getImage({ src: images.small })).src,
-    };
-  })
-);
+interface Props {
+  products?: FeaturedProduct[];
+}
+
+const { products = [] } = Astro.props as Props;
+
+// Fallback placeholder if no image
+const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmNWY1ZjciLz48L3N2Zz4=';
 ---
-
 
 <section class="grid gap-4 bg-white px-4 sm:grid-cols-2">
-  {imageEntries.map((category) => (
-    <article
-      class="category-card flex h-[580px] flex-col items-center px-6 py-8 text-center bg-cover bg-center bg-no-repeat"
-      style={`--bg-large: url(${category.bgLarge}); --bg-small: url(${category.bgSmall});`}
-    >
-      <div class="space-y-2">
-        <h3 class="text-4xl font-black text-neutral-900">
-          {category.title}
-        </h3>
-        <p class="mt-4 text-xl font-semibold text-neutral-500">
-          {category.description}
-        </p>
-      </div>
+  {products.length > 0 ? (
+    products.map((product) => {
+      const bgImage = product.image || placeholderBg;
+      const categoryName = product.category || 'Products';
+      const description = product.description || 'Explore our products';
 
-      <div class="mt-4 flex gap-2">
-        <button class="rounded-full bg-[#0a67d6] px-4 py-1.5 text-sm font-semibold text-white">
-          商品を見る
-        </button>
-        <button class="rounded-full border border-[#0a67d6] px-4 py-1.5 text-sm font-semibold text-[#0a67d6]">
-          カートに追加
-        </button>
-      </div>
+      return (
+        <article
+          class="category-card flex h-[580px] flex-col items-center px-6 py-8 text-center bg-cover bg-center bg-no-repeat"
+          style={`background-image: url(${bgImage});`}
+        >
+          <div class="space-y-2">
+            <h3 class="text-4xl font-black text-neutral-900">
+              {categoryName}
+            </h3>
+            <p class="mt-4 text-xl font-semibold text-neutral-500">
+              {description}
+            </p>
+          </div>
 
-      <div class="mt-6 h-40 w-full" aria-hidden="true"></div>
-    </article>
-  ))}
+          <div class="mt-4 flex gap-2">
+            <a
+              href={`/products?category=${encodeURIComponent(product.category || '')}`}
+              class="rounded-full bg-[#0a67d6] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#0956b8] transition-colors"
+            >
+              商品を見る
+            </a>
+            <a
+              href={`/products/${product.id}`}
+              class="rounded-full border border-[#0a67d6] px-4 py-1.5 text-sm font-semibold text-[#0a67d6] hover:bg-[#0a67d6] hover:text-white transition-colors"
+            >
+              詳細を見る
+            </a>
+          </div>
+
+          <div class="mt-6 h-40 w-full" aria-hidden="true"></div>
+        </article>
+      );
+    })
+  ) : (
+    <div class="col-span-2 py-12 text-center text-gray-500">
+      フィーチャー製品を設定してください
+    </div>
+  )}
 </section>
-
 
 <style>
   .category-card {
-    background-image: var(--bg-large);
+    position: relative;
   }
 
-  @media (max-width: 768px) {
-    .category-card {
-      background-image: var(--bg-small);
-    }
+  .category-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.3) 100%);
+    pointer-events: none;
   }
 </style>

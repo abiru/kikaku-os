@@ -1,8 +1,10 @@
 ---
 export const prerender = false;
 
+import { Alert } from '../../components/catalyst/alert-banner';
 import { Badge } from '../../components/catalyst/badge';
 import Button from '../../components/Button.astro';
+import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 
@@ -76,8 +78,8 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-zinc-950 dark:text-white">Pages</h1>
-				<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				<Heading>Pages</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
 			</div>
 			<Button href="/admin/pages/new" size="sm" variant="primary">
 				+ New Page
@@ -91,11 +93,11 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 						name="q"
 						value={q}
 						placeholder="Search by title or slug..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
 					/>
 					<input type="hidden" name="status" value={status} />
 					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400 dark:text-zinc-500"
+						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -106,19 +108,19 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 				<div class="flex gap-2">
 					<a
 						href={`?q=${q}&status=all`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white text-zinc-950 dark:text-white border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:bg-zinc-800/50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						All
 					</a>
 					<a
 						href={`?q=${q}&status=published`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'published' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white text-zinc-950 dark:text-white border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:bg-zinc-800/50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'published' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Published
 					</a>
 					<a
 						href={`?q=${q}&status=draft`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-indigo-600 dark:bg-indigo-500 text-white' : 'bg-white text-zinc-950 dark:text-white border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:bg-zinc-800/50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Draft
 					</a>
@@ -126,36 +128,36 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 			</div>
 
 			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				<Alert color="red" client:load>
 					{error}
-				</div>
+				</Alert>
 			)}
 
 			{/* Pages Table */}
-			<div class="bg-white rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
-						<thead class="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
+					<table class="w-full text-left text-sm text-zinc-950">
+						<thead class="bg-zinc-50 border-b border-zinc-200">
 							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Title</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Slug</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Status</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Updated</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400 text-right">Action</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Title</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Slug</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
+								<th class="px-6 py-3 font-medium text-zinc-500">Updated</th>
+								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Action</th>
 							</tr>
 						</thead>
-						<tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+						<tbody class="divide-y divide-zinc-100">
 							{pages.length > 0 ? (
 								pages.map((p) => (
-									<tr class="hover:bg-zinc-50 dark:bg-zinc-800/50 transition-colors group">
+									<tr class="hover:bg-zinc-50 transition-colors group">
 										<td class="px-6 py-4">
 											<div class="font-medium">{p.title}</div>
 											{CORE_SLUGS.includes(p.slug) && (
-												<span class="text-xs text-zinc-500 dark:text-zinc-400">Core page</span>
+												<span class="text-xs text-zinc-500">Core page</span>
 											)}
 										</td>
 										<td class="px-6 py-4">
-											<code class="text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">/{p.slug}</code>
+											<code class="text-xs bg-zinc-100 px-2 py-1 rounded">/{p.slug}</code>
 										</td>
 										<td class="px-6 py-4">
 											{p.status === 'published' ? (
@@ -164,17 +166,17 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 												<Badge color="zinc" client:only="react">Draft</Badge>
 											)}
 										</td>
-										<td class="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums">
+										<td class="px-6 py-4 text-zinc-500 tabular-nums">
 											{formatDate(p.updated_at)}
 										</td>
 										<td class="px-6 py-4 text-right">
-											<a href={`/admin/pages/${p.id}`} class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Edit</a>
+											<a href={`/admin/pages/${p.id}`} class="text-indigo-600 hover:underline font-medium">Edit</a>
 										</td>
 									</tr>
 								))
 							) : (
 								<tr>
-									<td colspan="5" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+									<td colspan="5" class="px-6 py-12 text-center text-zinc-500">
 										No pages found.
 									</td>
 								</tr>
@@ -184,8 +186,8 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 				</div>
 
 				{/* Pagination */}
-				<div class="border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-zinc-500 dark:text-zinc-400">
+				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+					<div class="text-xs text-zinc-500">
 						Page {page} of {meta.totalPages}
 					</div>
 					<div class="flex gap-2">

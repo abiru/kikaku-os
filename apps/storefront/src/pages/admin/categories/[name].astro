@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import Badge from '../../../components/Badge.astro';
+import { Alert } from '../../../components/catalyst/alert-banner';
 import Button from '../../../components/Button.astro';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
@@ -85,7 +86,7 @@ const formatDate = (dateStr: string | null) => {
 				{categoryName}
 			</h1>
 			<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} products</span>
-		</div>
+		</Alert>
 			{/* Search Bar */}
 			<div class="mb-6">
 				<form method="get" class="relative max-w-md">
@@ -94,7 +95,7 @@ const formatDate = (dateStr: string | null) => {
 						name="q"
 						value={q}
 						placeholder="Search products in this category..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
 					/>
 					<svg
 						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
@@ -105,7 +106,7 @@ const formatDate = (dateStr: string | null) => {
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 					</svg>
 				</form>
-			</div>
+			</Alert>
 
 			{error && (
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
@@ -113,13 +114,13 @@ const formatDate = (dateStr: string | null) => {
 					<Button href="/admin/categories" variant="secondary" size="sm">
 						Back to Categories
 					</Button>
-				</div>
+				</Alert>
 			)}
 
 			{!error && (
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 					<div class="overflow-x-auto">
-						<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
+						<table class="w-full text-left text-sm text-zinc-950">
 							<thead class="bg-gray-50 border-b border-gray-200">
 								<tr>
 									<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
@@ -160,14 +161,14 @@ const formatDate = (dateStr: string | null) => {
 								)}
 							</tbody>
 						</table>
-					</div>
+					</Alert>
 
 					{/* Pagination */}
 					{meta.totalPages > 1 && (
 						<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
 							<div class="text-xs text-[#86868b]">
 								Page {page} of {meta.totalPages}
-							</div>
+							</Alert>
 							<div class="flex gap-2">
 								<Button
 									href={hasPrev ? `?page=${page - 1}&q=${q}` : '#'}
@@ -185,10 +186,10 @@ const formatDate = (dateStr: string | null) => {
 								>
 									Next
 								</Button>
-							</div>
-						</div>
+							</Alert>
+						</Alert>
 					)}
-				</div>
+				</Alert>
 			)}
-	</div>
+	</Alert>
 </AdminLayout>
