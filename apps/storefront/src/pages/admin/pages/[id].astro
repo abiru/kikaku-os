@@ -3,7 +3,11 @@ export const prerender = false;
 
 import Badge from '../../../components/Badge.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
-import Button from '../../../components/Button.astro';
+import { Input } from '../../../components/catalyst/input';
+import { Textarea } from '../../../components/catalyst/textarea';
+import { Select } from '../../../components/catalyst/select';
+import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
@@ -156,165 +160,163 @@ const canDelete = page && !isCorePage;
 					View page
 				</a>
 			)}
-		</Alert>
-			{successMessage && (
-				<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
-					{successMessage}
-				</Alert>
-			)}
+		</div>
+		{successMessage && (
+			<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
+				{successMessage}
+			</div>
+		)}
 
-			{error && !page && (
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-					<div class="text-red-600 mb-4">{error}</div>
-					<Button href="/admin/pages" variant="secondary" size="sm">
-						Back to Pages
-					</Button>
-				</Alert>
-			)}
+		{error && !page && (
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+				<div class="text-red-600 mb-4">{error}</div>
+				<Button href="/admin/pages" color="zinc" client:load>
+					Back to Pages
+				</Button>
+			</div>
+		)}
 
-			{error && page && (
-				<Alert color="red" client:load>
-					{error}
-				</Alert>
-			)}
+		{error && page && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
 
-			{page && (
-				<form method="POST" class="space-y-6">
-					{/* Status Card */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-						<div class="flex items-center justify-between">
-							<div class="flex items-center gap-4">
-								{page.status === 'published' ? (
-									<Badge severity="info">Published</Badge>
-								) : (
-									<Badge severity="secondary">Draft</Badge>
-								)}
-								{isCorePage && (
-									<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded">Core page</span>
-								)}
-							</Alert>
-							<div class="flex gap-2">
-								<button
-									type="button"
-									id="publish-btn"
-									class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${page.status === 'published' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-								>
-									{page.status === 'published' ? 'Unpublish' : 'Publish'}
-								</button>
-							</Alert>
-						</Alert>
-					</Alert>
+		{page && (
+			<form method="POST" class="space-y-6">
+				{/* Status Card */}
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-4">
+							{page.status === 'published' ? (
+								<Badge severity="info">Published</Badge>
+							) : (
+								<Badge severity="secondary">Draft</Badge>
+							)}
+							{isCorePage && (
+								<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded">Core page</span>
+							)}
+						</div>
+						<div class="flex gap-2">
+							<button
+								type="button"
+								id="publish-btn"
+								class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${page.status === 'published' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+							>
+								{page.status === 'published' ? 'Unpublish' : 'Publish'}
+							</button>
+						</div>
+					</div>
+				</div>
 
-					{/* Basic Info */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-						<h2 class="text-sm font-medium text-[#86868b]">Basic Information</h2>
+				{/* Basic Info */}
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+					<h2 class="text-sm font-medium text-[#86868b]">Basic Information</h2>
 
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<div>
-								<label for="title" class="block text-sm font-medium text-zinc-950 mb-2">
-									Title <span class="text-red-500">*</span>
-								</label>
-								<input
-									type="text"
-									id="title"
-									name="title"
-									required
-									value={page.title}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-								/>
-							</Alert>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<Field>
+							<Label>
+								Title <span class="text-red-500">*</span>
+							</Label>
+							<Input
+								type="text"
+								id="title"
+								name="title"
+								required
+								value={page.title}
+								client:load
+							/>
+						</Field>
 
-							<div>
-								<label for="slug" class="block text-sm font-medium text-zinc-950 mb-2">
+						<div>
+							<Field>
+								<Label>
 									Slug <span class="text-red-500">*</span>
-								</label>
+								</Label>
 								<div class="flex items-center gap-2">
 									<span class="text-sm text-[#86868b]">/</span>
-									<input
+									<Input
 										type="text"
 										id="slug"
 										name="slug"
 										required
 										value={page.slug}
 										pattern="^[a-z0-9-]+$"
-										class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+										class="flex-1 font-mono"
+										client:load
 									/>
-								</Alert>
-								<p class="mt-1 text-xs text-[#86868b]">Only lowercase letters, numbers, and hyphens</p>
-							</Alert>
+								</div>
+								<Description>Only lowercase letters, numbers, and hyphens</Description>
+							</Field>
+						</div>
 
-							<div>
-								<label for="status" class="block text-sm font-medium text-zinc-950 mb-2">
-									Status
-								</label>
-								<select
-									id="status"
-									name="status"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
-								>
-									<option value="draft" selected={page.status === 'draft'}>Draft</option>
-									<option value="published" selected={page.status === 'published'}>Published</option>
-								</select>
-							</Alert>
-						</Alert>
-					</Alert>
-
-					{/* SEO */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-						<h2 class="text-sm font-medium text-[#86868b]">SEO Settings</h2>
-
-						<div class="space-y-6">
-							<div>
-								<label for="meta_title" class="block text-sm font-medium text-zinc-950 mb-2">
-									Meta Title
-								</label>
-								<input
-									type="text"
-									id="meta_title"
-									name="meta_title"
-									value={page.meta_title || ''}
-									placeholder="Page Title - Site Name"
-									maxlength="255"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-								/>
-								<p class="mt-1 text-xs text-[#86868b]">Used as the browser tab title and in search results</p>
-							</Alert>
-
-							<div>
-								<label for="meta_description" class="block text-sm font-medium text-zinc-950 mb-2">
-									Meta Description
-								</label>
-								<textarea
-									id="meta_description"
-									name="meta_description"
-									rows="2"
-									maxlength="500"
-									placeholder="Brief description of the page content..."
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
-								>{page.meta_description || ''}</textarea>
-								<p class="mt-1 text-xs text-[#86868b]">Displayed in search engine results</p>
-							</Alert>
-						</Alert>
-					</Alert>
-
-					{/* Content */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-						<div class="flex items-center justify-between">
-							<h2 class="text-sm font-medium text-[#86868b]">Page Content (Markdown)</h2>
-							<button
-								type="button"
-								id="preview-toggle"
-								class="text-sm text-[#0071e3] hover:underline"
+						<Field>
+							<Label>Status</Label>
+							<Select
+								id="status"
+								name="status"
+								client:load
 							>
-								Toggle Preview
-							</button>
-						</Alert>
+								<option value="draft" selected={page.status === 'draft'}>Draft</option>
+								<option value="published" selected={page.status === 'published'}>Published</option>
+							</Select>
+						</Field>
+					</div>
+				</div>
 
-						<div id="editor-container">
-							<textarea
+				{/* SEO */}
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+					<h2 class="text-sm font-medium text-[#86868b]">SEO Settings</h2>
+
+					<div class="space-y-6">
+						<Field>
+							<Label>Meta Title</Label>
+							<Input
+								type="text"
+								id="meta_title"
+								name="meta_title"
+								value={page.meta_title || ''}
+								placeholder="Page Title - Site Name"
+								maxlength="255"
+								client:load
+							/>
+							<Description>Used as the browser tab title and in search results</Description>
+						</Field>
+
+						<Field>
+							<Label>Meta Description</Label>
+							<Textarea
+								id="meta_description"
+								name="meta_description"
+								rows={2}
+								maxlength="500"
+								placeholder="Brief description of the page content..."
+								client:load
+							>{page.meta_description || ''}</Textarea>
+							<Description>Displayed in search engine results</Description>
+						</Field>
+					</div>
+				</div>
+
+				{/* Content */}
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+					<div class="flex items-center justify-between">
+						<h2 class="text-sm font-medium text-[#86868b]">Page Content (Markdown)</h2>
+						<button
+							type="button"
+							id="preview-toggle"
+							class="text-sm text-[#0071e3] hover:underline"
+						>
+							Toggle Preview
+						</button>
+					</div>
+
+					<div id="editor-container">
+						<Field>
+							<Textarea
 								id="body"
 								name="body"
-								rows="20"
+								rows={20}
 								placeholder="# Heading 1
 
 ## Heading 2
@@ -331,61 +333,63 @@ const canDelete = page && !isCorePage;
 ```
 Code block
 ```"
-								class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
-							>{page.body}</textarea>
-							<p class="mt-2 text-xs text-[#86868b]">
+								class="font-mono resize-y"
+								client:load
+							>{page.body}</Textarea>
+							<Description>
 								Supports Markdown syntax. HTML is also valid within Markdown.
-							</p>
-						</Alert>
+							</Description>
+						</Field>
+					</div>
 
-						<div id="preview-container" class="hidden">
-							<div id="preview-content" class="prose prose-sm max-w-none min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white">
-								<p class="text-[#86868b]">Preview will appear here...</p>
-							</Alert>
-						</Alert>
-					</Alert>
+					<div id="preview-container" class="hidden">
+						<div id="preview-content" class="min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white prose prose-sm max-w-none">
+							<p class="text-[#86868b]">Preview will appear here...</p>
+						</div>
+					</div>
+				</div>
 
-					{/* Meta Info */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-						<dl class="grid grid-cols-2 gap-4 text-sm">
-							<div>
-								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(page.created_at)}</dd>
-							</Alert>
-							<div>
-								<dt class="text-[#86868b]">Updated</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(page.updated_at)}</dd>
-							</Alert>
-						</dl>
-					</Alert>
-
-					{/* Actions */}
-					<div class="flex justify-between items-center gap-3">
+				{/* Meta Info */}
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+					<dl class="grid grid-cols-2 gap-4 text-sm">
 						<div>
-							{canDelete ? (
-								<button
-									type="button"
-									id="delete-btn"
-									class="text-sm text-red-500 hover:underline"
-								>
-									Delete Page
-								</button>
-							) : isCorePage ? (
-								<span class="text-sm text-[#86868b]">Core pages cannot be deleted</span>
-							) : null}
-						</Alert>
-						<div class="flex gap-3">
-							<Button href="/admin/pages" variant="secondary" size="sm">
-								Back
-							</Button>
-							<Button type="submit" variant="primary" size="sm">
-								Save Changes
-							</Button>
-						</Alert>
-					</Alert>
-				</form>
-			)}
-	</Alert>
+							<dt class="text-[#86868b]">Created</dt>
+							<dd class="text-zinc-950 tabular-nums">{formatDate(page.created_at)}</dd>
+						</div>
+						<div>
+							<dt class="text-[#86868b]">Updated</dt>
+							<dd class="text-zinc-950 tabular-nums">{formatDate(page.updated_at)}</dd>
+						</div>
+					</dl>
+				</div>
+
+				{/* Actions */}
+				<div class="flex justify-between items-center gap-3">
+					<div>
+						{canDelete ? (
+							<button
+								type="button"
+								id="delete-btn"
+								class="text-sm text-red-500 hover:underline"
+							>
+								Delete Page
+							</button>
+						) : isCorePage ? (
+							<span class="text-sm text-[#86868b]">Core pages cannot be deleted</span>
+						) : null}
+					</div>
+					<div class="flex gap-3">
+						<Button href="/admin/pages" color="zinc" client:load>
+							Back
+						</Button>
+						<Button type="submit" color="indigo" client:load>
+							Save Changes
+						</Button>
+					</div>
+				</div>
+			</form>
+		)}
+	</div>
 </AdminLayout>
 
 <script define:vars={{ apiBase, apiKey, pageId: id, canDelete, currentStatus: page?.status }}>
