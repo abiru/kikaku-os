@@ -103,7 +103,7 @@ if (Astro.request.method === 'POST') {
 		<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<div class="md:col-span-2">
-					<label for="name" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+					<label for="name" class="block text-sm font-medium text-zinc-950 mb-2">
 						Name <span class="text-red-500">*</span>
 					</label>
 					<input
@@ -112,14 +112,14 @@ if (Astro.request.method === 'POST') {
 						name="name"
 						required
 						value={formValues.name}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 						placeholder="Standard Rate"
 					/>
 					<p class="text-xs text-[#86868b] mt-1">e.g., "Standard Rate", "Reduced Rate"</p>
 				</div>
 
 				<div>
-					<label for="rate" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+					<label for="rate" class="block text-sm font-medium text-zinc-950 mb-2">
 						Rate (decimal) <span class="text-red-500">*</span>
 					</label>
 					<input
@@ -131,14 +131,14 @@ if (Astro.request.method === 'POST') {
 						min="0"
 						max="1"
 						value={formValues.rate}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 						placeholder="0.10"
 					/>
 					<p class="text-xs text-[#86868b] mt-1">0.10 = 10%, 0.08 = 8%</p>
 				</div>
 
 				<div>
-					<label for="applicable_from" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+					<label for="applicable_from" class="block text-sm font-medium text-zinc-950 mb-2">
 						Applicable From <span class="text-red-500">*</span>
 					</label>
 					<input
@@ -147,12 +147,12 @@ if (Astro.request.method === 'POST') {
 						name="applicable_from"
 						required
 						value={formValues.applicable_from}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 					/>
 				</div>
 
 				<div>
-					<label for="applicable_to" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+					<label for="applicable_to" class="block text-sm font-medium text-zinc-950 mb-2">
 						Applicable To
 					</label>
 					<input
@@ -160,20 +160,20 @@ if (Astro.request.method === 'POST') {
 						id="applicable_to"
 						name="applicable_to"
 						value={formValues.applicable_to}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 					/>
 					<p class="text-xs text-[#86868b] mt-1">Leave empty for no end date</p>
 				</div>
 
 				<div class="md:col-span-2">
-					<label for="description" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+					<label for="description" class="block text-sm font-medium text-zinc-950 mb-2">
 						Description
 					</label>
 					<textarea
 						id="description"
 						name="description"
 						rows="3"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 						placeholder="Standard consumption tax (10%)"
 					>{formValues.description}</textarea>
 				</div>
@@ -187,7 +187,7 @@ if (Astro.request.method === 'POST') {
 							checked={formValues.is_active === 'true'}
 							class="w-5 h-5 text-[#0071e3] border-gray-300 rounded focus:ring-[#0071e3] focus:ring-2"
 						/>
-						<span class="text-sm font-medium text-zinc-950 dark:text-white">Active</span>
+						<span class="text-sm font-medium text-zinc-950">Active</span>
 					</label>
 					<p class="text-xs text-[#86868b] mt-1 ml-8">Only active rates can be assigned to products</p>
 				</div>

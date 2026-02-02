@@ -164,7 +164,7 @@ const formatDate = (dateStr: string) => {
 							name="subject"
 							required
 							value={template.subject}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 						/>
 						<p class="mt-1 text-xs text-[#86868b]">Supports variables like {"{{customer_name}}"}</p>
 					</Alert>
@@ -190,7 +190,7 @@ const formatDate = (dateStr: string) => {
 							id="body_html"
 							name="body_html"
 							rows="20"
-							class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+							class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
 						>{template.body_html}</textarea>
 					</Alert>
 
@@ -207,7 +207,7 @@ const formatDate = (dateStr: string) => {
 						id="body_text"
 						name="body_text"
 						rows="10"
-						class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+						class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
 					>{template.body_text}</textarea>
 					<p class="text-xs text-[#86868b]">Used when HTML email cannot be displayed</p>
 				</Alert>
@@ -220,7 +220,7 @@ const formatDate = (dateStr: string) => {
 							type="email"
 							id="preview-email"
 							placeholder="Enter email address..."
-							class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 						/>
 						<button
 							type="button"
@@ -239,11 +239,11 @@ const formatDate = (dateStr: string) => {
 					<dl class="grid grid-cols-2 gap-4 text-sm">
 						<div>
 							<dt class="text-[#86868b]">Created</dt>
-							<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(template.created_at)}</dd>
+							<dd class="text-zinc-950 tabular-nums">{formatDate(template.created_at)}</dd>
 						</Alert>
 						<div>
 							<dt class="text-[#86868b]">Updated</dt>
-							<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(template.updated_at)}</dd>
+							<dd class="text-zinc-950 tabular-nums">{formatDate(template.updated_at)}</dd>
 						</Alert>
 					</dl>
 				</Alert>

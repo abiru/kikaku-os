@@ -120,7 +120,7 @@ const getStatusLabel = (status: string) => {
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
 			<Heading>Inventory</Heading>
-			<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{inventory.length} variants</span>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{inventory.length} variants</span>
 		</div>
 			{error && (
 				<Alert color="red" client:load>
@@ -141,8 +141,8 @@ const getStatusLabel = (status: string) => {
 					class:list={[
 						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
 						!statusFilter
-							? 'bg-indigo-600 dark:bg-indigo-500 text-white'
-							: 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700'
+							? 'bg-indigo-600 text-white'
+							: 'bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50'
 					]}
 				>
 					All ({counts.all})
@@ -152,8 +152,8 @@ const getStatusLabel = (status: string) => {
 					class:list={[
 						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
 						statusFilter === 'low'
-							? 'bg-amber-500 dark:bg-amber-600 text-white'
-							: 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700'
+							? 'bg-amber-500 text-white'
+							: 'bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50'
 					]}
 				>
 					Low Stock ({counts.low})
@@ -163,8 +163,8 @@ const getStatusLabel = (status: string) => {
 					class:list={[
 						'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
 						statusFilter === 'out'
-							? 'bg-red-600 dark:bg-red-500 text-white'
-							: 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-950 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700'
+							? 'bg-red-600 text-white'
+							: 'bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50'
 					]}
 				>
 					Out of Stock ({counts.out})
@@ -180,16 +180,16 @@ const getStatusLabel = (status: string) => {
 						name="q"
 						value={searchQuery}
 						placeholder="Search by product, variant, or SKU..."
-						class="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-950 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
 					/>
-					<svg class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 					</svg>
 				</form>
 			</div>
 
 			<!-- Inventory Table -->
-			<div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
 					<Table client:load>
 						<TableHead>
@@ -208,14 +208,14 @@ const getStatusLabel = (status: string) => {
 								filteredInventory.map((item) => (
 									<TableRow data-variant-id={item.variant_id}>
 										<TableCell>
-											<a href={`/admin/products/${item.product_id}`} class="text-indigo-600 dark:text-indigo-400 hover:underline">
+											<a href={`/admin/products/${item.product_id}`} class="text-indigo-600 hover:underline">
 												{item.product_title}
 											</a>
 										</TableCell>
 										<TableCell>{item.variant_title}</TableCell>
-										<TableCell className="text-zinc-500 dark:text-zinc-400 font-mono text-xs">{item.sku || '-'}</TableCell>
+										<TableCell className="text-zinc-500 font-mono text-xs">{item.sku || '-'}</TableCell>
 										<TableCell className="tabular-nums font-semibold">{item.on_hand}</TableCell>
-										<TableCell className="tabular-nums text-zinc-500 dark:text-zinc-400">{item.threshold ?? '-'}</TableCell>
+										<TableCell className="tabular-nums text-zinc-500">{item.threshold ?? '-'}</TableCell>
 										<TableCell>
 											<Badge color={getStatusColor(item.status)} client:only="react">{getStatusLabel(item.status)}</Badge>
 										</TableCell>
@@ -223,7 +223,7 @@ const getStatusLabel = (status: string) => {
 											<div class="flex gap-2">
 												<button
 													type="button"
-													class="adjust-btn text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+													class="adjust-btn text-sm text-indigo-600 hover:underline"
 													data-variant-id={item.variant_id}
 													data-variant-title={item.variant_title}
 													data-product-title={item.product_title}
@@ -233,7 +233,7 @@ const getStatusLabel = (status: string) => {
 												</button>
 												<button
 													type="button"
-													class="threshold-btn text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:underline"
+													class="threshold-btn text-sm text-zinc-500 hover:text-zinc-950 hover:underline"
 													data-variant-id={item.variant_id}
 													data-variant-title={item.variant_title}
 													data-threshold={item.threshold ?? ''}
@@ -246,7 +246,7 @@ const getStatusLabel = (status: string) => {
 								))
 							) : (
 								<TableRow>
-									<TableCell colSpan={7} className="text-center text-zinc-500 dark:text-zinc-400">
+									<TableCell colSpan={7} className="text-center text-zinc-500">
 										{inventory.length === 0 ? 'No variants found. Add variants to products first.' : 'No items match your filters.'}
 									</TableCell>
 								</TableRow>
@@ -257,30 +257,30 @@ const getStatusLabel = (status: string) => {
 			</div>
 
 		<!-- Adjustment Modal -->
-		<div id="adjust-modal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-			<div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800">
-				<div class="p-6 border-b border-zinc-200 dark:border-zinc-800">
-					<h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Adjust Stock</h3>
-					<p id="adjust-subtitle" class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"></p>
+		<div id="adjust-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
+				<div class="p-6 border-b border-zinc-200">
+					<h3 class="text-lg font-semibold text-zinc-950">Adjust Stock</h3>
+					<p id="adjust-subtitle" class="text-sm text-zinc-500 mt-1"></p>
 				</div>
 				<form id="adjust-form" class="p-6 space-y-4">
 					<input type="hidden" id="adjust-variant-id" name="variant_id" />
 
 					<div>
-						<label class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+						<label class="block text-sm font-medium text-zinc-950 mb-2">
 							Current Stock: <span id="adjust-current" class="font-semibold tabular-nums"></span>
 						</label>
 					</div>
 
 					<div>
-						<label for="adjust-type" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+						<label for="adjust-type" class="block text-sm font-medium text-zinc-950 mb-2">
 							Adjustment Type <span class="text-red-500">*</span>
 						</label>
 						<select
 							id="adjust-type"
 							name="type"
 							required
-							class="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-950 dark:text-white bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
+							class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
 						>
 							<option value="add">Add Stock</option>
 							<option value="remove">Remove Stock</option>
@@ -288,7 +288,7 @@ const getStatusLabel = (status: string) => {
 					</div>
 
 					<div>
-						<label for="adjust-quantity" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+						<label for="adjust-quantity" class="block text-sm font-medium text-zinc-950 mb-2">
 							Quantity <span class="text-red-500">*</span>
 						</label>
 						<input
@@ -298,20 +298,20 @@ const getStatusLabel = (status: string) => {
 							required
 							min="1"
 							step="1"
-							class="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-950 dark:text-white bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all tabular-nums"
+							class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all tabular-nums"
 							placeholder="Enter quantity"
 						/>
 					</div>
 
 					<div>
-						<label for="adjust-reason" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+						<label for="adjust-reason" class="block text-sm font-medium text-zinc-950 mb-2">
 							Reason <span class="text-red-500">*</span>
 						</label>
 						<select
 							id="adjust-reason"
 							name="reason"
 							required
-							class="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-950 dark:text-white bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
+							class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
 						>
 							<option value="restock">Restock</option>
 							<option value="adjustment">Adjustment</option>
@@ -326,11 +326,11 @@ const getStatusLabel = (status: string) => {
 						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 					</div>
 
-					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200">
 						<button
 							type="button"
 							id="cancel-adjust-btn"
-							class="px-4 py-2 text-sm font-medium text-zinc-950 dark:text-white bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+							class="px-4 py-2 text-sm font-medium text-zinc-950 bg-zinc-100 rounded-lg hover:bg-zinc-200 transition-colors"
 						>
 							Cancel
 						</button>
@@ -346,17 +346,17 @@ const getStatusLabel = (status: string) => {
 		</div>
 
 		<!-- Threshold Modal -->
-		<div id="threshold-modal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-			<div class="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800">
-				<div class="p-6 border-b border-zinc-200 dark:border-zinc-800">
-					<h3 class="text-lg font-semibold text-zinc-950 dark:text-white">Set Threshold</h3>
-					<p id="threshold-subtitle" class="text-sm text-zinc-500 dark:text-zinc-400 mt-1"></p>
+		<div id="threshold-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
+				<div class="p-6 border-b border-zinc-200">
+					<h3 class="text-lg font-semibold text-zinc-950">Set Threshold</h3>
+					<p id="threshold-subtitle" class="text-sm text-zinc-500 mt-1"></p>
 				</div>
 				<form id="threshold-form" class="p-6 space-y-4">
 					<input type="hidden" id="threshold-variant-id" name="variant_id" />
 
 					<div>
-						<label for="threshold-value" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+						<label for="threshold-value" class="block text-sm font-medium text-zinc-950 mb-2">
 							Low Stock Threshold
 						</label>
 						<input
@@ -366,21 +366,21 @@ const getStatusLabel = (status: string) => {
 							required
 							min="0"
 							step="1"
-							class="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-950 dark:text-white bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all tabular-nums"
+							class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all tabular-nums"
 							placeholder="Enter threshold"
 						/>
-						<p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Alert when stock falls below this number.</p>
+						<p class="text-xs text-zinc-500 mt-1">Alert when stock falls below this number.</p>
 					</div>
 
 					<div id="threshold-error" class="hidden">
 						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 					</div>
 
-					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200">
 						<button
 							type="button"
 							id="cancel-threshold-btn"
-							class="px-4 py-2 text-sm font-medium text-zinc-950 dark:text-white bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+							class="px-4 py-2 text-sm font-medium text-zinc-950 bg-zinc-100 rounded-lg hover:bg-zinc-200 transition-colors"
 						>
 							Cancel
 						</button>

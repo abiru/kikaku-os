@@ -196,15 +196,15 @@ const getStatusBadge = (status: string) => {
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Total Orders</div>
-							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{stats.total_orders}</div>
+							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{stats.total_orders}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Total Spent</div>
-							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{formatCurrency(stats.total_spent)}</div>
+							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(stats.total_spent)}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Avg. Order Value</div>
-							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{formatCurrency(Math.round(stats.avg_order_value))}</div>
+							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(Math.round(stats.avg_order_value))}</div>
 						</div>
 					</div>
 
