@@ -3,6 +3,7 @@ export const prerender = false;
 
 import { Alert } from '../../../components/catalyst/alert-banner';
 import { Button } from '../../../components/catalyst/button';
+import { Checkbox } from '../../../components/catalyst/checkbox';
 import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Input } from '../../../components/catalyst/input';
@@ -281,7 +282,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 					<Fieldset client:only="react">
 						<Field>
 							<Label>Title *</Label>
-							<Input type="text" name="title" required value={product.title} />
+							<Input client:load type="text" name="title" required value={product.title} />
 						</Field>
 
 						<Field>
@@ -299,7 +300,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 						<Field>
 							<Label>Status</Label>
-							<Select name="status">
+							<Select client:load name="status">
 								<option value="active" selected={product.status === 'active'}>Active</option>
 								<option value="draft" selected={product.status === 'draft'}>Draft</option>
 								<option value="archived" selected={product.status === 'archived'}>Archived</option>
@@ -308,12 +309,10 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 						<Field>
 							<div class="flex items-center gap-2">
-								<input
-									type="checkbox"
+								<Checkbox client:load
 									id="featured"
 									name="featured"
 									checked={product.featured === 1}
-									class="w-4 h-4 text-[#0071e3] border-gray-300 rounded focus:ring-[#0071e3]"
 								/>
 								<Label htmlFor="featured" className="!mb-0">
 									ホームページに表示（Featured）
@@ -324,7 +323,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 						<Field>
 							<Label>Category</Label>
-							<Input
+							<Input client:load
 								type="text"
 								name="category"
 								list="category-list"
@@ -341,7 +340,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 						<Field>
 							<Label>Tax Rate</Label>
-							<Select name="tax_rate_id">
+							<Select client:load name="tax_rate_id">
 								<option value="">Select tax rate...</option>
 								{taxRates.map((rate) => (
 									<option value={rate.id} selected={product.tax_rate_id === rate.id}>
