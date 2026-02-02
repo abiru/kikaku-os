@@ -4,6 +4,28 @@
 
 When working on multiple features or issues simultaneously, **ALWAYS** use separate terminal tabs for each worktree.
 
+## tmux Automation (Recommended)
+
+**Using tmux?** The `/feature` command automatically creates a new tmux window for each worktree!
+
+```bash
+# In tmux session
+cd ~/Code/kikaku-os
+/feature 142
+
+# Automatically:
+# 1. Creates worktree at ~/Code/kikaku-os-142
+# 2. Creates tmux window named "issue-142"
+# 3. Starts dev servers in split panes
+# 4. You can switch with: Ctrl+b w
+```
+
+**Benefits**:
+- No manual tab creation
+- Dev servers start automatically
+- Split panes for API + Storefront
+- Named windows for easy identification
+
 ## Core Principles
 
 ### 1. Main Worktree is Sacred

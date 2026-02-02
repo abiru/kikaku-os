@@ -214,6 +214,37 @@ if ($ARGUMENTS.match(/^\d+$/)) {
    pnpm install
    ```
 
+5. **自動的に新しいターミナルウィンドウ/タブを開く**:
+
+   **tmuxセッション内の場合**（自動検知）:
+   ```bash
+   if [[ -n "$TMUX" ]]; then
+     # tmuxで新しいウィンドウを自動作成
+     tmux new-window -c ~/Code/kikaku-os-{number} -n "issue-{number}"
+     tmux send-keys -t issue-{number} "pnpm dev:api --port 8788" Enter
+     tmux split-window -h -t issue-{number}
+     tmux send-keys -t issue-{number} "pnpm dev:store --port 4322" Enter
+
+     echo "✅ tmux window 'issue-{number}' created with dev servers running"
+     echo "   Switch to it with: Ctrl+b w (select window)"
+   fi
+   ```
+
+   **tmuxを使用していない場合**:
+   ```
+   ⚠️ Next: Open New Terminal Tab
+
+   IMPORTANT: You need to open a new terminal tab for this worktree.
+
+   In your new terminal tab, run:
+
+   cd ~/Code/kikaku-os-{number}
+   pnpm dev:api --port 8788
+
+   Then in another split/tab:
+   pnpm dev:store --port 4322
+   ```
+
 ### ステップ3: Issue
 
 **スキップ条件**: Issue番号が指定された場合（`/feature 142`）はこのステップをスキップ。指定されたIssueが存在することを確認。
