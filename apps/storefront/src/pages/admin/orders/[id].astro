@@ -10,7 +10,7 @@ import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field } from '../../../components/catalyst/fieldset';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -378,7 +378,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<form id="create-fulfillment-form" class="p-6 space-y-4">
 						<Fieldset client:load>
 						<Field>
-							<Label htmlFor="create-status">Status</Label>
+							<label for="create-status" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
 							<Select client:load id="create-status" name="status">
 								<option value="pending">Pending</option>
 								<option value="processing">Processing</option>
@@ -388,7 +388,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						</Field>
 
 						<Field>
-							<Label htmlFor="create-tracking">Tracking Number</Label>
+							<label for="create-tracking" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Tracking Number</label>
 							<Input client:load
 								type="text"
 								id="create-tracking"
@@ -432,7 +432,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 
 						<Fieldset client:load>
 						<Field>
-							<Label htmlFor="edit-status">Status</Label>
+							<label for="edit-status" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
 							<Select client:load id="edit-status" name="status">
 								<option value="pending">Pending</option>
 								<option value="processing">Processing</option>
@@ -443,7 +443,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						</Field>
 
 						<Field>
-							<Label htmlFor="edit-tracking">Tracking Number</Label>
+							<label for="edit-tracking" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Tracking Number</label>
 							<Input client:load
 								type="text"
 								id="edit-tracking"

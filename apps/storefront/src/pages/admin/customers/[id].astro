@@ -4,7 +4,7 @@ export const prerender = false;
 import { Alert } from '../../../components/catalyst/alert-banner';
 import { Badge } from '../../../components/catalyst/badge';
 import { Button } from '../../../components/catalyst/button';
-import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field } from '../../../components/catalyst/fieldset';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Input } from '../../../components/catalyst/input';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
@@ -214,7 +214,7 @@ const getStatusBadge = (status: string) => {
 
 						<Fieldset client:load>
 							<Field>
-								<Label>Name *</Label>
+								<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Name *</label>
 								<Input
 									type="text"
 									name="name"
@@ -224,7 +224,7 @@ const getStatusBadge = (status: string) => {
 							</Field>
 
 							<Field>
-								<Label>Email</Label>
+								<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Email</label>
 								<Input
 									type="email"
 									name="email"

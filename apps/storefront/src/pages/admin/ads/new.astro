@@ -8,7 +8,7 @@ import { getApiBase } from '../../../lib/api';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
 import { Select } from '../../../components/catalyst/select';
-import { Field, Label } from '../../../components/catalyst/fieldset';
+import { Field } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -38,7 +38,7 @@ const apiBase = getApiBase();
       <form id="generate-form" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field>
-            <Label>Product Name <span class="text-red-500">*</span></Label>
+            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Product Name <span class="text-red-500">*</span></label>
             <Input
               type="text"
               id="gen_productName"
@@ -48,7 +48,7 @@ const apiBase = getApiBase();
           </Field>
 
           <Field>
-            <Label>Landing Page URL <span class="text-red-500">*</span></Label>
+            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Landing Page URL <span class="text-red-500">*</span></label>
             <Input
               type="url"
               id="gen_finalUrl"
@@ -60,7 +60,7 @@ const apiBase = getApiBase();
         </div>
 
         <Field>
-          <Label>Product Description <span class="text-red-500">*</span></Label>
+          <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Product Description <span class="text-red-500">*</span></label>
           <Textarea
             id="gen_productDescription"
             required
@@ -71,7 +71,7 @@ const apiBase = getApiBase();
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field>
-            <Label>Target Audience <span class="text-red-500">*</span></Label>
+            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Target Audience <span class="text-red-500">*</span></label>
             <Input
               type="text"
               id="gen_targetAudience"
@@ -82,7 +82,7 @@ const apiBase = getApiBase();
           </Field>
 
           <Field>
-            <Label>Keywords <span class="text-red-500">*</span></Label>
+            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Keywords <span class="text-red-500">*</span></label>
             <Input
               type="text"
               id="gen_keywords"
@@ -95,7 +95,7 @@ const apiBase = getApiBase();
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Field>
-            <Label>Tone</Label>
+            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Tone</label>
             <Select
               id="gen_tone"
               client:load
@@ -108,7 +108,7 @@ const apiBase = getApiBase();
           </Field>
 
           <Field>
-            <Label>Language</Label>
+            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Language</label>
             <Select
               id="gen_language"
               client:load
@@ -119,7 +119,7 @@ const apiBase = getApiBase();
           </Field>
 
           <Field>
-            <Label>Ad Type</Label>
+            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Ad Type</label>
             <Select
               id="gen_adType"
               client:load

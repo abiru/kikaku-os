@@ -8,7 +8,7 @@ import { getApiBase } from '../../../lib/api';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
 import { Checkbox } from '../../../components/catalyst/checkbox';
-import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -180,7 +180,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 									max="1"
 									value={taxRate.rate}
 								/>
-								<Description>Current: {formatRate(taxRate.rate)}</Description>
+								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Current: {formatRate(taxRate.rate)}</p>
 							</Field>
 						</div>
 
@@ -206,7 +206,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 									name="applicable_to"
 									value={taxRate.applicable_to || ''}
 								/>
-								<Description>Leave empty for no end date</Description>
+								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for no end date</p>
 							</Field>
 						</div>
 

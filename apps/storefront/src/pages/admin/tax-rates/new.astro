@@ -5,7 +5,7 @@ import { Alert } from '../../../components/catalyst/alert-banner';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
-import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
 import { Checkbox, CheckboxField } from '../../../components/catalyst/checkbox';
@@ -120,7 +120,7 @@ if (Astro.request.method === 'POST') {
 							defaultValue={formValues.name}
 							placeholder="Standard Rate"
 						/>
-						<Description>e.g., "Standard Rate", "Reduced Rate"</Description>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">e.g., "Standard Rate", "Reduced Rate"</p>
 					</Field>
 				</div>
 
@@ -140,7 +140,7 @@ if (Astro.request.method === 'POST') {
 							defaultValue={formValues.rate}
 							placeholder="0.10"
 						/>
-						<Description>0.10 = 10%, 0.08 = 8%</Description>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">0.10 = 10%, 0.08 = 8%</p>
 					</Field>
 				</div>
 
@@ -168,7 +168,7 @@ if (Astro.request.method === 'POST') {
 							name="applicable_to"
 							defaultValue={formValues.applicable_to}
 						/>
-						<Description>Leave empty for no end date</Description>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for no end date</p>
 					</Field>
 				</div>
 
@@ -196,7 +196,7 @@ if (Astro.request.method === 'POST') {
 							color="indigo"
 						/>
 						<Label>Active</Label>
-						<Description>Only active rates can be assigned to products</Description>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Only active rates can be assigned to products</p>
 					</CheckboxField>
 				</div>
 			</div>

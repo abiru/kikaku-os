@@ -10,7 +10,7 @@ import { getApiBase } from '../../lib/api';
 import { Input } from '../../components/catalyst/input';
 import { Textarea } from '../../components/catalyst/textarea';
 import { Checkbox } from '../../components/catalyst/checkbox';
-import { Field, Label, Description } from '../../components/catalyst/fieldset';
+import { Field } from '../../components/catalyst/fieldset';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -178,10 +178,10 @@ const formatBooleanValue = (value: string): boolean => {
             {settings.map((setting) => (
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                 <div class="md:col-span-1">
-                  <Label htmlFor={`setting_${setting.key}`}>
+                  <label for={`setting_${setting.key}`} data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">
                     {setting.description || setting.key}
-                  </Label>
-                  <Description>{setting.key}</Description>
+                  </label>
+                  <p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{setting.key}</p>
                   <Badge color="zinc" client:only="react" className="mt-2 text-xs">
                     {setting.data_type}
                   </Badge>

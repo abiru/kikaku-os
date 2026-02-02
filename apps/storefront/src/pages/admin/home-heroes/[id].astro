@@ -3,7 +3,7 @@ export const prerender = false;
 
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Fieldset, Field, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import { Badge } from '../../../components/catalyst/badge';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
@@ -314,7 +314,7 @@ if (Astro.request.method === 'POST' && hero) {
 						min="0"
 
 					/>
-					<Description>Lower numbers appear first on the homepage</Description>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Lower numbers appear first on the homepage</p>
 				</Field>
 
 				{/* Status */}

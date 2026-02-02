@@ -7,7 +7,7 @@ import { getApiBase } from '../../lib/api';
 import { Badge } from '../../components/catalyst/badge';
 import { Heading } from '../../components/catalyst/heading';
 import { Input } from '../../components/catalyst/input';
-import { Field, Label } from '../../components/catalyst/fieldset';
+import { Field } from '../../components/catalyst/fieldset';
 import { Button } from '../../components/catalyst/button';
 
 const apiBase = getApiBase();
@@ -141,7 +141,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<input type="hidden" id="ship-fulfillment-id" name="fulfillmentId" />
 
 					<Field>
-						<Label htmlFor="ship-tracking">Tracking Number</Label>
+						<label for="ship-tracking" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Tracking Number</label>
 						<Input client:load
 							type="text"
 							id="ship-tracking"

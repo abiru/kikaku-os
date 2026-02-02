@@ -8,7 +8,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
-import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Field, Label } from '../../../components/catalyst/fieldset';
 import { Button as CatalystButton } from '../../../components/catalyst/button';
 
 const { slug } = Astro.params;
@@ -169,7 +169,7 @@ const formatDate = (dateStr: string) => {
 							required
 							value={template.subject}
 						/>
-						<Description>Supports variables like {`{{customer_name}}`}</Description>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Supports variables like {`{{customer_name}}`}</p>
 					</Field>
 				</div>
 
@@ -211,7 +211,7 @@ const formatDate = (dateStr: string) => {
 							name="body_text"
 							rows={10}
 						>{template.body_text}</Textarea>
-						<Description>Used when HTML email cannot be displayed</Description>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Used when HTML email cannot be displayed</p>
 					</Field>
 				</div>
 
