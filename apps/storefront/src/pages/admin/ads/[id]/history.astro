@@ -3,7 +3,7 @@ export const prerender = false;
 
 import AdminLayout from '../../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../../components/catalyst/alert-banner';
-import Badge from '../../../../components/Badge.astro';
+import { Badge } from '../../../../components/catalyst/badge';
 import { Button } from '../../../../components/catalyst/button';
 import { getApiBase } from '../../../../lib/api';
 
@@ -112,7 +112,7 @@ const formatDate = (dateStr: string) => {
                   <div class="flex items-center gap-2 mb-2">
                     <span class="text-sm text-gray-500">{formatDate(item.created_at)}</span>
                     {item.selected === 1 && (
-                      <Badge severity="info">Selected</Badge>
+                      <Badge color="blue" client:load>Selected</Badge>
                     )}
                   </Alert>
                 </Alert>

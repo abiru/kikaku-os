@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 
-import Badge from '../../components/Badge.astro';
+import { Badge } from '../../components/catalyst/badge';
 import { Button } from '../../components/catalyst/button';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
@@ -123,11 +123,11 @@ const hasPrev = page > 1;
 									</td>
 									<td class="px-6 py-4">
 										{hero.status === 'draft' ? (
-											<Badge severity="secondary">Draft</Badge>
+											<Badge color="zinc" client:load>Draft</Badge>
 										) : hero.status === 'archived' ? (
-											<Badge severity="critical">Archived</Badge>
+											<Badge color="red" client:load>Archived</Badge>
 										) : (
-											<Badge severity="info">Active</Badge>
+											<Badge color="blue" client:load>Active</Badge>
 										)}
 									</td>
 									<td class="px-6 py-4 text-[#86868b] tabular-nums">

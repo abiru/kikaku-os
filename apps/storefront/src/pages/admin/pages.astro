@@ -191,22 +191,40 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 						Page {page} of {meta.totalPages}
 					</div>
 					<div class="flex gap-2">
-						<Button
-							href={hasPrev ? `?page=${page - 1}&q=${q}&status=${status}` : '#'}
-							disabled={!hasPrev}
-							
-							outline client:load
-						>
-							Previous
-						</Button>
-						<Button
-							href={hasNext ? `?page=${page + 1}&q=${q}&status=${status}` : '#'}
-							disabled={!hasNext}
-							
-							outline client:load
-						>
-							Next
-						</Button>
+						{hasPrev ? (
+							<Button
+								href={`?page=${page - 1}&q=${q}&status=${status}`}
+								outline
+								client:load
+							>
+								Previous
+							</Button>
+						) : (
+							<Button
+								plain
+								disabled
+								client:load
+							>
+								Previous
+							</Button>
+						)}
+						{hasNext ? (
+							<Button
+								href={`?page=${page + 1}&q=${q}&status=${status}`}
+								outline
+								client:load
+							>
+								Next
+							</Button>
+						) : (
+							<Button
+								plain
+								disabled
+								client:load
+							>
+								Next
+							</Button>
+						)}
 					</div>
 				</div>
 			</div>
