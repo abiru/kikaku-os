@@ -6,6 +6,10 @@ import { Alert } from '../../../components/catalyst/alert-banner';
 import Button from '../../../components/Button.astro';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { Input } from '../../../components/catalyst/input';
+import { Textarea } from '../../../components/catalyst/textarea';
+import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { CatalystButton } from '../../../components/catalyst/button';
 
 const { slug } = Astro.params;
 const apiBase = getApiBase();
@@ -157,18 +161,17 @@ const formatDate = (dateStr: string) => {
 				{/* Subject */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
 					<h2 class="text-sm font-medium text-[#86868b]">Email Subject</h2>
-					<div>
-						<input
+					<Field>
+						<Input client:load
 							type="text"
 							id="subject"
 							name="subject"
 							required
 							value={template.subject}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 						/>
-						<p class="mt-1 text-xs text-[#86868b]">Supports variables like {"{{customer_name}}"}</p>
-					</Alert>
-				</Alert>
+						<Description>Supports variables like {`{{customer_name}}`}</Description>
+					</Field>
+				</div>
 
 				{/* HTML Body */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
@@ -186,13 +189,12 @@ const formatDate = (dateStr: string) => {
 					</Alert>
 
 					<div id="html-editor-container">
-						<textarea
+						<Textarea client:load
 							id="body_html"
 							name="body_html"
-							rows="20"
-							class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
-						>{template.body_html}</textarea>
-					</Alert>
+							rows={20}
+						>{template.body_html}</Textarea>
+					</div>
 
 					<div id="html-preview-container" class="hidden">
 						<div id="html-preview-content" class="min-h-[300px] border border-gray-200 rounded-lg bg-white overflow-auto">
@@ -203,33 +205,34 @@ const formatDate = (dateStr: string) => {
 				{/* Text Body */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
 					<h2 class="text-sm font-medium text-[#86868b]">Plain Text Content (Fallback)</h2>
-					<textarea
-						id="body_text"
-						name="body_text"
-						rows="10"
-						class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
-					>{template.body_text}</textarea>
-					<p class="text-xs text-[#86868b]">Used when HTML email cannot be displayed</p>
-				</Alert>
+					<Field>
+						<Textarea client:load
+							id="body_text"
+							name="body_text"
+							rows={10}
+						>{template.body_text}</Textarea>
+						<Description>Used when HTML email cannot be displayed</Description>
+					</Field>
+				</div>
 
 				{/* Preview Email */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
 					<h2 class="text-sm font-medium text-[#86868b]">Send Test Email</h2>
 					<div class="flex gap-4">
-						<input
+						<Input client:load
 							type="email"
 							id="preview-email"
 							placeholder="Enter email address..."
-							class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							className="flex-1"
 						/>
-						<button
+						<CatalystButton client:load
 							type="button"
 							id="send-preview-btn"
-							class="px-4 py-2 bg-[#1d1d1f] text-white text-sm font-medium rounded-lg hover:bg-[#333] transition-colors"
+							color="zinc"
 						>
 							Send Preview
-						</button>
-					</Alert>
+						</CatalystButton>
+					</div>
 					<p class="text-xs text-[#86868b]">A test email will be sent with sample data</p>
 					<div id="preview-result" class="hidden"></div>
 				</Alert>
