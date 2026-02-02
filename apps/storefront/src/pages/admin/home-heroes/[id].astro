@@ -234,7 +234,7 @@ if (Astro.request.method === 'POST' && hero) {
 						value={hero.title}
 						required
 						maxLength={255}
-						client:load
+						
 					/>
 				</Field>
 
@@ -247,7 +247,7 @@ if (Astro.request.method === 'POST' && hero) {
 						name="subtitle"
 						value={hero.subtitle || ''}
 						maxLength={500}
-						client:load
+						
 					/>
 				</Field>
 
@@ -261,7 +261,7 @@ if (Astro.request.method === 'POST' && hero) {
 							name="cta_primary_text"
 							value={hero.cta_primary_text || ''}
 							maxLength={100}
-							client:load
+							
 						/>
 					</Field>
 					<Field>
@@ -272,7 +272,7 @@ if (Astro.request.method === 'POST' && hero) {
 							name="cta_primary_url"
 							value={hero.cta_primary_url || ''}
 							maxLength={500}
-							client:load
+							
 						/>
 					</Field>
 				</div>
@@ -287,7 +287,7 @@ if (Astro.request.method === 'POST' && hero) {
 							name="cta_secondary_text"
 							value={hero.cta_secondary_text || ''}
 							maxLength={100}
-							client:load
+							
 						/>
 					</Field>
 					<Field>
@@ -298,7 +298,7 @@ if (Astro.request.method === 'POST' && hero) {
 							name="cta_secondary_url"
 							value={hero.cta_secondary_url || ''}
 							maxLength={500}
-							client:load
+							
 						/>
 					</Field>
 				</div>
@@ -312,7 +312,7 @@ if (Astro.request.method === 'POST' && hero) {
 						name="position"
 						value={hero.position}
 						min="0"
-						client:load
+						
 					/>
 					<Description>Lower numbers appear first on the homepage</Description>
 				</Field>
@@ -323,7 +323,7 @@ if (Astro.request.method === 'POST' && hero) {
 					<Select
 						id="status"
 						name="status"
-						client:load
+						
 					>
 						<option value="draft" selected={hero.status === 'draft'}>Draft</option>
 						<option value="active" selected={hero.status === 'active'}>Active</option>
@@ -333,10 +333,10 @@ if (Astro.request.method === 'POST' && hero) {
 
 				{/* Submit Button */}
 				<div class="flex gap-3 pt-4">
-					<Button type="submit" color="indigo" client:load>
+					<Button type="submit" color="indigo">
 						Save Changes
 					</Button>
-					<Button href="/admin/home-heroes" color="zinc" client:load>
+					<Button href="/admin/home-heroes" color="zinc">
 						Cancel
 					</Button>
 				</div>
