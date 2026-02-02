@@ -1,4 +1,6 @@
 import { Badge } from '../catalyst/badge';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
+import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
 
 type StripeEvent = {
 	event_id: string;
@@ -45,91 +47,73 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 	};
 
 	return (
-		<div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+		<div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 			<div className="overflow-x-auto">
-				<table className="w-full text-left text-sm text-zinc-950 dark:text-white">
-					<thead className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
-						<tr>
-							<th className="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Received</th>
-							<th className="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Event ID</th>
-							<th className="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Type</th>
-							<th className="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Status</th>
-							<th className="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Error</th>
-							<th className="px-6 py-3 font-medium text-zinc-500 dark:text-zinc-400">Processed</th>
-						</tr>
-					</thead>
-					<tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+				<Table>
+					<TableHead>
+						<TableRow>
+							<TableHeader>Received</TableHeader>
+							<TableHeader>Event ID</TableHeader>
+							<TableHeader>Type</TableHeader>
+							<TableHeader>Status</TableHeader>
+							<TableHeader>Error</TableHeader>
+							<TableHeader>Processed</TableHeader>
+						</TableRow>
+					</TableHead>
+					<TableBody>
 						{events.length > 0 ? (
 							events.map((e) => (
-								<tr
+								<TableRow
 									key={e.event_id}
-									className={`transition-colors ${
+									className={
 										e.processing_status === 'failed'
-											? 'bg-red-50/50 dark:bg-red-950/20 hover:bg-red-50 dark:hover:bg-red-950/30'
-											: 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
-									}`}
+											? 'bg-red-50/50 hover:bg-red-50'
+											: ''
+									}
 								>
-									<td className="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums whitespace-nowrap">
+									<TableCell className="text-zinc-500 tabular-nums whitespace-nowrap">
 										{formatDate(e.received_at)}
-									</td>
-									<td className="px-6 py-4 font-mono text-xs">
-										<span className="bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{e.event_id}</span>
-									</td>
-									<td className="px-6 py-4 font-mono text-xs">{e.event_type}</td>
-									<td className="px-6 py-4">
+									</TableCell>
+									<TableCell className="font-mono text-xs">
+										<span className="bg-zinc-100 px-1.5 py-0.5 rounded">{e.event_id}</span>
+									</TableCell>
+									<TableCell className="font-mono text-xs">{e.event_type}</TableCell>
+									<TableCell>
 										<Badge color={getStatusColor(e.processing_status)}>{e.processing_status}</Badge>
-									</td>
-									<td className="px-6 py-4 text-xs max-w-xs truncate" title={e.error || ''}>
+									</TableCell>
+									<TableCell className="text-xs max-w-xs truncate" title={e.error || ''}>
 										{e.error ? (
-											<span className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-2 py-1 rounded">{e.error}</span>
+											<span className="text-red-600 bg-red-50 px-2 py-1 rounded">{e.error}</span>
 										) : '-'}
-									</td>
-									<td className="px-6 py-4 text-zinc-500 dark:text-zinc-400 tabular-nums whitespace-nowrap">
+									</TableCell>
+									<TableCell className="text-zinc-500 tabular-nums whitespace-nowrap">
 										{formatDate(e.processed_at)}
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							))
 						) : (
-							<tr>
-								<td colSpan={6} className="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+							<TableRow>
+								<TableCell colSpan={6} className="text-center text-zinc-500">
 									No events found.
-								</td>
-							</tr>
+								</TableCell>
+							</TableRow>
 						)}
-					</tbody>
-				</table>
+					</TableBody>
+				</Table>
 			</div>
 
 			{/* Pagination */}
-			<div className="border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
-				<div className="text-xs text-zinc-500 dark:text-zinc-400">
-					Page {currentPage} of {totalPages}
+			{totalPages > 1 && (
+				<div className="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+					<div className="text-sm text-zinc-500">
+						Page {currentPage} of {totalPages}
+					</div>
+					<Pagination>
+						<PaginationPrevious href={hasPrev ? buildPaginationUrl(currentPage - 1) : null} />
+						<PaginationNext href={hasNext ? buildPaginationUrl(currentPage + 1) : null} />
+					</Pagination>
 				</div>
-				<div className="flex gap-2">
-					<a
-						href={hasPrev ? buildPaginationUrl(currentPage - 1) : '#'}
-						className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-							hasPrev
-								? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700'
-								: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'
-						}`}
-						aria-disabled={!hasPrev}
-					>
-						Previous
-					</a>
-					<a
-						href={hasNext ? buildPaginationUrl(currentPage + 1) : '#'}
-						className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-							hasNext
-								? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700'
-								: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 cursor-not-allowed'
-						}`}
-						aria-disabled={!hasNext}
-					>
-						Next
-					</a>
-				</div>
-			</div>
+			)}
 		</div>
 	);
 }

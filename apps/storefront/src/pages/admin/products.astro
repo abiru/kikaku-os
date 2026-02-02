@@ -55,7 +55,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
 				<Heading>Products</Heading>
-				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full dark:bg-zinc-800 dark:text-zinc-400">{meta.totalCount} items</span>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
 			</Alert>
 			<Button client:only="react" href="/admin/products/new">
 				+ New Product
@@ -68,8 +68,8 @@ if (import.meta.env.ADMIN_API_KEY) {
 				href="?status=all"
 				class={`px-4 py-2 text-sm rounded-lg transition-colors ${
 					status === 'all'
-						? 'bg-indigo-600 text-white dark:bg-indigo-500'
-						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700'
+						? 'bg-indigo-600 text-white'
+						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200'
 				}`}
 			>
 				All
@@ -78,8 +78,8 @@ if (import.meta.env.ADMIN_API_KEY) {
 				href="?status=active"
 				class={`px-4 py-2 text-sm rounded-lg transition-colors ${
 					status === 'active'
-						? 'bg-indigo-600 text-white dark:bg-indigo-500'
-						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700'
+						? 'bg-indigo-600 text-white'
+						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200'
 				}`}
 			>
 				Active
@@ -88,8 +88,8 @@ if (import.meta.env.ADMIN_API_KEY) {
 				href="?status=draft"
 				class={`px-4 py-2 text-sm rounded-lg transition-colors ${
 					status === 'draft'
-						? 'bg-indigo-600 text-white dark:bg-indigo-500'
-						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700'
+						? 'bg-indigo-600 text-white'
+						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200'
 				}`}
 			>
 				Draft
@@ -98,8 +98,8 @@ if (import.meta.env.ADMIN_API_KEY) {
 				href="?status=archived"
 				class={`px-4 py-2 text-sm rounded-lg transition-colors ${
 					status === 'archived'
-						? 'bg-indigo-600 text-white dark:bg-indigo-500'
-						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700'
+						? 'bg-indigo-600 text-white'
+						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200'
 				}`}
 			>
 				Archived
@@ -114,7 +114,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 					name="q"
 					value={q}
 					placeholder="Search by title..."
-					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm dark:bg-zinc-900 dark:border-zinc-700 dark:text-white"
+					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
 				/>
 				<svg
 					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
