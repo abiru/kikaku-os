@@ -61,6 +61,36 @@ pnpm db:seed
 3. **Stripeが正** - 財務データはStripeをソースとし、Webhookで同期
 4. **証跡保存** - レシート等はR2に、監査ログはD1に保存
 
+## AI機能（Claude API）
+
+### Cloudflare AI Gateway統合
+
+Claude API呼び出しはCloudflare AI Gateway経由で実行され、以下の機能を提供：
+
+- **キャッシング**: 重複リクエストのコスト削減
+- **モニタリング**: トークン使用量・コストのリアルタイム追跡
+- **レート制限**: Cloudflare側での追加制限
+- **フォールバック**: Gateway障害時は直接API呼び出しに自動切替
+
+### セットアップ手順
+
+1. **Cloudflare Dashboard**でAI Gatewayを作成:
+   - https://dash.cloudflare.com/?to=/:account/ai/ai-gateway
+   - Gateway名を設定（例: `ledkikaku-ai-gateway`）
+   - `account_id` と `gateway_id` をコピー
+
+2. **環境変数を設定**:
+   ```bash
+   # .dev.vars (ローカル開発)
+   CLAUDE_API_KEY=sk-ant-xxx
+   AI_GATEWAY_ACCOUNT_ID=your_cloudflare_account_id
+   AI_GATEWAY_ID=your_ai_gateway_id
+   ```
+
+3. **本番環境**では GitHub Secrets または `wrangler secret put` で設定
+
+**注意**: AI Gateway設定がない場合は、自動的に直接API呼び出しにフォールバックします。
+
 ## 環境変数
 
 ローカル開発: `.dev.vars` に秘密情報を配置（gitignore済み）

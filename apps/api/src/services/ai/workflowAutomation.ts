@@ -4,6 +4,8 @@ import { trackAIUsage, checkRateLimit } from './rateLimiter';
 type Bindings = {
   DB: D1Database;
   CLAUDE_API_KEY?: string;
+  AI_GATEWAY_ACCOUNT_ID?: string;
+  AI_GATEWAY_ID?: string;
 };
 
 export interface InboxTriageResult {
@@ -80,6 +82,9 @@ JSON形式で出力してください:
     messages,
     max_tokens: 512,
     temperature: 0.3, // Lower temperature for more consistent classification
+  }, {
+    AI_GATEWAY_ACCOUNT_ID: env.AI_GATEWAY_ACCOUNT_ID,
+    AI_GATEWAY_ID: env.AI_GATEWAY_ID,
   });
   const processingTime = Date.now() - startTime;
 
@@ -206,6 +211,9 @@ JSON形式で出力してください:
     messages,
     max_tokens: 1024,
     temperature: 0.7,
+  }, {
+    AI_GATEWAY_ACCOUNT_ID: env.AI_GATEWAY_ACCOUNT_ID,
+    AI_GATEWAY_ID: env.AI_GATEWAY_ID,
   });
   const processingTime = Date.now() - startTime;
 
