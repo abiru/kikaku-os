@@ -1,10 +1,11 @@
 ---
 export const prerender = false;
 
-import Badge from '../../components/Badge.astro';
-import Button from '../../components/Button.astro';
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Alert } from '../../components/catalyst/alert-banner';
 import { getApiBase } from '../../lib/api';
+import { Heading } from '../../components/catalyst/heading';
+import CustomersTable from '../../components/admin/CustomersTable';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -57,25 +58,14 @@ if (import.meta.env.ADMIN_API_KEY) {
 	error = 'ADMIN_API_KEY is missing in server environment.';
 }
 
-const hasNext = page < meta.totalPages;
-const hasPrev = page > 1;
-
-const formatCurrency = (amount: number) => {
-	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount);
-};
-
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	return new Date(dateStr).toLocaleDateString('ja-JP');
-};
 ---
 
 <AdminLayout title="Customers - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<h1 class="text-2xl font-semibold text-gray-900">Customers</h1>
-			<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} customers</span>
-		</div>
+			<Heading>Customers</Heading>
+			<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{meta.totalCount} customers</span>
+		</Alert>
 			{/* Search Bar */}
 			<div class="mb-6">
 				<form method="get" class="relative max-w-md">
@@ -84,10 +74,10 @@ const formatDate = (dateStr: string | null) => {
 						name="q"
 						value={q}
 						placeholder="Search by name or email..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-950 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
 					/>
 					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400 dark:text-zinc-500"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -95,97 +85,20 @@ const formatDate = (dateStr: string | null) => {
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 					</svg>
 				</form>
-			</div>
+			</Alert>
 
 			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				<div class="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
 					{error}
-				</div>
+				</Alert>
 			)}
 
-			{/* Customer Table */}
-			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-[#1d1d1f]">
-						<thead class="bg-gray-50 border-b border-gray-200">
-							<tr>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Name</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Email</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-center">Orders</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Total Spent</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Last Order</th>
-								<th class="px-6 py-3 font-medium text-[#86868b]">Created</th>
-								<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-gray-100">
-							{customers.length > 0 ? (
-								customers.map((customer) => (
-									<tr class="hover:bg-gray-50 transition-colors group">
-										<td class="px-6 py-4">
-											<a href={`/admin/customers/${customer.id}`} class="font-medium hover:text-[#0071e3] transition-colors">
-												{customer.name}
-											</a>
-										</td>
-										<td class="px-6 py-4 text-[#86868b]">
-											{customer.email || <span class="italic">No email</span>}
-										</td>
-										<td class="px-6 py-4 text-center">
-											{customer.order_count > 0 ? (
-												<Badge severity="info">{customer.order_count}</Badge>
-											) : (
-												<span class="text-[#86868b]">0</span>
-											)}
-										</td>
-										<td class="px-6 py-4 text-right tabular-nums">
-											{formatCurrency(customer.total_spent)}
-										</td>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums">
-											{formatDate(customer.last_order_date)}
-										</td>
-										<td class="px-6 py-4 text-[#86868b] tabular-nums">
-											{formatDate(customer.created_at)}
-										</td>
-										<td class="px-6 py-4 text-right">
-											<a href={`/admin/customers/${customer.id}`} class="text-[#0071e3] hover:underline font-medium">View</a>
-										</td>
-									</tr>
-								))
-							) : (
-								<tr>
-									<td colspan="7" class="px-6 py-12 text-center text-[#86868b]">
-										No customers found.
-									</td>
-								</tr>
-							)}
-						</tbody>
-					</table>
-				</div>
-
-				{/* Pagination */}
-				<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-[#86868b]">
-						Page {page} of {meta.totalPages}
-					</div>
-					<div class="flex gap-2">
-						<Button
-							href={hasPrev ? `?page=${page - 1}&q=${q}` : '#'}
-							disabled={!hasPrev}
-							size="sm"
-							variant="secondary"
-						>
-							Previous
-						</Button>
-						<Button
-							href={hasNext ? `?page=${page + 1}&q=${q}` : '#'}
-							disabled={!hasNext}
-							size="sm"
-							variant="secondary"
-						>
-							Next
-						</Button>
-					</div>
-				</div>
-			</div>
-	</div>
+			<CustomersTable
+				customers={customers}
+				currentPage={page}
+				totalPages={meta.totalPages}
+				searchQuery={q}
+				client:load
+			/>
+	</Alert>
 </AdminLayout>

@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import Badge from '../../../components/Badge.astro';
+import { Alert } from '../../../components/catalyst/alert-banner';
 import Button from '../../../components/Button.astro';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
@@ -155,11 +156,11 @@ const canDelete = page && !isCorePage;
 					View page
 				</a>
 			)}
-		</div>
+		</Alert>
 			{successMessage && (
 				<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
 					{successMessage}
-				</div>
+				</Alert>
 			)}
 
 			{error && !page && (
@@ -168,13 +169,13 @@ const canDelete = page && !isCorePage;
 					<Button href="/admin/pages" variant="secondary" size="sm">
 						Back to Pages
 					</Button>
-				</div>
+				</Alert>
 			)}
 
 			{error && page && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				<Alert color="red" client:load>
 					{error}
-				</div>
+				</Alert>
 			)}
 
 			{page && (
@@ -191,7 +192,7 @@ const canDelete = page && !isCorePage;
 								{isCorePage && (
 									<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded">Core page</span>
 								)}
-							</div>
+							</Alert>
 							<div class="flex gap-2">
 								<button
 									type="button"
@@ -200,9 +201,9 @@ const canDelete = page && !isCorePage;
 								>
 									{page.status === 'published' ? 'Unpublish' : 'Publish'}
 								</button>
-							</div>
-						</div>
-					</div>
+							</Alert>
+						</Alert>
+					</Alert>
 
 					{/* Basic Info */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
@@ -210,7 +211,7 @@ const canDelete = page && !isCorePage;
 
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div>
-								<label for="title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="title" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 									Title <span class="text-red-500">*</span>
 								</label>
 								<input
@@ -219,12 +220,12 @@ const canDelete = page && !isCorePage;
 									name="title"
 									required
 									value={page.title}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
-							</div>
+							</Alert>
 
 							<div>
-								<label for="slug" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="slug" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 									Slug <span class="text-red-500">*</span>
 								</label>
 								<div class="flex items-center gap-2">
@@ -236,27 +237,27 @@ const canDelete = page && !isCorePage;
 										required
 										value={page.slug}
 										pattern="^[a-z0-9-]+$"
-										class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+										class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 									/>
-								</div>
+								</Alert>
 								<p class="mt-1 text-xs text-[#86868b]">Only lowercase letters, numbers, and hyphens</p>
-							</div>
+							</Alert>
 
 							<div>
-								<label for="status" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="status" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 									Status
 								</label>
 								<select
 									id="status"
 									name="status"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
 								>
 									<option value="draft" selected={page.status === 'draft'}>Draft</option>
 									<option value="published" selected={page.status === 'published'}>Published</option>
 								</select>
-							</div>
-						</div>
-					</div>
+							</Alert>
+						</Alert>
+					</Alert>
 
 					{/* SEO */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
@@ -264,7 +265,7 @@ const canDelete = page && !isCorePage;
 
 						<div class="space-y-6">
 							<div>
-								<label for="meta_title" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="meta_title" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 									Meta Title
 								</label>
 								<input
@@ -274,13 +275,13 @@ const canDelete = page && !isCorePage;
 									value={page.meta_title || ''}
 									placeholder="Page Title - Site Name"
 									maxlength="255"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 								<p class="mt-1 text-xs text-[#86868b]">Used as the browser tab title and in search results</p>
-							</div>
+							</Alert>
 
 							<div>
-								<label for="meta_description" class="block text-sm font-medium text-[#1d1d1f] mb-2">
+								<label for="meta_description" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
 									Meta Description
 								</label>
 								<textarea
@@ -289,12 +290,12 @@ const canDelete = page && !isCorePage;
 									rows="2"
 									maxlength="500"
 									placeholder="Brief description of the page content..."
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
 								>{page.meta_description || ''}</textarea>
 								<p class="mt-1 text-xs text-[#86868b]">Displayed in search engine results</p>
-							</div>
-						</div>
-					</div>
+							</Alert>
+						</Alert>
+					</Alert>
 
 					{/* Content */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
@@ -307,7 +308,7 @@ const canDelete = page && !isCorePage;
 							>
 								Toggle Preview
 							</button>
-						</div>
+						</Alert>
 
 						<div id="editor-container">
 							<textarea
@@ -330,33 +331,33 @@ const canDelete = page && !isCorePage;
 ```
 Code block
 ```"
-								class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+								class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
 							>{page.body}</textarea>
 							<p class="mt-2 text-xs text-[#86868b]">
 								Supports Markdown syntax. HTML is also valid within Markdown.
 							</p>
-						</div>
+						</Alert>
 
 						<div id="preview-container" class="hidden">
 							<div id="preview-content" class="prose prose-sm max-w-none min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white">
 								<p class="text-[#86868b]">Preview will appear here...</p>
-							</div>
-						</div>
-					</div>
+							</Alert>
+						</Alert>
+					</Alert>
 
 					{/* Meta Info */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
 								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(page.created_at)}</dd>
-							</div>
+								<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(page.created_at)}</dd>
+							</Alert>
 							<div>
 								<dt class="text-[#86868b]">Updated</dt>
-								<dd class="text-[#1d1d1f] tabular-nums">{formatDate(page.updated_at)}</dd>
-							</div>
+								<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(page.updated_at)}</dd>
+							</Alert>
 						</dl>
-					</div>
+					</Alert>
 
 					{/* Actions */}
 					<div class="flex justify-between items-center gap-3">
@@ -372,7 +373,7 @@ Code block
 							) : isCorePage ? (
 								<span class="text-sm text-[#86868b]">Core pages cannot be deleted</span>
 							) : null}
-						</div>
+						</Alert>
 						<div class="flex gap-3">
 							<Button href="/admin/pages" variant="secondary" size="sm">
 								Back
@@ -380,11 +381,11 @@ Code block
 							<Button type="submit" variant="primary" size="sm">
 								Save Changes
 							</Button>
-						</div>
-					</div>
+						</Alert>
+					</Alert>
 				</form>
 			)}
-	</div>
+	</Alert>
 </AdminLayout>
 
 <script define:vars={{ apiBase, apiKey, pageId: id, canDelete, currentStatus: page?.status }}>

@@ -1,7 +1,8 @@
 ---
 export const prerender = false;
 
-import Button from '../../components/Button.astro';
+import { Button } from '../../components/catalyst/button';
+import { Heading, Subheading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 
@@ -12,29 +13,29 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 <AdminLayout title="Bulk Image Upload - Admin">
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center justify-between">
-			<h1 class="text-2xl font-semibold text-gray-900">Bulk Image Upload from External URLs</h1>
-			<Button href="/admin/products" size="sm" variant="secondary">
+			<Heading>Bulk Image Upload from External URLs</Heading>
+			<Button href="/admin/products" outline client:load>
 				Back to Products
 			</Button>
 		</div>
 
 		<!-- Step 1: Upload File -->
 		<div class="bg-white rounded-lg shadow p-6 space-y-4">
-			<h2 class="text-lg font-semibold text-gray-900">Step 1: Upload CSV/JSON File</h2>
+			<Subheading>Step 1: Upload CSV/JSON File</Subheading>
 
-			<div class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
-				<p class="text-sm font-medium text-gray-700">Format Examples:</p>
-				<div class="space-y-2 text-xs text-gray-600">
+			<div class="bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-2">
+				<p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Format Examples:</p>
+				<div class="space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
 					<div>
 						<strong>CSV:</strong>
-						<pre class="bg-white border border-gray-200 rounded p-2 mt-1 overflow-x-auto">product_id,image_url,position
+						<pre class="bg-white border border-zinc-200 dark:border-zinc-800 rounded p-2 mt-1 overflow-x-auto">product_id,image_url,position
 1,https://example.com/image1.jpg,0
 1,https://example.com/image2.jpg,1
 2,https://example.com/image3.jpg,0</pre>
 					</div>
 					<div>
 						<strong>JSON:</strong>
-						<pre class="bg-white border border-gray-200 rounded p-2 mt-1 overflow-x-auto" set:html={`[
+						<pre class="bg-white border border-zinc-200 dark:border-zinc-800 rounded p-2 mt-1 overflow-x-auto" set:html={`[
   {
     "product_id": 1,
     "image_urls": [
@@ -56,7 +57,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					type="file"
 					id="fileInput"
 					accept=".csv,.json"
-					class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+					class="block w-full text-sm text-zinc-500 dark:text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
 				/>
 				<button
 					id="parseBtn"
@@ -71,8 +72,8 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 
 		<!-- Step 2: Preview -->
 		<div id="previewSection" class="hidden bg-white rounded-lg shadow p-6 space-y-4">
-			<h2 class="text-lg font-semibold text-gray-900">Step 2: Preview</h2>
-			<div id="previewSummary" class="text-sm text-gray-600"></div>
+			<Subheading>Step 2: Preview</Subheading>
+			<div id="previewSummary" class="text-sm text-zinc-500 dark:text-zinc-400"></div>
 			<div id="previewContent" class="space-y-4"></div>
 			<div id="previewErrors" class="hidden space-y-2"></div>
 
@@ -81,7 +82,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					type="text"
 					id="batchName"
 					placeholder="Batch name (optional, e.g., 'Q1 2026 LED Products')"
-					class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					class="flex-1 px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 				/>
 				<button
 					id="sendToInboxBtn"
@@ -225,12 +226,12 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			// Mappings
 			if (data.mappings && data.mappings.length > 0) {
 				previewContent.innerHTML = data.mappings.map(mapping => `
-					<div class="border border-gray-200 rounded-lg p-4 space-y-2">
+					<div class="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-2">
 						<div class="flex items-center justify-between">
-							<p class="font-medium text-gray-900">
-								✓ ${escapeHtml(mapping.product_title)} <span class="text-gray-500 text-sm">(ID: ${mapping.product_id})</span>
+							<p class="font-medium text-zinc-950 dark:text-white">
+								✓ ${escapeHtml(mapping.product_title)} <span class="text-zinc-500 dark:text-zinc-400 text-sm">(ID: ${mapping.product_id})</span>
 							</p>
-							<span class="text-sm text-gray-600">
+							<span class="text-sm text-zinc-500 dark:text-zinc-400">
 								📷 ${mapping.image_urls.length} image${mapping.image_urls.length !== 1 ? 's' : ''} |
 								Existing: ${mapping.existing_r2_images}
 							</span>
@@ -241,14 +242,14 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 									<img
 										src="${escapeHtml(url)}"
 										alt="Preview"
-										class="w-20 h-20 object-cover rounded border border-gray-300"
+										class="w-20 h-20 object-cover rounded border border-zinc-200 dark:border-zinc-700"
 										onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect fill=%22%23ddd%22 width=%2280%22 height=%2280%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22%3EError%3C/text%3E%3C/svg%3E'"
 									/>
 								</div>
 							`).join('')}
 						</div>
-						<details class="text-xs text-gray-600">
-							<summary class="cursor-pointer hover:text-gray-900">View URLs</summary>
+						<details class="text-xs text-zinc-500 dark:text-zinc-400">
+							<summary class="cursor-pointer hover:text-zinc-950 dark:text-white">View URLs</summary>
 							<ul class="mt-2 space-y-1 pl-4">
 								${mapping.image_urls.map(url => `<li class="truncate">• ${escapeHtml(url)}</li>`).join('')}
 							</ul>

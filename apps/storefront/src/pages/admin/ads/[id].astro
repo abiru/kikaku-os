@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { Alert } from '../../../components/catalyst/alert-banner';
 import Button from '../../../components/Button.astro';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
 import { getApiBase } from '../../../lib/api';
@@ -44,16 +45,16 @@ if (apiKey && id) {
         </svg>
         Back to Ads
       </a>
-      <h1 class="text-3xl font-semibold text-[#1d1d1f]">
+      <h1 class="text-3xl font-semibold text-zinc-950 dark:text-white">
         {draft ? `Edit: ${draft.campaign_name}` : 'Edit Ad Draft'}
       </h1>
-    </div>
+    </Alert>
 
     {/* Error Message */}
     {error && (
-      <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
+      <Alert color="red" client:load>
         {error}
-      </div>
+      </Alert>
     )}
 
     {draft && (
@@ -64,13 +65,13 @@ if (apiKey && id) {
             <p class="text-sm text-gray-600">
               Last updated: {new Date(draft.updated_at).toLocaleString('ja-JP')}
             </p>
-          </div>
+          </Alert>
           <div class="flex gap-2">
             <Button href={`/admin/ads/${id}/history`} variant="secondary" size="sm">
               View History
             </Button>
-          </div>
-        </div>
+          </Alert>
+        </Alert>
 
         {/* Edit Form */}
         <AdDraftForm
@@ -93,10 +94,10 @@ if (apiKey && id) {
           >
             Delete Draft
           </button>
-        </div>
-      </div>
+        </Alert>
+      </Alert>
     )}
-  </div>
+  </Alert>
 
   {draft && (
     <script define:vars={{ apiKey, apiBase, id }}>
