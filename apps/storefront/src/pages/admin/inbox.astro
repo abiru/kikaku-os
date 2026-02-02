@@ -6,6 +6,7 @@ import EmptyState from '../../components/EmptyState.astro';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Heading, Subheading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
+import { Button } from '../../components/catalyst/button';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -182,22 +183,16 @@ const getBadgeColor = (severity: string) => {
 								<form method="post">
 									<input type="hidden" name="id" value={item.id} />
 									<input type="hidden" name="action" value="approve" />
-									<button
-										type="submit"
-										class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
-									>
+									<Button client:load type="submit" color="indigo" className="w-full">
 										✓ Approve
-									</button>
+									</Button>
 								</form>
 								<form method="post">
 									<input type="hidden" name="id" value={item.id} />
 									<input type="hidden" name="action" value="reject" />
-									<button
-										type="submit"
-										class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 transition-colors"
-									>
+									<Button client:load type="submit" color="zinc" className="w-full">
 										✕ Dismiss
-									</button>
+									</Button>
 								</form>
 							</div>
 						</div>
