@@ -251,13 +251,15 @@ if ($ARGUMENTS.match(/^\d+$/)) {
    # 新しいウィンドウを作成（実際のnumberに置き換える）
    tmux new-window -c "$HOME/Code/kikaku-os-{number}" -n "issue-{number}"
 
-   # APIサーバーを起動（Wranglerはデフォルトポート8787を使用）
+   # 左ペイン: APIサーバー
+   tmux select-pane -t "issue-{number}.0" -T "API"
    tmux send-keys -t "issue-{number}" "cd $HOME/Code/kikaku-os-{number} && pnpm -C apps/api dev" Enter
 
    # ウィンドウを水平分割
    tmux split-window -h -c "$HOME/Code/kikaku-os-{number}" -t "issue-{number}"
 
-   # Storefrontサーバーを起動（デフォルトポート4321を使用）
+   # 右ペイン: Storefrontサーバー
+   tmux select-pane -t "issue-{number}.1" -T "Storefront"
    tmux send-keys -t "issue-{number}.1" "pnpm -C apps/storefront dev" Enter
    ```
 
@@ -458,10 +460,26 @@ if ($ARGUMENTS.match(/^\d+$/)) {
    )"
    ```
 
-3. **PRのURLを表示**:
+3. **tmux window名を自動更新** - Bash toolで実行:
+
+   PR作成後、tmuxセッション内であればwindow名を更新:
+   ```bash
+   # PR番号を取得
+   PR_NUMBER=$(gh pr list --head $(git branch --show-current) --json number --jq '.[0].number')
+   ISSUE_NUMBER=$(git branch --show-current | grep -oP 'issue-\K\d+')
+
+   # tmuxセッション内であれば、window名を更新
+   if [[ -n "$TMUX" ]]; then
+     tmux rename-window "issue-${ISSUE_NUMBER} PR-${PR_NUMBER}"
+     echo "✓ tmux window renamed to: issue-${ISSUE_NUMBER} PR-${PR_NUMBER}"
+   fi
+   ```
+
+4. **PRのURLを表示**:
    PRが作成されたら、ユーザーにURLを報告:
    ```
    ✓ Pull Request created: #143
+   ✓ tmux window renamed to: issue-142 PR-143
    URL: https://github.com/user/repo/pull/143
 
    Next steps:
