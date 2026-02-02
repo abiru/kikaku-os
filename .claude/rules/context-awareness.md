@@ -70,24 +70,46 @@ gh pr list --head $(git branch --show-current) --json number,title,state 2>/dev/
 
 At the start of the conversation, display:
 
-### If Working on Feature Branch
+### If Working in Subworktree (Feature Branch)
 
 ```
-📍 Current Work: Issue #142, PR #143
+📍 Worktree: kikaku-os-142 | Issue #142, PR #143
 ```
 
 **Variations**:
-- Issue only (no PR yet): `📍 Current Work: Issue #142`
-- PR only (issue closed): `📍 Current Work: PR #143`
-- Neither: Don't display (user is on main)
+- Issue only (no PR yet): `📍 Worktree: kikaku-os-142 | Issue #142`
+- PR only (issue closed): `📍 Worktree: kikaku-os-142 | PR #143`
+- Worktree only: `📍 Worktree: kikaku-os-142`
 
-### If on Main Branch
+### If in Main Worktree but Wrong Branch
 
-Don't display anything unless user explicitly asks.
+⚠️ **Critical**: If user is in main worktree but NOT on main branch:
+
+```
+⚠️ Warning: Main worktree is on branch 'claude/feature-xyz' instead of 'main'
+
+This will cause problems when creating new worktrees!
+
+To fix:
+1. git checkout main
+2. git pull origin main
+
+Or move this work to a dedicated worktree:
+1. git worktree add ../kikaku-os-155 claude/feature-xyz
+2. cd ../kikaku-os-155
+```
+
+### If on Main Branch in Main Worktree
+
+```
+✅ Ready: Main worktree on main branch
+```
+
+Only display this if user explicitly asks, or if they attempt to run `/feature` command.
 
 **Exception**: If user has uncommitted changes on main, warn:
 ```
-⚠️ You're on main branch with uncommitted changes. Consider creating a feature branch.
+⚠️ You're on main branch with uncommitted changes. Consider creating a feature branch with /feature.
 ```
 
 ## When to Display

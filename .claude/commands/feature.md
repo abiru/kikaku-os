@@ -34,9 +34,100 @@
 6. **Test** - テスト実行（失敗時は自動修正試行）
 7. **PR** - Pull Request作成 → ユーザー確認
 
+## 前提条件チェック（必須）
+
+**このコマンドを実行する前に、必ず以下をチェックしてください：**
+
+### 1. メインworktreeで実行されているか
+
+```bash
+# 現在のディレクトリを確認
+pwd
+
+# メインworktreeのパスは通常: /home/user/Code/kikaku-os
+# サブworktreeのパスは: /home/user/Code/kikaku-os-{number}
+```
+
+**もしサブworktree（例: kikaku-os-155）で実行しようとしている場合：**
+
+```
+❌ エラー: このコマンドはメインworktreeからのみ実行できます
+
+現在: /home/user/Code/kikaku-os-155 (サブworktree)
+必要: /home/user/Code/kikaku-os (メインworktree)
+
+解決方法:
+1. 新しいターミナルタブを開く
+2. メインディレクトリに移動: cd /home/user/Code/kikaku-os
+3. このコマンドを再実行
+
+または、既存のworktreeで作業を続けたい場合:
+cd /home/user/Code/kikaku-os-155
+# 通常の開発フローに従ってください
+```
+
+### 2. mainブランチにいるか
+
+```bash
+# 現在のブランチを確認
+git branch --show-current
+# 出力: main （これが正しい）
+```
+
+**もしmainブランチでない場合：**
+
+```
+❌ エラー: このコマンドはmainブランチからのみ実行できます
+
+現在のブランチ: feat/some-feature
+必要なブランチ: main
+
+解決方法:
+git checkout main
+git pull origin main
+
+その後、このコマンドを再実行してください。
+```
+
+### 3. mainブランチが最新か
+
+```bash
+# リモートから最新を取得
+git fetch origin
+git pull origin main
+```
+
+### チェックスクリプト
+
+以下のコマンドですべてをチェック：
+
+```bash
+# 前提条件を自動チェック
+CURRENT_DIR=$(pwd)
+CURRENT_BRANCH=$(git branch --show-current)
+MAIN_WORKTREE=$(git worktree list | grep "\[main\]" | awk '{print $1}')
+
+if [[ "$CURRENT_DIR" != "$MAIN_WORKTREE" ]]; then
+  echo "❌ エラー: メインworktreeで実行してください"
+  echo "現在: $CURRENT_DIR"
+  echo "必要: $MAIN_WORKTREE"
+  exit 1
+fi
+
+if [[ "$CURRENT_BRANCH" != "main" ]]; then
+  echo "❌ エラー: mainブランチで実行してください"
+  echo "現在: $CURRENT_BRANCH"
+  exit 1
+fi
+
+echo "✅ 前提条件OK: /feature コマンドを実行できます"
+```
+
+---
+
 ## 引数処理
 
-コマンド実行時、最初に `$ARGUMENTS` を解析して動作モードを決定します：
+**前提条件チェックに合格した後**、`$ARGUMENTS` を解析して動作モードを決定します：
 
 ### 新機能開発モード
 ```bash
