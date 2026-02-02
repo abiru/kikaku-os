@@ -57,6 +57,7 @@ const navigation: NavigationItem[] = [
   { name: 'Shipping', href: '/admin/shipping', icon: TruckIcon },
   { name: 'Events', href: '/admin/events', icon: CalendarIcon },
   { name: 'Products', href: '/admin/products', icon: CubeIcon },
+  { name: 'Home Heroes', href: '/admin/home-heroes', icon: PhotoIcon },
   { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon },
   { name: 'Categories', href: '/admin/categories', icon: FolderIcon },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },

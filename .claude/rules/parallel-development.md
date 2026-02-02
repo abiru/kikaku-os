@@ -4,6 +4,135 @@
 
 When working on multiple features or issues simultaneously, **ALWAYS** use separate terminal tabs for each worktree.
 
+## Recommended Setup: Ghostty + Tabs
+
+**シンプル、直感的、Claude Codeと相性抜群**
+
+```bash
+# Main worktree (Tab 1)
+cd ~/Code/kikaku-os
+/feature 142
+
+# New tab (Tab 2) for the new worktree
+cd ~/Code/kikaku-os-142
+pnpm install
+pnpm -C apps/api dev       # Port 8787
+pnpm -C apps/storefront dev # Port 4321 (別タブで起動推奨)
+```
+
+**Why Ghostty + Tabs > tmux**:
+- ✅ **通知がネイティブ動作** - Claude Codeのプロンプトで即座にalert
+- ✅ **視認性が高い** - タブ名で作業内容が一目瞭然
+- ✅ **シンプル** - セッション管理不要、学習コスト低
+- ✅ **Claude Code相性◎** - インタラクティブ出力が見やすい
+
+**Ghostty Tab Auto-Naming (推奨設定)**:
+
+タブタイトルを自動設定して、どのタブで何をしているか一目瞭然に：
+
+### 1. シェル設定に追加 (~/.zshrc or ~/.bashrc)
+
+```bash
+# Ghosttyタブタイトル自動設定
+function set_tab_title() {
+  echo -ne "\033]0;$1\007"
+}
+
+# ディレクトリ変更時にタブタイトルを自動更新
+function auto_tab_title() {
+  local current_dir=$(basename "$PWD")
+
+  # worktreeディレクトリの場合
+  if [[ "$current_dir" =~ kikaku-os-([0-9]+) ]]; then
+    local issue_num="${BASH_REMATCH[1]}"
+
+    # PR番号も取得できれば追加
+    local pr_num=$(gh pr list --head "$(git branch --show-current)" --json number --jq '.[0].number' 2>/dev/null)
+
+    if [[ -n "$pr_num" ]]; then
+      set_tab_title "Issue #${issue_num} / PR #${pr_num}"
+    else
+      set_tab_title "Issue #${issue_num}"
+    fi
+  # メインworktreeの場合
+  elif [[ "$current_dir" == "kikaku-os" ]]; then
+    set_tab_title "Main ($(git branch --show-current))"
+  else
+    set_tab_title "$current_dir"
+  fi
+}
+
+# zshの場合
+if [[ -n "$ZSH_VERSION" ]]; then
+  autoload -Uz add-zsh-hook
+  add-zsh-hook chpwd auto_tab_title
+  # 初回実行
+  auto_tab_title
+fi
+
+# bashの場合
+if [[ -n "$BASH_VERSION" ]]; then
+  PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }auto_tab_title"
+fi
+```
+
+### 2. Ghostty設定 (~/.config/ghostty/config)
+
+```ini
+# タブタイトルを常に表示
+window-decoration = true
+window-title-font-family = "monospace"
+
+# シェルからのタイトル変更を許可
+shell-integration = true
+shell-integration-features = cursor,sudo,title
+```
+
+### 3. 使用例
+
+```bash
+# メインworktreeで作業
+cd ~/Code/kikaku-os
+# → タブタイトル: "Main (main)"
+
+# Issue #142のworktreeで作業
+cd ~/Code/kikaku-os-142
+# → タブタイトル: "Issue #142"
+
+# PR作成後
+gh pr create ...
+# → タブタイトル: "Issue #142 / PR #143"
+```
+
+### 4. さらに便利に: プロンプトカスタマイズ
+
+プロンプトにもworktree情報を表示：
+
+```bash
+# ~/.zshrc
+function worktree_info() {
+  local current_dir=$(basename "$PWD")
+  if [[ "$current_dir" =~ kikaku-os-([0-9]+) ]]; then
+    echo "  #${BASH_REMATCH[1]}"
+  elif [[ "$current_dir" == "kikaku-os" ]]; then
+    echo "  main"
+  fi
+}
+
+# プロンプトに追加（starship使用例）
+# ~/.config/starship.toml
+# [custom.worktree]
+# command = "basename $PWD | grep -oP 'kikaku-os-\\K\\d+' || echo ''"
+# when = "git rev-parse --is-inside-work-tree 2>/dev/null"
+# format = " [$output]($style)"
+# style = "bold yellow"
+```
+
+**メリット**:
+- タブを切り替えただけで、どのissue/PRか分かる
+- プロンプトでも確認可能
+- 設定後は自動で動作、手動設定不要
+
 ## Core Principles
 
 ### 1. Main Worktree is Sacred
@@ -76,9 +205,9 @@ git pull origin main
 # 5. 新しいworktreeに移動
 cd ~/Code/kikaku-os-142
 
-# 6. 開発サーバーを起動（別ポート）
-pnpm dev:api --port 8788
-pnpm dev:store --port 4322
+# 6. 開発サーバーを起動（デフォルトポート使用）
+pnpm -C apps/api dev       # Port 8787
+pnpm -C apps/storefront dev # Port 4321
 
 # 7. 実装、テスト、コミット
 # ... 作業 ...
@@ -89,9 +218,11 @@ gh pr create --title "feat: ..." --body "..."
 
 ### Working on Another Feature (Parallel)
 
-**さらに別のターミナルタブを開く**（Terminal Tab 3）:
+**注意**: 同時に複数のAPIサーバーを起動できないため、現在のサーバーを停止してから次を起動：
 
 ```bash
+# 現在のサーバーを停止（Tab 2で Ctrl+C）
+
 # メインworktreeに戻る（Tab 1）
 cd ~/Code/kikaku-os
 
@@ -100,8 +231,8 @@ cd ~/Code/kikaku-os
 
 # 新しいタブ（Tab 3）を開いて移動
 cd ~/Code/kikaku-os-155
-pnpm dev:api --port 8789  # 別ポート！
-pnpm dev:store --port 4323
+pnpm -C apps/api dev       # Port 8787
+pnpm -C apps/storefront dev # Port 4321
 ```
 
 ### After Merge
@@ -171,7 +302,7 @@ Terminal Tab 3: ~/Code/kikaku-os-155
 ```bash
 # ❌ 間違い
 cd ~/Code/kikaku-os
-pnpm dev
+pnpm -C apps/api dev
 # → mainブランチで起動してしまう
 ```
 
@@ -180,20 +311,26 @@ pnpm dev
 ```bash
 # ✅ 正しい: worktreeで起動
 cd ~/Code/kikaku-os-142
-pnpm dev:api --port 8788
-pnpm dev:store --port 4322
+pnpm -C apps/api dev
+pnpm -C apps/storefront dev
 ```
 
 ## Port Management
 
-各worktreeは異なるポートを使用：
+**重要**: Cloudflare Wranglerはカスタムポートをサポートしていません。
 
-| Worktree | API Port | Storefront Port |
-|----------|----------|-----------------|
-| main | 8787 | 4321 |
-| kikaku-os-142 | 8788 | 4322 |
-| kikaku-os-155 | 8789 | 4323 |
-| kikaku-os-XXX | 8790+ | 4324+ |
+各worktreeは同じポートを使用しますが、**同時に複数のAPIサーバーを起動することはできません**：
+
+| Worktree | API Port | Storefront Port | 注意 |
+|----------|----------|-----------------|------|
+| main | 8787 (default) | 4321 (default) | 通常は停止状態 |
+| kikaku-os-142 | 8787 (default) | 4321 (default) | 作業中のみ起動 |
+| kikaku-os-155 | 8787 (default) | 4321 (default) | 作業中のみ起動 |
+
+**ベストプラクティス**:
+1. メインworktreeのサーバーは常時停止しておく
+2. 作業するworktreeでのみサーバーを起動
+3. 別のworktreeに切り替える際は、現在のサーバーを停止してから新しいサーバーを起動
 
 ## Verification Checklist
 

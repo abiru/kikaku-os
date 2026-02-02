@@ -5,6 +5,28 @@
 新機能開発の完全ワークフローを実行する統合コマンド。
 7ステップのワークフローを自動化し、各ステップでユーザー確認を取りながら進みます。
 
+## ⚠️ 重要: コマンド実行方針
+
+**このコマンドを実行する際、Claude（あなた）は必ず以下を守ってください:**
+
+1. **Bash toolを使って実際にコマンドを実行する**
+   - 単なる指示やドキュメントを提供するだけではダメ
+   - `git`, `pnpm`, `gh`, `tmux` などのコマンドを実際に実行する
+
+2. **各コマンドの成功を確認してから次に進む**
+   - 実行結果をチェックする
+   - エラーが発生したら適切に対処する
+
+**❌ やってはいけないこと:**
+- "以下のコマンドを実行してください" とユーザーに指示するだけ
+- bash scriptファイルを作成してユーザーに実行させる
+- 実行せずに次のステップに進む
+
+**✅ やるべきこと:**
+- Bash toolで実際にコマンドを実行
+- 実行結果を確認して次のステップへ
+- エラーが出たら原因を調べて修正
+
 ## 使用方法
 
 ```bash
@@ -190,29 +212,51 @@ if ($ARGUMENTS.match(/^\d+$/)) {
 
 ### ステップ2: Worktree Cleanup & Create
 
-1. 既存worktreeをチェック:
+**重要**: このステップではBash toolを使って実際にコマンドを実行してください。
+
+1. **既存worktreeをチェック** - Bash toolで実行:
    ```bash
    git worktree list
    ```
 
-2. 古いworktreeを特定（7日以上 or マージ済み）
+2. 古いworktreeを特定（7日以上 or マージ済み）し、削除が必要な場合はユーザー確認を取る
 
-3. **ユーザー確認**（古いworktreeがある場合）:
-   ```
-   Found old worktrees:
-   - ../kikaku-os-110 (merged 10 days ago)
-   - ../kikaku-os-111 (deleted)
-
-   Remove them? (y/n)
-   ```
-
-4. Worktreeを作成:
+3. **Worktreeを作成** - Bash toolで実行:
    ```bash
+   # リモートから最新を取得
    git fetch origin
+
+   # Worktreeを作成（実際のnumberとslugに置き換える）
    git worktree add ../kikaku-os-{number} -b feat/issue-{number}-{slug}
-   cd ../kikaku-os-{number}
-   pnpm install
    ```
+
+4. **依存関係をインストール** - Bash toolで実行:
+   ```bash
+   cd ../kikaku-os-{number} && pnpm install
+   ```
+
+5. **ユーザーに新しいタブでの作業を指示**:
+
+   Worktree作成後、ユーザーに以下を表示:
+   ```
+   ✅ Worktree created: ~/Code/kikaku-os-{number}
+
+   📍 Next: Open New Terminal Tab
+
+   Open a new Ghostty tab and run:
+
+   cd ~/Code/kikaku-os-{number}
+   pnpm -C apps/api dev       # Port 8787
+   pnpm -C apps/storefront dev # Port 4321 (別タブ推奨)
+
+   Then continue with implementation in that tab.
+   ```
+
+**注意事項**:
+- Wranglerは `--port` フラグをサポートしていないため、デフォルトポートを使用
+- API: 8787 (Wrangler default)
+- Storefront: 4321 (Astro default)
+- メインworktreeのサーバーと競合する場合は、メインのサーバーを停止してから起動
 
 ### ステップ3: Issue
 
@@ -224,21 +268,45 @@ if ($ARGUMENTS.match(/^\d+$/)) {
 
 ### ステップ4: Exec
 
-1. `exec-issue {number}` コマンドを使用して実装
+**重要**: 実装中は常にBash toolを使ってコマンドを実行してください。
 
-2. Dev serversを起動（API: 8788, Storefront: 4322）
+1. **exec-issue コマンドを起動**:
+   ```
+   /exec-issue {number}
+   ```
+   このコマンドが自動的に実装を開始します
 
-3. 実装完了後、code-reviewerを自動起動
+2. 実装完了後、**code-reviewerを自動起動**
 
-4. CRITICAL/HIGH issuesがあればブロック、修正を要求
+3. CRITICAL/HIGH issuesがあればブロック、修正を要求
 
-5. コミット（Conventional Commits形式）
+4. **変更をコミット** - Bash toolで実行:
+   ```bash
+   cd ~/Code/kikaku-os-{number}
+   git add .
+   git commit -m "$(cat <<'EOF'
+   feat: [description]
+
+   [details]
+
+   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+   EOF
+   )"
+   ```
 
 ### ステップ5: Typecheck（自動修正機能付き）
 
-1. 型チェック実行:
+**重要**: Bash toolを使って実際にコマンドを実行してください。
+
+1. **型チェック実行** - Bash toolで実行:
    ```bash
+   cd ~/Code/kikaku-os-{number}
    pnpm -C apps/api typecheck
+   ```
+
+   続いて:
+   ```bash
+   cd ~/Code/kikaku-os-{number}
    pnpm -C apps/storefront exec astro check
    ```
 
@@ -274,9 +342,17 @@ if ($ARGUMENTS.match(/^\d+$/)) {
 
 ### ステップ6: Test（自動修正機能付き）
 
-1. テスト実行:
+**重要**: Bash toolを使って実際にコマンドを実行してください。
+
+1. **テスト実行** - Bash toolで実行:
    ```bash
+   cd ~/Code/kikaku-os-{number}
    pnpm -C apps/api test
+   ```
+
+   Storefrontのテストがある場合:
+   ```bash
+   cd ~/Code/kikaku-os-{number}
    pnpm -C apps/storefront test
    ```
 
@@ -316,18 +392,41 @@ if ($ARGUMENTS.match(/^\d+$/)) {
 
 ### ステップ7: PR
 
-1. コミット履歴を分析:
+**重要**: Bash toolを使って実際にコマンドを実行してください。
+
+1. **コミット履歴を分析** - Bash toolで実行:
    ```bash
+   cd ~/Code/kikaku-os-{number}
    git log main..HEAD
+   ```
+
+   続いて差分統計を確認:
+   ```bash
+   cd ~/Code/kikaku-os-{number}
    git diff main...HEAD --stat
    ```
 
-2. PRを作成:
+2. **PRを作成** - Bash toolで実行:
    ```bash
-   gh pr create --title "feat: ..." --body "..."
+   cd ~/Code/kikaku-os-{number}
+   gh pr create --title "feat: [description]" --body "$(cat <<'EOF'
+   ## Summary
+   - [bullet point 1]
+   - [bullet point 2]
+
+   ## Test plan
+   - [ ] [test item 1]
+   - [ ] [test item 2]
+
+   Closes #{issue-number}
+
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+   EOF
+   )"
    ```
 
-3. **ユーザー確認**:
+3. **PRのURLを表示**:
+   PRが作成されたら、ユーザーにURLを報告:
    ```
    ✓ Pull Request created: #143
    URL: https://github.com/user/repo/pull/143
@@ -339,7 +438,7 @@ if ($ARGUMENTS.match(/^\d+$/)) {
    - Merge when approved
 
    Clean up worktree after merge:
-   git worktree remove ../kikaku-os-142
+   git worktree remove ../kikaku-os-{number}
    ```
 
 ## 自動修正機能の詳細
