@@ -1141,36 +1141,39 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 		cancelPreviewBtn?.addEventListener('click', hidePreview);
 
-		// Apply all (title + description) directly to form
-		applyAllBtn?.addEventListener('click', () => {
+		// Apply all (title + description) directly to form and submit
+		applyAllBtn?.addEventListener('click', async () => {
 			if (!fetchedData) return;
 
-			const titleInput = document.getElementById('title');
-			const descHidden = document.getElementById('description-hidden');
+			const form = document.querySelector('form');
+			const titleInput = document.getElementById('title') as HTMLInputElement;
+			const descHidden = document.getElementById('description-hidden') as HTMLInputElement;
 
 			if (titleInput && fetchedData.generated_title) {
 				titleInput.value = fetchedData.generated_title;
 			}
 			if (descHidden && fetchedData.generated_description) {
 				descHidden.value = fetchedData.generated_description;
-				// Trigger change event to update MarkdownPreview component
-				descHidden.dispatchEvent(new Event('change', { bubbles: true }));
 			}
 
-			hidePreview();
-			titleInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-			titleInput?.focus();
+			// Auto-submit the form to save changes
+			if (form && confirm('取得した情報で商品を更新しますか？')) {
+				form.submit();
+			} else {
+				hidePreview();
+			}
 		});
 
 		// Apply title only
 		applyTitleOnlyBtn?.addEventListener('click', () => {
 			if (!fetchedData) return;
 
-			const titleInput = document.getElementById('title');
+			const titleInput = document.getElementById('title') as HTMLInputElement;
 			if (titleInput && fetchedData.generated_title) {
 				titleInput.value = fetchedData.generated_title;
 			}
 
+			hidePreview();
 			titleInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 			titleInput?.focus();
 		});
@@ -1179,13 +1182,12 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 		applyDescOnlyBtn?.addEventListener('click', () => {
 			if (!fetchedData) return;
 
-			const descHidden = document.getElementById('description-hidden');
+			const descHidden = document.getElementById('description-hidden') as HTMLInputElement;
 			if (descHidden && fetchedData.generated_description) {
 				descHidden.value = fetchedData.generated_description;
-				// Trigger change event to update MarkdownPreview component
-				descHidden.dispatchEvent(new Event('change', { bubbles: true }));
 			}
 
+			hidePreview();
 			descHidden?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 		});
 
