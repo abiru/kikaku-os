@@ -9,7 +9,7 @@ import { getApiBase } from '../../../lib/api';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
 import { Field, Label, Description } from '../../../components/catalyst/fieldset';
-import { CatalystButton } from '../../../components/catalyst/button';
+import { Button as CatalystButton } from '../../../components/catalyst/button';
 
 const { slug } = Astro.params;
 const apiBase = getApiBase();
@@ -119,12 +119,12 @@ const formatDate = (dateStr: string) => {
 			<h1 class="text-2xl font-semibold text-gray-900">
 				{template ? template.name : 'Email Template'}
 			</h1>
-		</Alert>
+		</div>
 
 		{successMessage && (
 			<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
 				{successMessage}
-			</Alert>
+			</div>
 		)}
 
 		{error && !template && (
@@ -133,7 +133,7 @@ const formatDate = (dateStr: string) => {
 				<Button href="/admin/email-templates" variant="secondary" size="sm">
 					Back to Templates
 				</Button>
-			</Alert>
+			</div>
 		)}
 
 		{error && template && (
@@ -155,8 +155,8 @@ const formatDate = (dateStr: string) => {
 						) : (
 							<span class="text-sm text-blue-700">No variables defined</span>
 						)}
-					</Alert>
-				</Alert>
+					</div>
+				</div>
 
 				{/* Subject */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
@@ -185,8 +185,8 @@ const formatDate = (dateStr: string) => {
 							>
 								Preview
 							</button>
-						</Alert>
-					</Alert>
+						</div>
+					</div>
 
 					<div id="html-editor-container">
 						<Textarea client:load
@@ -198,9 +198,9 @@ const formatDate = (dateStr: string) => {
 
 					<div id="html-preview-container" class="hidden">
 						<div id="html-preview-content" class="min-h-[300px] border border-gray-200 rounded-lg bg-white overflow-auto">
-						</Alert>
-					</Alert>
-				</Alert>
+						</div>
+					</div>
+				</div>
 
 				{/* Text Body */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
@@ -235,7 +235,7 @@ const formatDate = (dateStr: string) => {
 					</div>
 					<p class="text-xs text-[#86868b]">A test email will be sent with sample data</p>
 					<div id="preview-result" class="hidden"></div>
-				</Alert>
+				</div>
 
 				{/* Meta Info */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -243,13 +243,13 @@ const formatDate = (dateStr: string) => {
 						<div>
 							<dt class="text-[#86868b]">Created</dt>
 							<dd class="text-zinc-950 tabular-nums">{formatDate(template.created_at)}</dd>
-						</Alert>
+						</div>
 						<div>
 							<dt class="text-[#86868b]">Updated</dt>
 							<dd class="text-zinc-950 tabular-nums">{formatDate(template.updated_at)}</dd>
-						</Alert>
+						</div>
 					</dl>
-				</Alert>
+				</div>
 
 				{/* Actions */}
 				<div class="flex justify-end gap-3">
@@ -259,10 +259,10 @@ const formatDate = (dateStr: string) => {
 					<Button type="submit" variant="primary" size="sm">
 						Save Changes
 					</Button>
-				</Alert>
+				</div>
 			</form>
 		)}
-	</Alert>
+	</div>
 </AdminLayout>
 
 <script define:vars={{ apiBase, apiKey, templateSlug: slug }}>
