@@ -87,64 +87,49 @@ const getDisplayName = (user: UserInfo | null): string => {
   return user.email || 'Admin'
 }
 
-// Custom hook to access Clerk via window global
-function useClerkAuth() {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [isSignedIn, setIsSignedIn] = useState(false)
+// Custom hook to fetch Clerk user info for display purposes only
+// Authentication is handled by middleware - if this component renders, user is authenticated
+function useClerkUser() {
   const [user, setUser] = useState<UserInfo | null>(null)
 
   useEffect(() => {
     let mounted = true
-    let attempts = 0
-    const maxAttempts = 100 // 10 seconds max
 
-    const checkClerk = () => {
+    // Single attempt to fetch user info - no polling, no loading state
+    // If Clerk is available, great. If not, we show placeholder until it loads
+    const fetchUserInfo = () => {
       const clerk = (
         window as {
           Clerk?: {
-            loaded?: boolean
-            session?: { id: string } | null
             user?: {
               primaryEmailAddress?: { emailAddress: string }
               firstName: string | null
               lastName: string | null
               imageUrl: string
             } | null
-            signOut?: () => Promise<void>
           }
         }
       ).Clerk
 
-      if (clerk?.loaded) {
-        if (mounted) {
-          setIsLoaded(true)
-          setIsSignedIn(!!clerk.session)
-          if (clerk.user) {
-            setUser({
-              email: clerk.user.primaryEmailAddress?.emailAddress || null,
-              firstName: clerk.user.firstName,
-              lastName: clerk.user.lastName,
-              imageUrl: clerk.user.imageUrl,
-            })
-          }
-        }
-        return
-      }
-
-      attempts++
-      if (attempts < maxAttempts) {
-        setTimeout(checkClerk, 100)
-      } else if (mounted) {
-        // Clerk failed to load, but we still mark as loaded to show UI
-        setIsLoaded(true)
-        setIsSignedIn(false)
+      if (clerk?.user && mounted) {
+        setUser({
+          email: clerk.user.primaryEmailAddress?.emailAddress || null,
+          firstName: clerk.user.firstName,
+          lastName: clerk.user.lastName,
+          imageUrl: clerk.user.imageUrl,
+        })
       }
     }
 
-    checkClerk()
+    // Try immediately
+    fetchUserInfo()
+
+    // If Clerk hasn't loaded yet, try again after a short delay
+    const timer = setTimeout(fetchUserInfo, 500)
 
     return () => {
       mounted = false
+      clearTimeout(timer)
     }
   }, [])
 
@@ -156,7 +141,7 @@ function useClerkAuth() {
     window.location.href = '/admin/login'
   }
 
-  return { isLoaded, isSignedIn, user, signOut }
+  return { user, signOut }
 }
 
 type Props = {
@@ -165,25 +150,10 @@ type Props = {
 }
 
 export default function AdminLayout({ currentPath, children }: Props) {
-  const { isLoaded, isSignedIn, user, signOut } = useClerkAuth()
-
-  useEffect(() => {
-    // Redirect to login if not authenticated (after auth is loaded)
-    if (isLoaded && !isSignedIn) {
-      window.location.href = '/admin/login'
-    }
-  }, [isLoaded, isSignedIn])
-
-  if (!isLoaded) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600" />
-          <span className="text-sm text-zinc-500">Authenticating...</span>
-        </div>
-      </div>
-    )
-  }
+  // Authentication is already handled by middleware (src/middleware.ts)
+  // If this component is rendering, the user is authenticated
+  // We only fetch user info for display purposes (avatar, name)
+  const { user, signOut } = useClerkUser()
 
   const isActive = (href: string) => {
     if (href === '/admin/') {
