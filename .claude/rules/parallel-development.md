@@ -4,32 +4,134 @@
 
 When working on multiple features or issues simultaneously, **ALWAYS** use separate terminal tabs for each worktree.
 
-## tmux Automation (Recommended)
+## Recommended Setup: Ghostty + Tabs
 
-**Using tmux?** The `/feature` command automatically creates a new tmux window for each worktree!
+**シンプル、直感的、Claude Codeと相性抜群**
 
 ```bash
-# In tmux session
+# Main worktree (Tab 1)
 cd ~/Code/kikaku-os
 /feature 142
 
-# Automatically:
-# 1. Creates worktree at ~/Code/kikaku-os-142
-# 2. Creates tmux window named "issue-142"
-# 3. Starts dev servers in split panes (left: API, right: Storefront)
-# 4. You can switch with: Ctrl+b w
+# New tab (Tab 2) for the new worktree
+cd ~/Code/kikaku-os-142
+pnpm install
+pnpm -C apps/api dev       # Port 8787
+pnpm -C apps/storefront dev # Port 4321 (別タブで起動推奨)
 ```
 
-**Benefits**:
-- No manual tab creation
-- Dev servers start automatically
-- Split panes for API + Storefront
-- Named windows for easy identification
+**Why Ghostty + Tabs > tmux**:
+- ✅ **通知がネイティブ動作** - Claude Codeのプロンプトで即座にalert
+- ✅ **視認性が高い** - タブ名で作業内容が一目瞭然
+- ✅ **シンプル** - セッション管理不要、学習コスト低
+- ✅ **Claude Code相性◎** - インタラクティブ出力が見やすい
 
-**Port Usage**:
-- API: 8787 (Wrangler default)
-- Storefront: 4321 (Astro default)
-- **Note**: Only one API server can run at a time. Stop other servers before starting a new one.
+**Ghostty Tab Auto-Naming (推奨設定)**:
+
+タブタイトルを自動設定して、どのタブで何をしているか一目瞭然に：
+
+### 1. シェル設定に追加 (~/.zshrc or ~/.bashrc)
+
+```bash
+# Ghosttyタブタイトル自動設定
+function set_tab_title() {
+  echo -ne "\033]0;$1\007"
+}
+
+# ディレクトリ変更時にタブタイトルを自動更新
+function auto_tab_title() {
+  local current_dir=$(basename "$PWD")
+
+  # worktreeディレクトリの場合
+  if [[ "$current_dir" =~ kikaku-os-([0-9]+) ]]; then
+    local issue_num="${BASH_REMATCH[1]}"
+
+    # PR番号も取得できれば追加
+    local pr_num=$(gh pr list --head "$(git branch --show-current)" --json number --jq '.[0].number' 2>/dev/null)
+
+    if [[ -n "$pr_num" ]]; then
+      set_tab_title "Issue #${issue_num} / PR #${pr_num}"
+    else
+      set_tab_title "Issue #${issue_num}"
+    fi
+  # メインworktreeの場合
+  elif [[ "$current_dir" == "kikaku-os" ]]; then
+    set_tab_title "Main ($(git branch --show-current))"
+  else
+    set_tab_title "$current_dir"
+  fi
+}
+
+# zshの場合
+if [[ -n "$ZSH_VERSION" ]]; then
+  autoload -Uz add-zsh-hook
+  add-zsh-hook chpwd auto_tab_title
+  # 初回実行
+  auto_tab_title
+fi
+
+# bashの場合
+if [[ -n "$BASH_VERSION" ]]; then
+  PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }auto_tab_title"
+fi
+```
+
+### 2. Ghostty設定 (~/.config/ghostty/config)
+
+```ini
+# タブタイトルを常に表示
+window-decoration = true
+window-title-font-family = "monospace"
+
+# シェルからのタイトル変更を許可
+shell-integration = true
+shell-integration-features = cursor,sudo,title
+```
+
+### 3. 使用例
+
+```bash
+# メインworktreeで作業
+cd ~/Code/kikaku-os
+# → タブタイトル: "Main (main)"
+
+# Issue #142のworktreeで作業
+cd ~/Code/kikaku-os-142
+# → タブタイトル: "Issue #142"
+
+# PR作成後
+gh pr create ...
+# → タブタイトル: "Issue #142 / PR #143"
+```
+
+### 4. さらに便利に: プロンプトカスタマイズ
+
+プロンプトにもworktree情報を表示：
+
+```bash
+# ~/.zshrc
+function worktree_info() {
+  local current_dir=$(basename "$PWD")
+  if [[ "$current_dir" =~ kikaku-os-([0-9]+) ]]; then
+    echo "  #${BASH_REMATCH[1]}"
+  elif [[ "$current_dir" == "kikaku-os" ]]; then
+    echo "  main"
+  fi
+}
+
+# プロンプトに追加（starship使用例）
+# ~/.config/starship.toml
+# [custom.worktree]
+# command = "basename $PWD | grep -oP 'kikaku-os-\\K\\d+' || echo ''"
+# when = "git rev-parse --is-inside-work-tree 2>/dev/null"
+# format = " [$output]($style)"
+# style = "bold yellow"
+```
+
+**メリット**:
+- タブを切り替えただけで、どのissue/PRか分かる
+- プロンプトでも確認可能
+- 設定後は自動で動作、手動設定不要
 
 ## Core Principles
 

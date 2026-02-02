@@ -17,10 +17,6 @@
    - 実行結果をチェックする
    - エラーが発生したら適切に対処する
 
-3. **tmux automation**
-   - tmuxセッション内であれば、自動的にウィンドウを作成し開発サーバーを起動する
-   - tmuxを使用していない場合は、ユーザーに手動での起動を指示する
-
 **❌ やってはいけないこと:**
 - "以下のコマンドを実行してください" とユーザーに指示するだけ
 - bash scriptファイルを作成してユーザーに実行させる
@@ -239,52 +235,21 @@ if ($ARGUMENTS.match(/^\d+$/)) {
    cd ../kikaku-os-{number} && pnpm install
    ```
 
-5. **tmuxウィンドウを自動作成して開発サーバーを起動** - Bash toolで実行:
+5. **ユーザーに新しいタブでの作業を指示**:
 
-   まずtmuxセッションの有無をチェック:
-   ```bash
-   if [[ -n "$TMUX" ]]; then echo "tmux"; else echo "no-tmux"; fi
+   Worktree作成後、ユーザーに以下を表示:
    ```
+   ✅ Worktree created: ~/Code/kikaku-os-{number}
 
-   **tmuxセッション内の場合**、以下のコマンドを**実際に実行**:
-   ```bash
-   # 新しいウィンドウを作成（実際のnumberに置き換える）
-   tmux new-window -c "$HOME/Code/kikaku-os-{number}" -n "issue-{number}"
+   📍 Next: Open New Terminal Tab
 
-   # 左ペイン: APIサーバー
-   tmux select-pane -t "issue-{number}.0" -T "API"
-   tmux send-keys -t "issue-{number}" "cd $HOME/Code/kikaku-os-{number} && pnpm -C apps/api dev" Enter
-
-   # ウィンドウを水平分割
-   tmux split-window -h -c "$HOME/Code/kikaku-os-{number}" -t "issue-{number}"
-
-   # 右ペイン: Storefrontサーバー
-   tmux select-pane -t "issue-{number}.1" -T "Storefront"
-   tmux send-keys -t "issue-{number}.1" "pnpm -C apps/storefront dev" Enter
-   ```
-
-   成功したらユーザーに通知:
-   ```
-   ✅ tmux window 'issue-{number}' created with dev servers running
-      - API: http://localhost:8787 (left pane)
-      - Storefront: http://localhost:4321 (right pane)
-      Switch to it with: Ctrl+b w
-   ```
-
-   **tmuxを使用していない場合**、ユーザーに指示を表示:
-   ```
-   ⚠️ Next: Open New Terminal Tab
-
-   You need to open a new terminal tab for this worktree.
-
-   In your new terminal tab, run:
+   Open a new Ghostty tab and run:
 
    cd ~/Code/kikaku-os-{number}
-   pnpm -C apps/api dev
+   pnpm -C apps/api dev       # Port 8787
+   pnpm -C apps/storefront dev # Port 4321 (別タブ推奨)
 
-   Then in another split/tab:
-   cd ~/Code/kikaku-os-{number}
-   pnpm -C apps/storefront dev
+   Then continue with implementation in that tab.
    ```
 
 **注意事項**:
@@ -460,26 +425,10 @@ if ($ARGUMENTS.match(/^\d+$/)) {
    )"
    ```
 
-3. **tmux window名を自動更新** - Bash toolで実行:
-
-   PR作成後、tmuxセッション内であればwindow名を更新:
-   ```bash
-   # PR番号を取得
-   PR_NUMBER=$(gh pr list --head $(git branch --show-current) --json number --jq '.[0].number')
-   ISSUE_NUMBER=$(git branch --show-current | grep -oP 'issue-\K\d+')
-
-   # tmuxセッション内であれば、window名を更新
-   if [[ -n "$TMUX" ]]; then
-     tmux rename-window "issue-${ISSUE_NUMBER} PR-${PR_NUMBER}"
-     echo "✓ tmux window renamed to: issue-${ISSUE_NUMBER} PR-${PR_NUMBER}"
-   fi
-   ```
-
-4. **PRのURLを表示**:
+3. **PRのURLを表示**:
    PRが作成されたら、ユーザーにURLを報告:
    ```
    ✓ Pull Request created: #143
-   ✓ tmux window renamed to: issue-142 PR-143
    URL: https://github.com/user/repo/pull/143
 
    Next steps:
