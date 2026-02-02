@@ -130,11 +130,15 @@ const getInputType = (dataType: string) => {
   }
 };
 
-const formatValue = (value: string, dataType: string) => {
+const formatValue = (value: string, dataType: string): boolean | string => {
   if (dataType === 'boolean') {
     return ['true', '1'].includes(value.toLowerCase());
   }
   return value;
+};
+
+const formatBooleanValue = (value: string): boolean => {
+  return ['true', '1'].includes(value.toLowerCase());
 };
 ---
 
@@ -198,7 +202,7 @@ const formatValue = (value: string, dataType: string) => {
                         id={`setting_${setting.key}`}
                         name={`setting_${setting.key}`}
                         value="true"
-                        checked={formatValue(setting.value, setting.data_type)}
+                        checked={formatBooleanValue(setting.value)}
                       />
                       <Label htmlFor={`setting_${setting.key}`}>Enabled</Label>
                     </Field>
