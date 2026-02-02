@@ -1,12 +1,12 @@
 ---
 export const prerender = false;
 
-import AdminLayout from'../../layouts/AdminLayout.astro';
-import { Alert } from'../../components/catalyst/alert-banner';
-import { Badge } from'../../components/catalyst/badge';
-import { Button } from'../../components/catalyst/button';
-import { Heading, Subheading } from'../../components/catalyst/heading';
-import { getApiBase } from'../../lib/api';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Alert } from '../../components/catalyst/alert-banner';
+import { Badge } from '../../components/catalyst/badge';
+import { Button } from '../../components/catalyst/button';
+import { Heading, Subheading } from '../../components/catalyst/heading';
+import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
 
@@ -55,8 +55,8 @@ let analyticsData: AnalyticsData | null = null;
 let error: string | null = null;
 
 // Get period from query params (default: 7 days)
-const periodParam = Astro.url.searchParams.get('period') ||'7';
-const period = ['7','30','90'].includes(periodParam) ? parseInt(periodParam) : 7;
+const periodParam = Astro.url.searchParams.get('period') || '7';
+const period = ['7', '30', '90'].includes(periodParam) ? parseInt(periodParam) : 7;
 
 // Calculate date range for analytics
 const today = new Date();
@@ -66,9 +66,9 @@ fromDate.setDate(fromDate.getDate() - (period - 1));
 const fromStr = fromDate.toISOString().slice(0, 10);
 
 const periodLabels: Record<number, string> = {
-	7:'7 Days',
-	30:'30 Days',
-	90:'90 Days'
+	7: '7 Days',
+	30: '30 Days',
+	90: '90 Days'
 };
 
 if (import.meta.env.ADMIN_API_KEY) {
@@ -76,10 +76,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		// Fetch dashboard data and analytics in parallel
 		const [dashboardRes, analyticsRes] = await Promise.all([
 			fetch(`${apiBase}/admin/dashboard`, {
-				headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
+				headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
 			}),
 			fetch(`${apiBase}/admin/analytics?from=${fromStr}&to=${todayStr}`, {
-				headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
+				headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
 			})
 		]);
 
@@ -95,40 +95,40 @@ if (import.meta.env.ADMIN_API_KEY) {
 		}
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load dashboard data.';
+		error = 'Failed to load dashboard data.';
 	}
 } else {
-	error ='ADMIN_API_KEY is missing.';
+	error = 'ADMIN_API_KEY is missing.';
 }
 
-const formatCurrency = (amount: number, currency ='JPY') => {
-	return new Intl.NumberFormat('ja-JP', { style:'currency', currency }).format(amount);
+const formatCurrency = (amount: number, currency = 'JPY') => {
+	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);
 };
 
 const formatDate = (dateStr: string) => {
 	return new Date(dateStr).toLocaleDateString('ja-JP', {
-		month:'short',
-		day:'numeric',
-		hour:'2-digit',
-		minute:'2-digit'
+		month: 'short',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit'
 	});
 };
 
 const getSeverityColor = (severity: string) => {
 	switch (severity) {
-		case'critical': return'red' as const;
-		case'warning': return'amber' as const;
-		default: return'blue' as const;
+		case 'critical': return 'red' as const;
+		case 'warning': return 'amber' as const;
+		default: return 'blue' as const;
 	}
 };
 
 const getStatusColor = (status: string) => {
 	switch (status) {
-		case'paid': return'lime' as const;
-		case'fulfilled': return'lime' as const;
-		case'partial_refunded': return'amber' as const;
-		case'refunded': return'red' as const;
-		default: return'zinc' as const;
+		case 'paid': return 'lime' as const;
+		case 'fulfilled': return 'lime' as const;
+		case 'partial_refunded': return 'amber' as const;
+		case 'refunded': return 'red' as const;
+		default: return 'zinc' as const;
 	}
 };
 ---
@@ -210,8 +210,8 @@ const getStatusColor = (status: string) => {
 												href={`?period=${p}`}
 												class={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
 													period === p
-														?'bg-indigo-600 text-white'
-														:'text-zinc-600 hover:bg-zinc-100'
+														? 'bg-indigo-600 text-white'
+														: 'text-zinc-600 hover:bg-zinc-100'
 												}`}
 											>
 												{p}D
@@ -276,7 +276,7 @@ const getStatusColor = (status: string) => {
 											<div class="flex items-center gap-3">
 												<span class="text-sm font-medium text-zinc-950">#{order.id}</span>
 												<span class="text-xs text-zinc-500 truncate max-w-[120px]">
-													{order.customer_email ||'No email'}
+													{order.customer_email || 'No email'}
 												</span>
 											</Alert>
 											<div class="flex items-center gap-3">
@@ -337,11 +337,11 @@ const getStatusColor = (status: string) => {
 <script id="analytics-data" type="application/json" set:html={JSON.stringify(analyticsData)}></script>
 
 <script>
-	import Chart from'chart.js/auto';
+	import Chart from 'chart.js/auto';
 
 	function initChart() {
 		const dataElement = document.getElementById('analytics-data');
-		const chartData = dataElement ? JSON.parse(dataElement.textContent ||'null') : null;
+		const chartData = dataElement ? JSON.parse(dataElement.textContent || 'null') : null;
 
 		if (!chartData || !chartData.dailySales || chartData.dailySales.length === 0) {
 			return; // No data to display
@@ -363,28 +363,28 @@ const getStatusColor = (status: string) => {
 		const orders = chartData.dailySales.map((d: { orders: number }) => d.orders);
 
 		new Chart(salesCtx, {
-			type:'bar',
+			type: 'bar',
 			data: {
 				labels,
 				datasets: [
 					{
-						type:'line',
-						label:'Revenue',
+						type: 'line',
+						label: 'Revenue',
 						data: revenues,
-						borderColor:'rgb(79, 70, 229)',
-						backgroundColor:'rgba(79, 70, 229, 0.1)',
+						borderColor: 'rgb(79, 70, 229)',
+						backgroundColor: 'rgba(79, 70, 229, 0.1)',
 						fill: true,
 						tension: 0.3,
-						yAxisID:'y'
+						yAxisID: 'y'
 					},
 					{
-						type:'bar',
-						label:'Orders',
+						type: 'bar',
+						label: 'Orders',
 						data: orders,
-						backgroundColor:'rgba(16, 185, 129, 0.8)',
-						borderColor:'rgb(16, 185, 129)',
+						backgroundColor: 'rgba(16, 185, 129, 0.8)',
+						borderColor: 'rgb(16, 185, 129)',
 						borderWidth: 1,
-						yAxisID:'y1'
+						yAxisID: 'y1'
 					}
 				]
 			},
@@ -392,7 +392,7 @@ const getStatusColor = (status: string) => {
 				responsive: true,
 				maintainAspectRatio: false,
 				interaction: {
-					mode:'index',
+					mode: 'index',
 					intersect: false
 				},
 				plugins: {
@@ -403,8 +403,8 @@ const getStatusColor = (status: string) => {
 						callbacks: {
 							label: (context) => {
 								const value = context.raw as number;
-								if (context.dataset.label ==='Revenue') {
-									return `Revenue: ${new Intl.NumberFormat('ja-JP', { style:'currency', currency:'JPY' }).format(value)}`;
+								if (context.dataset.label === 'Revenue') {
+									return `Revenue: ${new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(value)}`;
 								}
 								return `Orders: ${value}`;
 							}
@@ -413,9 +413,9 @@ const getStatusColor = (status: string) => {
 				},
 				scales: {
 					y: {
-						type:'linear',
+						type: 'linear',
 						display: true,
-						position:'left',
+						position: 'left',
 						beginAtZero: true,
 						ticks: {
 							callback: (value) => {
@@ -427,13 +427,13 @@ const getStatusColor = (status: string) => {
 							}
 						},
 						grid: {
-							color:'rgba(0, 0, 0, 0.05)'
+							color: 'rgba(0, 0, 0, 0.05)'
 						}
 					},
 					y1: {
-						type:'linear',
+						type: 'linear',
 						display: true,
-						position:'right',
+						position: 'right',
 						beginAtZero: true,
 						ticks: {
 							stepSize: 1
@@ -453,7 +453,7 @@ const getStatusColor = (status: string) => {
 	}
 
 	// Start initialization
-	if (document.readyState ==='loading') {
+	if (document.readyState === 'loading') {
 		document.addEventListener('DOMContentLoaded', initChart);
 	} else {
 		initChart();

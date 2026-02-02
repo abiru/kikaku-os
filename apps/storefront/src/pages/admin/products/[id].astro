@@ -1,12 +1,17 @@
 ---
 export const prerender = false;
 
-import { Alert } from'../../../components/catalyst/alert-banner';
-import { Button } from'../../../components/catalyst/button';
-import { Heading, Subheading } from'../../../components/catalyst/heading';
-import AdminLayout from'../../../layouts/AdminLayout.astro';
-import { getApiBase } from'../../../lib/api';
-import MarkdownPreview from'../../../components/MarkdownPreview';
+import { Alert } from '../../../components/catalyst/alert-banner';
+import { Button } from '../../../components/catalyst/button';
+import { Checkbox } from '../../../components/catalyst/checkbox';
+import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
+import { Heading, Subheading } from '../../../components/catalyst/heading';
+import { Input } from '../../../components/catalyst/input';
+import { Select } from '../../../components/catalyst/select';
+import { Textarea } from '../../../components/catalyst/textarea';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../../lib/api';
+import MarkdownPreview from '../../../components/MarkdownPreview';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -78,24 +83,24 @@ let error: string | null = null;
 let successMessage: string | null = null;
 
 // Handle POST - Update product
-if (Astro.request.method ==='POST' && apiKey) {
+if (Astro.request.method === 'POST' && apiKey) {
 	try {
 		const formData = await Astro.request.formData();
-		const title = formData.get('title')?.toString().trim() ||'';
-		const description = formData.get('description')?.toString().trim() ||'';
-		const status = formData.get('status')?.toString() ||'active';
+		const title = formData.get('title')?.toString().trim() || '';
+		const description = formData.get('description')?.toString().trim() || '';
+		const status = formData.get('status')?.toString() || 'active';
 		const category = formData.get('category')?.toString().trim() || null;
 		const tax_rate_id_str = formData.get('tax_rate_id')?.toString() || null;
 		const tax_rate_id = tax_rate_id_str ? parseInt(tax_rate_id_str, 10) : null;
-		const featured = formData.get('featured') ==='on' ? 1 : 0;
+		const featured = formData.get('featured') === 'on' ? 1 : 0;
 
 		if (!title) {
-			error ='Title is required';
+			error = 'Title is required';
 		} else {
 			const res = await fetch(`${apiBase}/admin/products/${id}`, {
-				method:'PUT',
+				method: 'PUT',
 				headers: {
-					'Content-Type':'application/json',
+					'Content-Type': 'application/json',
 					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({ title, description, status, category, tax_rate_id, featured })
@@ -104,15 +109,15 @@ if (Astro.request.method ==='POST' && apiKey) {
 			const data = await res.json();
 
 			if (!res.ok) {
-				error = data.message ||'Failed to update product';
+				error = data.message || 'Failed to update product';
 			} else {
 				product = data.product;
-				successMessage ='Product updated successfully';
+				successMessage = 'Product updated successfully';
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error ='Failed to update product. Please check your connection.';
+		error = 'Failed to update product. Please check your connection.';
 	}
 }
 
@@ -120,12 +125,12 @@ if (Astro.request.method ==='POST' && apiKey) {
 if (!product && apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/products/${id}`, {
-			headers: {'x-admin-key': apiKey }
+			headers: { 'x-admin-key': apiKey }
 		});
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error ='Product not found';
+				error = 'Product not found';
 			} else {
 				const data = await res.json();
 				error = data.message || `API Error: ${res.status}`;
@@ -136,17 +141,17 @@ if (!product && apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error ||'Failed to load product. Please check your connection.';
+		error = error || 'Failed to load product. Please check your connection.';
 	}
 } else if (!apiKey) {
-	error ='ADMIN_API_KEY is missing in server environment';
+	error = 'ADMIN_API_KEY is missing in server environment';
 }
 
 // Fetch variants if product is loaded
 if (product && apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/products/${id}/variants`, {
-			headers: {'x-admin-key': apiKey }
+			headers: { 'x-admin-key': apiKey }
 		});
 		if (res.ok) {
 			const data = await res.json();
@@ -161,7 +166,7 @@ if (product && apiKey) {
 if (product && apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/products/${id}/images`, {
-			headers: {'x-admin-key': apiKey }
+			headers: { 'x-admin-key': apiKey }
 		});
 		if (res.ok) {
 			const data = await res.json();
@@ -176,7 +181,7 @@ if (product && apiKey) {
 if (apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/categories`, {
-			headers: {'x-admin-key': apiKey }
+			headers: { 'x-admin-key': apiKey }
 		});
 		if (res.ok) {
 			const data = await res.json();
@@ -191,7 +196,7 @@ if (apiKey) {
 if (apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/tax-rates`, {
-			headers: {'x-admin-key': apiKey }
+			headers: { 'x-admin-key': apiKey }
 		});
 		if (res.ok) {
 			const data = await res.json();
@@ -203,19 +208,19 @@ if (apiKey) {
 }
 
 const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return'-';
+	if (!dateStr) return '-';
 	return new Date(dateStr).toLocaleString('ja-JP', {
-		year:'numeric',
-		month:'2-digit',
-		day:'2-digit',
-		hour:'2-digit',
-		minute:'2-digit'
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit'
 	});
 };
 
-const formatPrice = (amount: number, currency: string ='JPY') => {
+const formatPrice = (amount: number, currency: string = 'JPY') => {
 	return new Intl.NumberFormat('ja-JP', {
-		style:'currency',
+		style: 'currency',
 		currency: currency,
 		minimumFractionDigits: 0,
 	}).format(amount);
@@ -234,7 +239,7 @@ const getExternalImageUrl = (metadata: string | null): string | null => {
 const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 ---
 
-<AdminLayout title={product ? `${product.title} - Admin` :'Product - Admin'}>
+<AdminLayout title={product ? `${product.title} - Admin` : 'Product - Admin'}>
 	<div class="space-y-6 max-w-2xl">
 		<div class="flex items-center gap-4">
 			<a href="/admin/products" class="text-indigo-600 hover:underline text-sm flex items-center gap-1">
@@ -244,7 +249,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 				Products
 			</a>
 			<Heading>
-				{product ? `Edit: ${product.title}` :'Product'}
+				{product ? `Edit: ${product.title}` : 'Product'}
 			</Heading>
 		</div>
 			{successMessage && (
@@ -274,59 +279,56 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			{product && (
 				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-					<div class="space-y-4">
-						<div>
-							<label class="block text-sm font-medium text-zinc-950 mb-2">Title *</label>
-							<input type="text" name="title" required value={product.title} class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
-						</div>
+					<Fieldset client:load>
+						<Field>
+							<Label>Title *</Label>
+							<Input client:load type="text" name="title" required value={product.title} />
+						</Field>
 
-						<div>
-							<label class="block text-sm font-medium text-zinc-950 mb-2">Description（Markdown形式）</label>
+						<Field>
+							<Label>Description（Markdown形式）</Label>
 							<MarkdownPreview
 								client:load
-								value={product.description ||''}
+								value={product.description || ''}
 								onChange={(val: string) => {
 									const input = document.getElementById('description-hidden') as HTMLInputElement;
 									if (input) input.value = val;
 								}}
 							/>
-							<input type="hidden" id="description-hidden" name="description" value={product.description ||''} />
-						</div>
+							<input type="hidden" id="description-hidden" name="description" value={product.description || ''} />
+						</Field>
 
-						<div>
-							<label class="block text-sm font-medium text-zinc-950 mb-2">Status</label>
-							<select name="status" class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-								<option value="active" selected={product.status ==='active'}>Active</option>
-								<option value="draft" selected={product.status ==='draft'}>Draft</option>
-								<option value="archived" selected={product.status ==='archived'}>Archived</option>
-							</select>
-						</div>
+						<Field>
+							<Label>Status</Label>
+							<Select client:load name="status">
+								<option value="active" selected={product.status === 'active'}>Active</option>
+								<option value="draft" selected={product.status === 'draft'}>Draft</option>
+								<option value="archived" selected={product.status === 'archived'}>Archived</option>
+							</Select>
+						</Field>
 
-						<div>
+						<Field>
 							<div class="flex items-center gap-2">
-								<input
-									type="checkbox"
+								<Checkbox client:load
 									id="featured"
 									name="featured"
 									checked={product.featured === 1}
-									class="w-4 h-4 text-[#0071e3] border-gray-300 rounded focus:ring-[#0071e3]"
 								/>
-								<label for="featured" class="text-sm font-medium text-zinc-950">
+								<label for="featured" class="text-base/6 text-zinc-950 select-none sm:text-sm/6">
 									ホームページに表示（Featured）
 								</label>
 							</div>
 							<p class="text-xs text-[#86868b] mt-1">チェックするとホームページのカテゴリグリッドに表示されます</p>
-						</div>
+						</Field>
 
-						<div>
-							<label class="block text-sm font-medium text-zinc-950 mb-2">Category</label>
-							<input
+						<Field>
+							<Label>Category</Label>
+							<Input client:load
 								type="text"
 								name="category"
 								list="category-list"
-								value={product.category ||''}
+								value={product.category || ''}
 								placeholder="Select or enter a category"
-								class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
 							/>
 							<datalist id="category-list">
 								{categories.map((cat) => (
@@ -334,21 +336,21 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 								))}
 							</datalist>
 							<p class="text-xs text-[#86868b] mt-1">Type to create a new category or select from existing ones.</p>
-						</div>
+						</Field>
 
-						<div>
-							<label class="block text-sm font-medium text-zinc-950 mb-2">Tax Rate</label>
-							<select name="tax_rate_id" class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+						<Field>
+							<Label>Tax Rate</Label>
+							<Select client:load name="tax_rate_id">
 								<option value="">Select tax rate...</option>
 								{taxRates.map((rate) => (
 									<option value={rate.id} selected={product.tax_rate_id === rate.id}>
 										{rate.name} ({(rate.rate * 100).toFixed(1)}%)
 									</option>
 								))}
-							</select>
+							</Select>
 							<p class="text-xs text-[#86868b] mt-1">All prices are tax-inclusive (税込)</p>
-						</div>
-					</div>
+						</Field>
+					</Fieldset>
 
 					<div class="pt-4 border-t border-gray-100">
 						<dl class="grid grid-cols-2 gap-4 text-sm">
@@ -365,7 +367,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 				<div class="flex justify-between gap-3 pt-4 border-t border-gray-100">
 					<div>
-						{product.status !=='archived' && (
+						{product.status !== 'archived' && (
 							<button
 								type="button"
 								id="archive-product-btn"
@@ -374,7 +376,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 								Archive Product
 							</button>
 						)}
-						{product.status ==='archived' && (
+						{product.status === 'archived' && (
 							<button
 								type="button"
 								id="restore-product-btn"
@@ -401,15 +403,15 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 						<Subheading>Web更新</Subheading>
 					</div>
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
-						<div class="space-y-4">
-							<div>
-								<label class="block text-sm font-medium text-zinc-950 mb-2">商品ページURL</label>
+						<Fieldset client:load>
+							<Field>
+								<Label>商品ページURL</Label>
 								<div class="flex gap-2">
-									<input
+									<Input
 										type="url"
 										id="fetch-url"
 										placeholder="https://www.spider-farmer.com/products/..."
-										class="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+										className="flex-1"
 									/>
 								<button
 									type="button"
@@ -424,8 +426,8 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 								</button>
 								</div>
 								<p class="text-xs text-[#86868b] mt-1">メーカーの公式サイトURLを入力して情報を取得します</p>
-							</div>
-						</div>
+							</Field>
+						</Fieldset>
 
 						<div id="fetch-error" class="hidden">
 							<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
@@ -434,42 +436,6 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 						<div id="fetch-warning" class="hidden">
 							<div class="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm"></div>
 						</div>
-
-						<!-- Manual input fallback -->
-						<details class="text-sm">
-							<summary class="text-[#86868b] cursor-pointer hover:text-zinc-950">
-								URLで取得できない場合は手動入力
-							</summary>
-							<div class="mt-3 space-y-3 pl-4 border-l-2 border-gray-200">
-								<div class="space-y-4">
-									<div>
-										<label class="block text-xs font-medium text-zinc-950 mb-2">画像URL</label>
-										<input
-											type="url"
-											id="manual-image"
-											placeholder="https://example.com/image.jpg"
-											class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-										/>
-									</div>
-									<div>
-										<label class="block text-xs font-medium text-zinc-950 mb-2">説明文</label>
-										<textarea
-											id="manual-description"
-											rows={3}
-											placeholder="商品の説明..."
-											class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-										></textarea>
-									</div>
-								</div>
-								<button
-									type="button"
-									id="manual-apply-btn"
-									class="px-3 py-1.5 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
-								>
-									手動データでプレビュー
-								</button>
-							</div>
-						</details>
 
 						<div id="fetch-preview" class="hidden border-t border-gray-100 pt-4 space-y-4">
 							<h3 class="text-sm font-semibold text-zinc-950">取得結果</h3>
@@ -623,7 +589,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										data-image-id={image.id}
 									>
 										<img
-											src={`${apiBase}/r2?key=${encodeURIComponent(image.r2_key)}&x-admin-key=${encodeURIComponent(apiKey ||'')}`}
+											src={`${apiBase}/r2?key=${encodeURIComponent(image.r2_key)}&x-admin-key=${encodeURIComponent(apiKey || '')}`}
 											alt={image.filename}
 											class="w-full h-full object-cover"
 											loading="lazy"
@@ -682,12 +648,12 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										<div class="flex-1">
 											<div class="font-medium text-zinc-950">{variant.title}</div>
 											<div class="text-sm text-[#86868b] mt-1 flex flex-wrap gap-x-4 gap-y-1">
-												<span>SKU: {variant.sku ||'-'}</span>
+												<span>SKU: {variant.sku || '-'}</span>
 												<span class="tabular-nums">
-													{price ? formatPrice(price.amount, price.currency) :'No price set'}
+													{price ? formatPrice(price.amount, price.currency) : 'No price set'}
 												</span>
 												<span class="font-mono text-xs">
-													Stripe: {price?.provider_price_id ||'-'}
+													Stripe: {price?.provider_price_id || '-'}
 												</span>
 											</div>
 										</div>
@@ -724,56 +690,54 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 						<form id="variant-form" class="p-6 space-y-4">
 							<input type="hidden" id="variant-id" name="variantId" value="" />
 
-							<div class="space-y-4">
-								<div>
-									<label class="block text-sm font-medium text-zinc-950 mb-2">Title *</label>
-									<input
+							<Fieldset client:load>
+								<Field>
+									<Label>Title *</Label>
+									<Input
 										type="text"
 										id="variant-title"
 										name="title"
 										required
 										placeholder="e.g., Default, Size M, Color Red"
-										class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
 									/>
-								</div>
+								</Field>
 
-								<div>
-									<label class="block text-sm font-medium text-zinc-950 mb-2">SKU</label>
-									<input
+								<Field>
+									<Label>SKU</Label>
+									<Input
 										type="text"
 										id="variant-sku"
 										name="sku"
 										placeholder="Optional SKU code"
-										class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
 									/>
-								</div>
+								</Field>
 
-								<div>
-									<label class="block text-sm font-medium text-zinc-950 mb-2">Price (JPY) *</label>
-									<input
+								<Field>
+									<Label>Price (JPY) *</Label>
+									<Input
 										type="number"
 										id="price-amount"
 										name="amount"
 										required
 										min="0"
 										step="1"
+										className="tabular-nums"
 										placeholder="1000"
-										class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 tabular-nums placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
 									/>
-								</div>
+								</Field>
 
-								<div>
-									<label class="block text-sm font-medium text-zinc-950 mb-2">Stripe Price ID</label>
-									<input
+								<Field>
+									<Label>Stripe Price ID</Label>
+									<Input
 										type="text"
 										id="stripe-price-id"
 										name="provider_price_id"
+										className="font-mono"
 										placeholder="price_xxxxxxxx"
-										class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 font-mono placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
 									/>
 									<p class="text-xs text-[#86868b] mt-1">Required for checkout. Get this from your Stripe Dashboard.</p>
-								</div>
-							</div>
+								</Field>
+							</Fieldset>
 
 							<div id="modal-error" class="hidden">
 								<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
@@ -838,14 +802,14 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			try {
 				const res = await fetch(`${apiBase}/admin/products/${productId}/images`, {
-					method:'POST',
-					headers: {'x-admin-key': apiKey },
+					method: 'POST',
+					headers: { 'x-admin-key': apiKey },
 					body: formData
 				});
 
 				if (!res.ok) {
 					const data = await res.json();
-					showImageError(data.message ||'Failed to upload images');
+					showImageError(data.message || 'Failed to upload images');
 				} else {
 					location.reload();
 				}
@@ -853,7 +817,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 				showImageError('Failed to upload images. Please try again.');
 			} finally {
 				uploadProgress?.classList.add('hidden');
-				if (imageUpload) imageUpload.value ='';
+				if (imageUpload) imageUpload.value = '';
 			}
 		});
 
@@ -864,18 +828,18 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			const imageId = btn.dataset.imageId;
 			const filename = btn.dataset.imageFilename;
-			if (!confirm(`Delete image"${filename}"?`)) return;
+			if (!confirm(`Delete image "${filename}"?`)) return;
 
 			try {
 				const res = await fetch(`${apiBase}/admin/products/${productId}/images/${imageId}`, {
-					method:'DELETE',
-					headers: {'x-admin-key': apiKey }
+					method: 'DELETE',
+					headers: { 'x-admin-key': apiKey }
 				});
 				if (res.ok) {
 					location.reload();
 				} else {
 					const data = await res.json();
-					showImageError(data.message ||'Failed to delete image');
+					showImageError(data.message || 'Failed to delete image');
 				}
 			} catch (err) {
 				showImageError('Failed to delete image. Please try again.');
@@ -897,13 +861,13 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 		function showModal(isEdit = false, variant = null) {
 			if (!modal || !modalTitle || !variantIdInput || !variantTitleInput || !variantSkuInput || !priceAmountInput || !stripePriceIdInput || !modalError) return;
-			modalTitle.textContent = isEdit ?'Edit Variant' :'Add Variant';
-			variantIdInput.value = variant?.id ||'';
-			variantTitleInput.value = variant?.title ||'';
-			variantSkuInput.value = variant?.sku ||'';
+			modalTitle.textContent = isEdit ? 'Edit Variant' : 'Add Variant';
+			variantIdInput.value = variant?.id || '';
+			variantTitleInput.value = variant?.title || '';
+			variantSkuInput.value = variant?.sku || '';
 			const price = variant?.prices?.[0];
-			priceAmountInput.value = price?.amount ||'';
-			stripePriceIdInput.value = price?.provider_price_id ||'';
+			priceAmountInput.value = price?.amount || '';
+			stripePriceIdInput.value = price?.provider_price_id || '';
 			modalError.classList.add('hidden');
 			modal.classList.remove('hidden');
 		}
@@ -942,18 +906,18 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			if (deleteBtn) {
 				const variantId = deleteBtn.dataset.variantId;
 				const variantTitle = deleteBtn.dataset.variantTitle;
-				if (!confirm(`Delete variant"${variantTitle}"? This will also delete its prices.`)) return;
+				if (!confirm(`Delete variant "${variantTitle}"? This will also delete its prices.`)) return;
 
 				try {
 					const res = await fetch(`${apiBase}/admin/products/${productId}/variants/${variantId}`, {
-						method:'DELETE',
-						headers: {'x-admin-key': apiKey }
+						method: 'DELETE',
+						headers: { 'x-admin-key': apiKey }
 					});
 					if (res.ok) {
 						location.reload();
 					} else {
 						const data = await res.json();
-						alert(data.message ||'Failed to delete variant');
+						alert(data.message || 'Failed to delete variant');
 					}
 				} catch (err) {
 					alert('Failed to delete variant. Please try again.');
@@ -989,9 +953,9 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 					: `${apiBase}/admin/products/${productId}/variants`;
 
 				const variantRes = await fetch(variantUrl, {
-					method: isEdit ?'PUT' :'POST',
+					method: isEdit ? 'PUT' : 'POST',
 					headers: {
-						'Content-Type':'application/json',
+						'Content-Type': 'application/json',
 						'x-admin-key': apiKey
 					},
 					body: JSON.stringify({ title, sku })
@@ -999,7 +963,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 				if (!variantRes.ok) {
 					const data = await variantRes.json();
-					showError(data.message ||'Failed to save variant');
+					showError(data.message || 'Failed to save variant');
 					return;
 				}
 
@@ -1008,19 +972,19 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 				// Update prices
 				const priceRes = await fetch(`${apiBase}/admin/variants/${savedVariantId}/prices`, {
-					method:'PUT',
+					method: 'PUT',
 					headers: {
-						'Content-Type':'application/json',
+						'Content-Type': 'application/json',
 						'x-admin-key': apiKey
 					},
 					body: JSON.stringify({
-						prices: [{ currency:'JPY', amount, provider_price_id }]
+						prices: [{ currency: 'JPY', amount, provider_price_id }]
 					})
 				});
 
 				if (!priceRes.ok) {
 					const data = await priceRes.json();
-					showError(data.message ||'Failed to save price');
+					showError(data.message || 'Failed to save price');
 					return;
 				}
 
@@ -1094,32 +1058,32 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			// Show original title
 			if (previewOriginalTitle) {
-				previewOriginalTitle.textContent = data.original_title ||'-';
+				previewOriginalTitle.textContent = data.original_title || '-';
 			}
 
 			// Show specs
 			if (previewSpecs && data.specs) {
 				const specsText = Object.entries(data.specs)
 					.map(([key, value]) => `${key}: ${value}`)
-					.join(' |');
-				previewSpecs.textContent = specsText ||'-';
+					.join(' | ');
+				previewSpecs.textContent = specsText || '-';
 			} else if (previewSpecs) {
-				previewSpecs.textContent ='-';
+				previewSpecs.textContent = '-';
 			}
 
 			// Show source
 			if (previewSource) {
-				previewSource.textContent = data.source ||'-';
+				previewSource.textContent = data.source || '-';
 			}
 
 			// Show generated title
 			if (previewGeneratedTitle) {
-				previewGeneratedTitle.textContent = data.generated_title ||'-';
+				previewGeneratedTitle.textContent = data.generated_title || '-';
 			}
 
 			// Show generated description (as HTML)
 			if (previewGeneratedDescription) {
-				previewGeneratedDescription.innerHTML = data.generated_description ||'-';
+				previewGeneratedDescription.innerHTML = data.generated_description || '-';
 			}
 
 			fetchPreview.classList.remove('hidden');
@@ -1144,143 +1108,67 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			// Show loading state
 			if (fetchSpinner) fetchSpinner.classList.remove('hidden');
-			if (fetchLabel) fetchLabel.textContent ='取得中...';
+			if (fetchLabel) fetchLabel.textContent = '取得中...';
 			if (fetchBtn) fetchBtn.disabled = true;
 
 			try {
-				const productName = document.querySelector('input[name="title"]')?.value?.trim() ||'';
-				const res = await fetch('/api/admin/products/fetch-url', {
-					method:'POST',
-					headers: {'Content-Type':'application/json' },
-					body: JSON.stringify({ url, product_name: productName })
+				const productName = document.querySelector('input[name="title"]')?.value?.trim() || '';
+				const res = await fetch(`${apiBase}/admin/product-fetch`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': apiKey
+					},
+					body: JSON.stringify({ url, productName })
 				});
 
 				const data = await res.json();
 
-				if (!data.success) {
-					showFetchError(data.error ||'取得に失敗しました');
+				if (!res.ok || !data.success) {
+					showFetchError(data.message || '取得に失敗しました');
 				} else {
-					// Show warning if URL fetch failed but content was generated
-					if (data.warning) {
-						showFetchWarning(data.warning);
-					}
 					showPreview(data);
 				}
 			} catch (err) {
 				showFetchError('通信エラーが発生しました');
 			} finally {
 				if (fetchSpinner) fetchSpinner.classList.add('hidden');
-				if (fetchLabel) fetchLabel.textContent ='取得';
+				if (fetchLabel) fetchLabel.textContent = '取得';
 				if (fetchBtn) fetchBtn.disabled = false;
 			}
 		});
 
 		cancelPreviewBtn?.addEventListener('click', hidePreview);
 
-		// Manual input handler
-		const manualImageInput = document.getElementById('manual-image');
-		const manualDescInput = document.getElementById('manual-description');
-		const manualApplyBtn = document.getElementById('manual-apply-btn');
+		// Apply all (title + description) - Submit to Inbox for approval
+		// Note: Direct updates bypass the Inbox approval pattern (CLAUDE.md violation)
+		// All AI-generated content must be reviewed before being applied
+		applyAllBtn?.addEventListener('click', async () => {
+			if (!fetchedData) return;
 
-		manualApplyBtn?.addEventListener('click', async () => {
-			const imageUrl = manualImageInput?.value?.trim();
-			const description = manualDescInput?.value?.trim();
-
-			if (!imageUrl && !description) {
-				showFetchError('画像URLまたは説明文を入力してください');
+			if (!confirm('この情報をInboxに送信して承認待ちにしますか？')) {
 				return;
 			}
 
-			hideFetchError();
-			if (applySuccess) applySuccess.classList.add('hidden');
-
-			const productTitle = document.querySelector('input[name="title"]')?.value?.trim() ||'Product';
-
-			try {
-				const res = await fetch('/api/admin/products/fetch-url', {
-					method:'POST',
-					headers: {'Content-Type':'application/json' },
-					body: JSON.stringify({
-						image_url: imageUrl,
-						description,
-						product_name: productTitle
-					})
-				});
-
-				const data = await res.json();
-				if (data.success) {
-					showPreview(data);
-				}
-			} catch (err) {
-				showFetchError('エラーが発生しました');
+			if (sendInboxBtn) sendInboxBtn.disabled = true;
+			if (applyAllBtn) {
+				applyAllBtn.disabled = true;
+				applyAllBtn.textContent = '送信中...';
 			}
-		});
-
-		// Apply all (title + description) directly to form
-		applyAllBtn?.addEventListener('click', () => {
-			if (!fetchedData) return;
-
-			const titleInput = document.getElementById('title');
-			const descTextarea = document.getElementById('description');
-
-			if (titleInput && fetchedData.generated_title) {
-				titleInput.value = fetchedData.generated_title;
-			}
-			if (descTextarea && fetchedData.generated_description) {
-				descTextarea.value = fetchedData.generated_description;
-			}
-
-			hidePreview();
-			titleInput?.scrollIntoView({ behavior:'smooth', block:'center' });
-			titleInput?.focus();
-		});
-
-		// Apply title only
-		applyTitleOnlyBtn?.addEventListener('click', () => {
-			if (!fetchedData) return;
-
-			const titleInput = document.getElementById('title');
-			if (titleInput && fetchedData.generated_title) {
-				titleInput.value = fetchedData.generated_title;
-			}
-
-			titleInput?.scrollIntoView({ behavior:'smooth', block:'center' });
-			titleInput?.focus();
-		});
-
-		// Apply description only
-		applyDescOnlyBtn?.addEventListener('click', () => {
-			if (!fetchedData) return;
-
-			const descTextarea = document.getElementById('description');
-			if (descTextarea && fetchedData.generated_description) {
-				descTextarea.value = fetchedData.generated_description;
-			}
-
-			descTextarea?.scrollIntoView({ behavior:'smooth', block:'center' });
-			descTextarea?.focus();
-		});
-
-		// Send to inbox for approval
-		sendInboxBtn?.addEventListener('click', async () => {
-			if (!fetchedData) return;
-
-			sendInboxBtn.disabled = true;
-			sendInboxBtn.textContent ='送信中...';
 
 			try {
 				// Create inbox item via API
 				const res = await fetch(`${apiBase}/inbox`, {
-					method:'POST',
+					method: 'POST',
 					headers: {
-						'Content-Type':'application/json',
+						'Content-Type': 'application/json',
 						'x-admin-key': apiKey
 					},
 					body: JSON.stringify({
-						title: `Product Update: ${document.querySelector('input[name="title"]')?.value ||'Unknown'}`,
-						body: `Web取得による商品情報更新の提案\n\n画像: ${fetchedData.image_url ||'なし'}\n元タイトル: ${fetchedData.original_title ||'なし'}\n生成タイトル: ${fetchedData.generated_title ||'なし'}\nソース: ${fetchedData.source ||'なし'}`,
-						severity:'info',
-						kind:'product_update',
+						title: `Product Update: ${document.querySelector('input[name="title"]')?.value || 'Unknown'}`,
+						body: `Web取得による商品情報更新の提案\n\n画像: ${fetchedData.image_url || 'なし'}\n元タイトル: ${fetchedData.original_title || 'なし'}\n生成タイトル: ${fetchedData.generated_title || 'なし'}\n生成説明文: [HTML形式]\nソース: ${fetchedData.source || 'なし'}`,
+						severity: 'info',
+						kind: 'product_update',
 						metadata: JSON.stringify({
 							product_id: parseInt(productId),
 							image_url: fetchedData.image_url,
@@ -1295,7 +1183,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 				if (!res.ok) {
 					const data = await res.json();
-					showFetchError(data.message ||'Inbox送信に失敗しました');
+					showFetchError(data.message || 'Inbox送信に失敗しました');
 				} else {
 					hidePreview();
 					if (applySuccess) applySuccess.classList.remove('hidden');
@@ -1303,8 +1191,89 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			} catch (err) {
 				showFetchError('通信エラーが発生しました');
 			} finally {
-				sendInboxBtn.disabled = false;
-				sendInboxBtn.textContent ='Inboxに送信';
+				if (sendInboxBtn) {
+					sendInboxBtn.disabled = false;
+				}
+				if (applyAllBtn) {
+					applyAllBtn.disabled = false;
+					applyAllBtn.textContent = 'すべて適用';
+				}
+			}
+		});
+
+		// Apply title only
+		applyTitleOnlyBtn?.addEventListener('click', () => {
+			if (!fetchedData) return;
+
+			const titleInput = document.getElementById('title');
+			if (titleInput && fetchedData.generated_title) {
+				titleInput.value = fetchedData.generated_title;
+			}
+
+			hidePreview();
+			titleInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			titleInput?.focus();
+		});
+
+		// Apply description only
+		applyDescOnlyBtn?.addEventListener('click', () => {
+			if (!fetchedData) return;
+
+			const descHidden = document.getElementById('description-hidden');
+			if (descHidden && fetchedData.generated_description) {
+				descHidden.value = fetchedData.generated_description;
+			}
+
+			hidePreview();
+			descHidden?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		});
+
+		// Send to inbox for approval
+		sendInboxBtn?.addEventListener('click', async () => {
+			if (!fetchedData || !sendInboxBtn) return;
+
+			sendInboxBtn.disabled = true;
+			sendInboxBtn.textContent = '送信中...';
+
+			try {
+				// Create inbox item via API
+				const res = await fetch(`${apiBase}/inbox`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': apiKey
+					},
+					body: JSON.stringify({
+						title: `Product Update: ${document.querySelector('input[name="title"]')?.value || 'Unknown'}`,
+						body: `Web取得による商品情報更新の提案\n\n画像: ${fetchedData.image_url || 'なし'}\n元タイトル: ${fetchedData.original_title || 'なし'}\n生成タイトル: ${fetchedData.generated_title || 'なし'}\nソース: ${fetchedData.source || 'なし'}`,
+						severity: 'info',
+						kind: 'product_update',
+						metadata: JSON.stringify({
+							product_id: parseInt(productId),
+							image_url: fetchedData.image_url,
+							title: fetchedData.generated_title,
+							description: fetchedData.generated_description,
+							original_title: fetchedData.original_title,
+							specs: fetchedData.specs,
+							source: fetchedData.source
+						})
+					})
+				});
+
+				if (!res.ok) {
+					const data = await res.json();
+					showFetchError(data.message || 'Inbox送信に失敗しました');
+				} else {
+					hidePreview();
+					if (applySuccess) applySuccess.classList.remove('hidden');
+				}
+			} catch (err) {
+				showFetchError('通信エラーが発生しました');
+			} finally {
+				if (sendInboxBtn) {
+					sendInboxBtn.disabled = false;
+					sendInboxBtn.textContent = 'Inboxに送信';
+				}
 			}
 		});
 
@@ -1316,15 +1285,15 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 		try {
 			const res = await fetch(`${apiBase}/admin/products/${productId}`, {
-				method:'DELETE',
-				headers: {'x-admin-key': apiKey }
+				method: 'DELETE',
+				headers: { 'x-admin-key': apiKey }
 			});
 
 			if (res.ok) {
-				window.location.href ='/admin/products?status=archived';
+				window.location.href = '/admin/products?status=archived';
 			} else {
 				const data = await res.json();
-				alert(data.message ||'Failed to archive');
+				alert(data.message || 'Failed to archive');
 			}
 		} catch (err) {
 			alert('Failed to archive product');
@@ -1338,15 +1307,15 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 		try {
 			const res = await fetch(`${apiBase}/admin/products/${productId}/restore`, {
-				method:'POST',
-				headers: {'x-admin-key': apiKey }
+				method: 'POST',
+				headers: { 'x-admin-key': apiKey }
 			});
 
 			if (res.ok) {
 				location.reload();
 			} else {
 				const data = await res.json();
-				alert(data.message ||'Failed to restore');
+				alert(data.message || 'Failed to restore');
 			}
 		} catch (err) {
 			alert('Failed to restore product');
@@ -1356,7 +1325,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 	}
 
 	// Start initialization
-	if (document.readyState ==='loading') {
+	if (document.readyState === 'loading') {
 		document.addEventListener('DOMContentLoaded', initProductPage);
 	} else {
 		initProductPage();

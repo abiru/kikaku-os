@@ -1,11 +1,14 @@
 ---
 export const prerender = false;
 
-import { Alert } from'../../../components/catalyst/alert-banner';
-import Badge from'../../../components/Badge.astro';
-import Button from'../../../components/Button.astro';
-import AdminLayout from'../../../layouts/AdminLayout.astro';
-import { getApiBase } from'../../../lib/api';
+import { Alert } from '../../../components/catalyst/alert-banner';
+import { Badge } from '../../../components/catalyst/badge';
+import { Input } from '../../../components/catalyst/input';
+import { Select } from '../../../components/catalyst/select';
+import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Button } from '../../../components/catalyst/button';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../../lib/api';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -39,18 +42,18 @@ let error: string | null = null;
 let successMessage: string | null = null;
 
 // Handle POST - Update coupon
-if (Astro.request.method ==='POST' && apiKey) {
+if (Astro.request.method === 'POST' && apiKey) {
 	try {
 		const formData = await Astro.request.formData();
-		const code = formData.get('code')?.toString().trim().toUpperCase() ||'';
-		const type = formData.get('type')?.toString() ||'percentage';
-		const valueStr = formData.get('value')?.toString() ||'';
-		const minOrderStr = formData.get('min_order_amount')?.toString() ||'0';
-		const maxUsesStr = formData.get('max_uses')?.toString() ||'';
-		const usesPerCustomerStr = formData.get('uses_per_customer')?.toString() ||'1';
-		const status = formData.get('status')?.toString() ||'active';
-		const starts_at = formData.get('starts_at')?.toString() ||'';
-		const expires_at = formData.get('expires_at')?.toString() ||'';
+		const code = formData.get('code')?.toString().trim().toUpperCase() || '';
+		const type = formData.get('type')?.toString() || 'percentage';
+		const valueStr = formData.get('value')?.toString() || '';
+		const minOrderStr = formData.get('min_order_amount')?.toString() || '0';
+		const maxUsesStr = formData.get('max_uses')?.toString() || '';
+		const usesPerCustomerStr = formData.get('uses_per_customer')?.toString() || '1';
+		const status = formData.get('status')?.toString() || 'active';
+		const starts_at = formData.get('starts_at')?.toString() || '';
+		const expires_at = formData.get('expires_at')?.toString() || '';
 
 		const value = parseInt(valueStr, 10);
 		const min_order_amount = parseInt(minOrderStr, 10) || 0;
@@ -58,23 +61,23 @@ if (Astro.request.method ==='POST' && apiKey) {
 		const uses_per_customer = parseInt(usesPerCustomerStr, 10) || 1;
 
 		if (!code) {
-			error ='Code is required';
+			error = 'Code is required';
 		} else if (isNaN(value) || value <= 0) {
-			error ='Value must be a positive number';
-		} else if (type ==='percentage' && value > 100) {
-			error ='Percentage value cannot exceed 100';
+			error = 'Value must be a positive number';
+		} else if (type === 'percentage' && value > 100) {
+			error = 'Percentage value cannot exceed 100';
 		} else {
 			const res = await fetch(`${apiBase}/admin/coupons/${id}`, {
-				method:'PUT',
+				method: 'PUT',
 				headers: {
-					'Content-Type':'application/json',
+					'Content-Type': 'application/json',
 					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({
 					code,
 					type,
 					value,
-					currency:'JPY',
+					currency: 'JPY',
 					min_order_amount,
 					max_uses,
 					uses_per_customer,
@@ -87,15 +90,15 @@ if (Astro.request.method ==='POST' && apiKey) {
 			const data = await res.json();
 
 			if (!res.ok) {
-				error = data.message ||'Failed to update coupon';
+				error = data.message || 'Failed to update coupon';
 			} else {
 				coupon = data.coupon;
-				successMessage ='Coupon updated successfully';
+				successMessage = 'Coupon updated successfully';
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error ='Failed to update coupon. Please check your connection.';
+		error = 'Failed to update coupon. Please check your connection.';
 	}
 }
 
@@ -103,12 +106,12 @@ if (Astro.request.method ==='POST' && apiKey) {
 if (!coupon && apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/coupons/${id}`, {
-			headers: {'x-admin-key': apiKey }
+			headers: { 'x-admin-key': apiKey }
 		});
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error ='Coupon not found';
+				error = 'Coupon not found';
 			} else {
 				const data = await res.json();
 				error = data.message || `API Error: ${res.status}`;
@@ -120,17 +123,17 @@ if (!coupon && apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error ||'Failed to load coupon. Please check your connection.';
+		error = error || 'Failed to load coupon. Please check your connection.';
 	}
 } else if (!apiKey) {
-	error ='ADMIN_API_KEY is missing in server environment';
+	error = 'ADMIN_API_KEY is missing in server environment';
 }
 
 // Fetch stats again after update
 if (coupon && apiKey && successMessage) {
 	try {
 		const res = await fetch(`${apiBase}/admin/coupons/${id}`, {
-			headers: {'x-admin-key': apiKey }
+			headers: { 'x-admin-key': apiKey }
 		});
 		if (res.ok) {
 			const data = await res.json();
@@ -142,25 +145,25 @@ if (coupon && apiKey && successMessage) {
 }
 
 const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return'-';
+	if (!dateStr) return '-';
 	return new Date(dateStr).toLocaleString('ja-JP', {
-		year:'numeric',
-		month:'2-digit',
-		day:'2-digit',
-		hour:'2-digit',
-		minute:'2-digit'
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit'
 	});
 };
 
 const formatDateForInput = (dateStr: string | null) => {
-	if (!dateStr) return'';
+	if (!dateStr) return '';
 	const date = new Date(dateStr);
 	return date.toISOString().slice(0, 16);
 };
 
-const formatCurrency = (amount: number, currency: string ='JPY') => {
+const formatCurrency = (amount: number, currency: string = 'JPY') => {
 	return new Intl.NumberFormat('ja-JP', {
-		style:'currency',
+		style: 'currency',
 		currency: currency,
 		minimumFractionDigits: 0
 	}).format(amount);
@@ -174,7 +177,7 @@ const isExpired = (c: Coupon) => {
 const canDelete = coupon && coupon.current_uses === 0;
 ---
 
-<AdminLayout title={coupon ? `${coupon.code} - Admin` :'Coupon - Admin'}>
+<AdminLayout title={coupon ? `${coupon.code} - Admin` : 'Coupon - Admin'}>
 	<div class="space-y-6 max-w-2xl">
 		<div class="flex items-center gap-4">
 			<a href="/admin/coupons" class="text-indigo-600 hover:text-indigo-500 text-sm flex items-center gap-1">
@@ -184,235 +187,232 @@ const canDelete = coupon && coupon.current_uses === 0;
 				Coupons
 			</a>
 			<h1 class="text-2xl font-semibold text-gray-900">
-				{coupon ? `Edit: ${coupon.code}` :'Coupon'}
+				{coupon ? `Edit: ${coupon.code}` : 'Coupon'}
 			</h1>
 		</div>
-			{successMessage && (
-				<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
-					{successMessage}
-				</div>
-			)}
+		{successMessage && (
+			<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">
+				{successMessage}
+			</div>
+		)}
 
-			{error && !coupon && (
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-					<div class="text-red-600 mb-4">{error}</div>
-					<Button href="/admin/coupons" variant="secondary" size="sm">
-						Back to Coupons
-					</Button>
-				</div>
-			)}
+		{error && !coupon && (
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+				<div class="text-red-600 mb-4">{error}</div>
+				<Button href="/admin/coupons" color="zinc" client:load>
+					Back to Coupons
+				</Button>
+			</div>
+		)}
 
-			{error && coupon && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
-					{error}
-				</div>
-			)}
+		{error && coupon && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				{error}
+			</div>
+		)}
 
-			{coupon && (
-				<>
-					{/* Stats Card */}
-					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
-						<h2 class="text-sm font-medium text-[#86868b] mb-4">Usage Statistics</h2>
-						<div class="grid grid-cols-3 gap-6">
-							<div>
-								<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{stats.totalUsages}</div>
-								<div class="text-xs text-[#86868b]">Total Uses</div>
+		{coupon && (
+			<>
+				{/* Stats Card */}
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+					<h2 class="text-sm font-medium text-[#86868b] mb-4">Usage Statistics</h2>
+					<div class="grid grid-cols-3 gap-6">
+						<div>
+							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{stats.totalUsages}</div>
+							<div class="text-xs text-[#86868b]">Total Uses</div>
+						</div>
+						<div>
+							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(stats.totalDiscount, coupon.currency)}</div>
+							<div class="text-xs text-[#86868b]">Total Discount</div>
+						</div>
+						<div>
+							<div class="flex items-center gap-2">
+								{isExpired(coupon) ? (
+									<Badge color="amber" client:load>Expired</Badge>
+								) : coupon.status === 'active' ? (
+									<Badge color="blue" client:load>Active</Badge>
+								) : (
+									<Badge color="zinc" client:load>Inactive</Badge>
+								)}
 							</div>
-							<div>
-								<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(stats.totalDiscount, coupon.currency)}</div>
-								<div class="text-xs text-[#86868b]">Total Discount</div>
-							</div>
-							<div>
-								<div class="flex items-center gap-2">
-									{isExpired(coupon) ? (
-										<Badge severity="warn">Expired</Badge>
-									) : coupon.status ==='active' ? (
-										<Badge severity="info">Active</Badge>
-									) : (
-										<Badge severity="secondary">Inactive</Badge>
-									)}
-								</div>
-								<div class="text-xs text-[#86868b] mt-1">Current Status</div>
-							</div>
+							<div class="text-xs text-[#86868b] mt-1">Current Status</div>
 						</div>
 					</div>
+				</div>
 
-					{/* Edit Form */}
-					<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<div class="md:col-span-2">
-								<label for="code" class="block text-sm font-medium text-zinc-950 mb-2">
+				{/* Edit Form */}
+				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div class="md:col-span-2">
+				<Fieldset client:load>
+							<Field>
+								<Label>
 									Coupon Code <span class="text-red-500">*</span>
-								</label>
-								<input
+								</Label>
+								<Input
 									type="text"
 									id="code"
 									name="code"
 									required
 									value={coupon.code}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									className="font-mono uppercase"
+									client:load
 								/>
-							</div>
-
-							<div>
-								<label for="type" class="block text-sm font-medium text-zinc-950 mb-2">
-									Discount Type <span class="text-red-500">*</span>
-								</label>
-								<select
-									id="type"
-									name="type"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
-								>
-									<option value="percentage" selected={coupon.type ==='percentage'}>Percentage (%)</option>
-									<option value="fixed" selected={coupon.type ==='fixed'}>Fixed Amount (JPY)</option>
-								</select>
-							</div>
-
-							<div>
-								<label for="value" class="block text-sm font-medium text-zinc-950 mb-2">
-									Value <span class="text-red-500">*</span>
-								</label>
-								<input
-									type="number"
-									id="value"
-									name="value"
-									required
-									min="1"
-									value={coupon.value}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-								/>
-							</div>
-
-							<div>
-								<label for="min_order_amount" class="block text-sm font-medium text-zinc-950 mb-2">
-									Minimum Order Amount (JPY)
-								</label>
-								<input
-									type="number"
-									id="min_order_amount"
-									name="min_order_amount"
-									min="0"
-									value={coupon.min_order_amount}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-								/>
-							</div>
-
-							<div>
-								<label for="max_uses" class="block text-sm font-medium text-zinc-950 mb-2">
-									Max Total Uses
-								</label>
-								<input
-									type="number"
-									id="max_uses"
-									name="max_uses"
-									min="1"
-									value={coupon.max_uses ||''}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-									placeholder="Unlimited"
-								/>
-							</div>
-
-							<div>
-								<label for="uses_per_customer" class="block text-sm font-medium text-zinc-950 mb-2">
-									Uses Per Customer
-								</label>
-								<input
-									type="number"
-									id="uses_per_customer"
-									name="uses_per_customer"
-									min="1"
-									value={coupon.uses_per_customer}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-								/>
-							</div>
-
-							<div>
-								<label for="status" class="block text-sm font-medium text-zinc-950 mb-2">
-									Status
-								</label>
-								<select
-									id="status"
-									name="status"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
-								>
-									<option value="active" selected={coupon.status ==='active'}>Active</option>
-									<option value="inactive" selected={coupon.status ==='inactive'}>Inactive</option>
-								</select>
-							</div>
-
-							<div>
-								<label for="starts_at" class="block text-sm font-medium text-zinc-950 mb-2">
-									Start Date
-								</label>
-								<input
-									type="datetime-local"
-									id="starts_at"
-									name="starts_at"
-									value={formatDateForInput(coupon.starts_at)}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-								/>
-							</div>
-
-							<div>
-								<label for="expires_at" class="block text-sm font-medium text-zinc-950 mb-2">
-									Expiration Date
-								</label>
-								<input
-									type="datetime-local"
-									id="expires_at"
-									name="expires_at"
-									value={formatDateForInput(coupon.expires_at)}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-								/>
-							</div>
+							</Field>
 						</div>
 
-						<div class="pt-4 border-t border-gray-100">
-							<dl class="grid grid-cols-2 gap-4 text-sm">
-								<div>
-									<dt class="text-[#86868b]">Created</dt>
-									<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.created_at)}</dd>
-								</div>
-								<div>
-									<dt class="text-[#86868b]">Updated</dt>
-									<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.updated_at)}</dd>
-								</div>
-							</dl>
-						</div>
+						<Field>
+							<Label>
+								Discount Type <span class="text-red-500">*</span>
+							</Label>
+							<Select
+								id="type"
+								name="type"
+								client:load
+							>
+								<option value="percentage" selected={coupon.type === 'percentage'}>Percentage (%)</option>
+								<option value="fixed" selected={coupon.type === 'fixed'}>Fixed Amount (JPY)</option>
+							</Select>
+						</Field>
 
-						<div class="flex justify-between items-center gap-3 pt-4 border-t border-gray-100">
+						<Field>
+							<Label>
+								Value <span class="text-red-500">*</span>
+							</Label>
+							<Input
+								type="number"
+								id="value"
+								name="value"
+								required
+								min="1"
+								value={coupon.value}
+								className="tabular-nums"
+								client:load
+							/>
+						</Field>
+
+						<Field>
+							<Label>Minimum Order Amount (JPY)</Label>
+							<Input
+								type="number"
+								id="min_order_amount"
+								name="min_order_amount"
+								min="0"
+								value={coupon.min_order_amount}
+								className="tabular-nums"
+								client:load
+							/>
+						</Field>
+
+						<Field>
+							<Label>Max Total Uses</Label>
+							<Input
+								type="number"
+								id="max_uses"
+								name="max_uses"
+								min="1"
+								value={coupon.max_uses || ''}
+								className="tabular-nums"
+								placeholder="Unlimited"
+								client:load
+							/>
+						</Field>
+
+						<Field>
+							<Label>Uses Per Customer</Label>
+							<Input
+								type="number"
+								id="uses_per_customer"
+								name="uses_per_customer"
+								min="1"
+								value={coupon.uses_per_customer}
+								className="tabular-nums"
+								client:load
+							/>
+						</Field>
+
+						<Field>
+							<Label>Status</Label>
+							<Select
+								id="status"
+								name="status"
+								client:load
+							>
+								<option value="active" selected={coupon.status === 'active'}>Active</option>
+								<option value="inactive" selected={coupon.status === 'inactive'}>Inactive</option>
+							</Select>
+						</Field>
+
+						<Field>
+							<Label>Start Date</Label>
+							<Input
+								type="datetime-local"
+								id="starts_at"
+								name="starts_at"
+								value={formatDateForInput(coupon.starts_at)}
+								client:load
+							/>
+						</Field>
+
+						<Field>
+							<Label>Expiration Date</Label>
+							<Input
+								type="datetime-local"
+								id="expires_at"
+								name="expires_at"
+								value={formatDateForInput(coupon.expires_at)}
+								client:load
+							/>
+						</Field>
+				</Fieldset>
+					</div>
+
+					<div class="pt-4 border-t border-gray-100">
+						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
-								{canDelete ? (
-									<button
-										type="button"
-										id="delete-btn"
-										class="text-sm text-red-500 hover:underline"
-									>
-										Delete Coupon
-									</button>
-								) : (
-									<span class="text-sm text-[#86868b]">Cannot delete used coupons</span>
-								)}
+								<dt class="text-[#86868b]">Created</dt>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.created_at)}</dd>
 							</div>
-							<div class="flex gap-3">
-								<Button href="/admin/coupons" variant="secondary" size="sm">
-									Back
-								</Button>
+							<div>
+								<dt class="text-[#86868b]">Updated</dt>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.updated_at)}</dd>
+							</div>
+						</dl>
+					</div>
+
+					<div class="flex justify-between items-center gap-3 pt-4 border-t border-gray-100">
+						<div>
+							{canDelete ? (
 								<button
 									type="button"
-									id="toggle-btn"
-									class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${coupon.status ==='active' ?'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' :'bg-green-100 text-green-700 hover:bg-green-200'}`}
+									id="delete-btn"
+									class="text-sm text-red-500 hover:underline"
 								>
-									{coupon.status ==='active' ?'Deactivate' :'Activate'}
+									Delete Coupon
 								</button>
-								<Button type="submit" variant="primary" size="sm">
-									Save Changes
-								</Button>
-							</div>
+							) : (
+								<span class="text-sm text-[#86868b]">Cannot delete used coupons</span>
+							)}
 						</div>
-					</form>
-				</>
-			)}
+						<div class="flex gap-3">
+							<Button href="/admin/coupons" color="zinc" client:load>
+								Back
+							</Button>
+							<button
+								type="button"
+								id="toggle-btn"
+								class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${coupon.status === 'active' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+							>
+								{coupon.status === 'active' ? 'Deactivate' : 'Activate'}
+							</button>
+							<Button type="submit" color="indigo" client:load>
+								Save Changes
+							</Button>
+						</div>
+					</div>
+				</form>
+			</>
+		)}
 	</div>
 </AdminLayout>
 
@@ -428,15 +428,15 @@ const canDelete = coupon && coupon.current_uses === 0;
 
 			try {
 				const res = await fetch(`${apiBase}/admin/coupons/${couponId}`, {
-					method:'DELETE',
-					headers: {'x-admin-key': apiKey }
+					method: 'DELETE',
+					headers: { 'x-admin-key': apiKey }
 				});
 
 				if (res.ok) {
-					window.location.href ='/admin/coupons';
+					window.location.href = '/admin/coupons';
 				} else {
 					const data = await res.json();
-					alert(data.message ||'Failed to delete coupon');
+					alert(data.message || 'Failed to delete coupon');
 				}
 			} catch (e) {
 				alert('Failed to delete coupon. Please try again.');
@@ -448,15 +448,15 @@ const canDelete = coupon && coupon.current_uses === 0;
 		toggleBtn.addEventListener('click', async () => {
 			try {
 				const res = await fetch(`${apiBase}/admin/coupons/${couponId}/toggle`, {
-					method:'POST',
-					headers: {'x-admin-key': apiKey }
+					method: 'POST',
+					headers: { 'x-admin-key': apiKey }
 				});
 
 				if (res.ok) {
 					window.location.reload();
 				} else {
 					const data = await res.json();
-					alert(data.message ||'Failed to toggle coupon status');
+					alert(data.message || 'Failed to toggle coupon status');
 				}
 			} catch (e) {
 				alert('Failed to toggle coupon status. Please try again.');

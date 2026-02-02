@@ -1,9 +1,12 @@
 ---
 export const prerender = false;
 
-import AdminLayout from'../../../layouts/AdminLayout.astro';
-import Button from'../../../components/Button.astro';
-import { getApiBase } from'../../../lib/api';
+import { Input } from '../../../components/catalyst/input';
+import { Select } from '../../../components/catalyst/select';
+import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Button } from '../../../components/catalyst/button';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../../lib/api';
 
 const apiBase = getApiBase();
 
@@ -11,7 +14,7 @@ let success = false;
 let error = null;
 let createdId: number | null = null;
 
-if (Astro.request.method ==='POST') {
+if (Astro.request.method === 'POST') {
 	try {
 		const formData = await Astro.request.formData();
 		const title = formData.get('title') as string;
@@ -20,13 +23,13 @@ if (Astro.request.method ==='POST') {
 		const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
 		const ctaSecondaryText = formData.get('cta_secondary_text') as string;
 		const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
-		const position = Number(formData.get('position') ||'0');
+		const position = Number(formData.get('position') || '0');
 		const status = formData.get('status') as string;
 
 		const body: any = {
 			title,
 			position,
-			status: status ||'draft'
+			status: status || 'draft'
 		};
 
 		if (subtitle) body.subtitle = subtitle;
@@ -36,9 +39,9 @@ if (Astro.request.method ==='POST') {
 		if (ctaSecondaryUrl) body.cta_secondary_url = ctaSecondaryUrl;
 
 		const res = await fetch(`${apiBase}/admin/home/heroes`, {
-			method:'POST',
+			method: 'POST',
 			headers: {
-				'Content-Type':'application/json',
+				'Content-Type': 'application/json',
 				'x-admin-key': import.meta.env.ADMIN_API_KEY
 			},
 			body: JSON.stringify(body)
@@ -46,7 +49,7 @@ if (Astro.request.method ==='POST') {
 
 		if (!res.ok) {
 			const data = await res.json();
-			throw new Error(data.message ||'Failed to create hero section');
+			throw new Error(data.message || 'Failed to create hero section');
 		}
 
 		const data = await res.json();
@@ -59,7 +62,7 @@ if (Astro.request.method ==='POST') {
 		}
 	} catch (e: any) {
 		console.error(e);
-		error = e.message ||'Failed to create hero section';
+		error = e.message || 'Failed to create hero section';
 	}
 }
 ---
@@ -82,133 +85,121 @@ if (Astro.request.method ==='POST') {
 
 		<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 			{/* Title */}
-			<div>
-				<label for="title" class="block text-sm font-medium text-gray-900 mb-2">
+				<Fieldset client:load>
+			<Field>
+				<Label>
 					Title <span class="text-red-500">*</span>
-				</label>
-				<input
+				</Label>
+				<Input
 					type="text"
 					id="title"
 					name="title"
 					required
-					maxlength="255"
-					class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+					maxLength={255}
 					placeholder="スペシャルなギフト。お急ぎください。"
+					client:load
 				/>
-			</div>
+			</Field>
 
 			{/* Subtitle */}
-			<div>
-				<label for="subtitle" class="block text-sm font-medium text-gray-900 mb-2">
-					Subtitle
-				</label>
-				<input
+			<Field>
+				<Label>Subtitle</Label>
+				<Input
 					type="text"
 					id="subtitle"
 					name="subtitle"
-					maxlength="500"
-					class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+					maxLength={500}
 					placeholder="魔法みたいな瞬間をあの人に届けましょう。"
+					client:load
 				/>
-			</div>
+			</Field>
 
 			{/* Primary CTA */}
 			<div class="grid grid-cols-2 gap-4">
-				<div>
-					<label for="cta_primary_text" class="block text-sm font-medium text-gray-900 mb-2">
-						Primary Button Text
-					</label>
-					<input
+				<Field>
+					<Label>Primary Button Text</Label>
+					<Input
 						type="text"
 						id="cta_primary_text"
 						name="cta_primary_text"
-						maxlength="100"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						maxLength={100}
 						placeholder="商品を見る"
+						client:load
 					/>
-				</div>
-				<div>
-					<label for="cta_primary_url" class="block text-sm font-medium text-gray-900 mb-2">
-						Primary Button URL
-					</label>
-					<input
+				</Field>
+				<Field>
+					<Label>Primary Button URL</Label>
+					<Input
 						type="text"
 						id="cta_primary_url"
 						name="cta_primary_url"
-						maxlength="500"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						maxLength={500}
 						placeholder="/products"
+						client:load
 					/>
-				</div>
+				</Field>
 			</div>
 
 			{/* Secondary CTA */}
 			<div class="grid grid-cols-2 gap-4">
-				<div>
-					<label for="cta_secondary_text" class="block text-sm font-medium text-gray-900 mb-2">
-						Secondary Button Text
-					</label>
-					<input
+				<Field>
+					<Label>Secondary Button Text</Label>
+					<Input
 						type="text"
 						id="cta_secondary_text"
 						name="cta_secondary_text"
-						maxlength="100"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						maxLength={100}
 						placeholder="カートに追加"
+						client:load
 					/>
-				</div>
-				<div>
-					<label for="cta_secondary_url" class="block text-sm font-medium text-gray-900 mb-2">
-						Secondary Button URL
-					</label>
-					<input
+				</Field>
+				<Field>
+					<Label>Secondary Button URL</Label>
+					<Input
 						type="text"
 						id="cta_secondary_url"
 						name="cta_secondary_url"
-						maxlength="500"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						maxLength={500}
 						placeholder="/cart"
+						client:load
 					/>
-				</div>
+				</Field>
 			</div>
 
 			{/* Position */}
-			<div>
-				<label for="position" class="block text-sm font-medium text-gray-900 mb-2">
-					Position (Display Order)
-				</label>
-				<input
+			<Field>
+				<Label>Position (Display Order)</Label>
+				<Input
 					type="number"
 					id="position"
 					name="position"
 					min="0"
 					value="0"
-					class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+					client:load
 				/>
-				<p class="mt-1 text-xs text-gray-500">Lower numbers appear first on the homepage</p>
-			</div>
+				<Description>Lower numbers appear first on the homepage</Description>
+			</Field>
 
 			{/* Status */}
-			<div>
-				<label for="status" class="block text-sm font-medium text-gray-900 mb-2">
-					Status
-				</label>
-				<select
+			<Field>
+				<Label>Status</Label>
+				<Select
 					id="status"
 					name="status"
-					class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+					client:load
 				>
 					<option value="draft">Draft</option>
 					<option value="active">Active</option>
-				</select>
-			</div>
+				</Select>
+			</Field>
+				</Fieldset>
 
 			{/* Submit Button */}
 			<div class="flex gap-3 pt-4">
-				<Button type="submit" variant="primary">
+				<Button type="submit" color="indigo" client:load>
 					Create Hero Section
 				</Button>
-				<Button href="/admin/home-heroes" variant="secondary">
+				<Button href="/admin/home-heroes" color="zinc" client:load>
 					Cancel
 				</Button>
 			</div>

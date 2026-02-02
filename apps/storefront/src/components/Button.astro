@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from 'astro/types';
 
 interface Props extends HTMLAttributes<'button'> {
-	variant?: 'primary' | 'dark' | 'secondary' | 'link' | 'outline';
+	variant?: 'primary' | 'secondary' | 'link' | 'outline';
 	size?: 'sm' | 'md' | 'lg' | 'icon';
 	href?: string;
 	type?: 'button' | 'submit' | 'reset';
@@ -26,14 +26,12 @@ const base =
 
 const variants = {
 	// Indigo for primary actions (Catalyst primary color)
-	primary: 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600',
-	// Standard dark for secondary
-	dark: 'bg-zinc-950 text-white hover:bg-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700',
+	primary: 'bg-indigo-600 text-white hover:bg-indigo-700',
 	// Minimalist outline/secondary
-	secondary: 'bg-white text-zinc-950 hover:text-indigo-600 shadow-sm dark:bg-zinc-800 dark:text-white dark:hover:text-indigo-400',
+	secondary: 'bg-white text-zinc-950 hover:text-indigo-600 shadow-sm',
 	// Ghost link style
-	link: 'text-indigo-600 hover:underline underline-offset-4 dark:text-indigo-400',
-    outline: 'border border-zinc-200 bg-transparent text-zinc-950 hover:border-zinc-400 dark:border-zinc-700 dark:text-white dark:hover:border-zinc-500'
+	link: 'text-indigo-600 hover:underline underline-offset-4',
+    outline: 'border border-zinc-200 bg-transparent text-zinc-950 hover:border-zinc-400'
 };
 
 const sizes = {

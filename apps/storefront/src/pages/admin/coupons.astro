@@ -1,19 +1,19 @@
 ---
 export const prerender = false;
 
-import { Alert } from'../../components/catalyst/alert-banner';
-import { Badge } from'../../components/catalyst/badge';
-import { Button } from'../../components/catalyst/button';
-import { Heading } from'../../components/catalyst/heading';
-import { Pagination, PaginationPrevious, PaginationNext } from'../../components/catalyst/pagination';
-import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from'../../components/catalyst/table';
-import AdminLayout from'../../layouts/AdminLayout.astro';
-import { getApiBase } from'../../lib/api';
+import { Alert } from '../../components/catalyst/alert-banner';
+import { Badge } from '../../components/catalyst/badge';
+import { Button } from '../../components/catalyst/button';
+import { Heading } from '../../components/catalyst/heading';
+import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
+import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '../../components/catalyst/table';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
-const q = Astro.url.searchParams.get('q') ||'';
-const status = Astro.url.searchParams.get('status') ||'all';
-const page = Number(Astro.url.searchParams.get('page') ||'1');
+const q = Astro.url.searchParams.get('q') || '';
+const status = Astro.url.searchParams.get('status') || 'all';
+const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
 type Coupon = {
@@ -61,28 +61,28 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load coupons. Please check your admin key.';
+		error = 'Failed to load coupons. Please check your admin key.';
 	}
 } else {
-	error ='ADMIN_API_KEY is missing in server environment.';
+	error = 'ADMIN_API_KEY is missing in server environment.';
 }
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
 
 const formatValue = (coupon: Coupon) => {
-	if (coupon.type ==='percentage') {
+	if (coupon.type === 'percentage') {
 		return `${coupon.value}%`;
 	}
 	return new Intl.NumberFormat('ja-JP', {
-		style:'currency',
+		style: 'currency',
 		currency: coupon.currency,
 		minimumFractionDigits: 0
 	}).format(coupon.value);
 };
 
 const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return'-';
+	if (!dateStr) return '-';
 	return new Date(dateStr).toLocaleDateString('ja-JP');
 };
 
@@ -126,19 +126,19 @@ const isExpired = (coupon: Coupon) => {
 				<div class="flex gap-2">
 					<a
 						href={`?q=${q}&status=all`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status ==='all' ?'bg-indigo-600 text-white' :'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						All
 					</a>
 					<a
 						href={`?q=${q}&status=active`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status ==='active' ?'bg-indigo-600 text-white' :'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'active' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Active
 					</a>
 					<a
 						href={`?q=${q}&status=inactive`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status ==='inactive' ?'bg-indigo-600 text-white' :'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'inactive' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Inactive
 					</a>
@@ -174,13 +174,13 @@ const isExpired = (coupon: Coupon) => {
 											<div class="font-mono font-medium">{coupon.code}</div>
 											{coupon.min_order_amount > 0 && (
 												<div class="text-xs text-zinc-500">
-													Min: {new Intl.NumberFormat('ja-JP', { style:'currency', currency: coupon.currency, minimumFractionDigits: 0 }).format(coupon.min_order_amount)}
+													Min: {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: coupon.currency, minimumFractionDigits: 0 }).format(coupon.min_order_amount)}
 												</div>
 											)}
 										</TableCell>
 										<TableCell>
 											<Badge color="zinc" client:only="react">
-												{coupon.type ==='percentage' ?'Percentage' :'Fixed'}
+												{coupon.type === 'percentage' ? 'Percentage' : 'Fixed'}
 											</Badge>
 										</TableCell>
 										<TableCell className="font-medium tabular-nums">
@@ -189,14 +189,14 @@ const isExpired = (coupon: Coupon) => {
 										<TableCell>
 											{isExpired(coupon) ? (
 												<Badge color="amber" client:only="react">Expired</Badge>
-											) : coupon.status ==='active' ? (
+											) : coupon.status === 'active' ? (
 												<Badge color="lime" client:only="react">Active</Badge>
 											) : (
 												<Badge color="zinc" client:only="react">Inactive</Badge>
 											)}
 										</TableCell>
 										<TableCell className="text-zinc-500 tabular-nums">
-											{coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` :''}
+											{coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ''}
 										</TableCell>
 										<TableCell className="text-zinc-500 tabular-nums">
 											{formatDate(coupon.expires_at)}

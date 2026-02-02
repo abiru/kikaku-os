@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@clerk/backend": "^2.29.3",
+    "@cloudflare/playwright": "^1.1.0",
     "@hono/zod-validator": "^0.7.6",
     "hono": "^4.5.0",
     "resend": "^4.0.0",

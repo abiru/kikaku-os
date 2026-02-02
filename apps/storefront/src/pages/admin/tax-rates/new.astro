@@ -1,33 +1,37 @@
 ---
 export const prerender = false;
 
-import { Alert } from'../../../components/catalyst/alert-banner';
-import Button from'../../../components/Button.astro';
-import AdminLayout from'../../../layouts/AdminLayout.astro';
-import { getApiBase } from'../../../lib/api';
+import { Alert } from '../../../components/catalyst/alert-banner';
+import { Button } from '../../../components/catalyst/button';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../../lib/api';
+import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Input } from '../../../components/catalyst/input';
+import { Textarea } from '../../../components/catalyst/textarea';
+import { Checkbox, CheckboxField } from '../../../components/catalyst/checkbox';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
 
 let error: string | null = null;
 let formValues = {
-	name:'',
-	rate:'',
+	name: '',
+	rate: '',
 	applicable_from: new Date().toISOString().split('T')[0],
-	applicable_to:'',
-	description:'',
-	is_active:'true'
+	applicable_to: '',
+	description: '',
+	is_active: 'true'
 };
 
-if (Astro.request.method ==='POST') {
+if (Astro.request.method === 'POST') {
 	try {
 		const formData = await Astro.request.formData();
-		const name = formData.get('name')?.toString().trim() ||'';
-		const rateStr = formData.get('rate')?.toString() ||'';
-		const applicable_from = formData.get('applicable_from')?.toString() ||'';
-		const applicable_to = formData.get('applicable_to')?.toString() ||'';
-		const description = formData.get('description')?.toString().trim() ||'';
-		const is_active = formData.get('is_active') ==='true';
+		const name = formData.get('name')?.toString().trim() || '';
+		const rateStr = formData.get('rate')?.toString() || '';
+		const applicable_from = formData.get('applicable_from')?.toString() || '';
+		const applicable_to = formData.get('applicable_to')?.toString() || '';
+		const description = formData.get('description')?.toString().trim() || '';
+		const is_active = formData.get('is_active') === 'true';
 
 		formValues = {
 			name,
@@ -41,18 +45,18 @@ if (Astro.request.method ==='POST') {
 		const rate = parseFloat(rateStr);
 
 		if (!name) {
-			error ='Name is required';
+			error = 'Name is required';
 		} else if (isNaN(rate) || rate < 0 || rate > 1) {
-			error ='Rate must be a number between 0 and 1 (e.g., 0.10 for 10%)';
+			error = 'Rate must be a number between 0 and 1 (e.g., 0.10 for 10%)';
 		} else if (!applicable_from) {
-			error ='Applicable from date is required';
+			error = 'Applicable from date is required';
 		} else if (!apiKey) {
-			error ='ADMIN_API_KEY is missing in server environment';
+			error = 'ADMIN_API_KEY is missing in server environment';
 		} else {
 			const res = await fetch(`${apiBase}/admin/tax-rates`, {
-				method:'POST',
+				method: 'POST',
 				headers: {
-					'Content-Type':'application/json',
+					'Content-Type': 'application/json',
 					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({
@@ -68,16 +72,16 @@ if (Astro.request.method ==='POST') {
 			const data = await res.json();
 
 			if (!res.ok) {
-				error = data.message ||'Failed to create tax rate';
+				error = data.message || 'Failed to create tax rate';
 			} else if (data.id) {
 				return Astro.redirect(`/admin/tax-rates/${data.id}`);
 			} else {
-				error ='Failed to create tax rate';
+				error = 'Failed to create tax rate';
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error ='Failed to create tax rate. Please check your connection.';
+		error = 'Failed to create tax rate. Please check your connection.';
 	}
 }
 ---
@@ -103,93 +107,97 @@ if (Astro.request.method ==='POST') {
 		<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<div class="md:col-span-2">
-					<label for="name" class="block text-sm font-medium text-zinc-950 mb-2">
-						Name <span class="text-red-500">*</span>
-					</label>
-					<input
-						type="text"
-						id="name"
-						name="name"
-						required
-						value={formValues.name}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-						placeholder="Standard Rate"
-					/>
-					<p class="text-xs text-[#86868b] mt-1">e.g.,"Standard Rate","Reduced Rate"</p>
+				<Fieldset client:load>
+					<Field>
+						<Label>
+							Name <span class="text-red-500">*</span>
+						</Label>
+						<Input
+							client:load
+							type="text"
+							name="name"
+							required
+							defaultValue={formValues.name}
+							placeholder="Standard Rate"
+						/>
+						<Description>e.g., "Standard Rate", "Reduced Rate"</Description>
+					</Field>
 				</div>
 
 				<div>
-					<label for="rate" class="block text-sm font-medium text-zinc-950 mb-2">
-						Rate (decimal) <span class="text-red-500">*</span>
-					</label>
-					<input
-						type="number"
-						id="rate"
-						name="rate"
-						required
-						step="0.01"
-						min="0"
-						max="1"
-						value={formValues.rate}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-						placeholder="0.10"
-					/>
-					<p class="text-xs text-[#86868b] mt-1">0.10 = 10%, 0.08 = 8%</p>
+					<Field>
+						<Label>
+							Rate (decimal) <span class="text-red-500">*</span>
+						</Label>
+						<Input
+							client:load
+							type="number"
+							name="rate"
+							required
+							step="0.01"
+							min="0"
+							max="1"
+							defaultValue={formValues.rate}
+							placeholder="0.10"
+						/>
+						<Description>0.10 = 10%, 0.08 = 8%</Description>
+					</Field>
 				</div>
 
 				<div>
-					<label for="applicable_from" class="block text-sm font-medium text-zinc-950 mb-2">
-						Applicable From <span class="text-red-500">*</span>
-					</label>
-					<input
-						type="date"
-						id="applicable_from"
-						name="applicable_from"
-						required
-						value={formValues.applicable_from}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-					/>
+					<Field>
+						<Label>
+							Applicable From <span class="text-red-500">*</span>
+						</Label>
+						<Input
+							client:load
+							type="date"
+							name="applicable_from"
+							required
+							defaultValue={formValues.applicable_from}
+						/>
+					</Field>
 				</div>
 
 				<div>
-					<label for="applicable_to" class="block text-sm font-medium text-zinc-950 mb-2">
-						Applicable To
-					</label>
-					<input
-						type="date"
-						id="applicable_to"
-						name="applicable_to"
-						value={formValues.applicable_to}
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-					/>
-					<p class="text-xs text-[#86868b] mt-1">Leave empty for no end date</p>
+					<Field>
+						<Label>Applicable To</Label>
+						<Input
+							client:load
+							type="date"
+							name="applicable_to"
+							defaultValue={formValues.applicable_to}
+						/>
+						<Description>Leave empty for no end date</Description>
+					</Field>
 				</div>
 
 				<div class="md:col-span-2">
-					<label for="description" class="block text-sm font-medium text-zinc-950 mb-2">
-						Description
-					</label>
-					<textarea
-						id="description"
-						name="description"
-						rows="3"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-						placeholder="Standard consumption tax (10%)"
-					>{formValues.description}</textarea>
+					<Field>
+						<Label>Description</Label>
+						<Textarea
+							client:load
+							name="description"
+							rows={3}
+							defaultValue={formValues.description}
+							placeholder="Standard consumption tax (10%)"
+						/>
+					</Field>
+				</Fieldset>
 				</div>
 
 				<div class="md:col-span-2">
-					<label class="flex items-center gap-3 cursor-pointer">
-						<input
-							type="checkbox"
+					<CheckboxField>
+						<Checkbox
+							client:load
 							name="is_active"
 							value="true"
-							checked={formValues.is_active ==='true'}
-							class="w-5 h-5 text-[#0071e3] border-gray-300 rounded focus:ring-[#0071e3] focus:ring-2"
+							defaultChecked={formValues.is_active === 'true'}
+							color="indigo"
 						/>
-						<span class="text-sm font-medium text-zinc-950">Active</span>
-					</label>
-					<p class="text-xs text-[#86868b] mt-1 ml-8">Only active rates can be assigned to products</p>
+						<Label>Active</Label>
+						<Description>Only active rates can be assigned to products</Description>
+					</CheckboxField>
 				</div>
 			</div>
 
@@ -202,10 +210,10 @@ if (Astro.request.method ==='POST') {
 			</div>
 
 			<div class="flex gap-3 pt-4 border-t border-gray-200">
-				<Button type="submit" variant="primary" size="sm">
+				<Button type="submit" color="indigo" client:load >
 					Create Tax Rate
 				</Button>
-				<Button href="/admin/tax-rates" variant="secondary" size="sm">
+				<Button href="/admin/tax-rates" outline client:load >
 					Cancel
 				</Button>
 			</div>

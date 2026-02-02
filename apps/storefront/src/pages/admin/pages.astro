@@ -1,17 +1,17 @@
 ---
 export const prerender = false;
 
-import { Alert } from'../../components/catalyst/alert-banner';
-import { Badge } from'../../components/catalyst/badge';
-import Button from'../../components/Button.astro';
-import { Heading } from'../../components/catalyst/heading';
-import AdminLayout from'../../layouts/AdminLayout.astro';
-import { getApiBase } from'../../lib/api';
+import { Alert } from '../../components/catalyst/alert-banner';
+import { Badge } from '../../components/catalyst/badge';
+import Button from '../../components/Button.astro';
+import { Heading } from '../../components/catalyst/heading';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
-const q = Astro.url.searchParams.get('q') ||'';
-const status = Astro.url.searchParams.get('status') ||'all';
-const page = Number(Astro.url.searchParams.get('page') ||'1');
+const q = Astro.url.searchParams.get('q') || '';
+const status = Astro.url.searchParams.get('status') || 'all';
+const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
 type Page = {
@@ -54,10 +54,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load pages. Please check your admin key.';
+		error = 'Failed to load pages. Please check your admin key.';
 	}
 } else {
-	error ='ADMIN_API_KEY is missing in server environment.';
+	error = 'ADMIN_API_KEY is missing in server environment.';
 }
 
 const hasNext = page < meta.totalPages;
@@ -65,13 +65,13 @@ const hasPrev = page > 1;
 
 const formatDate = (dateStr: string) => {
 	return new Date(dateStr).toLocaleDateString('ja-JP', {
-		year:'numeric',
-		month:'2-digit',
-		day:'2-digit'
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
 	});
 };
 
-const CORE_SLUGS = ['terms','privacy','refund'];
+const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 ---
 
 <AdminLayout title="Pages - Admin">
@@ -108,19 +108,19 @@ const CORE_SLUGS = ['terms','privacy','refund'];
 				<div class="flex gap-2">
 					<a
 						href={`?q=${q}&status=all`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status ==='all' ?'bg-indigo-600 text-white' :'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						All
 					</a>
 					<a
 						href={`?q=${q}&status=published`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status ==='published' ?'bg-indigo-600 text-white' :'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'published' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Published
 					</a>
 					<a
 						href={`?q=${q}&status=draft`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status ==='draft' ?'bg-indigo-600 text-white' :'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 					>
 						Draft
 					</a>
@@ -160,7 +160,7 @@ const CORE_SLUGS = ['terms','privacy','refund'];
 											<code class="text-xs bg-zinc-100 px-2 py-1 rounded">/{p.slug}</code>
 										</td>
 										<td class="px-6 py-4">
-											{p.status ==='published' ? (
+											{p.status === 'published' ? (
 												<Badge color="lime" client:only="react">Published</Badge>
 											) : (
 												<Badge color="zinc" client:only="react">Draft</Badge>
@@ -192,7 +192,7 @@ const CORE_SLUGS = ['terms','privacy','refund'];
 					</div>
 					<div class="flex gap-2">
 						<Button
-							href={hasPrev ? `?page=${page - 1}&q=${q}&status=${status}` :'#'}
+							href={hasPrev ? `?page=${page - 1}&q=${q}&status=${status}` : '#'}
 							disabled={!hasPrev}
 							size="sm"
 							variant="secondary"
@@ -200,7 +200,7 @@ const CORE_SLUGS = ['terms','privacy','refund'];
 							Previous
 						</Button>
 						<Button
-							href={hasNext ? `?page=${page + 1}&q=${q}&status=${status}` :'#'}
+							href={hasNext ? `?page=${page + 1}&q=${q}&status=${status}` : '#'}
 							disabled={!hasNext}
 							size="sm"
 							variant="secondary"

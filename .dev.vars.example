@@ -1,0 +1,43 @@
+# ===========================================
+# Kikaku OS - Local Development Environment
+# ===========================================
+# Copy this file to .dev.vars and fill in your values
+# This file is used by Wrangler for the API (apps/api)
+
+# Admin API Key (used for x-admin-key header)
+ADMIN_API_KEY=CHANGE_ME
+
+# Development Mode (enables /dev/seed endpoint)
+DEV_MODE=true
+
+# Stripe Configuration
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+# Storefront URL (for CORS and redirects)
+STOREFRONT_BASE_URL=http://localhost:4321
+
+# Optional: Bank Transfer (Stripe jp_bank_transfer)
+# ENABLE_BANK_TRANSFER=true
+
+# Optional: Shipping Configuration
+# SHIPPING_FEE_AMOUNT=500
+# FREE_SHIPPING_THRESHOLD=5000
+
+# Optional: Clerk Authentication
+# CLERK_SECRET_KEY=sk_test_xxx
+
+# Optional: Slack Notifications
+# SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx
+
+# Optional: Email (Resend)
+# RESEND_API_KEY=re_xxx
+
+# Cloudflare AI Gateway (for Claude API proxy)
+# Get these values from: https://dash.cloudflare.com/?to=/:account/ai/ai-gateway
+AI_GATEWAY_ACCOUNT_ID=your_cloudflare_account_id
+AI_GATEWAY_ID=your_ai_gateway_id
+
+# Claude API Key (Anthropic)
+CLAUDE_API_KEY=sk-ant-xxx

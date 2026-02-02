@@ -1,11 +1,12 @@
 ---
 export const prerender = false;
 
-import { Alert } from'../../components/catalyst/alert-banner';
-import EmptyState from'../../components/EmptyState.astro';
-import AdminLayout from'../../layouts/AdminLayout.astro';
-import { Heading, Subheading } from'../../components/catalyst/heading';
-import { getApiBase } from'../../lib/api';
+import { Alert } from '../../components/catalyst/alert-banner';
+import EmptyState from '../../components/EmptyState.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Heading, Subheading } from '../../components/catalyst/heading';
+import { getApiBase } from '../../lib/api';
+import { Button } from '../../components/catalyst/button';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -13,23 +14,23 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 // Form Action Handling (SSR)
 let actionMessage = null;
 
-if (Astro.request.method ==='POST') {
+if (Astro.request.method === 'POST') {
 	try {
 		const formData = await Astro.request.formData();
 		const action = formData.get('action');
 		const id = formData.get('id');
 
-		if (apiKey && id && (action ==='approve' || action ==='reject')) {
+		if (apiKey && id && (action === 'approve' || action === 'reject')) {
 			const res = await fetch(`${apiBase}/inbox/${id}/${action}`, {
-				method:'POST',
-				headers: {'x-admin-key': apiKey }
+				method: 'POST',
+				headers: { 'x-admin-key': apiKey }
 			});
 			if (!res.ok) throw new Error(`API Error: ${res.status}`);
-			actionMessage = { type:'success', text: `Item ${action}ed successfully.` };
+			actionMessage = { type: 'success', text: `Item ${action}ed successfully.` };
 		}
 	} catch (e) {
 		console.error(e);
-		actionMessage = { type:'error', text:'Failed to process action.' };
+		actionMessage = { type: 'error', text: 'Failed to process action.' };
 	}
 }
 
@@ -40,16 +41,16 @@ let error = null;
 if (apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/inbox?status=open&limit=50`, {
-			headers: {'x-admin-key': apiKey }
+			headers: { 'x-admin-key': apiKey }
 		});
 		if (!res.ok) throw new Error(`API Error: ${res.status}`);
 		const data = await res.json();
 		items = data.items || [];
 	} catch (e) {
-		error ='Failed to load inbox.';
+		error = 'Failed to load inbox.';
 	}
 } else {
-	error ='ADMIN_API_KEY is missing.';
+	error = 'ADMIN_API_KEY is missing.';
 }
 
 const parseBody = (body: string) => {
@@ -75,9 +76,9 @@ const parseMetadata = (metadataStr: string | null) => {
 
 const getBadgeColor = (severity: string) => {
 	switch (severity) {
-		case'critical': return'red';
-		case'warning': return'amber';
-		default: return'blue';
+		case 'critical': return 'red';
+		case 'warning': return 'amber';
+		default: return 'blue';
 	}
 };
 ---
@@ -92,7 +93,7 @@ const getBadgeColor = (severity: string) => {
 		</div>
 
 		{actionMessage && (
-			<Alert color={actionMessage.type ==='success' ?'green' :'red'} client:load>
+			<Alert color={actionMessage.type === 'success' ? 'green' : 'red'} client:load>
 				{actionMessage.text}
 			</Alert>
 		)}
@@ -107,7 +108,7 @@ const getBadgeColor = (severity: string) => {
 			<div class="space-y-4">
 				{items.map((item) => {
 					const metadata = parseMetadata(item.metadata);
-					const isBulkImageUpload = item.kind ==='bulk_image_upload';
+					const isBulkImageUpload = item.kind === 'bulk_image_upload';
 					const badgeColor = getBadgeColor(item.severity);
 
 					return (
@@ -115,8 +116,8 @@ const getBadgeColor = (severity: string) => {
 							<div class="flex-1 space-y-3">
 								<div class="flex items-center gap-3 flex-wrap">
 									<span class={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-										badgeColor ==='red' ?'bg-red-50 text-red-700 ring-red-600/20' :
-										badgeColor ==='amber' ?'bg-amber-50 text-amber-700 ring-amber-600/20' :
+										badgeColor === 'red' ? 'bg-red-50 text-red-700 ring-red-600/20' :
+										badgeColor === 'amber' ? 'bg-amber-50 text-amber-700 ring-amber-600/20' :
 										'bg-blue-50 text-blue-700 ring-blue-600/20'
 									}`}>
 										{item.severity}
@@ -146,7 +147,7 @@ const getBadgeColor = (severity: string) => {
 															{uploadItem.product_title} <span class="text-zinc-500 text-xs">(ID: {uploadItem.product_id})</span>
 														</p>
 														<span class="text-xs text-zinc-600">
-															📷 {uploadItem.image_urls.length} image{uploadItem.image_urls.length !== 1 ?'s' :''} | Existing: {uploadItem.existing_r2_images}
+															📷 {uploadItem.image_urls.length} image{uploadItem.image_urls.length !== 1 ? 's' : ''} | Existing: {uploadItem.existing_r2_images}
 														</span>
 													</div>
 													<div class="flex gap-2 overflow-x-auto">
@@ -182,22 +183,16 @@ const getBadgeColor = (severity: string) => {
 								<form method="post">
 									<input type="hidden" name="id" value={item.id} />
 									<input type="hidden" name="action" value="approve" />
-									<button
-										type="submit"
-										class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
-									>
+									<Button client:load type="submit" color="indigo" className="w-full">
 										✓ Approve
-									</button>
+									</Button>
 								</form>
 								<form method="post">
 									<input type="hidden" name="id" value={item.id} />
 									<input type="hidden" name="action" value="reject" />
-									<button
-										type="submit"
-										class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 transition-colors"
-									>
+									<Button client:load type="submit" color="zinc" className="w-full">
 										✕ Dismiss
-									</button>
+									</Button>
 								</form>
 							</div>
 						</div>

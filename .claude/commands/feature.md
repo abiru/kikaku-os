@@ -3,428 +3,430 @@
 ## 目的
 
 新機能開発の完全ワークフローを実行する統合コマンド。
-すべての機能開発に対して、一貫したプロセスを提供します。
+7ステップのワークフローを自動化し、各ステップでユーザー確認を取りながら進みます。
 
-## ワークフロー概要
+## ⚠️ 重要: コマンド実行方針
 
-1. **Plan** - planner agentで実装計画作成
-2. **Worktree** - git worktree作成（main と分離、ポート衝突回避）
-3. **Issue** - GitHub Issue作成（トラッキング）
-4. **Exec** - 実装（TDD + code review）
-5. **Typecheck** - 型チェック（API + Storefront）
-6. **Test** - テスト実行（API + Storefront、80%+ coverage）
-7. **PR** - Pull Request作成（包括的なサマリー）
+**このコマンドを実行する際、Claude（あなた）は必ず以下を守ってください:**
+
+1. **Bash toolを使って実際にコマンドを実行する**
+   - 単なる指示やドキュメントを提供するだけではダメ
+   - `git`, `pnpm`, `gh`, `tmux` などのコマンドを実際に実行する
+
+2. **各コマンドの成功を確認してから次に進む**
+   - 実行結果をチェックする
+   - エラーが発生したら適切に対処する
+
+**❌ やってはいけないこと:**
+- "以下のコマンドを実行してください" とユーザーに指示するだけ
+- bash scriptファイルを作成してユーザーに実行させる
+- 実行せずに次のステップに進む
+
+**✅ やるべきこと:**
+- Bash toolで実際にコマンドを実行
+- 実行結果を確認して次のステップへ
+- エラーが出たら原因を調べて修正
 
 ## 使用方法
 
 ```bash
-# 新機能開発を開始
+# 新機能開発を開始（フルワークフロー）
 /feature "product filtering for admin page"
 
-# 既存のissueから再開
-/feature --resume 142
+# 既存issueから作業開始（簡潔な形式）
+/feature 142
 
-# 特定のステップをスキップ（非推奨）
-/feature "quick feature" --skip-plan
+# 既存issueから再開（明示的な形式）
+/feature --resume 142
 ```
 
 ## 引数
 
-- `$ARGUMENTS` - 機能の説明（必須）
-- `--resume [number]` - 既存のissueから再開
-- `--skip-plan` - 計画ステップをスキップ（明示的に指示された場合のみ）
-- `--skip-worktree` - worktree作成をスキップ（既に存在する場合）
+- `$ARGUMENTS` が文字列 → 新機能の説明（フルワークフロー）
+- `$ARGUMENTS` が数字のみ → Issue番号（Plan/Issueスキップ、Execから開始）
+- `--resume [number]` → Issue番号を明示的に指定（数字のみと同じ動作）
 
-## 詳細ステップ
+## ワークフロー概要
+
+1. **Plan** - planner agentで実装計画作成 → ユーザー確認
+2. **Worktree** - git worktree作成（クリーンアップ含む） → ユーザー確認
+3. **Issue** - GitHub Issue作成
+4. **Exec** - 実装（TDD + code review）
+5. **Typecheck** - 型チェック（エラー時は自動修正試行）
+6. **Test** - テスト実行（失敗時は自動修正試行）
+7. **PR** - Pull Request作成 → ユーザー確認
+
+## 前提条件チェック（必須）
+
+**このコマンドを実行する前に、必ず以下をチェックしてください：**
+
+### 1. メインworktreeで実行されているか
+
+```bash
+# 現在のディレクトリを確認
+pwd
+
+# メインworktreeのパスは通常: /home/user/Code/kikaku-os
+# サブworktreeのパスは: /home/user/Code/kikaku-os-{number}
+```
+
+**もしサブworktree（例: kikaku-os-155）で実行しようとしている場合：**
+
+```
+❌ エラー: このコマンドはメインworktreeからのみ実行できます
+
+現在: /home/user/Code/kikaku-os-155 (サブworktree)
+必要: /home/user/Code/kikaku-os (メインworktree)
+
+解決方法:
+1. 新しいターミナルタブを開く
+2. メインディレクトリに移動: cd /home/user/Code/kikaku-os
+3. このコマンドを再実行
+
+または、既存のworktreeで作業を続けたい場合:
+cd /home/user/Code/kikaku-os-155
+# 通常の開発フローに従ってください
+```
+
+### 2. mainブランチにいるか
+
+```bash
+# 現在のブランチを確認
+git branch --show-current
+# 出力: main （これが正しい）
+```
+
+**もしmainブランチでない場合：**
+
+```
+❌ エラー: このコマンドはmainブランチからのみ実行できます
+
+現在のブランチ: feat/some-feature
+必要なブランチ: main
+
+解決方法:
+git checkout main
+git pull origin main
+
+その後、このコマンドを再実行してください。
+```
+
+### 3. mainブランチが最新か
+
+```bash
+# リモートから最新を取得
+git fetch origin
+git pull origin main
+```
+
+### チェックスクリプト
+
+以下のコマンドですべてをチェック：
+
+```bash
+# 前提条件を自動チェック
+CURRENT_DIR=$(pwd)
+CURRENT_BRANCH=$(git branch --show-current)
+MAIN_WORKTREE=$(git worktree list | grep "\[main\]" | awk '{print $1}')
+
+if [[ "$CURRENT_DIR" != "$MAIN_WORKTREE" ]]; then
+  echo "❌ エラー: メインworktreeで実行してください"
+  echo "現在: $CURRENT_DIR"
+  echo "必要: $MAIN_WORKTREE"
+  exit 1
+fi
+
+if [[ "$CURRENT_BRANCH" != "main" ]]; then
+  echo "❌ エラー: mainブランチで実行してください"
+  echo "現在: $CURRENT_BRANCH"
+  exit 1
+fi
+
+echo "✅ 前提条件OK: /feature コマンドを実行できます"
+```
 
 ---
 
+## 引数処理
+
+**前提条件チェックに合格した後**、`$ARGUMENTS` を解析して動作モードを決定します：
+
+### 新機能開発モード
+```bash
+/feature "add product filtering"
+```
+- `$ARGUMENTS` が文字列（非数字）
+- フルワークフロー（Step 1-7）を実行
+- Plan作成 → Worktree作成 → Issue作成 → Exec → Typecheck → Test → PR
+
+### 既存Issue作業モード
+```bash
+/feature 142
+# または
+/feature --resume 142
+```
+- `$ARGUMENTS` が数字のみ、または `--resume [number]`
+- Issue #142が既に存在することを確認
+- Plan/Issueスキップ、Step 2（Worktree）から開始
+- Worktree作成 → Exec → Typecheck → Test → PR
+
+**検知ロジック**:
+```javascript
+if ($ARGUMENTS.match(/^\d+$/)) {
+  // 数字のみ → 既存Issue作業モード
+  issueNumber = $ARGUMENTS
+  skipPlan = true
+  skipIssue = true
+} else if ($ARGUMENTS.startsWith("--resume ")) {
+  // --resume フラグ → 既存Issue作業モード
+  issueNumber = $ARGUMENTS.split(" ")[1]
+  skipPlan = true
+  skipIssue = true
+} else {
+  // 文字列 → 新機能開発モード
+  description = $ARGUMENTS
+  skipPlan = false
+  skipIssue = false
+}
+```
+
+## 実行フロー
+
 ### ステップ1: Plan
 
-**目的**: 実装計画を作成し、スコープと設計を明確にする
-
-**実行内容**:
+**スキップ条件**: Issue番号が指定された場合（`/feature 142`）はこのステップをスキップ
 
 1. planner agentを起動:
    ```
    @planner <description>
    ```
 
-2. Agentが以下を含む詳細計画を作成:
-   - フェーズ分割
-   - 変更対象ファイル
-   - 依存関係
-   - リスク
-   - 実装アプローチ
+2. 計画を `.claude/plans/feature-{timestamp}.md` に保存
 
-3. 計画は `.claude/plans/feature-{timestamp}.md` に保存
-
-4. ユーザーに計画を表示し、承認を待つ:
+3. **ユーザー確認**:
    ```
-   Plan created at .claude/plans/feature-20260202-143022.md
+   Plan created. Review at .claude/plans/feature-20260202.md
 
-   ## Summary
-   [Plan summary here]
-
-   Proceed to Step 2: Worktree creation?
+   Proceed to Step 2: Worktree creation? (y/n)
    ```
-
-**スキップ条件**:
-- `--skip-plan` が指定されている
-- ユーザーが "skip planning, I already have a design" と明示
-
-**エラーハンドリング**:
-- planner agentが利用不可: エラー表示、手動計画を提案
-- 計画が不完全: ユーザーに追加情報を求める
-
----
 
 ### ステップ2: Worktree Cleanup & Create
 
-**目的**: 分離された開発環境を作成し、main branchとの衝突を回避
+**重要**: このステップではBash toolを使って実際にコマンドを実行してください。
 
-#### 2.1: Cleanup Phase
-
-1. 既存worktreeをチェック:
+1. **既存worktreeをチェック** - Bash toolで実行:
    ```bash
    git worktree list
    ```
 
-2. 古い/マージ済みworktreeを特定:
-   - 作成から7日以上経過
-   - ブランチがマージ済み
-   - ブランチが削除済み
+2. 古いworktreeを特定（7日以上 or マージ済み）し、削除が必要な場合はユーザー確認を取る
 
-3. クリーンアップを提案:
-   ```
-   Found old worktrees:
-   - ../kikaku-os-110 (feat/issue-110-settings, merged 10 days ago)
-   - ../kikaku-os-111 (feat/issue-111-google-ads, deleted)
-
-   Remove them? (y/n)
-   ```
-
-4. ユーザーが承認したら削除:
+3. **Worktreeを作成** - Bash toolで実行:
    ```bash
-   git worktree remove ../kikaku-os-110
-   git worktree remove ../kikaku-os-111
-   ```
-
-#### 2.2: Create Phase
-
-1. 最新のmainを取得:
-   ```bash
+   # リモートから最新を取得
    git fetch origin
-   # mainブランチにいる場合のみ
-   git pull origin main
-   ```
 
-2. Issue番号を決定:
-   - `--resume [number]` が指定されていればそれを使用
-   - そうでなければ、次のステップ（Issue作成）後に決定
-
-3. Worktreeを作成:
-   ```bash
-   # Issue番号が分かっている場合
+   # Worktreeを作成（実際のnumberとslugに置き換える）
    git worktree add ../kikaku-os-{number} -b feat/issue-{number}-{slug}
-
-   # Issue番号が未定の場合（Step 3の後に作成）
-   # このステップは一時的にスキップし、Issue作成後に戻る
    ```
 
-4. 依存関係をインストール:
+4. **依存関係をインストール** - Bash toolで実行:
    ```bash
-   cd ../kikaku-os-{number}
-   pnpm install
+   cd ../kikaku-os-{number} && pnpm install
    ```
 
-5. 確認メッセージ:
+5. **ユーザーに新しいタブでの作業を指示**:
+
+   Worktree作成後、ユーザーに以下を表示:
    ```
-   ✓ Worktree created at ../kikaku-os-142
-   ✓ Branch: feat/issue-142-product-filtering
-   ✓ Dependencies installed
+   ✅ Worktree created: ~/Code/kikaku-os-{number}
 
-   Dev servers will use:
-   - API: http://localhost:8788
-   - Storefront: http://localhost:4322
+   📍 Next: Open New Terminal Tab
+
+   Open a new Ghostty tab and run:
+
+   cd ~/Code/kikaku-os-{number}
+   pnpm -C apps/api dev       # Port 8787
+   pnpm -C apps/storefront dev # Port 4321 (別タブ推奨)
+
+   Then continue with implementation in that tab.
    ```
 
-**スキップ条件**:
-- `--skip-worktree` が指定されている
-- Worktreeが既に存在する（`--resume` 使用時）
-
-**エラーハンドリング**:
-- Worktreeパスが既に存在: 削除提案 or 別名使用
-- pnpm installが失敗: エラー表示、ユーザーに手動実行を促す
-- Gitリポジトリでない: エラー表示、終了
-
----
+**注意事項**:
+- Wranglerは `--port` フラグをサポートしていないため、デフォルトポートを使用
+- API: 8787 (Wrangler default)
+- Storefront: 4321 (Astro default)
+- メインworktreeのサーバーと競合する場合は、メインのサーバーを停止してから起動
 
 ### ステップ3: Issue
 
-**目的**: GitHub Issueを作成し、作業をトラッキング
+**スキップ条件**: Issue番号が指定された場合（`/feature 142`）はこのステップをスキップ。指定されたIssueが存在することを確認。
 
-**実行内容**:
+1. `create-issue` コマンドを使用してGitHub Issueを作成
 
-1. `create-issue` コマンドを内部的に呼び出す
-
-2. Issueの内容を計画から抽出:
-   - **Title**: `feat: [description]`（50文字以内）
-   - **Body**: 計画のサマリー + Acceptance Criteria
-   - **Labels**: `enhancement`, `priority:normal`
-
-3. GitHub CLIで作成:
-   ```bash
-   gh issue create \
-     --title "feat: product filtering for admin page" \
-     --body "[Plan summary and acceptance criteria]" \
-     --label "enhancement,priority:normal"
-   ```
-
-4. Issue番号をキャプチャ:
-   ```
-   ✓ Issue created: #142
-   URL: https://github.com/user/repo/issues/142
-   ```
-
-5. Issue番号を使ってWorktreeを作成（Step 2がスキップされていた場合）
-
-**スキップ条件**:
-- `--resume [number]` でIssue番号が既知
-- Issue #[number] が既に存在
-
-**エラーハンドリング**:
-- GitHub CLI未認証: `gh auth login` を促す
-- Issue作成失敗: エラー表示、手動作成を提案
-
----
+2. Issue番号をキャプチャ（例: #142）
 
 ### ステップ4: Exec
 
-**目的**: 機能を実装し、コードレビューを実施
+**重要**: 実装中は常にBash toolを使ってコマンドを実行してください。
 
-**実行内容**:
+1. **exec-issue コマンドを起動**:
+   ```
+   /exec-issue {number}
+   ```
+   このコマンドが自動的に実装を開始します
 
-1. `exec-issue` コマンドを内部的に呼び出す:
+2. 実装完了後、**code-reviewerを自動起動**
+
+3. CRITICAL/HIGH issuesがあればブロック、修正を要求
+
+4. **変更をコミット** - Bash toolで実行:
    ```bash
-   /exec-issue 142
+   cd ~/Code/kikaku-os-{number}
+   git add .
+   git commit -m "$(cat <<'EOF'
+   feat: [description]
+
+   [details]
+
+   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+   EOF
+   )"
    ```
 
-2. exec-issueが以下を実行:
-   - Worktreeに移動
-   - Dev serversを起動（API: 8788, Storefront: 4322）
-   - 実装ガイダンスを提供
-   - TDD アプローチを促進:
-     1. テストを書く（RED）
-     2. 実装する（GREEN）
-     3. リファクタリング（IMPROVE）
+### ステップ5: Typecheck（自動修正機能付き）
 
-3. 実装完了後、code-reviewerを自動起動:
-   ```
-   @code-reviewer
-   ```
+**重要**: Bash toolを使って実際にコマンドを実行してください。
 
-4. レビュー結果を評価:
-   - **CRITICAL/HIGH issues**: ブロック、修正を要求
-   - **MEDIUM issues**: 警告、修正を推奨
-   - **LOW issues**: 情報提供のみ
-
-5. コミット:
+1. **型チェック実行** - Bash toolで実行:
    ```bash
-   git add [changed files]
-   git commit -m "feat: [description]
-
-   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
-   ```
-
-6. 確認メッセージ:
-   ```
-   ✓ Implementation complete
-   ✓ Code review passed
-   ✓ Changes committed
-
-   Proceeding to Step 5: Typecheck...
-   ```
-
-**エラーハンドリング**:
-- Dev server起動失敗（ポート使用中）: 別ポートを提案
-- Code review失敗（CRITICAL issues）: 修正を要求、再レビュー
-- コミット失敗: エラー表示、ユーザーに手動実行を促す
-
----
-
-### ステップ5: Typecheck
-
-**目的**: TypeScriptの型エラーをチェック
-
-**実行内容**:
-
-1. APIの型チェック:
-   ```bash
+   cd ~/Code/kikaku-os-{number}
    pnpm -C apps/api typecheck
    ```
 
-2. Storefrontの型チェック:
+   続いて:
    ```bash
+   cd ~/Code/kikaku-os-{number}
    pnpm -C apps/storefront exec astro check
    ```
 
-3. 結果を評価:
-   - **エラーなし**: 次のステップへ進む
-   - **エラーあり**: エラーを表示、修正を要求
+2. **エラーがある場合**:
 
-4. エラー時の対応:
+   a. エラーを表示
+
+   b. **自動修正を試行**:
    ```
-   ✗ Typecheck failed with 3 errors:
+   Found 3 typecheck errors. Attempting auto-fix...
 
-   apps/api/src/routes/products.ts:45:12
-   - Type 'string' is not assignable to type 'number'
+   Analyzing errors...
+   - Type 'string' is not assignable to type 'number' (apps/api/src/routes/products.ts:45)
+   - Property 'price' does not exist on type 'Product' (apps/storefront/src/pages/admin/products.astro:23)
 
-   apps/storefront/src/pages/admin/products.astro:23:5
-   - Property 'price' does not exist on type 'Product'
-
-   [More errors...]
-
-   Please fix these errors and I'll retry the typecheck.
+   Applying fixes...
    ```
 
-5. 修正後、再チェック:
-   - ユーザーが修正を完了したら、再度typecheckを実行
-   - すべてのエラーが解消されるまで繰り返す
+   c. 修正後、再チェック
 
-6. 成功時:
+   d. **自動修正が失敗した場合**:
    ```
-   ✓ API typecheck passed
-   ✓ Storefront typecheck passed
+   ✗ Auto-fix failed for some errors. Manual fix required:
 
-   Proceeding to Step 6: Tests...
+   [Remaining errors...]
+
+   Please fix these errors manually. I'll wait for your confirmation.
    ```
 
-**スキップ条件**:
-- NEVER（型チェックは必須）
+   e. ユーザーが修正完了したら再チェック
 
-**エラーハンドリング**:
-- pnpm未インストール: エラー表示、インストールを促す
-- package.jsonが存在しない: エラー表示、worktreeの状態を確認
-- typescriptスクリプトが未定義: エラー表示、package.jsonを確認
+3. **エラーがない場合**: 次のステップへ自動進行
 
----
+### ステップ6: Test（自動修正機能付き）
 
-### ステップ6: Test
+**重要**: Bash toolを使って実際にコマンドを実行してください。
 
-**目的**: テストを実行し、カバレッジを確認
-
-**実行内容**:
-
-1. APIのテスト:
+1. **テスト実行** - Bash toolで実行:
    ```bash
+   cd ~/Code/kikaku-os-{number}
    pnpm -C apps/api test
    ```
 
-2. Storefrontのテスト（存在する場合）:
+   Storefrontのテストがある場合:
    ```bash
+   cd ~/Code/kikaku-os-{number}
    pnpm -C apps/storefront test
    ```
 
-3. カバレッジを評価:
-   - **新規コード**: 80%+ カバレッジを要求
-   - **既存テスト**: すべてパスする必要がある
-   - **リグレッション**: 許可しない
+2. **失敗がある場合**:
 
-4. 結果を評価:
-   - **すべてパス**: 次のステップへ進む
-   - **失敗あり**: 失敗を表示、修正を要求
+   a. 失敗を表示
 
-5. 失敗時の対応:
+   b. **自動修正を試行**:
    ```
-   ✗ Tests failed:
+   Found 2 test failures. Attempting auto-fix...
 
-   FAIL apps/api/src/routes/products.test.ts
-     ● products › should filter by category
-       Expected: 3
-       Received: 0
+   Analyzing failures...
+   - products › should filter by category (Expected: 3, Received: 0)
+   - inventory › should update stock (TypeError: Cannot read property 'quantity')
 
-   FAIL apps/api/src/services/inventory.test.ts
-     ● inventory › should update stock
-       TypeError: Cannot read property 'quantity' of undefined
-
-   Coverage: 65% (target: 80%)
-
-   Please fix these failures and add tests to improve coverage.
+   Applying fixes...
    ```
 
-6. 修正後、再テスト:
-   - ユーザーが修正を完了したら、再度testを実行
-   - すべてのテストがパスし、カバレッジが80%+になるまで繰り返す
+   c. 修正後、再テスト
 
-7. 成功時:
+   d. **自動修正が失敗した場合**:
    ```
-   ✓ API tests passed (127 tests)
-   ✓ Storefront tests passed (43 tests)
-   ✓ Coverage: 87% (target: 80%)
+   ✗ Auto-fix failed for some tests. Manual fix required:
 
-   Proceeding to Step 7: PR creation...
+   [Remaining failures...]
+
+   Please fix these tests manually. I'll wait for your confirmation.
    ```
 
-**スキップ条件**:
-- NEVER（テストは必須）
+   e. ユーザーが修正完了したら再テスト
 
-**エラーハンドリング**:
-- テストが存在しない: 警告、テスト作成を強く推奨
-- pnpm test未定義: エラー表示、package.jsonを確認
-- テストが無限ループ: タイムアウト、ユーザーに通知
+3. **カバレッジチェック**:
+   - 新規コード: 80%+ 必須
+   - 不足している場合: テスト追加を促す（自動生成試行可能）
 
----
+4. **すべてパス**: 次のステップへ自動進行
 
 ### ステップ7: PR
 
-**目的**: 包括的なPull Requestを作成
+**重要**: Bash toolを使って実際にコマンドを実行してください。
 
-**実行内容**:
-
-1. コミット履歴を分析:
+1. **コミット履歴を分析** - Bash toolで実行:
    ```bash
-   git log main..HEAD --oneline
+   cd ~/Code/kikaku-os-{number}
+   git log main..HEAD
    ```
 
-2. 差分を分析:
+   続いて差分統計を確認:
    ```bash
+   cd ~/Code/kikaku-os-{number}
    git diff main...HEAD --stat
    ```
 
-3. PRタイトルを作成:
-   - フォーマット: `feat: [description]`
-   - 長さ制限: 70文字以内
-   - 例: `feat: add product filtering to admin page`
-
-4. PRボディを作成:
-   ```markdown
+2. **PRを作成** - Bash toolで実行:
+   ```bash
+   cd ~/Code/kikaku-os-{number}
+   gh pr create --title "feat: [description]" --body "$(cat <<'EOF'
    ## Summary
-   - Added product filtering UI to admin page
-   - Implemented filter by category, price range, and stock status
-   - Added tests for all filter combinations
+   - [bullet point 1]
+   - [bullet point 2]
 
    ## Test plan
-   - [ ] Navigate to /admin/products
-   - [ ] Apply category filter, verify results
-   - [ ] Apply price range filter, verify results
-   - [ ] Apply stock status filter, verify results
-   - [ ] Combine multiple filters, verify results
-   - [ ] Clear filters, verify all products shown
+   - [ ] [test item 1]
+   - [ ] [test item 2]
 
-   Closes #142
+   Closes #{issue-number}
 
    🤖 Generated with [Claude Code](https://claude.com/claude-code)
+   EOF
+   )"
    ```
 
-5. PRを作成:
-   ```bash
-   gh pr create \
-     --title "feat: add product filtering to admin page" \
-     --body "[body content]"
-   ```
-
-6. PR URLをキャプチャして表示:
+3. **PRのURLを表示**:
+   PRが作成されたら、ユーザーにURLを報告:
    ```
    ✓ Pull Request created: #143
    URL: https://github.com/user/repo/pull/143
@@ -432,286 +434,218 @@
    Next steps:
    - Review the PR
    - Wait for CI to pass
-   - Request reviews from team
+   - Request reviews
    - Merge when approved
+
+   Clean up worktree after merge:
+   git worktree remove ../kikaku-os-{number}
    ```
 
-7. Worktree cleanup guidance:
-   ```
-   After merging, clean up the worktree:
-   git worktree remove ../kikaku-os-142
-   ```
+## 自動修正機能の詳細
 
-**スキップ条件**:
-- ユーザーが "I'll create the PR manually" と明示
+### Typecheck自動修正
 
-**エラーハンドリング**:
-- GitHub CLI未認証: `gh auth login` を促す
-- PR作成失敗: エラー表示、手動作成を提案
-- コミットがpushされていない: 自動push or ユーザーにpushを促す
+**対応可能なエラー**:
+- 型アノテーション不足: `let x = ...` → `let x: Type = ...`
+- null/undefined チェック不足: `obj.prop` → `obj?.prop` or `if (obj) { obj.prop }`
+- 型キャスト不足: `value` → `value as Type`
+- インポート不足: 自動でimport文追加
 
----
+**対応できないエラー**:
+- 複雑な型推論エラー
+- 構造的な設計ミス
+- 外部ライブラリの型定義不足
 
-## 状態検知（ステートレス）
+### Test自動修正
 
-各ステップの前に、既に完了しているかをチェック:
+**対応可能なエラー**:
+- 簡単なアサーションミス: 期待値の調整
+- モック不足: モック追加
+- 非同期処理のタイミング: `await` 追加、`waitFor` 使用
 
-### Worktree存在チェック
-```bash
-git worktree list | grep "kikaku-os-{number}"
-```
-- 存在する: Step 2をスキップ
-- 存在しない: Step 2を実行
+**対応できないエラー**:
+- ロジックのバグ
+- 複雑なテストシナリオの設計ミス
+- 外部依存の問題
 
-### Issue存在チェック
-```bash
-gh issue view {number} 2>/dev/null
-```
-- 存在する: Step 3をスキップ、Issue番号を使用
-- 存在しない: Step 3を実行
+### 自動修正の制限
 
-### Branch存在チェック
-```bash
-git branch -a | grep "feat/issue-{number}"
-```
-- 存在する: Branchを使用
-- 存在しない: Branchを作成
-
-### Commits存在チェック
-```bash
-git log main..feat/issue-{number} --oneline
-```
-- コミットあり: Step 4をスキップ（実装済み）
-- コミットなし: Step 4を実行
-
----
+- **試行回数**: 最大3回まで
+- **タイムアウト**: 各試行5分まで
+- **安全性**: 既存のテストを壊さない範囲で修正
+- **フォールバック**: 失敗したらユーザーに確認を求める
 
 ## エラーハンドリング
 
-### Prerequisites Validation
-
-各ステップの前に前提条件を検証:
-
-- **Plan**: planner agentが利用可能か
-- **Worktree**: Gitリポジトリか、競合するworktreeがないか
-- **Issue**: GitHub CLI認証済みか（`gh auth status`）
-- **Exec**: Worktreeが存在するか、Dev serverがすでに起動していないか
-- **Typecheck**: pnpmがインストールされているか、package.jsonが存在するか
-- **Test**: pnpmがインストールされているか、テストが存在するか
-- **PR**: すべてのコミットがpushされているか、typecheck/testがパスしているか
-
-### Error Messages
-
-明確でアクションable なエラーメッセージを表示:
+### Git関連エラー
 
 ```
-✗ Error: GitHub CLI not authenticated
+✗ Error: Worktree already exists at ../kikaku-os-142
 
-To fix this issue:
+Solution:
+1. Remove: git worktree remove ../kikaku-os-142
+2. Or resume: /feature --resume 142
+```
+
+### GitHub関連エラー
+
+```
+✗ Error: gh: Not authenticated
+
+Solution:
 1. Run: gh auth login
-2. Follow the authentication flow
-3. Retry this command
-
-Would you like me to guide you through authentication?
+2. Retry this command
 ```
 
-### Retry Mechanism
+### ビルド関連エラー
 
-エラーが修正可能な場合、リトライを提供:
+```
+✗ Error: pnpm install failed
 
-- Typecheck errors: 修正後に再チェック
-- Test failures: 修正後に再テスト
-- GitHub authentication: 認証後に再試行
+Solution:
+1. Check error log above
+2. Fix package.json if needed
+3. Retry: pnpm install
+```
 
----
+## 状態検知（ステートレス）
 
-## ユーザー確認ポイント
+各ステップの前に自動検知:
 
-以下のポイントでユーザー確認を取る:
+- **Worktree存在**: `git worktree list | grep kikaku-os-{number}`
+- **Issue存在**: `gh issue view {number}`
+- **Branch存在**: `git branch -a | grep feat/issue-{number}`
+- **コミット存在**: `git log main..feat/issue-{number}`
 
-1. **ワークフロー開始前**:
-   ```
-   I'll guide you through the feature workflow for: [description]
-   This will involve 7 steps: Plan, Worktree, Issue, Exec, Typecheck, Test, PR.
-   Proceed? (y/n)
-   ```
-
-2. **計画作成後**:
-   ```
-   Plan created at .claude/plans/feature-20260202.md
-   [Plan summary]
-   Approve and proceed to Step 2? (y/n)
-   ```
-
-3. **Worktreeクリーンアップ前**:
-   ```
-   Found old worktrees: X, Y, Z
-   Remove them? (y/n)
-   ```
-
-4. **Typecheck成功後**:
-   ```
-   ✓ Typecheck passed
-   Proceed to Step 6: Tests? (y/n)
-   ```
-
-5. **Test成功後**:
-   ```
-   ✓ Tests passed (87% coverage)
-   Proceed to Step 7: PR creation? (y/n)
-   ```
-
----
+完了済みステップは自動スキップ。
 
 ## 再開機能
 
-中断したワークフローを再開:
-
-### 使用例
 ```bash
 /feature --resume 142
 ```
 
-### 動作
+**動作**:
 1. Issue #142の存在を確認
-2. Worktree `../kikaku-os-142` の存在を確認
-3. Branch `feat/issue-142-*` の存在を確認
-4. コミット履歴を確認
-5. 完了済みステップをスキップ
-6. 次のステップから再開
+2. Worktree/Branch/コミットを確認
+3. 完了済みステップをスキップ
+4. 次のステップから再開
 
-### 例
+**例**:
 ```
 User: /feature --resume 142
 
-Claude: Detected existing state for Issue #142:
-✓ Worktree exists: ../kikaku-os-142
-✓ Issue exists: #142
-✓ Branch exists: feat/issue-142-product-filtering
+Claude: Detected existing state:
+✓ Worktree: ../kikaku-os-142
+✓ Issue: #142
 ✓ Implementation committed
 
 Skipping Steps 1-4.
 Starting Step 5: Typecheck...
 ```
 
----
-
 ## 完了後の表示
-
-すべてのステップが完了したら、サマリーを表示:
 
 ```
 ✅ Feature Workflow Complete!
 
 Summary:
-- Plan: .claude/plans/feature-20260202-143022.md
-- Issue: #142 (https://github.com/user/repo/issues/142)
+- Plan: .claude/plans/feature-20260202.md
+- Issue: #142
 - Worktree: ../kikaku-os-142
 - Branch: feat/issue-142-product-filtering
-- Commits: 5 commits
-- PR: #143 (https://github.com/user/repo/pull/143)
+- Commits: 5
+- PR: #143
 
 Next Steps:
-1. Review the PR on GitHub
-2. Wait for CI checks to pass
-3. Request reviews from team members
+1. Review PR on GitHub
+2. Wait for CI checks
+3. Request reviews
 4. Merge when approved
-5. Clean up worktree: git worktree remove ../kikaku-os-142
-
-Great work! 🎉
+5. Clean up: git worktree remove ../kikaku-os-142
 ```
 
----
+## ユーザー確認ポイント
+
+以下のポイントでユーザー確認を取ります:
+
+1. **計画承認後**: "Proceed to Step 2?"
+2. **Worktreeクリーンアップ**: "Remove old worktrees?"
+3. **PR作成前**: 自動作成（確認は不要、URLを表示）
+
+**エラー時のみ確認**:
+- Typecheck自動修正失敗
+- Test自動修正失敗
+- その他のエラー
 
 ## トラブルシューティング
 
-### Port Already in Use
+### ポート使用中
 
 ```
 Error: Port 8788 already in use
 
 Solution:
-1. Check if another dev server is running: lsof -i :8788
-2. Stop the conflicting process: kill <PID>
-3. Or use a different port: --port 8789
+lsof -i :8788
+kill <PID>
 ```
 
-### Worktree Already Exists
+### 自動修正が遅い
 
 ```
-Error: Worktree already exists at ../kikaku-os-142
+Auto-fix is taking too long...
 
-Solution:
-1. Remove existing worktree: git worktree remove ../kikaku-os-142
-2. Or use --resume flag to continue existing work
+You can:
+1. Wait (max 5 minutes per attempt)
+2. Ctrl+C to cancel and fix manually
 ```
-
-### GitHub CLI Not Authenticated
-
-```
-Error: gh: Not authenticated
-
-Solution:
-1. Run: gh auth login
-2. Choose: GitHub.com
-3. Choose: HTTPS
-4. Authenticate via browser
-5. Retry this command
-```
-
----
 
 ## 関連コマンド
 
-- `/create-issue` - Issueの作成のみ（Step 3）
-- `/exec-issue [number]` - 実装のみ（Step 4）
+- `/create-issue` - Issue作成のみ
+- `/exec-issue [number]` - 実装のみ
 - `/code-review` - コードレビューのみ
-- `@planner` - 計画作成のみ（Step 1）
-
----
 
 ## カスタマイズ
 
-### ステップをスキップ
-
-ユーザーが明示的に指示した場合のみ:
+### 自動修正を無効化
 
 ```bash
-# 計画をスキップ（非推奨）
-/feature "quick feature" --skip-plan
-
-# Worktreeをスキップ（既に存在する場合）
-/feature "feature" --skip-worktree
+/feature "feature" --no-auto-fix
 ```
 
-**重要**: Typecheck と Test ステップは絶対にスキップしない。
-
-### ポート番号のカスタマイズ
-
-デフォルトはAPI=8788, Storefront=4322だが、衝突する場合は変更可能:
+### 特定のステップをスキップ
 
 ```bash
-# exec-issue内で環境変数を設定
-API_PORT=8789 STOREFRONT_PORT=4323 /feature "feature"
+/feature "feature" --skip-plan --skip-worktree
 ```
 
----
+**注意**: Typecheck/Testはスキップ不可。
 
 ## ベストプラクティス
 
-1. **計画は詳細に**: 実装前に時間をかけて計画を練る
-2. **小さなPR**: 1つのPRで1つの機能、大きすぎる場合は分割
-3. **テストファースト**: TDDアプローチに従う
-4. **頻繁にコミット**: 小さな変更を頻繁にコミット
-5. **定期的にクリーンアップ**: 古いworktreeを定期的に削除
-6. **CI/CDを信頼**: ローカルのtypecheck/testがパスしてもCIを確認
+1. **計画に時間をかける**: 実装前に十分な計画を
+2. **小さなPR**: 大きすぎる場合は分割
+3. **TDD**: テストファーストで実装
+4. **頻繁にコミット**: 小さな変更を頻繁に
+5. **定期的にクリーンアップ**: 古いworktreeを削除
 
----
+## パフォーマンス
+
+- **Plan**: 1-3分（planner agent）
+- **Worktree作成**: 1-2分（pnpm install含む）
+- **Issue作成**: 5-10秒
+- **Exec**: 実装内容による（10分-数時間）
+- **Typecheck**: 30秒-2分
+- **Test**: 1-5分
+- **PR作成**: 10-20秒
+
+**合計**: 小規模機能で15-30分、中規模で1-3時間
 
 ## 参考資料
 
 - `.claude/rules/feature-workflow.md` - ワークフロー強制ルール
-- `.claude/commands/create-issue.md` - Issue作成コマンド
-- `.claude/commands/exec-issue.md` - 実装コマンド
-- `.claude/rules/git-workflow.md` - Git ワークフローガイドライン
+- `.claude/commands/create-issue.md` - Issue作成
+- `.claude/commands/exec-issue.md` - 実装
+- `.claude/rules/git-workflow.md` - Git ワークフロー
 - `CLAUDE.md` - プロジェクト全体のドキュメント

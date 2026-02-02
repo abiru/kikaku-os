@@ -1,15 +1,15 @@
 ---
 export const prerender = false;
 
-import AdminLayout from'../../layouts/AdminLayout.astro';
-import { Alert } from'../../components/catalyst/alert-banner';
-import { getApiBase } from'../../lib/api';
-import { Heading } from'../../components/catalyst/heading';
-import CustomersTable from'../../components/admin/CustomersTable';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Alert } from '../../components/catalyst/alert-banner';
+import { getApiBase } from '../../lib/api';
+import { Heading } from '../../components/catalyst/heading';
+import CustomersTable from '../../components/admin/CustomersTable';
 
 const apiBase = getApiBase();
-const q = Astro.url.searchParams.get('q') ||'';
-const page = Number(Astro.url.searchParams.get('page') ||'1');
+const q = Astro.url.searchParams.get('q') || '';
+const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
 type Customer = {
@@ -52,10 +52,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load customers. Please check your admin key.';
+		error = 'Failed to load customers. Please check your admin key.';
 	}
 } else {
-	error ='ADMIN_API_KEY is missing in server environment.';
+	error = 'ADMIN_API_KEY is missing in server environment.';
 }
 
 ---
@@ -65,40 +65,41 @@ if (import.meta.env.ADMIN_API_KEY) {
 		<div class="flex items-center gap-4">
 			<Heading>Customers</Heading>
 			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} customers</span>
-		</Alert>
-			{/* Search Bar */}
-			<div class="mb-6">
-				<form method="get" class="relative max-w-md">
-					<input
-						type="search"
-						name="q"
-						value={q}
-						placeholder="Search by name or email..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
-					/>
-					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-				</form>
+		</div>
+
+		{/* Search Bar */}
+		<div class="mb-6">
+			<form method="get" class="relative max-w-md">
+				<input
+					type="search"
+					name="q"
+					value={q}
+					placeholder="Search by name or email..."
+					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
+				/>
+				<svg
+					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+				</svg>
+			</form>
+		</div>
+
+		{error && (
+			<Alert color="red" client:load>
+				{error}
 			</Alert>
+		)}
 
-			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
-					{error}
-				</Alert>
-			)}
-
-			<CustomersTable
-				customers={customers}
-				currentPage={page}
-				totalPages={meta.totalPages}
-				searchQuery={q}
-				client:load
-			/>
-	</Alert>
+		<CustomersTable
+			customers={customers}
+			currentPage={page}
+			totalPages={meta.totalPages}
+			searchQuery={q}
+			client:load
+		/>
+	</div>
 </AdminLayout>

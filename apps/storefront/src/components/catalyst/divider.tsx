@@ -1,5 +1,4 @@
-import clsx from'clsx'
-
+import clsx from 'clsx'
 export function Divider({
  soft = false,
  className,
@@ -11,9 +10,9 @@ export function Divider({
  {...props}
  className={clsx(
  className,
-'w-full border-t',
- soft &&'border-zinc-950/5',
- !soft &&'border-zinc-950/10'
+ 'w-full border-t',
+ soft && 'border-zinc-950/5',
+ !soft && 'border-zinc-950/10'
  )}
  />
  )

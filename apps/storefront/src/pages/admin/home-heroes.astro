@@ -1,14 +1,14 @@
 ---
 export const prerender = false;
 
-import Badge from'../../components/Badge.astro';
-import Button from'../../components/Button.astro';
-import AdminLayout from'../../layouts/AdminLayout.astro';
-import { getApiBase } from'../../lib/api';
+import { Badge } from '../../components/catalyst/badge';
+import { Button } from '../../components/catalyst/button';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
-const status = Astro.url.searchParams.get('status') ||'all';
-const page = Number(Astro.url.searchParams.get('page') ||'1');
+const status = Astro.url.searchParams.get('status') || 'all';
+const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
 let heroes: any[] = [];
@@ -39,10 +39,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load hero sections. Please check your admin key.';
+		error = 'Failed to load hero sections. Please check your admin key.';
 	}
 } else {
-	error ='ADMIN_API_KEY is missing in server environment.';
+	error = 'ADMIN_API_KEY is missing in server environment.';
 }
 
 const hasNext = page < meta.totalPages;
@@ -56,7 +56,7 @@ const hasPrev = page > 1;
 				<h1 class="text-2xl font-semibold text-gray-900">Home Hero Sections</h1>
 				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
 			</div>
-			<Button href="/admin/home-heroes/new" size="sm" variant="primary">
+			<Button href="/admin/home-heroes/new" color="indigo" client:load>
 				+ New Hero Section
 			</Button>
 		</div>
@@ -65,25 +65,25 @@ const hasPrev = page > 1;
 		<div class="flex gap-2">
 			<a
 				href="?status=all"
-				class={`px-4 py-2 text-sm rounded-lg ${status ==='all' ?'bg-[#0071e3] text-white' :'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm rounded-lg ${status === 'all' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
 			>
 				All
 			</a>
 			<a
 				href="?status=active"
-				class={`px-4 py-2 text-sm rounded-lg ${status ==='active' ?'bg-[#0071e3] text-white' :'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm rounded-lg ${status === 'active' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
 			>
 				Active
 			</a>
 			<a
 				href="?status=draft"
-				class={`px-4 py-2 text-sm rounded-lg ${status ==='draft' ?'bg-[#0071e3] text-white' :'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm rounded-lg ${status === 'draft' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
 			>
 				Draft
 			</a>
 			<a
 				href="?status=archived"
-				class={`px-4 py-2 text-sm rounded-lg ${status ==='archived' ?'bg-[#0071e3] text-white' :'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm rounded-lg ${status === 'archived' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
 			>
 				Archived
 			</a>
@@ -122,12 +122,12 @@ const hasPrev = page > 1;
 										<div class="text-xs text-[#86868b] truncate max-w-xs">{hero.subtitle}</div>
 									</td>
 									<td class="px-6 py-4">
-										{hero.status ==='draft' ? (
-											<Badge severity="secondary">Draft</Badge>
-										) : hero.status ==='archived' ? (
-											<Badge severity="critical">Archived</Badge>
+										{hero.status === 'draft' ? (
+											<Badge color="zinc" client:load>Draft</Badge>
+										) : hero.status === 'archived' ? (
+											<Badge color="red" client:load>Archived</Badge>
 										) : (
-											<Badge severity="info">Active</Badge>
+											<Badge color="blue" client:load>Active</Badge>
 										)}
 									</td>
 									<td class="px-6 py-4 text-[#86868b] tabular-nums">
@@ -141,7 +141,7 @@ const hasPrev = page > 1;
 											>
 												Edit
 											</a>
-											{hero.status !=='archived' && (
+											{hero.status !== 'archived' && (
 												<button
 													data-id={hero.id}
 													data-action="archive"
@@ -150,7 +150,7 @@ const hasPrev = page > 1;
 													Archive
 												</button>
 											)}
-											{hero.status ==='archived' && (
+											{hero.status === 'archived' && (
 												<button
 													data-id={hero.id}
 													data-action="restore"
@@ -212,8 +212,8 @@ const hasPrev = page > 1;
 
 			try {
 				const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-					method:'DELETE',
-					headers: {'x-admin-key': adminKey }
+					method: 'DELETE',
+					headers: { 'x-admin-key': adminKey }
 				});
 
 				if (res.ok) {
@@ -222,7 +222,7 @@ const hasPrev = page > 1;
 					alert('Failed to archive hero section');
 				}
 			} catch (error) {
-				alert('Error:' + error.message);
+				alert('Error: ' + error.message);
 			}
 		});
 	});
@@ -233,8 +233,8 @@ const hasPrev = page > 1;
 
 			try {
 				const res = await fetch(`${apiBase}/admin/home/heroes/${id}/restore`, {
-					method:'POST',
-					headers: {'x-admin-key': adminKey }
+					method: 'POST',
+					headers: { 'x-admin-key': adminKey }
 				});
 
 				if (res.ok) {
@@ -243,7 +243,7 @@ const hasPrev = page > 1;
 					alert('Failed to restore hero section');
 				}
 			} catch (error) {
-				alert('Error:' + error.message);
+				alert('Error: ' + error.message);
 			}
 		});
 	});

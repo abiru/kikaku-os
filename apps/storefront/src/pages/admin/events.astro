@@ -1,17 +1,17 @@
 ---
 export const prerender = false;
 
-import AdminLayout from'../../layouts/AdminLayout.astro';
-import { Alert } from'../../components/catalyst/alert-banner';
-import { getApiBase } from'../../lib/api';
-import { Heading } from'../../components/catalyst/heading';
-import EventsTable from'../../components/admin/EventsTable';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Alert } from '../../components/catalyst/alert-banner';
+import { getApiBase } from '../../lib/api';
+import { Heading } from '../../components/catalyst/heading';
+import EventsTable from '../../components/admin/EventsTable';
 
 const apiBase = getApiBase();
-const page = Number(Astro.url.searchParams.get('page') ||'1');
+const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 50;
-const status = Astro.url.searchParams.get('status') ||'';
-const type = Astro.url.searchParams.get('type') ||'';
+const status = Astro.url.searchParams.get('status') || '';
+const type = Astro.url.searchParams.get('type') || '';
 
 let events: any[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
@@ -27,7 +27,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		if (type) query.set('type', type);
 
 		const res = await fetch(`${apiBase}/admin/stripe-events?${query}`, {
-			headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
+			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
 		});
 
 		if (!res.ok) throw new Error(`API Error: ${res.status}`);
@@ -37,21 +37,21 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load events.';
+		error = 'Failed to load events.';
 	}
 } else {
-	error ='ADMIN_API_KEY is missing.';
+	error = 'ADMIN_API_KEY is missing.';
 }
 
 const buildFilterUrl = (newStatus: string) => {
 	const params = new URLSearchParams();
-	params.set('page','1');
+	params.set('page', '1');
 	if (newStatus) params.set('status', newStatus);
 	if (type) params.set('type', type);
 	return `?${params}`;
 };
 
-const failedCount = events.filter(e => e.processing_status ==='failed').length;
+const failedCount = events.filter(e => e.processing_status === 'failed').length;
 ---
 
 <AdminLayout title="Stripe Events - Admin">
@@ -66,7 +66,7 @@ const failedCount = events.filter(e => e.processing_status ==='failed').length;
 					href={buildFilterUrl('')}
 					class:list={[
 						"px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-						!status ?"bg-indigo-600 text-white" :"bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
+						!status ? "bg-indigo-600 text-white" : "bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
 					]}
 				>
 					All
@@ -75,7 +75,7 @@ const failedCount = events.filter(e => e.processing_status ==='failed').length;
 					href={buildFilterUrl('completed')}
 					class:list={[
 						"px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-						status ==='completed' ?"bg-indigo-600 text-white" :"bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
+						status === 'completed' ? "bg-indigo-600 text-white" : "bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
 					]}
 				>
 					Completed
@@ -84,7 +84,7 @@ const failedCount = events.filter(e => e.processing_status ==='failed').length;
 					href={buildFilterUrl('pending')}
 					class:list={[
 						"px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-						status ==='pending' ?"bg-indigo-600 text-white" :"bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
+						status === 'pending' ? "bg-indigo-600 text-white" : "bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
 					]}
 				>
 					Pending
@@ -93,12 +93,12 @@ const failedCount = events.filter(e => e.processing_status ==='failed').length;
 					href={buildFilterUrl('failed')}
 					class:list={[
 						"px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2",
-						status ==='failed' ?"bg-red-600 text-white" :"bg-white border border-red-200 text-red-600 hover:bg-red-50"
+						status === 'failed' ? "bg-red-600 text-white" : "bg-white border border-red-200 text-red-600 hover:bg-red-50"
 					]}
 				>
 					Failed
-					{meta.totalCount > 0 && status !=='failed' && (
-						<span class="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">{failedCount > 0 ? failedCount :''}</span>
+					{meta.totalCount > 0 && status !== 'failed' && (
+						<span class="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">{failedCount > 0 ? failedCount : ''}</span>
 					)}
 				</a>
 			</Alert>

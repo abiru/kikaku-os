@@ -224,6 +224,86 @@ describe('Claude Client', () => {
     });
   });
 
+  describe('AI Gateway integration', () => {
+    it('should use direct API when no AI Gateway credentials provided', async () => {
+      const mockResponse = {
+        id: 'msg_123',
+        model: 'claude-sonnet-4-5-20250929',
+        content: [{ type: 'text', text: 'Hello' }],
+        usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+      };
+
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      await callClaudeAPI('test-api-key', {
+        messages: [{ role: 'user', content: 'Test' }],
+        max_tokens: 100,
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.anthropic.com/v1/messages',
+        expect.any(Object)
+      );
+    });
+
+    it('should use AI Gateway when credentials provided', async () => {
+      const mockResponse = {
+        id: 'msg_123',
+        model: 'claude-sonnet-4-5-20250929',
+        content: [{ type: 'text', text: 'Hello via Gateway' }],
+        usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+      };
+
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      await callClaudeAPI('test-api-key', {
+        messages: [{ role: 'user', content: 'Test' }],
+        max_tokens: 100,
+      }, {
+        AI_GATEWAY_ACCOUNT_ID: 'test-account-id',
+        AI_GATEWAY_ID: 'test-gateway-id',
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://gateway.ai.cloudflare.com/v1/test-account-id/test-gateway-id/anthropic/v1/messages',
+        expect.any(Object)
+      );
+    });
+
+    it('should fallback to direct API if only one AI Gateway credential provided', async () => {
+      const mockResponse = {
+        id: 'msg_123',
+        model: 'claude-sonnet-4-5-20250929',
+        content: [{ type: 'text', text: 'Fallback to direct' }],
+        usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+      };
+
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse,
+      });
+
+      await callClaudeAPI('test-api-key', {
+        messages: [{ role: 'user', content: 'Test' }],
+        max_tokens: 100,
+      }, {
+        AI_GATEWAY_ACCOUNT_ID: 'test-account-id',
+        // Missing AI_GATEWAY_ID
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.anthropic.com/v1/messages',
+        expect.any(Object)
+      );
+    });
+  });
+
   describe('estimateCost', () => {
     it('should estimate cost for token usage', () => {
       expect(estimateCost(1_000_000)).toBe(900); // $9 per 1M tokens

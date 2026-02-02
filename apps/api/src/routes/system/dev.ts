@@ -41,6 +41,15 @@ dev.get('/ping', (c) => {
   });
 });
 
+dev.get('/tmux-test', (c) => {
+  return jsonOk(c, {
+    name: 'tmux-test',
+    timestamp: new Date().toISOString(),
+    env: c.env.DEV_MODE === 'true' ? 'development' : 'production',
+    message: 'tmux automation test endpoint'
+  });
+});
+
 dev.post('/seed', async (c) => {
   if (c.env.DEV_MODE !== 'true') return jsonError(c, 'Not found', 404);
 

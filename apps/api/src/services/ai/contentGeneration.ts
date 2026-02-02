@@ -4,6 +4,8 @@ import { trackAIUsage, checkRateLimit } from './rateLimiter';
 type Bindings = {
   DB: D1Database;
   CLAUDE_API_KEY?: string;
+  AI_GATEWAY_ACCOUNT_ID?: string;
+  AI_GATEWAY_ID?: string;
 };
 
 export interface ContentGenerationRequest {
@@ -191,6 +193,9 @@ export async function generateContent(
     max_tokens: 2048,
     temperature: request.temperature || 0.7,
     system: systemPrompt || undefined,
+  }, {
+    AI_GATEWAY_ACCOUNT_ID: env.AI_GATEWAY_ACCOUNT_ID,
+    AI_GATEWAY_ID: env.AI_GATEWAY_ID,
   });
   const processingTime = Date.now() - startTime;
 

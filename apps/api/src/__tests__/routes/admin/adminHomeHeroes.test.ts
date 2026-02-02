@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import adminHomeHeroes from '../../../routes/admin/adminHomeHeroes';
 
+// Mock R2 functions
+vi.mock('../../../lib/r2', () => ({
+  putImage: vi.fn().mockResolvedValue(undefined),
+  deleteKey: vi.fn().mockResolvedValue(undefined)
+}));
+
 const ADMIN_KEY = 'test-admin-key';
 
 const createMockDb = (options: {
@@ -41,10 +47,11 @@ const createMockDb = (options: {
 const createApp = (db: ReturnType<typeof createMockDb>) => {
   const app = new Hono();
   app.route('/admin', adminHomeHeroes);
+  const mockR2 = {} as any; // Mock R2 bucket
   return {
     app,
     fetch: (path: string, init?: RequestInit) =>
-      app.request(path, init, { DB: db, ADMIN_API_KEY: ADMIN_KEY } as any)
+      app.request(path, init, { DB: db, ADMIN_API_KEY: ADMIN_KEY, R2: mockR2 } as any)
   };
 };
 
@@ -351,6 +358,53 @@ describe('Admin Home Heroes API', () => {
       expect(res.status).toBe(200);
       expect(json.ok).toBe(true);
     });
+
+    it('handles empty strings by converting to null', async () => {
+      const db = createMockDb({ hero: { id: 1 }, checkHero: { id: 1 } });
+      const { fetch } = createApp(db);
+
+      // Simulates form submission with empty string fields
+      const res = await fetch('/admin/home/heroes/1', {
+        method: 'PUT',
+        headers: {
+          'x-admin-key': ADMIN_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: 'Updated Title',
+          subtitle: '',  // Empty string should be converted to null
+          image_r2_key: '',
+          image_r2_key_small: '',
+          cta_primary_text: '',
+          cta_primary_url: '',
+          cta_secondary_text: '',
+          cta_secondary_url: ''
+        })
+      });
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.ok).toBe(true);
+      expect(json.message).toContain('updated');
+    });
+
+    it('rejects empty title string', async () => {
+      const db = createMockDb({ hero: { id: 1 }, checkHero: { id: 1 } });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/admin/home/heroes/1', {
+        method: 'PUT',
+        headers: {
+          'x-admin-key': ADMIN_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: ''  // Empty title should be rejected
+        })
+      });
+
+      expect(res.status).toBe(400);
+    });
   });
 
   describe('DELETE /admin/home/heroes/:id', () => {
@@ -435,6 +489,103 @@ describe('Admin Home Heroes API', () => {
 
       expect(res.status).toBe(200);
       expect(json.ok).toBe(true);
+    });
+  });
+
+  describe('POST /admin/home/heroes/:id/image', () => {
+    it('uploads hero image successfully', async () => {
+      const db = createMockDb({ hero: { id: 1 } });
+      const { fetch } = createApp(db);
+
+      // Create a mock File
+      const mockFile = new File(['test image content'], 'hero.jpg', { type: 'image/jpeg' });
+      const formData = new FormData();
+      formData.append('image', mockFile);
+      formData.append('imageType', 'main');
+
+      const res = await fetch('/admin/home/heroes/1/image', {
+        method: 'POST',
+        headers: {
+          'x-admin-key': ADMIN_KEY
+        },
+        body: formData
+      });
+
+      expect(res.status).toBe(200);
+    });
+
+    it('rejects invalid image type', async () => {
+      const db = createMockDb({ hero: { id: 1 } });
+      const { fetch } = createApp(db);
+
+      const mockFile = new File(['test'], 'test.txt', { type: 'text/plain' });
+      const formData = new FormData();
+      formData.append('image', mockFile);
+      formData.append('imageType', 'main');
+
+      const res = await fetch('/admin/home/heroes/1/image', {
+        method: 'POST',
+        headers: {
+          'x-admin-key': ADMIN_KEY
+        },
+        body: formData
+      });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects missing imageType', async () => {
+      const db = createMockDb({ hero: { id: 1 } });
+      const { fetch } = createApp(db);
+
+      const mockFile = new File(['test image'], 'hero.jpg', { type: 'image/jpeg' });
+      const formData = new FormData();
+      formData.append('image', mockFile);
+      // Missing imageType
+
+      const res = await fetch('/admin/home/heroes/1/image', {
+        method: 'POST',
+        headers: {
+          'x-admin-key': ADMIN_KEY
+        },
+        body: formData
+      });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('DELETE /admin/home/heroes/:id/image/:type', () => {
+    it('deletes hero image successfully', async () => {
+      const db = createMockDb({
+        hero: { id: 1, r2_key: 'home-heroes/1/main-123.jpg' }
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/admin/home/heroes/1/image/main', {
+        method: 'DELETE',
+        headers: {
+          'x-admin-key': ADMIN_KEY
+        }
+      });
+
+      expect(res.status).toBe(200);
+    });
+
+    it('returns 404 when no image to delete', async () => {
+      const db = createMockDb({
+        hero: { id: 1, r2_key: null }
+      });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/admin/home/heroes/1/image/main', {
+        method: 'DELETE',
+        headers: {
+          'x-admin-key': ADMIN_KEY
+        }
+      });
+
+      expect(res.status).toBe(404);
     });
   });
 });

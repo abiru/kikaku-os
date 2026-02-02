@@ -1,9 +1,7 @@
 'use client'
-
-import * as Headless from'@headlessui/react'
-import React, { useState } from'react'
-import { NavbarItem } from'./navbar'
-
+import * as Headless from '@headlessui/react'
+import React, { useState } from 'react'
+import { NavbarItem } from './navbar'
 function OpenMenuIcon() {
  return (
  <svg data-slot="icon" viewBox="0 0 20 20" aria-hidden="true">
@@ -11,7 +9,6 @@ function OpenMenuIcon() {
  </svg>
  )
 }
-
 function CloseMenuIcon() {
  return (
  <svg data-slot="icon" viewBox="0 0 20 20" aria-hidden="true">
@@ -19,7 +16,6 @@ function CloseMenuIcon() {
  </svg>
  )
 }
-
 function MobileSidebar({ open, close, children }: React.PropsWithChildren<{ open: boolean; close: () => void }>) {
  return (
  <Headless.Dialog open={open} onClose={close} className="lg:hidden">
@@ -43,21 +39,18 @@ function MobileSidebar({ open, close, children }: React.PropsWithChildren<{ open
  </Headless.Dialog>
  )
 }
-
 export function StackedLayout({
  navbar,
  sidebar,
  children,
 }: React.PropsWithChildren<{ navbar: React.ReactNode; sidebar: React.ReactNode }>) {
  let [showSidebar, setShowSidebar] = useState(false)
-
  return (
  <div className="relative isolate flex min-h-svh w-full flex-col bg-white lg:bg-zinc-100">
  {/* Sidebar on mobile */}
  <MobileSidebar open={showSidebar} close={() => setShowSidebar(false)}>
  {sidebar}
  </MobileSidebar>
-
  {/* Navbar */}
  <header className="flex items-center px-4">
  <div className="py-2.5 lg:hidden">
@@ -67,7 +60,6 @@ export function StackedLayout({
  </div>
  <div className="min-w-0 flex-1">{navbar}</div>
  </header>
-
  {/* Content */}
  <main className="flex flex-1 flex-col pb-2 lg:px-2">
  <div className="grow p-6 lg:rounded-lg lg:bg-white lg:p-10 lg:shadow-xs lg:ring-1 lg:ring-zinc-950/5">

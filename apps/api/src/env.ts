@@ -1,7 +1,14 @@
+// Cloudflare Browser Rendering binding type
+// Uses the Fetcher interface from Cloudflare Workers
+interface BrowserWorker {
+  fetch: typeof fetch;
+}
+
 export type Env = {
   Bindings: {
     DB: D1Database;
     R2: R2Bucket;
+    BROWSER?: BrowserWorker;
     ADMIN_API_KEY?: string;
     DEV_MODE: string;
     STRIPE_API_KEY: string;
