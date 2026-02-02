@@ -317,7 +317,7 @@ const canDelete = page && !isCorePage;
 								id="body"
 								name="body"
 								rows={20}
-								placeholder="# Heading 1
+								placeholder={`# Heading 1
 
 ## Heading 2
 
@@ -330,9 +330,9 @@ const canDelete = page && !isCorePage;
 
 > Blockquote
 
-```
+\`\`\`
 Code block
-```"
+\`\`\``}
 								class="font-mono resize-y"
 								client:load
 							>{page.body}</Textarea>
