@@ -3,7 +3,7 @@ export const prerender = false;
 
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import { Badge } from '../../../components/catalyst/badge';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
@@ -221,6 +221,7 @@ if (Astro.request.method === 'POST' && hero) {
 
 		{hero ? (
 			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+				<Fieldset client:load>
 				{/* Title */}
 				<Field>
 					<Label>
@@ -339,6 +340,7 @@ if (Astro.request.method === 'POST' && hero) {
 						Cancel
 					</Button>
 				</div>
+				</Fieldset>
 			</form>
 		) : (
 			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-12 text-center">
