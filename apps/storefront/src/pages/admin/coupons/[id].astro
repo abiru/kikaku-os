@@ -254,7 +254,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 									name="code"
 									required
 									value={coupon.code}
-									class="font-mono uppercase"
+									className="font-mono uppercase"
 									client:load
 								/>
 							</Field>
@@ -285,7 +285,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 								required
 								min="1"
 								value={coupon.value}
-								class="tabular-nums"
+								className="tabular-nums"
 								client:load
 							/>
 						</Field>
@@ -298,7 +298,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 								name="min_order_amount"
 								min="0"
 								value={coupon.min_order_amount}
-								class="tabular-nums"
+								className="tabular-nums"
 								client:load
 							/>
 						</Field>
@@ -311,7 +311,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 								name="max_uses"
 								min="1"
 								value={coupon.max_uses || ''}
-								class="tabular-nums"
+								className="tabular-nums"
 								placeholder="Unlimited"
 								client:load
 							/>
@@ -325,7 +325,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 								name="uses_per_customer"
 								min="1"
 								value={coupon.uses_per_customer}
-								class="tabular-nums"
+								className="tabular-nums"
 								client:load
 							/>
 						</Field>

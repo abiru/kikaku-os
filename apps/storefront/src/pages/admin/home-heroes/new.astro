@@ -94,7 +94,7 @@ if (Astro.request.method === 'POST') {
 					id="title"
 					name="title"
 					required
-					maxlength="255"
+					maxLength={255}
 					placeholder="スペシャルなギフト。お急ぎください。"
 					client:load
 				/>
@@ -107,7 +107,7 @@ if (Astro.request.method === 'POST') {
 					type="text"
 					id="subtitle"
 					name="subtitle"
-					maxlength="500"
+					maxLength={500}
 					placeholder="魔法みたいな瞬間をあの人に届けましょう。"
 					client:load
 				/>
@@ -121,7 +121,7 @@ if (Astro.request.method === 'POST') {
 						type="text"
 						id="cta_primary_text"
 						name="cta_primary_text"
-						maxlength="100"
+						maxLength={100}
 						placeholder="商品を見る"
 						client:load
 					/>
@@ -132,7 +132,7 @@ if (Astro.request.method === 'POST') {
 						type="text"
 						id="cta_primary_url"
 						name="cta_primary_url"
-						maxlength="500"
+						maxLength={500}
 						placeholder="/products"
 						client:load
 					/>
@@ -147,7 +147,7 @@ if (Astro.request.method === 'POST') {
 						type="text"
 						id="cta_secondary_text"
 						name="cta_secondary_text"
-						maxlength="100"
+						maxLength={100}
 						placeholder="カートに追加"
 						client:load
 					/>
@@ -158,7 +158,7 @@ if (Astro.request.method === 'POST') {
 						type="text"
 						id="cta_secondary_url"
 						name="cta_secondary_url"
-						maxlength="500"
+						maxLength={500}
 						placeholder="/cart"
 						client:load
 					/>

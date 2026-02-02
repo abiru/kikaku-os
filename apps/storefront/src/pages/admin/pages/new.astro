@@ -134,7 +134,7 @@ if (!apiKey) {
 										required
 										placeholder="page-slug"
 										pattern="^[a-z0-9-]+$"
-										class="flex-1 font-mono"
+										className="flex-1 font-mono"
 										client:load
 									/>
 								</div>
@@ -168,7 +168,7 @@ if (!apiKey) {
 								id="meta_title"
 								name="meta_title"
 								placeholder="Page Title - Site Name"
-								maxlength="255"
+								maxLength={255}
 								client:load
 							/>
 							<Description>Used as the browser tab title and in search results</Description>
@@ -180,7 +180,7 @@ if (!apiKey) {
 								id="meta_description"
 								name="meta_description"
 								rows={2}
-								maxlength="500"
+								maxLength={500}
 								placeholder="Brief description of the page content..."
 								client:load
 							/>
@@ -224,7 +224,7 @@ if (!apiKey) {
 \`\`\`
 Code block
 \`\`\``}
-								class="font-mono resize-y"
+								className="font-mono resize-y"
 								client:load
 							/>
 							<Description>

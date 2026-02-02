@@ -140,7 +140,7 @@ if (Astro.request.method === 'POST' && hero) {
 						name="title"
 						value={hero.title}
 						required
-						maxlength="255"
+						maxLength={255}
 						client:load
 					/>
 				</Field>
@@ -153,7 +153,7 @@ if (Astro.request.method === 'POST' && hero) {
 						id="subtitle"
 						name="subtitle"
 						value={hero.subtitle || ''}
-						maxlength="500"
+						maxLength={500}
 						client:load
 					/>
 				</Field>
@@ -167,7 +167,7 @@ if (Astro.request.method === 'POST' && hero) {
 							id="cta_primary_text"
 							name="cta_primary_text"
 							value={hero.cta_primary_text || ''}
-							maxlength="100"
+							maxLength={100}
 							client:load
 						/>
 					</Field>
@@ -178,7 +178,7 @@ if (Astro.request.method === 'POST' && hero) {
 							id="cta_primary_url"
 							name="cta_primary_url"
 							value={hero.cta_primary_url || ''}
-							maxlength="500"
+							maxLength={500}
 							client:load
 						/>
 					</Field>
@@ -193,7 +193,7 @@ if (Astro.request.method === 'POST' && hero) {
 							id="cta_secondary_text"
 							name="cta_secondary_text"
 							value={hero.cta_secondary_text || ''}
-							maxlength="100"
+							maxLength={100}
 							client:load
 						/>
 					</Field>
@@ -204,7 +204,7 @@ if (Astro.request.method === 'POST' && hero) {
 							id="cta_secondary_url"
 							name="cta_secondary_url"
 							value={hero.cta_secondary_url || ''}
-							maxlength="500"
+							maxLength={500}
 							client:load
 						/>
 					</Field>

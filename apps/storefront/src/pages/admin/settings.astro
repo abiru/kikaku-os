@@ -130,7 +130,7 @@ const getInputType = (dataType: string) => {
   }
 };
 
-const formatValue = (value: string, dataType: string): boolean | string => {
+const formatValue = (value: string, dataType: string): string | boolean => {
   if (dataType === 'boolean') {
     return ['true', '1'].includes(value.toLowerCase());
   }
