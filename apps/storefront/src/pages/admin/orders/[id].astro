@@ -10,7 +10,7 @@ import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Field, Label } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -376,6 +376,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<p class="text-sm text-[#86868b] mt-1">Order #{id}</p>
 					</div>
 					<form id="create-fulfillment-form" class="p-6 space-y-4">
+						<Fieldset client:load>
 						<Field>
 							<Label htmlFor="create-status">Status</Label>
 							<Select client:load id="create-status" name="status">
@@ -395,6 +396,8 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								placeholder="Optional tracking number"
 							/>
 						</Field>
+
+						</Fieldset>
 
 						<div id="create-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 
@@ -427,6 +430,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<form id="edit-fulfillment-form" class="p-6 space-y-4">
 						<input type="hidden" id="edit-fulfillment-id" name="fulfillmentId" />
 
+						<Fieldset client:load>
 						<Field>
 							<Label htmlFor="edit-status">Status</Label>
 							<Select client:load id="edit-status" name="status">
@@ -447,6 +451,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								placeholder="Optional tracking number"
 							/>
 						</Field>
+						</Fieldset>
 
 						<div id="edit-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 
