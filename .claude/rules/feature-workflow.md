@@ -4,6 +4,12 @@
 
 When the user requests ANY new feature, enhancement, or significant change, you MUST automatically guide them through the standardized 7-step workflow.
 
+**CRITICAL EXECUTION RULE**:
+- You MUST use the Bash tool to actually execute commands at each step
+- Do NOT just provide instructions or documentation
+- EXECUTE the actual git, pnpm, gh, and tmux commands using Bash tool
+- Verify each command succeeded before proceeding to next step
+
 ## Automatic Detection and Enforcement
 
 ### Trigger Patterns (Auto-invoke `/feature`)
