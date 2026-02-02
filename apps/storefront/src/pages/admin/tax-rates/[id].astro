@@ -222,12 +222,15 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 
 						<div class="md:col-span-2">
 							<Field>
-								<Checkbox client:load
-									name="is_active"
-									value="true"
-									checked={taxRate.is_active === 1}
-								/>
-								<Label htmlFor="is_active">Active</Label>
+								<div class="flex items-center gap-2">
+									<Checkbox client:load
+										id="is_active"
+										name="is_active"
+										value="true"
+										checked={taxRate.is_active === 1}
+									/>
+									<label for="is_active" class="text-base/6 text-zinc-950 select-none sm:text-sm/6">Active</label>
+								</div>
 							</Field>
 						</div>
 					</div>
