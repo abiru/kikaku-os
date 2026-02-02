@@ -5,24 +5,40 @@ import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { validationErrorHandler } from '../../lib/validation';
+import { putImage, deleteKey } from '../../lib/r2';
 
 const app = new Hono<Env>();
+
+// Helper to transform empty strings to null
+const emptyStringToNull = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((val) => (val === '' ? null : val), schema);
 
 // Validation schemas
 const createHeroSchema = z.object({
   title: z.string().min(1).max(255),
-  subtitle: z.string().max(500).optional(),
-  image_r2_key: z.string().max(500).optional(),
-  image_r2_key_small: z.string().max(500).optional(),
-  cta_primary_text: z.string().max(100).optional(),
-  cta_primary_url: z.string().max(500).optional(),
-  cta_secondary_text: z.string().max(100).optional(),
-  cta_secondary_url: z.string().max(500).optional(),
+  subtitle: emptyStringToNull(z.string().max(500).nullable().optional()),
+  image_r2_key: emptyStringToNull(z.string().max(500).nullable().optional()),
+  image_r2_key_small: emptyStringToNull(z.string().max(500).nullable().optional()),
+  cta_primary_text: emptyStringToNull(z.string().max(100).nullable().optional()),
+  cta_primary_url: emptyStringToNull(z.string().max(500).nullable().optional()),
+  cta_secondary_text: emptyStringToNull(z.string().max(100).nullable().optional()),
+  cta_secondary_url: emptyStringToNull(z.string().max(500).nullable().optional()),
   position: z.number().int().min(0).default(0),
   status: z.enum(['active', 'draft', 'archived']).default('active')
 });
 
-const updateHeroSchema = createHeroSchema.partial();
+const updateHeroSchema = z.object({
+  title: z.string().min(1).max(255).optional(),
+  subtitle: emptyStringToNull(z.string().max(500).nullable().optional()),
+  image_r2_key: emptyStringToNull(z.string().max(500).nullable().optional()),
+  image_r2_key_small: emptyStringToNull(z.string().max(500).nullable().optional()),
+  cta_primary_text: emptyStringToNull(z.string().max(100).nullable().optional()),
+  cta_primary_url: emptyStringToNull(z.string().max(500).nullable().optional()),
+  cta_secondary_text: emptyStringToNull(z.string().max(100).nullable().optional()),
+  cta_secondary_url: emptyStringToNull(z.string().max(500).nullable().optional()),
+  position: z.number().int().min(0).optional(),
+  status: z.enum(['active', 'draft', 'archived']).optional()
+});
 
 const heroIdParamSchema = z.object({
   id: z.string().transform(Number).pipe(z.number().int().positive())
@@ -33,6 +49,20 @@ const heroListQuerySchema = z.object({
   page: z.string().optional().default('1').transform(Number).pipe(z.number().int().positive()),
   perPage: z.string().optional().default('20').transform(Number).pipe(z.number().int().positive().max(100))
 });
+
+// Image upload constants
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+const getExtensionFromContentType = (contentType: string): string => {
+  const map: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+  };
+  return map[contentType] || 'bin';
+};
 
 // GET /home/heroes - List hero sections
 app.get(
@@ -356,6 +386,132 @@ app.post(
     } catch (e) {
       console.error(e);
       return jsonError(c, 'Failed to restore hero section');
+    }
+  }
+);
+
+// POST /home/heroes/:id/image - Upload hero image
+app.post(
+  '/home/heroes/:id/image',
+  zValidator('param', heroIdParamSchema, validationErrorHandler),
+  async (c) => {
+    const { id } = c.req.valid('param');
+
+    try {
+      // Check if hero exists
+      const hero = await c.env.DB.prepare('SELECT id FROM home_hero_sections WHERE id = ?')
+        .bind(id)
+        .first();
+
+      if (!hero) {
+        return jsonError(c, 'Hero section not found', 404);
+      }
+
+      const formData = await c.req.formData();
+      const file = formData.get('image');
+      const imageType = formData.get('imageType') as 'main' | 'small'; // 'main' or 'small'
+
+      if (!file || !(file instanceof File)) {
+        return jsonError(c, 'No image file provided', 400);
+      }
+
+      if (!imageType || !['main', 'small'].includes(imageType)) {
+        return jsonError(c, 'Invalid imageType. Must be "main" or "small"', 400);
+      }
+
+      // Validate file type
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        return jsonError(c, `Invalid file type. Allowed: ${ALLOWED_IMAGE_TYPES.join(', ')}`, 400);
+      }
+
+      // Validate file size
+      if (file.size > MAX_IMAGE_SIZE) {
+        return jsonError(c, `File too large. Maximum size: ${MAX_IMAGE_SIZE / 1024 / 1024}MB`, 400);
+      }
+
+      // Generate R2 key
+      const ext = getExtensionFromContentType(file.type);
+      const timestamp = Date.now();
+      const r2Key = `home-heroes/${id}/${imageType}-${timestamp}.${ext}`;
+
+      // Upload to R2
+      const buffer = await file.arrayBuffer();
+      await putImage(c.env.R2, r2Key, buffer, file.type);
+
+      // Update database
+      const fieldName = imageType === 'main' ? 'image_r2_key' : 'image_r2_key_small';
+      await c.env.DB.prepare(`
+        UPDATE home_hero_sections
+        SET ${fieldName} = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(r2Key, id).run();
+
+      // Audit log
+      await c.env.DB.prepare(
+        'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
+      ).bind(
+        getActor(c),
+        'upload_home_hero_image',
+        `home_hero_${id}`,
+        JSON.stringify({ id, imageType, r2Key, size: file.size, contentType: file.type })
+      ).run();
+
+      return jsonOk(c, { r2Key, message: 'Image uploaded successfully' });
+    } catch (e) {
+      console.error(e);
+      return jsonError(c, 'Failed to upload image');
+    }
+  }
+);
+
+// DELETE /home/heroes/:id/image/:type - Delete hero image
+app.delete(
+  '/home/heroes/:id/image/:type',
+  zValidator('param', z.object({
+    id: z.string().transform(Number).pipe(z.number().int().positive()),
+    type: z.enum(['main', 'small'])
+  }), validationErrorHandler),
+  async (c) => {
+    const { id, type } = c.req.valid('param');
+
+    try {
+      const fieldName = type === 'main' ? 'image_r2_key' : 'image_r2_key_small';
+      const hero = await c.env.DB.prepare(`
+        SELECT ${fieldName} as r2_key FROM home_hero_sections WHERE id = ?
+      `).bind(id).first<{ r2_key: string | null }>();
+
+      if (!hero) {
+        return jsonError(c, 'Hero section not found', 404);
+      }
+
+      if (!hero.r2_key) {
+        return jsonError(c, 'No image to delete', 404);
+      }
+
+      // Delete from R2
+      await deleteKey(c.env.R2, hero.r2_key);
+
+      // Update database
+      await c.env.DB.prepare(`
+        UPDATE home_hero_sections
+        SET ${fieldName} = NULL, updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(id).run();
+
+      // Audit log
+      await c.env.DB.prepare(
+        'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
+      ).bind(
+        getActor(c),
+        'delete_home_hero_image',
+        `home_hero_${id}`,
+        JSON.stringify({ id, type, r2Key: hero.r2_key })
+      ).run();
+
+      return jsonOk(c, { message: 'Image deleted successfully' });
+    } catch (e) {
+      console.error(e);
+      return jsonError(c, 'Failed to delete image');
     }
   }
 );
