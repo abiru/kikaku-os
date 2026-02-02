@@ -12,6 +12,10 @@ binding = "BROWSER"
 # Uncomment for local development testing:
 # remote = true
 
+# Cloudflare Workers AI binding
+[ai]
+binding = "AI"
+
 triggers = { crons = ["0 16 * * *"] }
 
 [observability]

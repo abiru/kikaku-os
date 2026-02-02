@@ -4,11 +4,32 @@ interface BrowserWorker {
   fetch: typeof fetch;
 }
 
+// Cloudflare Workers AI binding type
+export interface Ai {
+  run<T = unknown>(
+    model: string,
+    inputs: AiTextGenerationInput | AiEmbeddingsInput
+  ): Promise<T>;
+}
+
+// Workers AI input types
+export interface AiTextGenerationInput {
+  prompt?: string;
+  messages?: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  max_tokens?: number;
+  temperature?: number;
+}
+
+export interface AiEmbeddingsInput {
+  text: string | string[];
+}
+
 export type Env = {
   Bindings: {
     DB: D1Database;
     R2: R2Bucket;
     BROWSER?: BrowserWorker;
+    AI?: Ai;
     ADMIN_API_KEY?: string;
     DEV_MODE: string;
     STRIPE_API_KEY: string;
@@ -23,6 +44,8 @@ export type Env = {
     RESEND_FROM_EMAIL?: string;
     CLERK_SECRET_KEY: string;
     CLAUDE_API_KEY?: string;
+    AI_GATEWAY_ACCOUNT_ID?: string;
+    AI_GATEWAY_ID?: string;
     COMPANY_NAME?: string;
     COMPANY_POSTAL_CODE?: string;
     COMPANY_ADDRESS?: string;

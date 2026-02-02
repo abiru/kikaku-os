@@ -1,8 +1,17 @@
 import { callClaudeAPI, type ClaudeMessage } from './claudeClient';
 import { trackAIUsage, checkRateLimit } from './rateLimiter';
+import {
+  selectModel,
+  AITaskType,
+  AIProvider,
+  type AIBindings,
+} from './modelRouter';
+import { callLlamaForJSON, estimateTokens } from './workersAIClient';
+import type { Ai } from '../../env';
 
 type Bindings = {
   DB: D1Database;
+  AI?: Ai;
   CLAUDE_API_KEY?: string;
   AI_GATEWAY_ACCOUNT_ID?: string;
   AI_GATEWAY_ID?: string;
@@ -15,90 +24,235 @@ export interface InboxTriageResult {
 }
 
 /**
+ * Extended triage result with provider info for tracking
+ */
+interface TriageResultWithMeta extends InboxTriageResult {
+  provider: AIProvider;
+  model: string;
+  tokens: number;
+  processingTimeMs: number;
+}
+
+/**
+ * Build optimized prompt for triage (works with both Llama and Claude)
+ * Simpler format for lightweight models
+ */
+function buildTriagePrompt(item: {
+  title: string;
+  body: string | null;
+  severity: string;
+  kind: string | null;
+  date: string | null;
+}): string {
+  return `Classify this inbox item priority. Respond ONLY with valid JSON.
+
+Item:
+- Title: ${item.title}
+- Content: ${item.body || 'None'}
+- Current Severity: ${item.severity}
+- Type: ${item.kind || 'Unclassified'}
+- Date: ${item.date || 'Not specified'}
+
+Classification rules:
+- "urgent": Immediate action needed (system failure, payment issues, customer complaints)
+- "normal": Handle in regular workflow (daily reports, inventory alerts)
+- "low": Low priority (informational, minor notifications)
+
+Respond with this exact JSON format:
+{"classification":"urgent|normal|low","suggestedAction":"next action (max 50 chars)","reasoning":"why (max 100 chars)"}`;
+}
+
+/**
+ * Triage using Workers AI (Llama 3.1)
+ */
+async function triageWithWorkersAI(
+  ai: Ai,
+  prompt: string
+): Promise<{ result: InboxTriageResult; tokens: number; rawText: string }> {
+  const { data, rawText } = await callLlamaForJSON<InboxTriageResult>(
+    ai,
+    prompt,
+    {
+      maxTokens: 256,
+      temperature: 0.2,
+      systemPrompt:
+        'You are a customer support priority classifier. Output only valid JSON.',
+    }
+  );
+
+  // Validate and normalize classification
+  const validClassifications = ['urgent', 'normal', 'low'] as const;
+  const normalizedClassification = validClassifications.includes(
+    data.classification as (typeof validClassifications)[number]
+  )
+    ? data.classification
+    : 'normal';
+
+  return {
+    result: {
+      classification: normalizedClassification,
+      suggestedAction: String(data.suggestedAction || '').slice(0, 50),
+      reasoning: String(data.reasoning || '').slice(0, 100),
+    },
+    tokens: estimateTokens(prompt) + estimateTokens(rawText),
+    rawText,
+  };
+}
+
+/**
+ * Triage using Claude API (fallback for high-quality results)
+ */
+async function triageWithClaude(
+  apiKey: string,
+  prompt: string,
+  gatewayConfig?: { AI_GATEWAY_ACCOUNT_ID?: string; AI_GATEWAY_ID?: string }
+): Promise<{ result: InboxTriageResult; tokens: number; rawText: string }> {
+  const messages: ClaudeMessage[] = [{ role: 'user', content: prompt }];
+
+  const response = await callClaudeAPI(
+    apiKey,
+    {
+      messages,
+      max_tokens: 512,
+      temperature: 0.3,
+    },
+    gatewayConfig
+  );
+
+  const rawText = response.content[0]?.text || '';
+
+  // Parse JSON response
+  const jsonMatch =
+    rawText.match(/```json\n?([\s\S]*?)\n?```/) ||
+    rawText.match(/```\n?([\s\S]*?)\n?```/);
+  const jsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
+  const data = JSON.parse(jsonText) as InboxTriageResult;
+
+  return {
+    result: {
+      classification: data.classification,
+      suggestedAction: String(data.suggestedAction || '').slice(0, 50),
+      reasoning: String(data.reasoning || '').slice(0, 100),
+    },
+    tokens: response.usage.total_tokens,
+    rawText,
+  };
+}
+
+/**
  * Automatically triage inbox items using AI
+ * Uses Workers AI (Llama 3.1) as primary, falls back to Claude on error
  */
 export async function triageInboxItem(
   env: Bindings,
   inboxItemId: number
 ): Promise<InboxTriageResult> {
-  const { DB, CLAUDE_API_KEY } = env;
+  const { DB } = env;
 
-  if (!CLAUDE_API_KEY) {
-    throw new Error('CLAUDE_API_KEY not configured');
-  }
+  // Select model based on available providers
+  const aiBindings: AIBindings = {
+    AI: env.AI,
+    CLAUDE_API_KEY: env.CLAUDE_API_KEY,
+    AI_GATEWAY_ACCOUNT_ID: env.AI_GATEWAY_ACCOUNT_ID,
+    AI_GATEWAY_ID: env.AI_GATEWAY_ID,
+  };
 
-  // Check rate limit
-  const rateCheck = await checkRateLimit(DB, 'claude', 'inbox_triage');
+  const modelSelection = selectModel(AITaskType.TRIAGE, aiBindings);
+
+  // Check rate limit for the selected provider
+  const providerKey =
+    modelSelection.provider === AIProvider.WORKERS_AI ? 'workers_ai' : 'claude';
+  const rateCheck = await checkRateLimit(DB, providerKey, 'inbox_triage');
   if (!rateCheck.allowed) {
-    throw new Error(`Rate limit exceeded. ${rateCheck.remaining}/${rateCheck.limit} remaining.`);
+    throw new Error(
+      `Rate limit exceeded. ${rateCheck.remaining}/${rateCheck.limit} remaining.`
+    );
   }
 
   // Fetch inbox item
   const item = await DB.prepare(
     `SELECT id, title, body, severity, kind, date, metadata FROM inbox_items WHERE id = ?`
-  ).bind(inboxItemId).first<{
-    id: number;
-    title: string;
-    body: string | null;
-    severity: string;
-    kind: string | null;
-    date: string | null;
-    metadata: string | null;
-  }>();
+  )
+    .bind(inboxItemId)
+    .first<{
+      id: number;
+      title: string;
+      body: string | null;
+      severity: string;
+      kind: string | null;
+      date: string | null;
+      metadata: string | null;
+    }>();
 
   if (!item) {
     throw new Error('Inbox item not found');
   }
 
-  // Build triage prompt
-  const prompt = `あなたは経験豊富なカスタマーサポートマネージャーです。以下のInbox項目を分析し、優先度を判定してください。
-
-**Inbox項目:**
-- タイトル: ${item.title}
-- 内容: ${item.body || 'なし'}
-- 現在の深刻度: ${item.severity}
-- 種類: ${item.kind || '未分類'}
-- 日付: ${item.date || '未指定'}
-
-**判定基準:**
-- urgent: 即座の対応が必要（システム障害、支払い問題、顧客クレーム）
-- normal: 通常の業務フロー内で対応（日次レポート、在庫アラート）
-- low: 優先度が低い（情報提供、軽微な通知）
-
-JSON形式で出力してください:
-{
-  "classification": "urgent" | "normal" | "low",
-  "suggestedAction": "推奨される次のアクション（50文字以内）",
-  "reasoning": "判定理由（100文字以内）"
-}`;
-
-  const messages: ClaudeMessage[] = [
-    { role: 'user', content: prompt }
-  ];
-
-  // Call Claude API
+  const prompt = buildTriagePrompt(item);
   const startTime = Date.now();
-  const response = await callClaudeAPI(CLAUDE_API_KEY, {
-    messages,
-    max_tokens: 512,
-    temperature: 0.3, // Lower temperature for more consistent classification
-  }, {
-    AI_GATEWAY_ACCOUNT_ID: env.AI_GATEWAY_ACCOUNT_ID,
-    AI_GATEWAY_ID: env.AI_GATEWAY_ID,
-  });
-  const processingTime = Date.now() - startTime;
 
-  const rawText = response.content[0]?.text || '';
+  let triageResult: TriageResultWithMeta;
 
-  // Parse JSON response
-  let result: InboxTriageResult;
-  try {
-    const jsonMatch = rawText.match(/```json\n?([\s\S]*?)\n?```/) || rawText.match(/```\n?([\s\S]*?)\n?```/);
-    const jsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
-    result = JSON.parse(jsonText) as InboxTriageResult;
-  } catch (parseErr) {
-    console.error('Failed to parse triage result:', parseErr);
-    throw new Error(`Failed to parse AI response: ${(parseErr as Error).message}`);
+  // Try primary provider first
+  if (
+    modelSelection.provider === AIProvider.WORKERS_AI &&
+    env.AI
+  ) {
+    try {
+      const { result, tokens } = await triageWithWorkersAI(
+        env.AI,
+        prompt
+      );
+      triageResult = {
+        ...result,
+        provider: AIProvider.WORKERS_AI,
+        model: modelSelection.model,
+        tokens,
+        processingTimeMs: Date.now() - startTime,
+      };
+    } catch (error) {
+      console.error('Workers AI triage failed, attempting fallback:', error);
+
+      // Fallback to Claude if available
+      if (modelSelection.canFallback && env.CLAUDE_API_KEY) {
+        const { result, tokens } = await triageWithClaude(
+          env.CLAUDE_API_KEY,
+          prompt,
+          {
+            AI_GATEWAY_ACCOUNT_ID: env.AI_GATEWAY_ACCOUNT_ID,
+            AI_GATEWAY_ID: env.AI_GATEWAY_ID,
+          }
+        );
+        triageResult = {
+          ...result,
+          provider: AIProvider.CLAUDE,
+          model: modelSelection.fallbackModel || 'claude-sonnet',
+          tokens,
+          processingTimeMs: Date.now() - startTime,
+        };
+      } else {
+        throw error;
+      }
+    }
+  } else if (env.CLAUDE_API_KEY) {
+    // Use Claude directly
+    const { result, tokens } = await triageWithClaude(
+      env.CLAUDE_API_KEY,
+      prompt,
+      {
+        AI_GATEWAY_ACCOUNT_ID: env.AI_GATEWAY_ACCOUNT_ID,
+        AI_GATEWAY_ID: env.AI_GATEWAY_ID,
+      }
+    );
+    triageResult = {
+      ...result,
+      provider: AIProvider.CLAUDE,
+      model: modelSelection.model,
+      tokens,
+      processingTimeMs: Date.now() - startTime,
+    };
+  } else {
+    throw new Error('No AI provider available for triage');
   }
 
   // Update inbox item metadata
@@ -106,36 +260,59 @@ JSON形式で出力してください:
   const updatedMeta = {
     ...currentMeta,
     ai_triage: {
-      classification: result.classification,
-      suggestedAction: result.suggestedAction,
-      reasoning: result.reasoning,
+      classification: triageResult.classification,
+      suggestedAction: triageResult.suggestedAction,
+      reasoning: triageResult.reasoning,
       triaged_at: new Date().toISOString(),
+      provider: triageResult.provider,
+      model: triageResult.model,
     },
   };
 
   await DB.prepare(
     `UPDATE inbox_items SET metadata = ?, updated_at = datetime('now') WHERE id = ?`
-  ).bind(JSON.stringify(updatedMeta), inboxItemId).run();
+  )
+    .bind(JSON.stringify(updatedMeta), inboxItemId)
+    .run();
 
   // Track usage
-  await trackAIUsage(DB, 'claude', 'inbox_triage', response.usage.total_tokens);
+  await trackAIUsage(
+    DB,
+    triageResult.provider === AIProvider.WORKERS_AI ? 'workers_ai' : 'claude',
+    'inbox_triage',
+    triageResult.tokens
+  );
 
   // Log workflow
   await DB.prepare(
     `INSERT INTO ai_workflow_logs (workflow_type, trigger, input_data, ai_response, action_taken, status, tokens_used, processing_time_ms, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-  ).bind(
-    'inbox_triage',
-    'manual',
-    JSON.stringify({ inboxItemId, title: item.title }),
-    JSON.stringify(result),
-    'metadata_updated',
-    'success',
-    response.usage.total_tokens,
-    processingTime
-  ).run();
+  )
+    .bind(
+      'inbox_triage',
+      'manual',
+      JSON.stringify({
+        inboxItemId,
+        title: item.title,
+        provider: triageResult.provider,
+      }),
+      JSON.stringify({
+        classification: triageResult.classification,
+        suggestedAction: triageResult.suggestedAction,
+        reasoning: triageResult.reasoning,
+      }),
+      'metadata_updated',
+      'success',
+      triageResult.tokens,
+      triageResult.processingTimeMs
+    )
+    .run();
 
-  return result;
+  return {
+    classification: triageResult.classification,
+    suggestedAction: triageResult.suggestedAction,
+    reasoning: triageResult.reasoning,
+  };
 }
 
 /**
