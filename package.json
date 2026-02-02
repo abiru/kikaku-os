@@ -2,7 +2,7 @@
 	"name": "kikaku-os",
 	"private": true,
 	"scripts": {
-		"dev": "concurrently -n api,store -c blue,green \"pnpm -C apps/api dev --port 8787\" \"pnpm -C apps/storefront dev\"",
+		"dev": "concurrently -n api,store -c blue,green \"pnpm -C apps/api dev\" \"pnpm -C apps/storefront dev\"",
 		"dev:api": "pnpm -C apps/api dev --port 8787",
 		"dev:store": "pnpm -C apps/storefront dev",
 		"build": "pnpm -C apps/api build && pnpm -C apps/storefront build",
