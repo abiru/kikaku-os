@@ -100,9 +100,9 @@ export default function ProductsTable({
             products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>
-                  <div className="font-medium text-zinc-950 dark:text-white">{product.title}</div>
+                  <div className="font-medium text-zinc-950">{product.title}</div>
                   {product.description && (
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-xs">
+                    <div className="text-xs text-zinc-500 truncate max-w-xs">
                       {product.description}
                     </div>
                   )}
@@ -112,19 +112,19 @@ export default function ProductsTable({
                     {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-zinc-500 tabular-nums dark:text-zinc-400">
+                <TableCell className="text-zinc-500 tabular-nums">
                   {new Date(product.updated_at).toLocaleDateString('ja-JP')}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Link href={`/admin/products/${product.id}`} className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 font-medium">
+                    <Link href={`/admin/products/${product.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
                       Edit
                     </Link>
                     {product.status !== 'archived' && (
                       <Button
                         plain
                         onClick={() => handleArchive(product.id, product.title, apiBase, apiKey)}
-                        className="text-red-600 hover:text-red-800 dark:text-red-400"
+                        className="text-red-600 hover:text-red-800"
                       >
                         Archive
                       </Button>
@@ -133,7 +133,7 @@ export default function ProductsTable({
                       <Button
                         plain
                         onClick={() => handleRestore(product.id, product.title, apiBase, apiKey)}
-                        className="text-green-600 hover:text-green-800 dark:text-green-400"
+                        className="text-green-600 hover:text-green-800"
                       >
                         Restore
                       </Button>
@@ -144,7 +144,7 @@ export default function ProductsTable({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-zinc-500 py-12 dark:text-zinc-400">
+              <TableCell colSpan={4} className="text-center text-zinc-500 py-12">
                 No products found.
               </TableCell>
             </TableRow>
@@ -154,7 +154,7 @@ export default function ProductsTable({
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-zinc-500 dark:text-zinc-400">
+          <div className="text-sm text-zinc-500">
             Page {currentPage} of {totalPages}
           </div>
           <Pagination>
