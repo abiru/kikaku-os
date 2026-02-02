@@ -7,6 +7,7 @@ import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
+import { Textarea } from '../../../components/catalyst/textarea';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import MarkdownPreview from '../../../components/MarkdownPreview';
@@ -393,7 +394,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										type="url"
 										id="fetch-url"
 										placeholder="https://www.spider-farmer.com/products/..."
-										class="flex-1"
+										className="flex-1"
 									/>
 								<button
 									type="button"
@@ -427,7 +428,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 							<div class="mt-3 space-y-3 pl-4 border-l-2 border-gray-200">
 								<Fieldset client:load>
 									<Field>
-										<Label class="text-xs">画像URL</Label>
+										<Label className="text-xs">画像URL</Label>
 										<Input
 											type="url"
 											id="manual-image"
@@ -435,7 +436,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										/>
 									</Field>
 									<Field>
-										<Label class="text-xs">説明文</Label>
+										<Label className="text-xs">説明文</Label>
 										<Textarea
 											id="manual-description"
 											rows={3}
@@ -737,7 +738,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										required
 										min="0"
 										step="1"
-										class="tabular-nums"
+										className="tabular-nums"
 										placeholder="1000"
 									/>
 								</Field>
@@ -748,7 +749,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										type="text"
 										id="stripe-price-id"
 										name="provider_price_id"
-										class="font-mono"
+										className="font-mono"
 										placeholder="price_xxxxxxxx"
 									/>
 									<p class="text-xs text-[#86868b] mt-1">Required for checkout. Get this from your Stripe Dashboard.</p>

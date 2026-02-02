@@ -63,7 +63,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 						name="q"
 						value={q}
 						placeholder="Search categories..."
-						class="pl-10"
+						className="pl-10"
 					/>
 					<svg
 						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
@@ -128,7 +128,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 								))
 							) : (
 								<TableRow>
-									<TableCell colSpan="3" className="text-center text-zinc-500">
+									<TableCell colSpan={3} className="text-center text-zinc-500">
 										No categories found. Categories are created automatically when you assign them to products.
 									</TableCell>
 								</TableRow>
@@ -152,8 +152,8 @@ if (import.meta.env.ADMIN_API_KEY) {
 							<Input
 								type="text"
 								id="rename-current"
-								readonly
-								class="text-zinc-500 bg-zinc-50"
+								readOnly
+								className="text-zinc-500 bg-zinc-50"
 							/>
 						</Field>
 
