@@ -1,0 +1,250 @@
+---
+export const prerender = false;
+
+import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+const status = Astro.url.searchParams.get('status') || 'all';
+const page = Number(Astro.url.searchParams.get('page') || '1');
+const perPage = 20;
+
+let heroes: any[] = [];
+let meta = { totalCount: 0, totalPages: 1 };
+let error = null;
+
+// SSR Data Fetching
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const query = new URLSearchParams({
+			status,
+			page: page.toString(),
+			perPage: perPage.toString()
+		});
+
+		const res = await fetch(`${apiBase}/admin/home/heroes?${query}`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY
+			}
+		});
+
+		if (!res.ok) {
+			throw new Error(`API Error: ${res.status}`);
+		}
+
+		const data = await res.json();
+		heroes = data.heroes || [];
+		meta = data.meta || meta;
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to load hero sections. Please check your admin key.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing in server environment.';
+}
+
+const hasNext = page < meta.totalPages;
+const hasPrev = page > 1;
+---
+
+<AdminLayout title="Home Heroes - Admin">
+	<div class="space-y-6">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-4">
+				<h1 class="text-2xl font-semibold text-gray-900">Home Hero Sections</h1>
+				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+			</div>
+			<Button href="/admin/home-heroes/new" size="sm" variant="primary">
+				+ New Hero Section
+			</Button>
+		</div>
+
+		{/* Status Filter Tabs */}
+		<div class="flex gap-2">
+			<a
+				href="?status=all"
+				class={`px-4 py-2 text-sm rounded-lg ${status === 'all' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+			>
+				All
+			</a>
+			<a
+				href="?status=active"
+				class={`px-4 py-2 text-sm rounded-lg ${status === 'active' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+			>
+				Active
+			</a>
+			<a
+				href="?status=draft"
+				class={`px-4 py-2 text-sm rounded-lg ${status === 'draft' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+			>
+				Draft
+			</a>
+			<a
+				href="?status=archived"
+				class={`px-4 py-2 text-sm rounded-lg ${status === 'archived' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+			>
+				Archived
+			</a>
+		</div>
+
+		{error && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				{error}
+			</div>
+		)}
+
+		{/* Hero Sections Table */}
+		<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+			<div class="overflow-x-auto">
+				<table class="w-full text-left text-sm text-[#1d1d1f]">
+					<thead class="bg-gray-50 border-b border-gray-200">
+						<tr>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Position</th>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
+							<th class="px-6 py-3 font-medium text-[#86868b]">Updated</th>
+							<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-100">
+						{heroes.length > 0 ? (
+							heroes.map((hero) => (
+								<tr class="hover:bg-gray-50 transition-colors group">
+									<td class="px-6 py-4">
+										<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-xs font-medium">
+											{hero.position}
+										</span>
+									</td>
+									<td class="px-6 py-4">
+										<div class="font-medium">{hero.title}</div>
+										<div class="text-xs text-[#86868b] truncate max-w-xs">{hero.subtitle}</div>
+									</td>
+									<td class="px-6 py-4">
+										{hero.status === 'draft' ? (
+											<Badge severity="secondary">Draft</Badge>
+										) : hero.status === 'archived' ? (
+											<Badge severity="critical">Archived</Badge>
+										) : (
+											<Badge severity="info">Active</Badge>
+										)}
+									</td>
+									<td class="px-6 py-4 text-[#86868b] tabular-nums">
+										{new Date(hero.updated_at).toLocaleDateString('ja-JP')}
+									</td>
+									<td class="px-6 py-4 text-right">
+										<div class="flex items-center justify-end gap-2">
+											<a
+												href={`/admin/home-heroes/${hero.id}`}
+												class="text-[#0071e3] hover:underline text-xs font-medium"
+											>
+												Edit
+											</a>
+											{hero.status !== 'archived' && (
+												<button
+													data-id={hero.id}
+													data-action="archive"
+													class="archive-btn text-red-600 hover:underline text-xs font-medium"
+												>
+													Archive
+												</button>
+											)}
+											{hero.status === 'archived' && (
+												<button
+													data-id={hero.id}
+													data-action="restore"
+													class="restore-btn text-green-600 hover:underline text-xs font-medium"
+												>
+													Restore
+												</button>
+											)}
+										</div>
+									</td>
+								</tr>
+							))
+						) : (
+							<tr>
+								<td colspan="5" class="px-6 py-8 text-center text-[#86868b]">
+									No hero sections found. Create your first one!
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		{/* Pagination */}
+		{meta.totalPages > 1 && (
+			<div class="flex items-center justify-between">
+				<div class="text-sm text-[#86868b]">
+					Page {page} of {meta.totalPages}
+				</div>
+				<div class="flex gap-2">
+					{hasPrev && (
+						<a
+							href={`?status=${status}&page=${page - 1}`}
+							class="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg text-[#1d1d1f] hover:bg-gray-50"
+						>
+							← Previous
+						</a>
+					)}
+					{hasNext && (
+						<a
+							href={`?status=${status}&page=${page + 1}`}
+							class="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg text-[#1d1d1f] hover:bg-gray-50"
+						>
+							Next →
+						</a>
+					)}
+				</div>
+			</div>
+		)}
+	</div>
+</AdminLayout>
+
+<script define:vars={{ apiBase, adminKey: import.meta.env.ADMIN_API_KEY }}>
+	document.querySelectorAll('.archive-btn').forEach(btn => {
+		btn.addEventListener('click', async (e) => {
+			const id = e.target.dataset.id;
+			if (!confirm('Archive this hero section?')) return;
+
+			try {
+				const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+					method: 'DELETE',
+					headers: { 'x-admin-key': adminKey }
+				});
+
+				if (res.ok) {
+					window.location.reload();
+				} else {
+					alert('Failed to archive hero section');
+				}
+			} catch (error) {
+				alert('Error: ' + error.message);
+			}
+		});
+	});
+
+	document.querySelectorAll('.restore-btn').forEach(btn => {
+		btn.addEventListener('click', async (e) => {
+			const id = e.target.dataset.id;
+
+			try {
+				const res = await fetch(`${apiBase}/admin/home/heroes/${id}/restore`, {
+					method: 'POST',
+					headers: { 'x-admin-key': adminKey }
+				});
+
+				if (res.ok) {
+					window.location.reload();
+				} else {
+					alert('Failed to restore hero section');
+				}
+			} catch (error) {
+				alert('Error: ' + error.message);
+			}
+		});
+	});
+</script>

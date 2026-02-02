@@ -44,6 +44,7 @@ type Product = {
 	metadata: string | null;
 	status: string | null;
 	tax_rate_id: number | null;
+	featured?: number;
 	created_at: string;
 	updated_at: string;
 };
@@ -90,6 +91,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 		const category = formData.get('category')?.toString().trim() || null;
 		const tax_rate_id_str = formData.get('tax_rate_id')?.toString() || null;
 		const tax_rate_id = tax_rate_id_str ? parseInt(tax_rate_id_str, 10) : null;
+		const featured = formData.get('featured') === 'on' ? 1 : 0;
 
 		if (!title) {
 			error = 'Title is required';
@@ -100,7 +102,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 					'Content-Type': 'application/json',
 					'x-admin-key': apiKey
 				},
-				body: JSON.stringify({ title, description, status, category, tax_rate_id })
+				body: JSON.stringify({ title, description, status, category, tax_rate_id, featured })
 			});
 
 			const data = await res.json();
@@ -302,6 +304,22 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 								<option value="draft" selected={product.status === 'draft'}>Draft</option>
 								<option value="archived" selected={product.status === 'archived'}>Archived</option>
 							</Select>
+						</Field>
+
+						<Field>
+							<div class="flex items-center gap-2">
+								<input
+									type="checkbox"
+									id="featured"
+									name="featured"
+									checked={product.featured === 1}
+									class="w-4 h-4 text-[#0071e3] border-gray-300 rounded focus:ring-[#0071e3]"
+								/>
+								<Label htmlFor="featured" className="!mb-0">
+									ホームページに表示（Featured）
+								</Label>
+							</div>
+							<p class="text-xs text-[#86868b] mt-1">チェックするとホームページのカテゴリグリッドに表示されます</p>
 						</Field>
 
 						<Field>

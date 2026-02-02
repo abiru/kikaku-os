@@ -15,6 +15,27 @@ type StorefrontRow = {
   provider_price_id: string | null;
 };
 
+type HeroSectionRow = {
+  id: number;
+  title: string;
+  subtitle: string | null;
+  image_r2_key: string | null;
+  image_r2_key_small: string | null;
+  cta_primary_text: string | null;
+  cta_primary_url: string | null;
+  cta_secondary_text: string | null;
+  cta_secondary_url: string | null;
+  position: number;
+};
+
+type FeaturedProductRow = {
+  id: number;
+  title: string;
+  description: string | null;
+  category: string | null;
+  r2_key: string | null;
+};
+
 const createMockDb = (options: {
   productRows?: StorefrontRow[];
   orderRow?: {
@@ -35,6 +56,8 @@ const createMockDb = (options: {
   priceRangeRow?: { minPrice: number | null; maxPrice: number | null };
   totalCount?: number;
   productIds?: Array<{ id: number }>;
+  heroSections?: HeroSectionRow[];
+  featuredProducts?: FeaturedProductRow[];
 }) => {
   return {
     prepare: vi.fn((sql: string) => ({
@@ -79,6 +102,12 @@ const createMockDb = (options: {
         }
         if (sql.includes('SELECT DISTINCT p.id')) {
           return { results: options.productIds || [] };
+        }
+        if (sql.includes('FROM home_hero_sections')) {
+          return { results: options.heroSections || [] };
+        }
+        if (sql.includes('p.featured = 1')) {
+          return { results: options.featuredProducts || [] };
         }
         if (sql.includes('FROM products')) {
           return { results: options.productRows || [] };
@@ -655,6 +684,233 @@ describe('Storefront API', () => {
       expect(json.filters.category).toBe('electronics');
       expect(json.filters.minPrice).toBe(1000);
       expect(json.meta.page).toBe(2);
+    });
+  });
+
+  describe('GET /store/home/heroes', () => {
+    it('returns active hero sections ordered by position', async () => {
+      const heroSections: HeroSectionRow[] = [
+        {
+          id: 1,
+          title: 'Hero 1',
+          subtitle: 'Subtitle 1',
+          image_r2_key: 'heroes/hero1.jpg',
+          image_r2_key_small: 'heroes/hero1-small.jpg',
+          cta_primary_text: 'Shop Now',
+          cta_primary_url: '/products',
+          cta_secondary_text: 'Learn More',
+          cta_secondary_url: '/about',
+          position: 1
+        },
+        {
+          id: 2,
+          title: 'Hero 2',
+          subtitle: null,
+          image_r2_key: 'heroes/hero2.jpg',
+          image_r2_key_small: null,
+          cta_primary_text: null,
+          cta_primary_url: null,
+          cta_secondary_text: null,
+          cta_secondary_url: null,
+          position: 2
+        }
+      ];
+
+      const db = createMockDb({ heroSections });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/heroes');
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.ok).toBe(true);
+      expect(json.heroes).toHaveLength(2);
+      expect(json.heroes[0].id).toBe(1);
+      expect(json.heroes[0].title).toBe('Hero 1');
+      expect(json.heroes[0].subtitle).toBe('Subtitle 1');
+      expect(json.heroes[0].image).toContain('heroes%2Fhero1.jpg');
+      expect(json.heroes[0].imageSmall).toContain('heroes%2Fhero1-small.jpg');
+      expect(json.heroes[0].cta_primary_text).toBe('Shop Now');
+      expect(json.heroes[1].id).toBe(2);
+      expect(json.heroes[1].imageSmall).toBeNull();
+    });
+
+    it('returns empty array when no hero sections', async () => {
+      const db = createMockDb({ heroSections: [] });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/heroes');
+      const json = await res.json();
+
+      expect(json.ok).toBe(true);
+      expect(json.heroes).toEqual([]);
+    });
+
+    it('builds R2 URLs correctly for hero images', async () => {
+      const heroSections: HeroSectionRow[] = [
+        {
+          id: 1,
+          title: 'Test Hero',
+          subtitle: null,
+          image_r2_key: 'test/image.png',
+          image_r2_key_small: null,
+          cta_primary_text: null,
+          cta_primary_url: null,
+          cta_secondary_text: null,
+          cta_secondary_url: null,
+          position: 1
+        }
+      ];
+
+      const db = createMockDb({ heroSections });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/heroes');
+      const json = await res.json();
+
+      expect(json.heroes[0].image).toMatch(/\/r2\?key=test%2Fimage\.png/);
+    });
+
+    it('handles null R2 keys gracefully', async () => {
+      const heroSections: HeroSectionRow[] = [
+        {
+          id: 1,
+          title: 'No Image Hero',
+          subtitle: 'Test',
+          image_r2_key: null,
+          image_r2_key_small: null,
+          cta_primary_text: 'Click',
+          cta_primary_url: '/test',
+          cta_secondary_text: null,
+          cta_secondary_url: null,
+          position: 1
+        }
+      ];
+
+      const db = createMockDb({ heroSections });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/heroes');
+      const json = await res.json();
+
+      expect(json.heroes[0].image).toBeNull();
+      expect(json.heroes[0].imageSmall).toBeNull();
+    });
+  });
+
+  describe('GET /store/home/featured-categories', () => {
+    it('returns featured products with R2 image URLs', async () => {
+      const featuredProducts: FeaturedProductRow[] = [
+        {
+          id: 1,
+          title: 'Featured Product 1',
+          description: 'Great product',
+          category: 'electronics',
+          r2_key: 'products/product1.jpg'
+        },
+        {
+          id: 2,
+          title: 'Featured Product 2',
+          description: null,
+          category: 'books',
+          r2_key: 'products/product2.jpg'
+        }
+      ];
+
+      const db = createMockDb({ featuredProducts });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/featured-categories');
+      const json = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(json.ok).toBe(true);
+      expect(json.products).toHaveLength(2);
+      expect(json.products[0].id).toBe(1);
+      expect(json.products[0].title).toBe('Featured Product 1');
+      expect(json.products[0].description).toBe('Great product');
+      expect(json.products[0].category).toBe('electronics');
+      expect(json.products[0].image).toContain('products%2Fproduct1.jpg');
+      expect(json.products[1].description).toBeNull();
+    });
+
+    it('returns empty array when no featured products', async () => {
+      const db = createMockDb({ featuredProducts: [] });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/featured-categories');
+      const json = await res.json();
+
+      expect(json.ok).toBe(true);
+      expect(json.products).toEqual([]);
+    });
+
+    it('handles products without images', async () => {
+      const featuredProducts: FeaturedProductRow[] = [
+        {
+          id: 1,
+          title: 'No Image Product',
+          description: 'Test product',
+          category: 'accessories',
+          r2_key: null
+        }
+      ];
+
+      const db = createMockDb({ featuredProducts });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/featured-categories');
+      const json = await res.json();
+
+      expect(json.products[0].image).toBeNull();
+      expect(json.products[0].title).toBe('No Image Product');
+    });
+
+    it('builds R2 URLs correctly for product images', async () => {
+      const featuredProducts: FeaturedProductRow[] = [
+        {
+          id: 1,
+          title: 'Test Product',
+          description: 'Test',
+          category: 'test',
+          r2_key: 'images/test product.jpg'
+        }
+      ];
+
+      const db = createMockDb({ featuredProducts });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/featured-categories');
+      const json = await res.json();
+
+      // Should properly encode the R2 key with spaces
+      expect(json.products[0].image).toMatch(/\/r2\?key=images%2Ftest%20product\.jpg/);
+    });
+
+    it('preserves all product fields', async () => {
+      const featuredProducts: FeaturedProductRow[] = [
+        {
+          id: 123,
+          title: 'Complete Product',
+          description: 'Full description',
+          category: 'premium',
+          r2_key: 'products/complete.jpg'
+        }
+      ];
+
+      const db = createMockDb({ featuredProducts });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/featured-categories');
+      const json = await res.json();
+
+      const product = json.products[0];
+      expect(product).toHaveProperty('id', 123);
+      expect(product).toHaveProperty('title', 'Complete Product');
+      expect(product).toHaveProperty('description', 'Full description');
+      expect(product).toHaveProperty('category', 'premium');
+      expect(product).toHaveProperty('image');
+      expect(product.image).toContain('products%2Fcomplete.jpg');
     });
   });
 });
