@@ -110,7 +110,7 @@ const formatDate = (dateStr: string | null) => {
 
 			{error && (
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-					<div class="text-red-600 mb-4">{error}</Alert>
+					<div class="text-red-600 mb-4">{error}</div>
 					<Button href="/admin/categories" variant="secondary" size="sm">
 						Back to Categories
 					</Button>
@@ -134,8 +134,8 @@ const formatDate = (dateStr: string | null) => {
 									products.map((product) => (
 										<tr class="hover:bg-gray-50 transition-colors group">
 											<td class="px-6 py-4">
-												<div class="font-medium">{product.title}</Alert>
-												<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</Alert>
+												<div class="font-medium">{product.title}</div>
+												<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</div>
 											</td>
 											<td class="px-6 py-4">
 												{product.status === 'draft' ? (
