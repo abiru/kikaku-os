@@ -6,7 +6,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 import { Badge } from '../../components/catalyst/badge';
 import { Button } from '../../components/catalyst/button';
-import { Fieldset, Field, Label } from '../../components/catalyst/fieldset';
+import { Fieldset, Field } from '../../components/catalyst/fieldset';
 import { Heading } from '../../components/catalyst/heading';
 import { Input } from '../../components/catalyst/input';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
@@ -149,7 +149,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 
 					<Fieldset client:load>
 						<Field>
-							<Label>Current Name</Label>
+							<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Current Name</label>
 							<Input
 								type="text"
 								id="rename-current"
@@ -159,7 +159,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 						</Field>
 
 						<Field>
-							<Label>New Name *</Label>
+							<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">New Name *</label>
 							<Input
 								type="text"
 								id="rename-new"
@@ -204,7 +204,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 
 					<Fieldset client:load>
 						<Field>
-							<Label>Move products to (optional)</Label>
+							<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Move products to (optional)</label>
 							<Input
 								type="text"
 								id="delete-move-to"
