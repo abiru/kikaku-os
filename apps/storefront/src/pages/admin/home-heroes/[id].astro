@@ -5,7 +5,7 @@ import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
 import { Field, Label, Description } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
-import Badge from '../../../components/Badge.astro';
+import { Badge } from '../../../components/catalyst/badge';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
@@ -105,11 +105,11 @@ if (Astro.request.method === 'POST' && hero) {
 				<h1 class="text-2xl font-semibold text-gray-900">Edit Hero Section</h1>
 				<div class="flex items-center gap-2">
 					{hero.status === 'draft' ? (
-						<Badge severity="secondary">Draft</Badge>
+						<Badge color="zinc" client:load>Draft</Badge>
 					) : hero.status === 'archived' ? (
-						<Badge severity="critical">Archived</Badge>
+						<Badge color="red" client:load>Archived</Badge>
 					) : (
-						<Badge severity="info">Active</Badge>
+						<Badge color="blue" client:load>Active</Badge>
 					)}
 				</div>
 			</div>

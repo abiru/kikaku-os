@@ -2,8 +2,8 @@
 export const prerender = false;
 
 import { Alert } from '../../../components/catalyst/alert-banner';
-import Badge from '../../../components/Badge.astro';
-import Button from '../../../components/Button.astro';
+import { Badge } from '../../../components/catalyst/badge';
+import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
@@ -68,36 +68,36 @@ const formatDate = (dateStr: string | null) => {
 	return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
 };
 
-const getStatusSeverity = (status: string) => {
+const getStatusColor = (status: string) => {
 	switch (status) {
 		case 'paid':
 		case 'completed':
 		case 'succeeded':
-			return 'info';
+			return 'blue';
 		case 'pending':
-			return 'warn';
+			return 'amber';
 		case 'failed':
 		case 'refunded':
-			return 'critical';
+			return 'red';
 		default:
-			return 'secondary';
+			return 'zinc';
 	}
 };
 
-const getFulfillmentStatusSeverity = (status: string) => {
+const getFulfillmentStatusColor = (status: string) => {
 	switch (status) {
 		case 'delivered':
-			return 'info';
+			return 'blue';
 		case 'shipped':
-			return 'info';
+			return 'blue';
 		case 'processing':
-			return 'warn';
+			return 'amber';
 		case 'pending':
-			return 'warn';
+			return 'amber';
 		case 'cancelled':
-			return 'critical';
+			return 'red';
 		default:
-			return 'secondary';
+			return 'zinc';
 	}
 };
 
@@ -114,7 +114,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 				Orders
 			</a>
 			<Heading>Order #{id}</Heading>
-			{order && <Badge severity={getStatusSeverity(order.status)}>{order.status}</Badge>}
+			{order && <Badge color={getStatusColor(order.status)} client:load>{order.status}</Badge>}
 		</div>
 			{error && (
 				<Alert color="red" client:load>
@@ -234,7 +234,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 										fulfillments.map((f) => (
 											<TableRow>
 												<TableCell>{f.id}</TableCell>
-												<TableCell><Badge severity={getFulfillmentStatusSeverity(f.status)}>{f.status}</Badge></TableCell>
+												<TableCell><Badge color={getFulfillmentStatusColor(f.status)} client:load>{f.status}</Badge></TableCell>
 												<TableCell className="font-mono text-xs">{f.tracking_number || '-'}</TableCell>
 												<TableCell className="text-[#86868b] tabular-nums">{formatDate(f.created_at)}</TableCell>
 												<TableCell>
@@ -278,7 +278,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 										payments.map((p) => (
 											<TableRow>
 												<TableCell>{p.id}</TableCell>
-												<TableCell><Badge severity={getStatusSeverity(p.status)}>{p.status}</Badge></TableCell>
+												<TableCell><Badge color={getStatusColor(p.status)} client:load>{p.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(p.amount, p.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{p.provider_payment_id || '-'}</TableCell>
 												<TableCell className="text-[#86868b] tabular-nums">{formatDate(p.created_at)}</TableCell>
@@ -315,7 +315,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 										refunds.map((r) => (
 											<TableRow>
 												<TableCell>{r.id}</TableCell>
-												<TableCell><Badge severity={getStatusSeverity(r.status)}>{r.status}</Badge></TableCell>
+												<TableCell><Badge color={getStatusColor(r.status)} client:load>{r.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(r.amount, r.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{r.provider_refund_id || '-'}</TableCell>
 												<TableCell className="text-[#86868b]">{r.reason || '-'}</TableCell>
@@ -353,7 +353,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											<TableRow>
 												<TableCell className="font-mono text-xs">{e.event_id}</TableCell>
 												<TableCell className="font-mono text-xs">{e.event_type}</TableCell>
-												<TableCell><Badge severity={getStatusSeverity(e.processing_status)}>{e.processing_status}</Badge></TableCell>
+												<TableCell><Badge color={getStatusColor(e.processing_status)} client:load>{e.processing_status}</Badge></TableCell>
 												<TableCell className="text-xs text-red-600">{e.error || '-'}</TableCell>
 												<TableCell className="text-[#86868b] tabular-nums">{formatDate(e.received_at)}</TableCell>
 											</TableRow>

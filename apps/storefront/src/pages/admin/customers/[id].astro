@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import { Alert } from '../../../components/catalyst/alert-banner';
-import Badge from '../../../components/Badge.astro';
+import { Badge } from '../../../components/catalyst/badge';
 import { Button } from '../../../components/catalyst/button';
 import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
@@ -145,13 +145,13 @@ const formatCurrency = (amount: number, currency: string = 'JPY') => {
 const getStatusBadge = (status: string) => {
 	switch (status) {
 		case 'paid':
-			return { severity: 'info' as const, label: 'Paid' };
+			return { color: 'blue' as const, label: 'Paid' };
 		case 'pending':
-			return { severity: 'warn' as const, label: 'Pending' };
+			return { color: 'amber' as const, label: 'Pending' };
 		case 'failed':
-			return { severity: 'critical' as const, label: 'Failed' };
+			return { color: 'red' as const, label: 'Failed' };
 		default:
-			return { severity: 'secondary' as const, label: status };
+			return { color: 'zinc' as const, label: status };
 	}
 };
 ---
@@ -288,7 +288,7 @@ const getStatusBadge = (status: string) => {
 															#{order.id}
 														</TableCell>
 														<TableCell>
-															<Badge severity={badge.severity}>{badge.label}</Badge>
+															<Badge color={badge.color} client:load>{badge.label}</Badge>
 														</TableCell>
 														<TableCell className="tabular-nums">
 															{formatCurrency(order.total_net, order.currency)}

@@ -1,5 +1,5 @@
 ---
-import Button from '../../components/Button.astro';
+import { Button } from '../../components/catalyst/button';
 import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
 import { t } from '../../i18n';
@@ -33,10 +33,10 @@ import { t } from '../../i18n';
 
 				{/* Next Actions */}
 				<div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-					<Button href="/cart" size="lg">
+					<Button href="/cart" color="indigo" client:load>
 						{t('cart.returnToCart')}
 					</Button>
-					<Button href="/products" variant="secondary" size="lg">
+					<Button href="/products" outline client:load>
 						{t('cart.continueShopping')}
 					</Button>
 				</div>

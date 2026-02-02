@@ -198,13 +198,15 @@ const formatBooleanValue = (value: string): boolean => {
                     </Field>
                   ) : setting.data_type === 'boolean' ? (
                     <Field>
-                      <Checkbox client:load
-                        id={`setting_${setting.key}`}
-                        name={`setting_${setting.key}`}
-                        value="true"
-                        checked={formatBooleanValue(setting.value)}
-                      />
-                      <Label htmlFor={`setting_${setting.key}`}>Enabled</Label>
+                      <div class="flex items-center gap-2">
+                        <Checkbox client:load
+                          id={`setting_${setting.key}`}
+                          name={`setting_${setting.key}`}
+                          value="true"
+                          checked={formatBooleanValue(setting.value)}
+                        />
+                        <label for={`setting_${setting.key}`} class="text-base/6 text-zinc-950 select-none sm:text-sm/6">Enabled</label>
+                      </div>
                     </Field>
                   ) : (
                     <Field>

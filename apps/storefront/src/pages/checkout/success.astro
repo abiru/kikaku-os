@@ -1,5 +1,5 @@
 ---
-import Button from '../../components/Button.astro';
+import { Button } from '../../components/catalyst/button';
 import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
 import { t } from '../../i18n';
@@ -121,10 +121,10 @@ const formatPrice = (amount: number, currency: string) => {
 
 				{/* Next Actions */}
 				<div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-					<Button href="/products" size="lg">
+					<Button href="/products" color="indigo" client:load>
 						{t('cart.continueShopping')}
 					</Button>
-					<Button href="/" variant="link" size="lg">
+					<Button href="/" plain client:load>
 						{t('checkout.returnToHome')}
 					</Button>
 				</div>

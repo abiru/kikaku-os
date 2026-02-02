@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import { Alert } from '../../../components/catalyst/alert-banner';
-import Badge from '../../../components/Badge.astro';
+import { Badge } from '../../../components/catalyst/badge';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
 import { Field, Label, Description } from '../../../components/catalyst/fieldset';
@@ -228,11 +228,11 @@ const canDelete = coupon && coupon.current_uses === 0;
 						<div>
 							<div class="flex items-center gap-2">
 								{isExpired(coupon) ? (
-									<Badge severity="warn">Expired</Badge>
+									<Badge color="amber" client:load>Expired</Badge>
 								) : coupon.status === 'active' ? (
-									<Badge severity="info">Active</Badge>
+									<Badge color="blue" client:load>Active</Badge>
 								) : (
-									<Badge severity="secondary">Inactive</Badge>
+									<Badge color="zinc" client:load>Inactive</Badge>
 								)}
 							</div>
 							<div class="text-xs text-[#86868b] mt-1">Current Status</div>
