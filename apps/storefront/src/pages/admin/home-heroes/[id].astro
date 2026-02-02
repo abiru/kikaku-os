@@ -12,6 +12,8 @@ const apiBase = getApiBase();
 let hero: any = null;
 let error = null;
 let success = false;
+let imageUploadSuccess = false;
+let imageUploadError = null;
 
 // Fetch hero section data
 try {
@@ -85,6 +87,84 @@ if (Astro.request.method === 'POST' && hero) {
 	} catch (e: any) {
 		console.error(e);
 		error = e.message || 'Failed to update hero section';
+		// Extract detailed error from JSON response
+		if (e.message.includes('Invalid input')) {
+			error = 'Validation error: Please check all required fields';
+		}
+	}
+}
+
+// Handle image upload
+if (Astro.request.method === 'POST' && hero) {
+	const formData = await Astro.request.formData();
+	const imageFile = formData.get('image_upload');
+	const imageType = formData.get('image_type');
+	const deleteImageType = formData.get('delete_image_type');
+
+	// Handle image deletion
+	if (deleteImageType) {
+		try {
+			const res = await fetch(`${apiBase}/admin/home/heroes/${id}/image/${deleteImageType}`, {
+				method: 'DELETE',
+				headers: {
+					'x-admin-key': import.meta.env.ADMIN_API_KEY
+				}
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.message || 'Failed to delete image');
+			}
+
+			imageUploadSuccess = true;
+
+			// Reload hero data
+			const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+				headers: {
+					'x-admin-key': import.meta.env.ADMIN_API_KEY
+				}
+			});
+			const refreshData = await refreshRes.json();
+			hero = refreshData.hero;
+		} catch (e: any) {
+			console.error(e);
+			imageUploadError = e.message || 'Failed to delete image';
+		}
+	}
+	// Handle image upload
+	else if (imageFile && imageFile instanceof File && imageFile.size > 0) {
+		try {
+			const uploadFormData = new FormData();
+			uploadFormData.append('image', imageFile);
+			uploadFormData.append('imageType', imageType as string);
+
+			const res = await fetch(`${apiBase}/admin/home/heroes/${id}/image`, {
+				method: 'POST',
+				headers: {
+					'x-admin-key': import.meta.env.ADMIN_API_KEY
+				},
+				body: uploadFormData
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.message || 'Failed to upload image');
+			}
+
+			imageUploadSuccess = true;
+
+			// Reload hero data
+			const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+				headers: {
+					'x-admin-key': import.meta.env.ADMIN_API_KEY
+				}
+			});
+			const refreshData = await refreshRes.json();
+			hero = refreshData.hero;
+		} catch (e: any) {
+			console.error(e);
+			imageUploadError = e.message || 'Failed to upload image';
+		}
 	}
 }
 ---
@@ -120,7 +200,19 @@ if (Astro.request.method === 'POST' && hero) {
 
 		{success && (
 			<div class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
-				Hero section updated successfully!
+				✓ Hero section updated successfully!
+			</div>
+		)}
+
+		{imageUploadSuccess && (
+			<div class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm">
+				✓ Image uploaded successfully!
+			</div>
+		)}
+
+		{imageUploadError && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+				<strong>Image Upload Error:</strong> {imageUploadError}
 			</div>
 		)}
 
@@ -266,9 +358,120 @@ if (Astro.request.method === 'POST' && hero) {
 		)}
 
 		{hero && (
-			<div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
-				<p class="font-medium mb-1">Image Upload:</p>
-				<p>Image upload functionality will be implemented in Phase 1.5 using the existing product image upload pattern.</p>
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+				<h2 class="text-lg font-semibold text-gray-900">Hero Images</h2>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					{/* Main Image */}
+					<div>
+						<h3 class="text-sm font-medium text-gray-900 mb-3">Main Image (Desktop)</h3>
+						{hero.image_r2_key ? (
+							<div class="space-y-3">
+								<div class="border border-gray-200 rounded-lg p-2 bg-gray-50">
+									<img
+										src={`${apiBase}/r2?key=${encodeURIComponent(hero.image_r2_key)}`}
+										alt="Hero main image"
+										class="w-full h-auto rounded"
+									/>
+								</div>
+								<form method="POST">
+									<input type="hidden" name="delete_image_type" value="main" />
+									<button
+										type="button"
+										onclick="if(confirm('Delete this image?')) this.form.submit()"
+										class="text-sm text-red-600 hover:text-red-700"
+									>
+										Delete Main Image
+									</button>
+								</form>
+							</div>
+						) : (
+							<div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500 text-sm">
+								No main image uploaded
+							</div>
+						)}
+
+						<form method="POST" enctype="multipart/form-data" class="mt-3">
+							<input type="hidden" name="image_type" value="main" />
+							<label class="block">
+								<span class="sr-only">Choose main image</span>
+								<input
+									type="file"
+									name="image_upload"
+									accept="image/jpeg,image/png,image/webp,image/gif"
+									class="block w-full text-sm text-gray-500
+										file:mr-3 file:py-2 file:px-4
+										file:rounded-lg file:border-0
+										file:text-sm file:font-medium
+										file:bg-[#0071e3] file:text-white
+										hover:file:bg-[#0077ed]
+										file:cursor-pointer"
+								/>
+							</label>
+							<p class="mt-1 text-xs text-gray-500">
+								JPG, PNG, WebP, GIF up to 5MB
+							</p>
+							<Button type="submit" variant="secondary" size="sm" class="mt-2">
+								Upload Main Image
+							</Button>
+						</form>
+					</div>
+
+					{/* Small Image */}
+					<div>
+						<h3 class="text-sm font-medium text-gray-900 mb-3">Small Image (Mobile)</h3>
+						{hero.image_r2_key_small ? (
+							<div class="space-y-3">
+								<div class="border border-gray-200 rounded-lg p-2 bg-gray-50">
+									<img
+										src={`${apiBase}/r2?key=${encodeURIComponent(hero.image_r2_key_small)}`}
+										alt="Hero small image"
+										class="w-full h-auto rounded"
+									/>
+								</div>
+								<form method="POST">
+									<input type="hidden" name="delete_image_type" value="small" />
+									<button
+										type="button"
+										onclick="if(confirm('Delete this image?')) this.form.submit()"
+										class="text-sm text-red-600 hover:text-red-700"
+									>
+										Delete Small Image
+									</button>
+								</form>
+							</div>
+						) : (
+							<div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500 text-sm">
+								No small image uploaded
+							</div>
+						)}
+
+						<form method="POST" enctype="multipart/form-data" class="mt-3">
+							<input type="hidden" name="image_type" value="small" />
+							<label class="block">
+								<span class="sr-only">Choose small image</span>
+								<input
+									type="file"
+									name="image_upload"
+									accept="image/jpeg,image/png,image/webp,image/gif"
+									class="block w-full text-sm text-gray-500
+										file:mr-3 file:py-2 file:px-4
+										file:rounded-lg file:border-0
+										file:text-sm file:font-medium
+										file:bg-[#0071e3] file:text-white
+										hover:file:bg-[#0077ed]
+										file:cursor-pointer"
+								/>
+							</label>
+							<p class="mt-1 text-xs text-gray-500">
+								JPG, PNG, WebP, GIF up to 5MB
+							</p>
+							<Button type="submit" variant="secondary" size="sm" class="mt-2">
+								Upload Small Image
+							</Button>
+						</form>
+					</div>
+				</div>
 			</div>
 		)}
 	</div>
