@@ -5,6 +5,7 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import { Badge } from '../../components/catalyst/badge';
 import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 
@@ -136,53 +137,53 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 			{/* Pages Table */}
 			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950">
-						<thead class="bg-zinc-50 border-b border-zinc-200">
-							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500">Title</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Slug</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Updated</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Action</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-zinc-100">
+					<Table client:only="react">
+						<TableHead>
+							<TableRow>
+								<TableHeader>Title</TableHeader>
+								<TableHeader>Slug</TableHeader>
+								<TableHeader>Status</TableHeader>
+								<TableHeader>Updated</TableHeader>
+								<TableHeader className="text-right">Action</TableHeader>
+							</TableRow>
+						</TableHead>
+						<TableBody>
 							{pages.length > 0 ? (
 								pages.map((p) => (
-									<tr class="hover:bg-zinc-50 transition-colors group">
-										<td class="px-6 py-4">
+									<TableRow href={`/admin/pages/${p.id}`}>
+										<TableCell>
 											<div class="font-medium">{p.title}</div>
 											{CORE_SLUGS.includes(p.slug) && (
 												<span class="text-xs text-zinc-500">Core page</span>
 											)}
-										</td>
-										<td class="px-6 py-4">
+										</TableCell>
+										<TableCell>
 											<code class="text-xs bg-zinc-100 px-2 py-1 rounded">/{p.slug}</code>
-										</td>
-										<td class="px-6 py-4">
+										</TableCell>
+										<TableCell>
 											{p.status === 'published' ? (
 												<Badge color="lime" client:only="react">Published</Badge>
 											) : (
 												<Badge color="zinc" client:only="react">Draft</Badge>
 											)}
-										</td>
-										<td class="px-6 py-4 text-zinc-500 tabular-nums">
+										</TableCell>
+										<TableCell className="text-zinc-500 tabular-nums">
 											{formatDate(p.updated_at)}
-										</td>
-										<td class="px-6 py-4 text-right">
+										</TableCell>
+										<TableCell className="text-right">
 											<a href={`/admin/pages/${p.id}`} class="text-indigo-600 hover:underline font-medium">Edit</a>
-										</td>
-									</tr>
+										</TableCell>
+									</TableRow>
 								))
 							) : (
-								<tr>
-									<td colspan="5" class="px-6 py-12 text-center text-zinc-500">
+								<TableRow>
+									<TableCell colSpan={5} className="text-center text-zinc-500">
 										No pages found.
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							)}
-						</tbody>
-					</table>
+						</TableBody>
+					</Table>
 				</div>
 
 				{/* Pagination */}
