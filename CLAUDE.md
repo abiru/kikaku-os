@@ -5,16 +5,44 @@ See @README.md for project overview.
 ## 開発コマンド
 
 ```bash
-# 開発サーバー起動
-pnpm -C apps/api dev --port 8787        # API: http://localhost:8787
-pnpm -C apps/storefront dev              # Store + Admin: http://localhost:4321
+# 初回セットアップ
+pnpm install
+pnpm env:setup          # .dev.vars と .env をテンプレートからコピー
+pnpm db:migrate         # ローカルD1にスキーマ適用
 
-# テスト実行
-pnpm -C apps/api test
+# 開発サーバー起動（推奨: 両方同時起動）
+pnpm dev                # API + Storefront を並列起動
 
-# データベースマイグレーション（ローカル）
-pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
+# 個別起動
+pnpm dev:api            # API: http://localhost:8787
+pnpm dev:store          # Store + Admin: http://localhost:4321
+
+# テスト・ビルド
+pnpm test               # APIテスト実行
+pnpm build              # 全アプリビルド
+
+# シードデータ投入（DEV_MODE=true時のみ）
+pnpm db:seed
 ```
+
+## Feature Development Workflow
+
+すべての機能開発は標準ワークフローに従います。
+
+```bash
+/feature "機能の説明"
+```
+
+7ステップを自動実行（各ステップでユーザー確認）：
+1. Plan - 実装計画作成
+2. Worktree - 分離環境作成
+3. Issue - GitHub Issue作成
+4. Exec - 実装（TDD）
+5. Typecheck - 型チェック（エラー時は自動修正試行）
+6. Test - テスト実行（失敗時は自動修正試行）
+7. PR - Pull Request作成
+
+詳細: `.claude/commands/feature.md`
 
 ## コード規約
 
