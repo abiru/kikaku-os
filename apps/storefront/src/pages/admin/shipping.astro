@@ -9,6 +9,7 @@ import { Heading } from '../../components/catalyst/heading';
 import { Input } from '../../components/catalyst/input';
 import { Field } from '../../components/catalyst/fieldset';
 import { Button } from '../../components/catalyst/button';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
 
 const apiBase = getApiBase();
 
@@ -69,41 +70,41 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 
 			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950">
-						<thead class="bg-zinc-50 border-b border-zinc-200">
-							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500">Order</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Customer</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Paid At</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Total</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Actions</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-zinc-100">
+					<Table client:only="react">
+						<TableHead>
+							<TableRow>
+								<TableHeader>Order</TableHeader>
+								<TableHeader>Customer</TableHeader>
+								<TableHeader>Paid At</TableHeader>
+								<TableHeader>Status</TableHeader>
+								<TableHeader className="text-right">Total</TableHeader>
+								<TableHeader className="text-right">Actions</TableHeader>
+							</TableRow>
+						</TableHead>
+						<TableBody>
 							{orders.length > 0 ? (
 								orders.map((order) => (
-									<tr class="hover:bg-zinc-50 transition-colors">
-										<td class="px-6 py-4 font-medium">
+									<TableRow>
+										<TableCell className="font-medium">
 											<a href={`/admin/orders/${order.order_id}`} class="text-indigo-600 hover:underline">
 												#{order.order_id}
 											</a>
-										</td>
-										<td class="px-6 py-4">
+										</TableCell>
+										<TableCell>
 											<div class="text-zinc-950">{order.customer_email || 'Guest'}</div>
-										</td>
-										<td class="px-6 py-4 text-zinc-500 tabular-nums">
+										</TableCell>
+										<TableCell className="text-zinc-500 tabular-nums">
 											{formatDate(order.paid_at)}
-										</td>
-										<td class="px-6 py-4">
+										</TableCell>
+										<TableCell>
 											<Badge color="zinc" client:only="react">
 												{order.fulfillment_status || 'Unfulfilled'}
 											</Badge>
-										</td>
-										<td class="px-6 py-4 text-right font-medium tabular-nums">
+										</TableCell>
+										<TableCell className="text-right font-medium tabular-nums">
 											{formatCurrency(order.total)}
-										</td>
-										<td class="px-6 py-4 text-right">
+										</TableCell>
+										<TableCell className="text-right">
 											<Button
 												type="button"
 												className="ship-btn"
@@ -114,18 +115,18 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											>
 												Ship
 											</Button>
-										</td>
-									</tr>
+										</TableCell>
+									</TableRow>
 								))
 							) : (
-								<tr>
-									<td colspan="6" class="px-6 py-12 text-center text-zinc-500">
+								<TableRow>
+									<TableCell colSpan={6} className="text-center text-zinc-500">
 										No orders ready to ship.
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							)}
-						</tbody>
-					</table>
+						</TableBody>
+					</Table>
 				</div>
 			</div>
 
