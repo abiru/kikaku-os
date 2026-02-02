@@ -1,7 +1,6 @@
 import * as Headless from '@headlessui/react'
 import clsx from 'clsx'
 import React, { forwardRef } from 'react'
-
 export function InputGroup({ children }: React.ComponentPropsWithoutRef<'span'>) {
  return (
  <span
@@ -18,10 +17,8 @@ export function InputGroup({ children }: React.ComponentPropsWithoutRef<'span'>)
  </span>
  )
 }
-
 const dateTypes = ['date', 'datetime-local', 'month', 'time', 'week']
 type DateType = (typeof dateTypes)[number]
-
 export const Input = forwardRef(function Input(
  {
  className,
@@ -42,7 +39,6 @@ export const Input = forwardRef(function Input(
  // Background color + shadow applied to inset pseudo element, so shadow blends with border in light mode
  'before:absolute before:inset-px before:rounded-[calc(var(--radius-lg)-1px)] before:bg-white before:shadow-sm',
  // Background color is moved to control and shadow is removed in dark mode so hide `before` pseudo
- 
  // Focus ring
  'after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-transparent after:ring-inset sm:focus-within:after:ring-2 sm:focus-within:after:ring-blue-500',
  // Disabled state
@@ -84,7 +80,6 @@ export const Input = forwardRef(function Input(
  // Disabled state
  'data-disabled:border-zinc-950/20',
  // System icons
- 
  ])}
  />
  </span>

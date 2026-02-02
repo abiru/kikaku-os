@@ -1,22 +1,18 @@
 'use client'
-
 import * as Headless from '@headlessui/react'
 import clsx from 'clsx'
 import type React from 'react'
 import { Button } from './button'
 import { Link } from './link'
-
 export function Dropdown(props: Headless.MenuProps) {
  return <Headless.Menu {...props} />
 }
-
 export function DropdownButton<T extends React.ElementType = typeof Button>({
  as = Button,
  ...props
 }: { className?: string } & Omit<Headless.MenuButtonProps<T>, 'className'>) {
  return <Headless.MenuButton as={as} {...props} />
 }
-
 export function DropdownMenu({
  anchor = 'bottom',
  className,
@@ -49,7 +45,6 @@ export function DropdownMenu({
  />
  )
 }
-
 export function DropdownItem({
  className,
  ...props
@@ -77,18 +72,15 @@ export function DropdownItem({
  // Avatar
  '*:data-[slot=avatar]:mr-2.5 *:data-[slot=avatar]:-ml-1 *:data-[slot=avatar]:size-6 sm:*:data-[slot=avatar]:mr-2 sm:*:data-[slot=avatar]:size-5'
  )
-
  return typeof props.href === 'string' ? (
  <Headless.MenuItem as={Link} {...props} className={classes} />
  ) : (
  <Headless.MenuItem as="button" type="button" {...props} className={classes} />
  )
 }
-
 export function DropdownHeader({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
  return <div {...props} className={clsx(className, 'col-span-5 px-3.5 pt-2.5 pb-1 sm:px-3')} />
 }
-
 export function DropdownSection({
  className,
  ...props
@@ -104,7 +96,6 @@ export function DropdownSection({
  />
  )
 }
-
 export function DropdownHeading({
  className,
  ...props
@@ -119,7 +110,6 @@ export function DropdownHeading({
  />
  )
 }
-
 export function DropdownDivider({
  className,
  ...props
@@ -134,11 +124,9 @@ export function DropdownDivider({
  />
  )
 }
-
 export function DropdownLabel({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
  return <div {...props} data-slot="label" className={clsx(className, 'col-start-2 row-start-1')} />
 }
-
 export function DropdownDescription({
  className,
  ...props
@@ -154,7 +142,6 @@ export function DropdownDescription({
  />
  )
 }
-
 export function DropdownShortcut({
  keys,
  className,

@@ -1,9 +1,7 @@
 'use client'
-
 import * as Headless from '@headlessui/react'
 import clsx from 'clsx'
 import { Fragment } from 'react'
-
 export function Listbox<T>({
  className,
  placeholder,
@@ -31,7 +29,6 @@ export function Listbox<T>({
  // Background color + shadow applied to inset pseudo element, so shadow blends with border in light mode
  'before:absolute before:inset-px before:rounded-[calc(var(--radius-lg)-1px)] before:bg-white before:shadow-sm',
  // Background color is moved to control and shadow is removed in dark mode so hide `before` pseudo
- 
  // Hide default focus styles
  'focus:outline-hidden',
  // Focus ring
@@ -100,7 +97,6 @@ export function Listbox<T>({
  </Headless.Listbox>
  )
 }
-
 export function ListboxOption<T>({
  children,
  className,
@@ -119,14 +115,12 @@ export function ListboxOption<T>({
  // Avatars
  '*:data-[slot=avatar]:-mx-0.5 *:data-[slot=avatar]:size-6 sm:*:data-[slot=avatar]:size-5'
  )
-
  return (
  <Headless.ListboxOption as={Fragment} {...props}>
  {({ selectedOption }) => {
  if (selectedOption) {
  return <div className={clsx(className, sharedClasses)}>{children}</div>
  }
-
  return (
  <div
  className={clsx(
@@ -157,11 +151,9 @@ export function ListboxOption<T>({
  </Headless.ListboxOption>
  )
 }
-
 export function ListboxLabel({ className, ...props }: React.ComponentPropsWithoutRef<'span'>) {
  return <span {...props} className={clsx(className, 'ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0')} />
 }
-
 export function ListboxDescription({ className, children, ...props }: React.ComponentPropsWithoutRef<'span'>) {
  return (
  <span

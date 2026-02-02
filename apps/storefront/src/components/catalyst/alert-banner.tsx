@@ -1,6 +1,5 @@
 import clsx from 'clsx'
 import type React from 'react'
-
 const colors = {
  red: 'bg-red-50 border-red-200 text-red-600',
  green: 'bg-green-50 border-green-200 text-green-600',
@@ -8,7 +7,6 @@ const colors = {
  blue: 'bg-blue-50 border-blue-200 text-blue-800',
  zinc: 'bg-zinc-50 border-zinc-200 text-zinc-600',
 }
-
 export function Alert({
  color = 'zinc',
  className,

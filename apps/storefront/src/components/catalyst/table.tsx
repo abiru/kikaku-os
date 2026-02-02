@@ -1,17 +1,14 @@
 'use client'
-
 import clsx from 'clsx'
 import type React from 'react'
 import { createContext, useContext, useState } from 'react'
 import { Link } from './link'
-
 const TableContext = createContext<{ bleed: boolean; dense: boolean; grid: boolean; striped: boolean }>({
  bleed: false,
  dense: false,
  grid: false,
  striped: false,
 })
-
 export function Table({
  bleed = false,
  dense = false,
@@ -33,21 +30,17 @@ export function Table({
  </TableContext.Provider>
  )
 }
-
 export function TableHead({ className, ...props }: React.ComponentPropsWithoutRef<'thead'>) {
  return <thead {...props} className={clsx(className, 'text-zinc-500')} />
 }
-
 export function TableBody(props: React.ComponentPropsWithoutRef<'tbody'>) {
  return <tbody {...props} />
 }
-
 const TableRowContext = createContext<{ href?: string; target?: string; title?: string }>({
  href: undefined,
  target: undefined,
  title: undefined,
 })
-
 export function TableRow({
  href,
  target,
@@ -56,7 +49,6 @@ export function TableRow({
  ...props
 }: { href?: string; target?: string; title?: string } & React.ComponentPropsWithoutRef<'tr'>) {
  let { striped } = useContext(TableContext)
-
  return (
  <TableRowContext.Provider value={{ href, target, title } as React.ContextType<typeof TableRowContext>}>
  <tr
@@ -73,10 +65,8 @@ export function TableRow({
  </TableRowContext.Provider>
  )
 }
-
 export function TableHeader({ className, ...props }: React.ComponentPropsWithoutRef<'th'>) {
  let { bleed, grid } = useContext(TableContext)
-
  return (
  <th
  {...props}
@@ -89,12 +79,10 @@ export function TableHeader({ className, ...props }: React.ComponentPropsWithout
  />
  )
 }
-
 export function TableCell({ className, children, ...props }: React.ComponentPropsWithoutRef<'td'>) {
  let { bleed, dense, grid, striped } = useContext(TableContext)
  let { href, target, title } = useContext(TableRowContext)
  let [cellRef, setCellRef] = useState<HTMLElement | null>(null)
-
  return (
  <td
  ref={href ? setCellRef : undefined}

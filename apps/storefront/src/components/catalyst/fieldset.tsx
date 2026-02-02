@@ -1,7 +1,6 @@
 import * as Headless from '@headlessui/react'
 import clsx from 'clsx'
 import type React from 'react'
-
 export function Fieldset({
  className,
  ...props
@@ -13,7 +12,6 @@ export function Fieldset({
  />
  )
 }
-
 export function Legend({
  className,
  ...props
@@ -29,11 +27,9 @@ export function Legend({
  />
  )
 }
-
 export function FieldGroup({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
  return <div data-slot="control" {...props} className={clsx(className, 'space-y-8')} />
 }
-
 export function Field({ className, ...props }: { className?: string } & Omit<Headless.FieldProps, 'as' | 'className'>) {
  return (
  <Headless.Field
@@ -50,7 +46,6 @@ export function Field({ className, ...props }: { className?: string } & Omit<Hea
  />
  )
 }
-
 export function Label({ className, ...props }: { className?: string } & Omit<Headless.LabelProps, 'as' | 'className'>) {
  return (
  <Headless.Label
@@ -63,7 +58,6 @@ export function Label({ className, ...props }: { className?: string } & Omit<Hea
  />
  )
 }
-
 export function Description({
  className,
  ...props
@@ -76,7 +70,6 @@ export function Description({
  />
  )
 }
-
 export function ErrorMessage({
  className,
  ...props

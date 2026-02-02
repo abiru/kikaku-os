@@ -1,5 +1,4 @@
 import clsx from 'clsx'
-
 export function Divider({
  soft = false,
  className,

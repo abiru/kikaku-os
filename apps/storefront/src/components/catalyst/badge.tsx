@@ -3,7 +3,6 @@ import clsx from 'clsx'
 import React, { forwardRef } from 'react'
 import { TouchTarget } from './button'
 import { Link } from './link'
-
 const colors = {
  red: 'bg-red-500/15 text-red-700 group-data-hover:bg-red-500/25',
  orange:
@@ -33,9 +32,7 @@ const colors = {
  rose: 'bg-rose-400/15 text-rose-700 group-data-hover:bg-rose-400/25',
  zinc: 'bg-zinc-600/10 text-zinc-700 group-data-hover:bg-zinc-600/20',
 }
-
 type BadgeProps = { color?: keyof typeof colors }
-
 export function Badge({ color = 'zinc', className, ...props }: BadgeProps & React.ComponentPropsWithoutRef<'span'>) {
  return (
  <span
@@ -48,7 +45,6 @@ export function Badge({ color = 'zinc', className, ...props }: BadgeProps & Reac
  />
  )
 }
-
 export const BadgeButton = forwardRef(function BadgeButton(
  {
  color = 'zinc',
@@ -65,7 +61,6 @@ export const BadgeButton = forwardRef(function BadgeButton(
  className,
  'group relative inline-flex rounded-md focus:not-data-focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500'
  )
-
  return typeof props.href === 'string' ? (
  <Link {...props} className={classes} ref={ref as React.ForwardedRef<HTMLAnchorElement>}>
  <TouchTarget>
