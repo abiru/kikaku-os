@@ -238,10 +238,10 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 					</div>
 
 					<div class="flex gap-3 pt-4 border-t border-gray-200">
-						<Button type="submit" color="indigo" client:load>
+						<Button type="submit" color="indigo" client:load >
 							Save Changes
 						</Button>
-						<Button href="/admin/tax-rates" outline client:load>
+						<Button href="/admin/tax-rates" outline client:load >
 							Cancel
 						</Button>
 					</div>
@@ -255,9 +255,9 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 					<input type="hidden" name="action" value="delete" />
 					<Button
 						type="submit"
-						color="red"
-						onclick="return confirm('Are you sure you want to deactivate this tax rate?')"
+						outline
 						client:load
+						onClick={(e) => { if (!confirm('Are you sure you want to deactivate this tax rate?')) e.preventDefault(); }}
 					>
 						Deactivate Tax Rate
 					</Button>

@@ -75,7 +75,7 @@ const getStatusColor = (status: string) => {
 		case 'succeeded':
 			return 'blue';
 		case 'pending':
-			return 'amber';
+			return 'yellow';
 		case 'failed':
 		case 'refunded':
 			return 'red';
@@ -87,11 +87,11 @@ const getStatusColor = (status: string) => {
 const getFulfillmentStatusColor = (status: string) => {
 	switch (status) {
 		case 'delivered':
-			return 'blue';
+			return 'green';
 		case 'shipped':
 			return 'blue';
 		case 'processing':
-			return 'amber';
+			return 'yellow';
 		case 'pending':
 			return 'amber';
 		case 'cancelled':

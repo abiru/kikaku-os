@@ -130,7 +130,7 @@ const formatDate = (dateStr: string) => {
 		{error && !template && (
 			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
 				<div class="text-red-600 mb-4">{error}</div>
-				<Button href="/admin/email-templates" outline client:load>
+				<Button href="/admin/email-templates" outline client:load >
 					Back to Templates
 				</Button>
 			</div>
@@ -253,10 +253,10 @@ const formatDate = (dateStr: string) => {
 
 				{/* Actions */}
 				<div class="flex justify-end gap-3">
-					<Button href="/admin/email-templates" outline client:load>
+					<Button href="/admin/email-templates" outline client:load >
 						Back
 					</Button>
-					<Button type="submit" color="indigo" client:load>
+					<Button type="submit" color="indigo" client:load >
 						Save Changes
 					</Button>
 				</div>
