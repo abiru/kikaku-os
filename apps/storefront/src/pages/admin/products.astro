@@ -5,6 +5,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Alert } from '../../components/catalyst/alert-banner';
 import ProductsTable from '../../components/admin/ProductsTable';
 import { Button } from '../../components/catalyst/button';
+import { Input } from '../../components/catalyst/input';
 import { Heading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
 
@@ -109,12 +110,13 @@ if (import.meta.env.ADMIN_API_KEY) {
 		{/* Search Bar */}
 		<div>
 			<form method="get" class="relative max-w-md">
-				<input
+				<Input
 					type="search"
 					name="q"
 					value={q}
 					placeholder="Search by title..."
-					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+					className="pl-10"
+					client:load
 				/>
 				<svg
 					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
@@ -126,7 +128,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 				</svg>
 				<input type="hidden" name="status" value={status} />
 			</form>
-		</Alert>
+		</div>
 
 		{error && (
 			<Alert color="red" client:load>
