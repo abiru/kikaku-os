@@ -1,9 +1,12 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import Button from '../../../components/Button.astro';
+import { Input } from '../../../components/catalyst/input';
+import { Select } from '../../../components/catalyst/select';
+import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Button } from '../../../components/catalyst/button';
 import Badge from '../../../components/Badge.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
 const { id } = Astro.params;
@@ -127,134 +130,120 @@ if (Astro.request.method === 'POST' && hero) {
 		{hero ? (
 			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 				{/* Title */}
-				<div>
-					<label for="title" class="block text-sm font-medium text-gray-900 mb-2">
+				<Field>
+					<Label>
 						Title <span class="text-red-500">*</span>
-					</label>
-					<input
+					</Label>
+					<Input
 						type="text"
 						id="title"
 						name="title"
 						value={hero.title}
 						required
-						maxlength="255"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						maxLength={255}
+						client:load
 					/>
-				</div>
+				</Field>
 
 				{/* Subtitle */}
-				<div>
-					<label for="subtitle" class="block text-sm font-medium text-gray-900 mb-2">
-						Subtitle
-					</label>
-					<input
+				<Field>
+					<Label>Subtitle</Label>
+					<Input
 						type="text"
 						id="subtitle"
 						name="subtitle"
 						value={hero.subtitle || ''}
-						maxlength="500"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						maxLength={500}
+						client:load
 					/>
-				</div>
+				</Field>
 
 				{/* Primary CTA */}
 				<div class="grid grid-cols-2 gap-4">
-					<div>
-						<label for="cta_primary_text" class="block text-sm font-medium text-gray-900 mb-2">
-							Primary Button Text
-						</label>
-						<input
+					<Field>
+						<Label>Primary Button Text</Label>
+						<Input
 							type="text"
 							id="cta_primary_text"
 							name="cta_primary_text"
 							value={hero.cta_primary_text || ''}
-							maxlength="100"
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+							maxLength={100}
+							client:load
 						/>
-					</div>
-					<div>
-						<label for="cta_primary_url" class="block text-sm font-medium text-gray-900 mb-2">
-							Primary Button URL
-						</label>
-						<input
+					</Field>
+					<Field>
+						<Label>Primary Button URL</Label>
+						<Input
 							type="text"
 							id="cta_primary_url"
 							name="cta_primary_url"
 							value={hero.cta_primary_url || ''}
-							maxlength="500"
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+							maxLength={500}
+							client:load
 						/>
-					</div>
+					</Field>
 				</div>
 
 				{/* Secondary CTA */}
 				<div class="grid grid-cols-2 gap-4">
-					<div>
-						<label for="cta_secondary_text" class="block text-sm font-medium text-gray-900 mb-2">
-							Secondary Button Text
-						</label>
-						<input
+					<Field>
+						<Label>Secondary Button Text</Label>
+						<Input
 							type="text"
 							id="cta_secondary_text"
 							name="cta_secondary_text"
 							value={hero.cta_secondary_text || ''}
-							maxlength="100"
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+							maxLength={100}
+							client:load
 						/>
-					</div>
-					<div>
-						<label for="cta_secondary_url" class="block text-sm font-medium text-gray-900 mb-2">
-							Secondary Button URL
-						</label>
-						<input
+					</Field>
+					<Field>
+						<Label>Secondary Button URL</Label>
+						<Input
 							type="text"
 							id="cta_secondary_url"
 							name="cta_secondary_url"
 							value={hero.cta_secondary_url || ''}
-							maxlength="500"
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+							maxLength={500}
+							client:load
 						/>
-					</div>
+					</Field>
 				</div>
 
 				{/* Position */}
-				<div>
-					<label for="position" class="block text-sm font-medium text-gray-900 mb-2">
-						Position (Display Order)
-					</label>
-					<input
+				<Field>
+					<Label>Position (Display Order)</Label>
+					<Input
 						type="number"
 						id="position"
 						name="position"
 						value={hero.position}
 						min="0"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						client:load
 					/>
-					<p class="mt-1 text-xs text-gray-500">Lower numbers appear first on the homepage</p>
-				</div>
+					<Description>Lower numbers appear first on the homepage</Description>
+				</Field>
 
 				{/* Status */}
-				<div>
-					<label for="status" class="block text-sm font-medium text-gray-900 mb-2">
-						Status
-					</label>
-					<select
+				<Field>
+					<Label>Status</Label>
+					<Select
 						id="status"
 						name="status"
-						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
+						client:load
 					>
 						<option value="draft" selected={hero.status === 'draft'}>Draft</option>
 						<option value="active" selected={hero.status === 'active'}>Active</option>
 						<option value="archived" selected={hero.status === 'archived'}>Archived</option>
-					</select>
-				</div>
+					</Select>
+				</Field>
 
 				{/* Submit Button */}
 				<div class="flex gap-3 pt-4">
-					<Button type="submit" variant="primary">
+					<Button type="submit" color="indigo" client:load>
 						Save Changes
 					</Button>
-					<Button href="/admin/home-heroes" variant="secondary">
+					<Button href="/admin/home-heroes" color="zinc" client:load>
 						Cancel
 					</Button>
 				</div>

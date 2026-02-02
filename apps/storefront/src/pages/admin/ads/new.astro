@@ -5,6 +5,11 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
 import { getApiBase } from '../../../lib/api';
+import { Input } from '../../../components/catalyst/input';
+import { Textarea } from '../../../components/catalyst/textarea';
+import { Select } from '../../../components/catalyst/select';
+import { Field, Label } from '../../../components/catalyst/fieldset';
+import { Button } from '../../../components/catalyst/button';
 
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const apiBase = getApiBase();
@@ -21,7 +26,7 @@ const apiBase = getApiBase();
         Back to Ads
       </a>
       <h1 class="text-3xl font-semibold text-zinc-950">Create Ad Draft</h1>
-    </Alert>
+    </div>
 
     {/* AI Generation Section */}
     <div id="ai-generation-section" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
@@ -32,136 +37,121 @@ const apiBase = getApiBase();
 
       <form id="generate-form" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="gen_productName" class="block text-sm font-medium text-zinc-950 mb-2">
-              Product Name <span class="text-red-500">*</span>
-            </label>
-            <input
+          <Field>
+            <Label>Product Name <span class="text-red-500">*</span></Label>
+            <Input
               type="text"
               id="gen_productName"
               required
-              class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+              client:load
             />
-          </Alert>
+          </Field>
 
-          <div>
-            <label for="gen_finalUrl" class="block text-sm font-medium text-zinc-950 mb-2">
-              Landing Page URL <span class="text-red-500">*</span>
-            </label>
-            <input
+          <Field>
+            <Label>Landing Page URL <span class="text-red-500">*</span></Label>
+            <Input
               type="url"
               id="gen_finalUrl"
               required
               placeholder="https://example.com/product"
-              class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+              client:load
             />
-          </Alert>
-        </Alert>
+          </Field>
+        </div>
 
-        <div>
-          <label for="gen_productDescription" class="block text-sm font-medium text-zinc-950 mb-2">
-            Product Description <span class="text-red-500">*</span>
-          </label>
-          <textarea
+        <Field>
+          <Label>Product Description <span class="text-red-500">*</span></Label>
+          <Textarea
             id="gen_productDescription"
             required
-            rows="3"
-            class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
-          ></textarea>
-        </Alert>
+            rows={3}
+            client:load
+          />
+        </Field>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="gen_targetAudience" class="block text-sm font-medium text-zinc-950 mb-2">
-              Target Audience <span class="text-red-500">*</span>
-            </label>
-            <input
+          <Field>
+            <Label>Target Audience <span class="text-red-500">*</span></Label>
+            <Input
               type="text"
               id="gen_targetAudience"
               required
               placeholder="e.g., Small business owners"
-              class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+              client:load
             />
-          </Alert>
+          </Field>
 
-          <div>
-            <label for="gen_keywords" class="block text-sm font-medium text-zinc-950 mb-2">
-              Keywords <span class="text-red-500">*</span>
-            </label>
-            <input
+          <Field>
+            <Label>Keywords <span class="text-red-500">*</span></Label>
+            <Input
               type="text"
               id="gen_keywords"
               required
               placeholder="keyword1, keyword2, keyword3"
-              class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+              client:load
             />
-          </Alert>
-        </Alert>
+          </Field>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label for="gen_tone" class="block text-sm font-medium text-zinc-950 mb-2">
-              Tone
-            </label>
-            <select
+          <Field>
+            <Label>Tone</Label>
+            <Select
               id="gen_tone"
-              class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+              client:load
             >
               <option value="professional">Professional</option>
               <option value="casual">Casual</option>
               <option value="urgent">Urgent</option>
               <option value="informative">Informative</option>
-            </select>
-          </Alert>
+            </Select>
+          </Field>
 
-          <div>
-            <label for="gen_language" class="block text-sm font-medium text-zinc-950 mb-2">
-              Language
-            </label>
-            <select
+          <Field>
+            <Label>Language</Label>
+            <Select
               id="gen_language"
-              class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+              client:load
             >
               <option value="ja">Japanese</option>
               <option value="en">English</option>
-            </select>
-          </Alert>
+            </Select>
+          </Field>
 
-          <div>
-            <label for="gen_adType" class="block text-sm font-medium text-zinc-950 mb-2">
-              Ad Type
-            </label>
-            <select
+          <Field>
+            <Label>Ad Type</Label>
+            <Select
               id="gen_adType"
-              class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20"
+              client:load
             >
               <option value="search">Search</option>
               <option value="display">Display</option>
               <option value="performance_max">Performance Max</option>
-            </select>
-          </Alert>
-        </Alert>
+            </Select>
+          </Field>
+        </div>
 
         <div>
-          <button
+          <Button
             type="submit"
             id="generate-btn"
-            class="px-6 py-3 bg-[#0071e3] text-white rounded-lg font-medium hover:bg-[#0077ed] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            color="indigo"
+            client:load
           >
             Generate with AI
-          </button>
-        </Alert>
+          </Button>
+        </div>
       </form>
 
       <div id="generation-error" class="hidden mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-      </Alert>
+      </div>
 
       <div id="generation-loading" class="hidden mt-6 text-center py-8">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0071e3]"></div>
         <p class="mt-4 text-sm text-gray-600">Generating ad variations with AI...</p>
         <p class="mt-2 text-xs text-gray-500">Results will be sent to inbox for review.</p>
-      </Alert>
-    </Alert>
+      </div>
+    </div>
 
     {/* Manual Form Section */}
     <div id="form-section">
@@ -175,7 +165,7 @@ const apiBase = getApiBase();
         apiKey={apiKey}
         apiBase={apiBase}
       />
-    </Alert>
+    </div>
   </Alert>
 
   <script define:vars={{ apiKey, apiBase }}>
