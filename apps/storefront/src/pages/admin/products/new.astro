@@ -76,7 +76,7 @@ if (Astro.request.method === 'POST') {
 			)}
 
 			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-				<Fieldset client:only="react">
+				<Fieldset client:load>
 					<Field>
 						<Label>Title *</Label>
 						<Input type="text" name="title" required value={formValues.title} placeholder="Product title" />

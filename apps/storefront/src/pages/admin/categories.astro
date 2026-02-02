@@ -147,7 +147,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 				<form id="rename-form" class="p-6 space-y-4">
 					<input type="hidden" id="rename-old-name" name="oldName" value="" />
 
-					<Fieldset client:only="react">
+					<Fieldset client:load>
 						<Field>
 							<Label>Current Name</Label>
 							<Input
@@ -202,7 +202,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 						<span id="delete-product-count"></span> product(s) will have their category removed.
 					</p>
 
-					<Fieldset client:only="react">
+					<Fieldset client:load>
 						<Field>
 							<Label>Move products to (optional)</Label>
 							<Input

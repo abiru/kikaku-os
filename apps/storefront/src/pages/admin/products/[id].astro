@@ -279,7 +279,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			{product && (
 				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-					<Fieldset client:only="react">
+					<Fieldset client:load>
 						<Field>
 							<Label>Title *</Label>
 							<Input client:load type="text" name="title" required value={product.title} />
@@ -403,7 +403,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 						<Subheading>Web更新</Subheading>
 					</div>
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
-						<Fieldset client:only="react">
+						<Fieldset client:load>
 							<Field>
 								<Label>商品ページURL</Label>
 								<div class="flex gap-2">
@@ -690,7 +690,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 						<form id="variant-form" class="p-6 space-y-4">
 							<input type="hidden" id="variant-id" name="variantId" value="" />
 
-							<Fieldset client:only="react">
+							<Fieldset client:load>
 								<Field>
 									<Label>Title *</Label>
 									<Input

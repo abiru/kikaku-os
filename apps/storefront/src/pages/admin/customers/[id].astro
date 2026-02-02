@@ -212,7 +212,7 @@ const getStatusBadge = (status: string) => {
 					<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6 mb-8">
 						<Subheading>Customer Details</Subheading>
 
-						<Fieldset client:only="react">
+						<Fieldset client:load>
 							<Field>
 								<Label>Name *</Label>
 								<Input
