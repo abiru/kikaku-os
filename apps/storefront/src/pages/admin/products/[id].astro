@@ -438,40 +438,6 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 							<div class="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm"></div>
 						</div>
 
-						<!-- Manual input fallback -->
-						<details class="text-sm">
-							<summary class="text-[#86868b] cursor-pointer hover:text-zinc-950">
-								URLで取得できない場合は手動入力
-							</summary>
-							<div class="mt-3 space-y-3 pl-4 border-l-2 border-gray-200">
-								<Fieldset client:only="react">
-									<Field>
-										<Label className="text-xs">画像URL</Label>
-										<Input
-											type="url"
-											id="manual-image"
-											placeholder="https://example.com/image.jpg"
-										/>
-									</Field>
-									<Field>
-										<Label className="text-xs">説明文</Label>
-										<Textarea
-											id="manual-description"
-											rows={3}
-											placeholder="商品の説明..."
-										/>
-									</Field>
-								</Fieldset>
-								<button
-									type="button"
-									id="manual-apply-btn"
-									class="px-3 py-1.5 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
-								>
-									手動データでプレビュー
-								</button>
-							</div>
-						</details>
-
 						<div id="fetch-preview" class="hidden border-t border-gray-100 pt-4 space-y-4">
 							<h3 class="text-sm font-semibold text-zinc-950">取得結果</h3>
 
@@ -1148,21 +1114,20 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			try {
 				const productName = document.querySelector('input[name="title"]')?.value?.trim() || '';
-				const res = await fetch('/api/admin/products/fetch-url', {
+				const res = await fetch(`${apiBase}/admin/product-fetch`, {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ url, product_name: productName })
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': apiKey
+					},
+					body: JSON.stringify({ url, productName })
 				});
 
 				const data = await res.json();
 
-				if (!data.success) {
-					showFetchError(data.error || '取得に失敗しました');
+				if (!res.ok || !data.success) {
+					showFetchError(data.message || '取得に失敗しました');
 				} else {
-					// Show warning if URL fetch failed but content was generated
-					if (data.warning) {
-						showFetchWarning(data.warning);
-					}
 					showPreview(data);
 				}
 			} catch (err) {
@@ -1176,62 +1141,65 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 		cancelPreviewBtn?.addEventListener('click', hidePreview);
 
-		// Manual input handler
-		const manualImageInput = document.getElementById('manual-image');
-		const manualDescInput = document.getElementById('manual-description');
-		const manualApplyBtn = document.getElementById('manual-apply-btn');
+		// Apply all (title + description) - Submit to Inbox for approval
+		// Note: Direct updates bypass the Inbox approval pattern (CLAUDE.md violation)
+		// All AI-generated content must be reviewed before being applied
+		applyAllBtn?.addEventListener('click', async () => {
+			if (!fetchedData) return;
 
-		manualApplyBtn?.addEventListener('click', async () => {
-			const imageUrl = manualImageInput?.value?.trim();
-			const description = manualDescInput?.value?.trim();
-
-			if (!imageUrl && !description) {
-				showFetchError('画像URLまたは説明文を入力してください');
+			if (!confirm('この情報をInboxに送信して承認待ちにしますか？')) {
 				return;
 			}
 
-			hideFetchError();
-			if (applySuccess) applySuccess.classList.add('hidden');
-
-			const productTitle = document.querySelector('input[name="title"]')?.value?.trim() || 'Product';
+			if (sendInboxBtn) sendInboxBtn.disabled = true;
+			if (applyAllBtn) {
+				applyAllBtn.disabled = true;
+				applyAllBtn.textContent = '送信中...';
+			}
 
 			try {
-				const res = await fetch('/api/admin/products/fetch-url', {
+				// Create inbox item via API
+				const res = await fetch(`${apiBase}/inbox`, {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': apiKey
+					},
 					body: JSON.stringify({
-						image_url: imageUrl,
-						description,
-						product_name: productTitle
+						title: `Product Update: ${document.querySelector('input[name="title"]')?.value || 'Unknown'}`,
+						body: `Web取得による商品情報更新の提案\n\n画像: ${fetchedData.image_url || 'なし'}\n元タイトル: ${fetchedData.original_title || 'なし'}\n生成タイトル: ${fetchedData.generated_title || 'なし'}\n生成説明文: [HTML形式]\nソース: ${fetchedData.source || 'なし'}`,
+						severity: 'info',
+						kind: 'product_update',
+						metadata: JSON.stringify({
+							product_id: parseInt(productId),
+							image_url: fetchedData.image_url,
+							title: fetchedData.generated_title,
+							description: fetchedData.generated_description,
+							original_title: fetchedData.original_title,
+							specs: fetchedData.specs,
+							source: fetchedData.source
+						})
 					})
 				});
 
-				const data = await res.json();
-				if (data.success) {
-					showPreview(data);
+				if (!res.ok) {
+					const data = await res.json();
+					showFetchError(data.message || 'Inbox送信に失敗しました');
+				} else {
+					hidePreview();
+					if (applySuccess) applySuccess.classList.remove('hidden');
 				}
 			} catch (err) {
-				showFetchError('エラーが発生しました');
+				showFetchError('通信エラーが発生しました');
+			} finally {
+				if (sendInboxBtn) {
+					sendInboxBtn.disabled = false;
+				}
+				if (applyAllBtn) {
+					applyAllBtn.disabled = false;
+					applyAllBtn.textContent = 'すべて適用';
+				}
 			}
-		});
-
-		// Apply all (title + description) directly to form
-		applyAllBtn?.addEventListener('click', () => {
-			if (!fetchedData) return;
-
-			const titleInput = document.getElementById('title');
-			const descTextarea = document.getElementById('description');
-
-			if (titleInput && fetchedData.generated_title) {
-				titleInput.value = fetchedData.generated_title;
-			}
-			if (descTextarea && fetchedData.generated_description) {
-				descTextarea.value = fetchedData.generated_description;
-			}
-
-			hidePreview();
-			titleInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-			titleInput?.focus();
 		});
 
 		// Apply title only
@@ -1243,6 +1211,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 				titleInput.value = fetchedData.generated_title;
 			}
 
+			hidePreview();
 			titleInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 			titleInput?.focus();
 		});
@@ -1251,18 +1220,18 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 		applyDescOnlyBtn?.addEventListener('click', () => {
 			if (!fetchedData) return;
 
-			const descTextarea = document.getElementById('description');
-			if (descTextarea && fetchedData.generated_description) {
-				descTextarea.value = fetchedData.generated_description;
+			const descHidden = document.getElementById('description-hidden');
+			if (descHidden && fetchedData.generated_description) {
+				descHidden.value = fetchedData.generated_description;
 			}
 
-			descTextarea?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-			descTextarea?.focus();
+			hidePreview();
+			descHidden?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 		});
 
 		// Send to inbox for approval
 		sendInboxBtn?.addEventListener('click', async () => {
-			if (!fetchedData) return;
+			if (!fetchedData || !sendInboxBtn) return;
 
 			sendInboxBtn.disabled = true;
 			sendInboxBtn.textContent = '送信中...';
@@ -1302,8 +1271,10 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			} catch (err) {
 				showFetchError('通信エラーが発生しました');
 			} finally {
-				sendInboxBtn.disabled = false;
-				sendInboxBtn.textContent = 'Inboxに送信';
+				if (sendInboxBtn) {
+					sendInboxBtn.disabled = false;
+					sendInboxBtn.textContent = 'Inboxに送信';
+				}
 			}
 		});
 

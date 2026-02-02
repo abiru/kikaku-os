@@ -1,6 +1,16 @@
 name = "kikaku-os-api"
 main = "apps/api/src/index.ts"
 compatibility_date = "2026-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Browser Rendering binding
+# Note: For local development with `wrangler dev`, set remote = true
+# to connect to actual Cloudflare browser instances.
+# Local simulation is not available for Browser Rendering.
+[browser]
+binding = "BROWSER"
+# Uncomment for local development testing:
+# remote = true
 
 triggers = { crons = ["0 16 * * *"] }
 
