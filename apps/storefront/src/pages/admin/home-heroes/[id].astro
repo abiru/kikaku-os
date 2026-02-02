@@ -39,73 +39,74 @@ try {
 
 // Handle form submission
 if (Astro.request.method === 'POST' && hero) {
-	try {
-		const formData = await Astro.request.formData();
-		const title = formData.get('title') as string;
-		const subtitle = formData.get('subtitle') as string;
-		const ctaPrimaryText = formData.get('cta_primary_text') as string;
-		const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
-		const ctaSecondaryText = formData.get('cta_secondary_text') as string;
-		const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
-		const position = Number(formData.get('position') || '0');
-		const status = formData.get('status') as string;
-
-		const body: any = {};
-
-		if (title !== hero.title) body.title = title;
-		if (subtitle !== hero.subtitle) body.subtitle = subtitle || null;
-		if (ctaPrimaryText !== hero.cta_primary_text) body.cta_primary_text = ctaPrimaryText || null;
-		if (ctaPrimaryUrl !== hero.cta_primary_url) body.cta_primary_url = ctaPrimaryUrl || null;
-		if (ctaSecondaryText !== hero.cta_secondary_text) body.cta_secondary_text = ctaSecondaryText || null;
-		if (ctaSecondaryUrl !== hero.cta_secondary_url) body.cta_secondary_url = ctaSecondaryUrl || null;
-		if (position !== hero.position) body.position = position;
-		if (status !== hero.status) body.status = status;
-
-		if (Object.keys(body).length > 0) {
-			const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': import.meta.env.ADMIN_API_KEY
-				},
-				body: JSON.stringify(body)
-			});
-
-			if (!res.ok) {
-				const data = await res.json();
-				throw new Error(data.message || 'Failed to update hero section');
-			}
-
-			success = true;
-
-			// Reload hero data
-			const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-				headers: {
-					'x-admin-key': import.meta.env.ADMIN_API_KEY
-				}
-			});
-			const refreshData = await refreshRes.json();
-			hero = refreshData.hero;
-		}
-	} catch (e: any) {
-		console.error(e);
-		error = e.message || 'Failed to update hero section';
-		// Extract detailed error from JSON response
-		if (e.message.includes('Invalid input')) {
-			error = 'Validation error: Please check all required fields';
-		}
-	}
-}
-
-// Handle image upload
-if (Astro.request.method === 'POST' && hero) {
 	const formData = await Astro.request.formData();
 	const imageFile = formData.get('image_upload');
 	const imageType = formData.get('image_type');
 	const deleteImageType = formData.get('delete_image_type');
 
+	// Check if this is a hero data update (not an image operation)
+	const isImageOperation = imageFile instanceof File && imageFile.size > 0 || deleteImageType;
+
+	if (!isImageOperation) {
+		try {
+			const title = formData.get('title') as string;
+			const subtitle = formData.get('subtitle') as string;
+			const ctaPrimaryText = formData.get('cta_primary_text') as string;
+			const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
+			const ctaSecondaryText = formData.get('cta_secondary_text') as string;
+			const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
+			const position = Number(formData.get('position') || '0');
+			const status = formData.get('status') as string || 'draft';
+
+			const body: any = {};
+
+			if (title !== hero.title) body.title = title;
+			if (subtitle !== hero.subtitle) body.subtitle = subtitle || null;
+			if (ctaPrimaryText !== hero.cta_primary_text) body.cta_primary_text = ctaPrimaryText || null;
+			if (ctaPrimaryUrl !== hero.cta_primary_url) body.cta_primary_url = ctaPrimaryUrl || null;
+			if (ctaSecondaryText !== hero.cta_secondary_text) body.cta_secondary_text = ctaSecondaryText || null;
+			if (ctaSecondaryUrl !== hero.cta_secondary_url) body.cta_secondary_url = ctaSecondaryUrl || null;
+			if (position !== hero.position) body.position = position;
+			if (status !== hero.status) body.status = status;
+
+			if (Object.keys(body).length > 0) {
+				const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': import.meta.env.ADMIN_API_KEY
+					},
+					body: JSON.stringify(body)
+				});
+
+				if (!res.ok) {
+					const data = await res.json();
+					throw new Error(data.message || 'Failed to update hero section');
+				}
+
+				success = true;
+
+				// Reload hero data
+				const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+					headers: {
+						'x-admin-key': import.meta.env.ADMIN_API_KEY
+					}
+				});
+				const refreshData = await refreshRes.json();
+				hero = refreshData.hero;
+			}
+		} catch (e: any) {
+			console.error(e);
+			error = e.message || 'Failed to update hero section';
+			// Extract detailed error from JSON response
+			if (e.message.includes('Invalid input')) {
+				error = 'Validation error: Please check all required fields';
+			}
+		}
+	}
+
 	// Handle image deletion
-	if (deleteImageType) {
+	else if (deleteImageType) {
 		try {
 			const res = await fetch(`${apiBase}/admin/home/heroes/${id}/image/${deleteImageType}`, {
 				method: 'DELETE',
@@ -323,11 +324,12 @@ if (Astro.request.method === 'POST' && hero) {
 					<Select
 						id="status"
 						name="status"
-
+						defaultValue={hero.status}
+						client:load
 					>
-						<option value="draft" selected={hero.status === 'draft'}>Draft</option>
-						<option value="active" selected={hero.status === 'active'}>Active</option>
-						<option value="archived" selected={hero.status === 'archived'}>Archived</option>
+						<option value="draft">Draft</option>
+						<option value="active">Active</option>
+						<option value="archived">Archived</option>
 					</Select>
 				</Field>
 
