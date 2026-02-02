@@ -251,14 +251,13 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 						Deactivate this tax rate. It will no longer be assignable to products.
 					</p>
 					<input type="hidden" name="action" value="delete" />
-					<Button
+					<button
 						type="submit"
-						color="red"
 						onclick="return confirm('Are you sure you want to deactivate this tax rate?')"
-						client:load
+						class="relative isolate inline-flex items-baseline justify-center gap-x-2 rounded-lg border text-base/6 font-semibold px-[calc(var(--spacing)*3.5-1px)] py-[calc(var(--spacing)*2.5-1px)] sm:px-[calc(var(--spacing)*3-1px)] sm:py-[calc(var(--spacing)*1.5-1px)] sm:text-sm/6 border-transparent text-white cursor-default [--btn-bg:var(--color-red-600)] [--btn-border:var(--color-red-700)]/90 bg-[--btn-border] before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-[--btn-bg] before:shadow-sm"
 					>
 						Deactivate Tax Rate
-					</Button>
+					</button>
 				</form>
 
 				<div class="bg-gray-50 rounded-lg p-4 text-sm text-[#86868b]">
