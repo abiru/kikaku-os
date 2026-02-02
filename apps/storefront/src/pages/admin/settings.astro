@@ -7,6 +7,10 @@ import Button from '../../components/Button.astro';
 import { Badge } from '../../components/catalyst/badge';
 import { Heading, Subheading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
+import { Input } from '../../components/catalyst/input';
+import { Textarea } from '../../components/catalyst/textarea';
+import { Checkbox } from '../../components/catalyst/checkbox';
+import { Field, Label, Description } from '../../components/catalyst/fieldset';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -170,12 +174,10 @@ const formatValue = (value: string, dataType: string) => {
             {settings.map((setting) => (
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                 <div class="md:col-span-1">
-                  <label for={`setting_${setting.key}`} class="block text-sm font-medium text-zinc-950">
+                  <Label htmlFor={`setting_${setting.key}`}>
                     {setting.description || setting.key}
-                  </label>
-                  <p class="text-xs text-zinc-500 mt-1">
-                    {setting.key}
-                  </p>
+                  </Label>
+                  <Description>{setting.key}</Description>
                   <Badge color="zinc" client:only="react" className="mt-2 text-xs">
                     {setting.data_type}
                   </Badge>
@@ -183,33 +185,33 @@ const formatValue = (value: string, dataType: string) => {
 
                 <div class="md:col-span-2">
                   {setting.data_type === 'text' ? (
-                    <textarea
-                      id={`setting_${setting.key}`}
-                      name={`setting_${setting.key}`}
-                      rows={3}
-                      class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    >{setting.value}</textarea>
+                    <Field>
+                      <Textarea client:load
+                        id={`setting_${setting.key}`}
+                        name={`setting_${setting.key}`}
+                        rows={3}
+                      >{setting.value}</Textarea>
+                    </Field>
                   ) : setting.data_type === 'boolean' ? (
-                    <label class="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
+                    <Field>
+                      <Checkbox client:load
                         id={`setting_${setting.key}`}
                         name={`setting_${setting.key}`}
                         value="true"
                         checked={formatValue(setting.value, setting.data_type)}
-                        class="w-5 h-5 text-indigo-600 border-zinc-300 rounded focus:ring-indigo-500 focus:ring-2"
                       />
-                      <span class="text-sm text-zinc-700">Enabled</span>
-                    </label>
+                      <Label htmlFor={`setting_${setting.key}`}>Enabled</Label>
+                    </Field>
                   ) : (
-                    <input
-                      type={getInputType(setting.data_type)}
-                      id={`setting_${setting.key}`}
-                      name={`setting_${setting.key}`}
-                      value={setting.value}
-                      step={setting.data_type === 'integer' ? '1' : undefined}
-                      class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    />
+                    <Field>
+                      <Input client:load
+                        type={getInputType(setting.data_type)}
+                        id={`setting_${setting.key}`}
+                        name={`setting_${setting.key}`}
+                        value={setting.value}
+                        step={setting.data_type === 'integer' ? '1' : undefined}
+                      />
+                    </Field>
                   )}
                 </div>
               </div>
