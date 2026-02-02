@@ -2,7 +2,10 @@
 export const prerender = false;
 
 import { Alert } from '../../../components/catalyst/alert-banner';
-import Button from '../../../components/Button.astro';
+import { Input } from '../../../components/catalyst/input';
+import { Select } from '../../../components/catalyst/select';
+import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
@@ -109,158 +112,153 @@ if (Astro.request.method === 'POST') {
 			</a>
 			<h1 class="text-2xl font-semibold text-gray-900">New Coupon</h1>
 		</div>
-			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
-					{error}
-				</div>
-			)}
+		{error && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				{error}
+			</div>
+		)}
 
-			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div class="md:col-span-2">
-						<label for="code" class="block text-sm font-medium text-zinc-950 mb-2">
+		<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div class="md:col-span-2">
+					<Field>
+						<Label>
 							Coupon Code <span class="text-red-500">*</span>
-						</label>
-						<input
+						</Label>
+						<Input
 							type="text"
 							id="code"
 							name="code"
 							required
 							value={formValues.code}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							class="font-mono uppercase"
 							placeholder="SUMMER2024"
+							client:load
 						/>
-						<p class="text-xs text-[#86868b] mt-1">Will be converted to uppercase</p>
-					</div>
-
-					<div>
-						<label for="type" class="block text-sm font-medium text-zinc-950 mb-2">
-							Discount Type <span class="text-red-500">*</span>
-						</label>
-						<select
-							id="type"
-							name="type"
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
-						>
-							<option value="percentage" selected={formValues.type === 'percentage'}>Percentage (%)</option>
-							<option value="fixed" selected={formValues.type === 'fixed'}>Fixed Amount (JPY)</option>
-						</select>
-					</div>
-
-					<div>
-						<label for="value" class="block text-sm font-medium text-zinc-950 mb-2">
-							Value <span class="text-red-500">*</span>
-						</label>
-						<input
-							type="number"
-							id="value"
-							name="value"
-							required
-							min="1"
-							value={formValues.value}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-							placeholder="10"
-						/>
-						<p class="text-xs text-[#86868b] mt-1">For percentage, enter 10 for 10% off</p>
-					</div>
-
-					<div>
-						<label for="min_order_amount" class="block text-sm font-medium text-zinc-950 mb-2">
-							Minimum Order Amount (JPY)
-						</label>
-						<input
-							type="number"
-							id="min_order_amount"
-							name="min_order_amount"
-							min="0"
-							value={formValues.min_order_amount}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-							placeholder="0"
-						/>
-					</div>
-
-					<div>
-						<label for="max_uses" class="block text-sm font-medium text-zinc-950 mb-2">
-							Max Total Uses
-						</label>
-						<input
-							type="number"
-							id="max_uses"
-							name="max_uses"
-							min="1"
-							value={formValues.max_uses}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-							placeholder="Unlimited"
-						/>
-						<p class="text-xs text-[#86868b] mt-1">Leave empty for unlimited</p>
-					</div>
-
-					<div>
-						<label for="uses_per_customer" class="block text-sm font-medium text-zinc-950 mb-2">
-							Uses Per Customer
-						</label>
-						<input
-							type="number"
-							id="uses_per_customer"
-							name="uses_per_customer"
-							min="1"
-							value={formValues.uses_per_customer}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 tabular-nums focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-							placeholder="1"
-						/>
-					</div>
-
-					<div>
-						<label for="status" class="block text-sm font-medium text-zinc-950 mb-2">
-							Status
-						</label>
-						<select
-							id="status"
-							name="status"
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
-						>
-							<option value="active" selected={formValues.status === 'active'}>Active</option>
-							<option value="inactive" selected={formValues.status === 'inactive'}>Inactive</option>
-						</select>
-					</div>
-
-					<div>
-						<label for="starts_at" class="block text-sm font-medium text-zinc-950 mb-2">
-							Start Date
-						</label>
-						<input
-							type="datetime-local"
-							id="starts_at"
-							name="starts_at"
-							value={formValues.starts_at}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-						/>
-						<p class="text-xs text-[#86868b] mt-1">Leave empty for immediate</p>
-					</div>
-
-					<div>
-						<label for="expires_at" class="block text-sm font-medium text-zinc-950 mb-2">
-							Expiration Date
-						</label>
-						<input
-							type="datetime-local"
-							id="expires_at"
-							name="expires_at"
-							value={formValues.expires_at}
-							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-						/>
-						<p class="text-xs text-[#86868b] mt-1">Leave empty for no expiration</p>
-					</div>
+						<Description>Will be converted to uppercase</Description>
+					</Field>
 				</div>
 
-				<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-					<Button href="/admin/coupons" variant="secondary" size="sm">
-						Cancel
-					</Button>
-					<Button type="submit" variant="primary" size="sm">
-						Create Coupon
-					</Button>
-				</div>
-			</form>
+				<Field>
+					<Label>
+						Discount Type <span class="text-red-500">*</span>
+					</Label>
+					<Select
+						id="type"
+						name="type"
+						client:load
+					>
+						<option value="percentage" selected={formValues.type === 'percentage'}>Percentage (%)</option>
+						<option value="fixed" selected={formValues.type === 'fixed'}>Fixed Amount (JPY)</option>
+					</Select>
+				</Field>
+
+				<Field>
+					<Label>
+						Value <span class="text-red-500">*</span>
+					</Label>
+					<Input
+						type="number"
+						id="value"
+						name="value"
+						required
+						min="1"
+						value={formValues.value}
+						class="tabular-nums"
+						placeholder="10"
+						client:load
+					/>
+					<Description>For percentage, enter 10 for 10% off</Description>
+				</Field>
+
+				<Field>
+					<Label>Minimum Order Amount (JPY)</Label>
+					<Input
+						type="number"
+						id="min_order_amount"
+						name="min_order_amount"
+						min="0"
+						value={formValues.min_order_amount}
+						class="tabular-nums"
+						placeholder="0"
+						client:load
+					/>
+				</Field>
+
+				<Field>
+					<Label>Max Total Uses</Label>
+					<Input
+						type="number"
+						id="max_uses"
+						name="max_uses"
+						min="1"
+						value={formValues.max_uses}
+						class="tabular-nums"
+						placeholder="Unlimited"
+						client:load
+					/>
+					<Description>Leave empty for unlimited</Description>
+				</Field>
+
+				<Field>
+					<Label>Uses Per Customer</Label>
+					<Input
+						type="number"
+						id="uses_per_customer"
+						name="uses_per_customer"
+						min="1"
+						value={formValues.uses_per_customer}
+						class="tabular-nums"
+						placeholder="1"
+						client:load
+					/>
+				</Field>
+
+				<Field>
+					<Label>Status</Label>
+					<Select
+						id="status"
+						name="status"
+						client:load
+					>
+						<option value="active" selected={formValues.status === 'active'}>Active</option>
+						<option value="inactive" selected={formValues.status === 'inactive'}>Inactive</option>
+					</Select>
+				</Field>
+
+				<Field>
+					<Label>Start Date</Label>
+					<Input
+						type="datetime-local"
+						id="starts_at"
+						name="starts_at"
+						value={formValues.starts_at}
+						client:load
+					/>
+					<Description>Leave empty for immediate</Description>
+				</Field>
+
+				<Field>
+					<Label>Expiration Date</Label>
+					<Input
+						type="datetime-local"
+						id="expires_at"
+						name="expires_at"
+						value={formValues.expires_at}
+						client:load
+					/>
+					<Description>Leave empty for no expiration</Description>
+				</Field>
+			</div>
+
+			<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+				<Button href="/admin/coupons" color="zinc" client:load>
+					Cancel
+				</Button>
+				<Button type="submit" color="indigo" client:load>
+					Create Coupon
+				</Button>
+			</div>
+		</form>
 	</div>
 </AdminLayout>
