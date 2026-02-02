@@ -1,4 +1,11 @@
 <!-- .claude/commands/exec-issue.md -->
+<!-- Part of Feature Workflow: Step 4 (EXEC) -->
+
+このコマンドは **Feature Workflow の Step 4** です。
+完全なワークフローは `/feature` コマンドを使用してください。
+
+---
+
 `gh issue view $ARGUMENTS` でGitHub Issueの内容を確認し、タスクを遂行してください。
 
 ## 手順
@@ -83,3 +90,27 @@ pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
 
 ## 入力
 $ARGUMENTS にIssue番号を指定（例: `43` または `#43`）
+
+---
+
+## 完了後の次のステップ
+
+実装完了後、以下のステップに進んでください：
+
+### Step 5: Typecheck
+```bash
+pnpm -C apps/api typecheck
+pnpm -C apps/storefront exec astro check
+```
+
+### Step 6: Test
+```bash
+pnpm -C apps/api test
+```
+
+### Step 7: PR
+```bash
+gh pr create --title "feat: [description]" --body "[summary]"
+```
+
+完全なワークフローは `/feature` コマンドで自動化されます。
