@@ -268,7 +268,7 @@ const getStatusBadge = (status: string) => {
 						) : (
 							<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 								<div class="overflow-x-auto">
-									<Table client:load>
+									<Table client:only="react">
 										<TableHead>
 											<TableRow>
 												<TableHeader>Order ID</TableHeader>

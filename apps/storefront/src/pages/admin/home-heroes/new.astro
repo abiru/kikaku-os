@@ -3,7 +3,7 @@ export const prerender = false;
 
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Description } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
@@ -87,9 +87,9 @@ if (Astro.request.method === 'POST') {
 			{/* Title */}
 				<Fieldset client:load>
 			<Field>
-				<Label>
+				<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">
 					Title <span class="text-red-500">*</span>
-				</Label>
+				</label>
 				<Input
 					type="text"
 					id="title"
@@ -103,7 +103,7 @@ if (Astro.request.method === 'POST') {
 
 			{/* Subtitle */}
 			<Field>
-				<Label>Subtitle</Label>
+				<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Subtitle</label>
 				<Input
 					type="text"
 					id="subtitle"
@@ -117,7 +117,7 @@ if (Astro.request.method === 'POST') {
 			{/* Primary CTA */}
 			<div class="grid grid-cols-2 gap-4">
 				<Field>
-					<Label>Primary Button Text</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Primary Button Text</label>
 					<Input
 						type="text"
 						id="cta_primary_text"
@@ -128,7 +128,7 @@ if (Astro.request.method === 'POST') {
 					/>
 				</Field>
 				<Field>
-					<Label>Primary Button URL</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Primary Button URL</label>
 					<Input
 						type="text"
 						id="cta_primary_url"
@@ -143,7 +143,7 @@ if (Astro.request.method === 'POST') {
 			{/* Secondary CTA */}
 			<div class="grid grid-cols-2 gap-4">
 				<Field>
-					<Label>Secondary Button Text</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Secondary Button Text</label>
 					<Input
 						type="text"
 						id="cta_secondary_text"
@@ -154,7 +154,7 @@ if (Astro.request.method === 'POST') {
 					/>
 				</Field>
 				<Field>
-					<Label>Secondary Button URL</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Secondary Button URL</label>
 					<Input
 						type="text"
 						id="cta_secondary_url"
@@ -168,7 +168,7 @@ if (Astro.request.method === 'POST') {
 
 			{/* Position */}
 			<Field>
-				<Label>Position (Display Order)</Label>
+				<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Position (Display Order)</label>
 				<Input
 					type="number"
 					id="position"
@@ -182,7 +182,7 @@ if (Astro.request.method === 'POST') {
 
 			{/* Status */}
 			<Field>
-				<Label>Status</Label>
+				<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
 				<Select
 					id="status"
 					name="status"

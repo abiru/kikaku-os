@@ -219,7 +219,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							)}
 						</div>
 						<div class="overflow-x-auto">
-							<Table client:load>
+							<Table client:only="react">
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
@@ -263,7 +263,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<Table client:load>
+							<Table client:only="react">
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
@@ -299,7 +299,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<Table client:load>
+							<Table client:only="react">
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
@@ -337,7 +337,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<Table client:load>
+							<Table client:only="react">
 								<TableHead>
 									<TableRow>
 										<TableHeader>Event ID</TableHeader>

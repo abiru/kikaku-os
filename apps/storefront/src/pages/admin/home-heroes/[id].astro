@@ -3,7 +3,7 @@ export const prerender = false;
 
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Description } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import { Badge } from '../../../components/catalyst/badge';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
@@ -224,9 +224,9 @@ if (Astro.request.method === 'POST' && hero) {
 				<Fieldset client:load>
 				{/* Title */}
 				<Field>
-					<Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">
 						Title <span class="text-red-500">*</span>
-					</Label>
+					</label>
 					<Input
 						type="text"
 						id="title"
@@ -234,45 +234,45 @@ if (Astro.request.method === 'POST' && hero) {
 						value={hero.title}
 						required
 						maxLength={255}
-						
+
 					/>
 				</Field>
 
 				{/* Subtitle */}
 				<Field>
-					<Label>Subtitle</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Subtitle</label>
 					<Input
 						type="text"
 						id="subtitle"
 						name="subtitle"
 						value={hero.subtitle || ''}
 						maxLength={500}
-						
+
 					/>
 				</Field>
 
 				{/* Primary CTA */}
 				<div class="grid grid-cols-2 gap-4">
 					<Field>
-						<Label>Primary Button Text</Label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Primary Button Text</label>
 						<Input
 							type="text"
 							id="cta_primary_text"
 							name="cta_primary_text"
 							value={hero.cta_primary_text || ''}
 							maxLength={100}
-							
+
 						/>
 					</Field>
 					<Field>
-						<Label>Primary Button URL</Label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Primary Button URL</label>
 						<Input
 							type="text"
 							id="cta_primary_url"
 							name="cta_primary_url"
 							value={hero.cta_primary_url || ''}
 							maxLength={500}
-							
+
 						/>
 					</Field>
 				</div>
@@ -280,50 +280,50 @@ if (Astro.request.method === 'POST' && hero) {
 				{/* Secondary CTA */}
 				<div class="grid grid-cols-2 gap-4">
 					<Field>
-						<Label>Secondary Button Text</Label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Secondary Button Text</label>
 						<Input
 							type="text"
 							id="cta_secondary_text"
 							name="cta_secondary_text"
 							value={hero.cta_secondary_text || ''}
 							maxLength={100}
-							
+
 						/>
 					</Field>
 					<Field>
-						<Label>Secondary Button URL</Label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Secondary Button URL</label>
 						<Input
 							type="text"
 							id="cta_secondary_url"
 							name="cta_secondary_url"
 							value={hero.cta_secondary_url || ''}
 							maxLength={500}
-							
+
 						/>
 					</Field>
 				</div>
 
 				{/* Position */}
 				<Field>
-					<Label>Position (Display Order)</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Position (Display Order)</label>
 					<Input
 						type="number"
 						id="position"
 						name="position"
 						value={hero.position}
 						min="0"
-						
+
 					/>
 					<Description>Lower numbers appear first on the homepage</Description>
 				</Field>
 
 				{/* Status */}
 				<Field>
-					<Label>Status</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
 					<Select
 						id="status"
 						name="status"
-						
+
 					>
 						<option value="draft" selected={hero.status === 'draft'}>Draft</option>
 						<option value="active" selected={hero.status === 'active'}>Active</option>

@@ -64,7 +64,7 @@ const getReportLink = (id: number) => {
 
 			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
-					<Table client:load>
+					<Table client:only="react">
 						<TableHead>
 							<TableRow>
 								<TableHeader>Date</TableHeader>
