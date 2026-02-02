@@ -16,7 +16,7 @@ cd ~/Code/kikaku-os
 # Automatically:
 # 1. Creates worktree at ~/Code/kikaku-os-142
 # 2. Creates tmux window named "issue-142"
-# 3. Starts dev servers in split panes
+# 3. Starts dev servers in split panes (left: API, right: Storefront)
 # 4. You can switch with: Ctrl+b w
 ```
 
@@ -25,6 +25,11 @@ cd ~/Code/kikaku-os
 - Dev servers start automatically
 - Split panes for API + Storefront
 - Named windows for easy identification
+
+**Port Usage**:
+- API: 8787 (Wrangler default)
+- Storefront: 4321 (Astro default)
+- **Note**: Only one API server can run at a time. Stop other servers before starting a new one.
 
 ## Core Principles
 
@@ -98,9 +103,9 @@ git pull origin main
 # 5. 新しいworktreeに移動
 cd ~/Code/kikaku-os-142
 
-# 6. 開発サーバーを起動（別ポート）
-pnpm dev:api --port 8788
-pnpm dev:store --port 4322
+# 6. 開発サーバーを起動（デフォルトポート使用）
+pnpm -C apps/api dev       # Port 8787
+pnpm -C apps/storefront dev # Port 4321
 
 # 7. 実装、テスト、コミット
 # ... 作業 ...
@@ -111,9 +116,11 @@ gh pr create --title "feat: ..." --body "..."
 
 ### Working on Another Feature (Parallel)
 
-**さらに別のターミナルタブを開く**（Terminal Tab 3）:
+**注意**: 同時に複数のAPIサーバーを起動できないため、現在のサーバーを停止してから次を起動：
 
 ```bash
+# 現在のサーバーを停止（Tab 2で Ctrl+C）
+
 # メインworktreeに戻る（Tab 1）
 cd ~/Code/kikaku-os
 
@@ -122,8 +129,8 @@ cd ~/Code/kikaku-os
 
 # 新しいタブ（Tab 3）を開いて移動
 cd ~/Code/kikaku-os-155
-pnpm dev:api --port 8789  # 別ポート！
-pnpm dev:store --port 4323
+pnpm -C apps/api dev       # Port 8787
+pnpm -C apps/storefront dev # Port 4321
 ```
 
 ### After Merge
@@ -193,7 +200,7 @@ Terminal Tab 3: ~/Code/kikaku-os-155
 ```bash
 # ❌ 間違い
 cd ~/Code/kikaku-os
-pnpm dev
+pnpm -C apps/api dev
 # → mainブランチで起動してしまう
 ```
 
@@ -202,20 +209,26 @@ pnpm dev
 ```bash
 # ✅ 正しい: worktreeで起動
 cd ~/Code/kikaku-os-142
-pnpm dev:api --port 8788
-pnpm dev:store --port 4322
+pnpm -C apps/api dev
+pnpm -C apps/storefront dev
 ```
 
 ## Port Management
 
-各worktreeは異なるポートを使用：
+**重要**: Cloudflare Wranglerはカスタムポートをサポートしていません。
 
-| Worktree | API Port | Storefront Port |
-|----------|----------|-----------------|
-| main | 8787 | 4321 |
-| kikaku-os-142 | 8788 | 4322 |
-| kikaku-os-155 | 8789 | 4323 |
-| kikaku-os-XXX | 8790+ | 4324+ |
+各worktreeは同じポートを使用しますが、**同時に複数のAPIサーバーを起動することはできません**：
+
+| Worktree | API Port | Storefront Port | 注意 |
+|----------|----------|-----------------|------|
+| main | 8787 (default) | 4321 (default) | 通常は停止状態 |
+| kikaku-os-142 | 8787 (default) | 4321 (default) | 作業中のみ起動 |
+| kikaku-os-155 | 8787 (default) | 4321 (default) | 作業中のみ起動 |
+
+**ベストプラクティス**:
+1. メインworktreeのサーバーは常時停止しておく
+2. 作業するworktreeでのみサーバーを起動
+3. 別のworktreeに切り替える際は、現在のサーバーを停止してから新しいサーバーを起動
 
 ## Verification Checklist
 
