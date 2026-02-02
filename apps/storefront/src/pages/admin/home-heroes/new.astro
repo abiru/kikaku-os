@@ -1,9 +1,9 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import Button from '../../../components/Button.astro';
-import { getApiBase } from '../../../lib/api';
+import AdminLayout from'../../../layouts/AdminLayout.astro';
+import Button from'../../../components/Button.astro';
+import { getApiBase } from'../../../lib/api';
 
 const apiBase = getApiBase();
 
@@ -11,7 +11,7 @@ let success = false;
 let error = null;
 let createdId: number | null = null;
 
-if (Astro.request.method === 'POST') {
+if (Astro.request.method ==='POST') {
 	try {
 		const formData = await Astro.request.formData();
 		const title = formData.get('title') as string;
@@ -20,13 +20,13 @@ if (Astro.request.method === 'POST') {
 		const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
 		const ctaSecondaryText = formData.get('cta_secondary_text') as string;
 		const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
-		const position = Number(formData.get('position') || '0');
+		const position = Number(formData.get('position') ||'0');
 		const status = formData.get('status') as string;
 
 		const body: any = {
 			title,
 			position,
-			status: status || 'draft'
+			status: status ||'draft'
 		};
 
 		if (subtitle) body.subtitle = subtitle;
@@ -36,9 +36,9 @@ if (Astro.request.method === 'POST') {
 		if (ctaSecondaryUrl) body.cta_secondary_url = ctaSecondaryUrl;
 
 		const res = await fetch(`${apiBase}/admin/home/heroes`, {
-			method: 'POST',
+			method:'POST',
 			headers: {
-				'Content-Type': 'application/json',
+				'Content-Type':'application/json',
 				'x-admin-key': import.meta.env.ADMIN_API_KEY
 			},
 			body: JSON.stringify(body)
@@ -46,7 +46,7 @@ if (Astro.request.method === 'POST') {
 
 		if (!res.ok) {
 			const data = await res.json();
-			throw new Error(data.message || 'Failed to create hero section');
+			throw new Error(data.message ||'Failed to create hero section');
 		}
 
 		const data = await res.json();
@@ -59,7 +59,7 @@ if (Astro.request.method === 'POST') {
 		}
 	} catch (e: any) {
 		console.error(e);
-		error = e.message || 'Failed to create hero section';
+		error = e.message ||'Failed to create hero section';
 	}
 }
 ---

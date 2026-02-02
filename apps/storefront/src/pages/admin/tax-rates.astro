@@ -1,13 +1,13 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../components/catalyst/alert-banner';
-import { Badge } from '../../components/catalyst/badge';
-import { Button } from '../../components/catalyst/button';
-import { Heading } from '../../components/catalyst/heading';
-import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../lib/api';
+import { Alert } from'../../components/catalyst/alert-banner';
+import { Badge } from'../../components/catalyst/badge';
+import { Button } from'../../components/catalyst/button';
+import { Heading } from'../../components/catalyst/heading';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from'../../components/catalyst/table';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import { getApiBase } from'../../lib/api';
 
 const apiBase = getApiBase();
 
@@ -42,10 +42,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		taxRates = data || [];
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load tax rates. Please check your admin key.';
+		error ='Failed to load tax rates. Please check your admin key.';
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error ='ADMIN_API_KEY is missing in server environment.';
 }
 
 const formatRate = (rate: number) => {
@@ -53,7 +53,7 @@ const formatRate = (rate: number) => {
 };
 
 const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
+	if (!dateStr) return'-';
 	return new Date(dateStr).toLocaleDateString('ja-JP');
 };
 
@@ -75,7 +75,7 @@ const isActive = (taxRate: TaxRate) => {
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
 				<Heading>Tax Rates</Heading>
-				<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{taxRates.length} items</span>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{taxRates.length} items</span>
 			</div>
 			<Button href="/admin/tax-rates/new" color="indigo" client:load>
 				+ New Tax Rate
@@ -89,7 +89,7 @@ const isActive = (taxRate: TaxRate) => {
 		)}
 
 		{/* Tax Rates Table */}
-		<div class="bg-white rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+		<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 			<div class="overflow-x-auto">
 				<Table client:load>
 					<TableHead>
@@ -109,7 +109,7 @@ const isActive = (taxRate: TaxRate) => {
 									<TableCell>
 										<div class="font-medium">{taxRate.name}</div>
 										{taxRate.description && (
-											<div class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+											<div class="text-xs text-zinc-500 mt-1">
 												{taxRate.description}
 											</div>
 										)}
@@ -126,20 +126,20 @@ const isActive = (taxRate: TaxRate) => {
 											<Badge color="zinc" client:only="react">Inactive</Badge>
 										)}
 									</TableCell>
-									<TableCell className="text-zinc-500 dark:text-zinc-400 tabular-nums">
+									<TableCell className="text-zinc-500 tabular-nums">
 										{formatDate(taxRate.applicable_from)}
 									</TableCell>
-									<TableCell className="text-zinc-500 dark:text-zinc-400 tabular-nums">
+									<TableCell className="text-zinc-500 tabular-nums">
 										{formatDate(taxRate.applicable_to)}
 									</TableCell>
 									<TableCell>
-										<a href={`/admin/tax-rates/${taxRate.id}`} class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Edit</a>
+										<a href={`/admin/tax-rates/${taxRate.id}`} class="text-indigo-600 hover:underline font-medium">Edit</a>
 									</TableCell>
 								</TableRow>
 							))
 						) : (
 							<TableRow>
-								<TableCell colSpan={6} className="text-center text-zinc-500 dark:text-zinc-400">
+								<TableCell colSpan={6} className="text-center text-zinc-500">
 									No tax rates found.
 								</TableCell>
 							</TableRow>

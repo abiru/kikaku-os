@@ -1,11 +1,11 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../components/catalyst/alert-banner';
-import EmptyState from '../../components/EmptyState.astro';
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { Heading, Subheading } from '../../components/catalyst/heading';
-import { getApiBase } from '../../lib/api';
+import { Alert } from'../../components/catalyst/alert-banner';
+import EmptyState from'../../components/EmptyState.astro';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import { Heading, Subheading } from'../../components/catalyst/heading';
+import { getApiBase } from'../../lib/api';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -13,23 +13,23 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 // Form Action Handling (SSR)
 let actionMessage = null;
 
-if (Astro.request.method === 'POST') {
+if (Astro.request.method ==='POST') {
 	try {
 		const formData = await Astro.request.formData();
 		const action = formData.get('action');
 		const id = formData.get('id');
 
-		if (apiKey && id && (action === 'approve' || action === 'reject')) {
+		if (apiKey && id && (action ==='approve' || action ==='reject')) {
 			const res = await fetch(`${apiBase}/inbox/${id}/${action}`, {
-				method: 'POST',
-				headers: { 'x-admin-key': apiKey }
+				method:'POST',
+				headers: {'x-admin-key': apiKey }
 			});
 			if (!res.ok) throw new Error(`API Error: ${res.status}`);
-			actionMessage = { type: 'success', text: `Item ${action}ed successfully.` };
+			actionMessage = { type:'success', text: `Item ${action}ed successfully.` };
 		}
 	} catch (e) {
 		console.error(e);
-		actionMessage = { type: 'error', text: 'Failed to process action.' };
+		actionMessage = { type:'error', text:'Failed to process action.' };
 	}
 }
 
@@ -40,16 +40,16 @@ let error = null;
 if (apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/inbox?status=open&limit=50`, {
-			headers: { 'x-admin-key': apiKey }
+			headers: {'x-admin-key': apiKey }
 		});
 		if (!res.ok) throw new Error(`API Error: ${res.status}`);
 		const data = await res.json();
 		items = data.items || [];
 	} catch (e) {
-		error = 'Failed to load inbox.';
+		error ='Failed to load inbox.';
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing.';
+	error ='ADMIN_API_KEY is missing.';
 }
 
 const parseBody = (body: string) => {
@@ -75,9 +75,9 @@ const parseMetadata = (metadataStr: string | null) => {
 
 const getBadgeColor = (severity: string) => {
 	switch (severity) {
-		case 'critical': return 'red';
-		case 'warning': return 'amber';
-		default: return 'blue';
+		case'critical': return'red';
+		case'warning': return'amber';
+		default: return'blue';
 	}
 };
 ---
@@ -87,12 +87,12 @@ const getBadgeColor = (severity: string) => {
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
 				<Heading>Inbox</Heading>
-				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full dark:bg-zinc-800 dark:text-zinc-400">{items.length} pending</span>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{items.length} pending</span>
 			</div>
 		</div>
 
 		{actionMessage && (
-			<Alert color={actionMessage.type === 'success' ? 'green' : 'red'} client:load>
+			<Alert color={actionMessage.type ==='success' ?'green' :'red'} client:load>
 				{actionMessage.text}
 			</Alert>
 		)}
@@ -107,22 +107,22 @@ const getBadgeColor = (severity: string) => {
 			<div class="space-y-4">
 				{items.map((item) => {
 					const metadata = parseMetadata(item.metadata);
-					const isBulkImageUpload = item.kind === 'bulk_image_upload';
+					const isBulkImageUpload = item.kind ==='bulk_image_upload';
 					const badgeColor = getBadgeColor(item.severity);
 
 					return (
-						<div class="bg-white rounded-xl p-6 shadow-sm border border-zinc-200 flex flex-col sm:flex-row gap-6 dark:bg-zinc-900 dark:border-zinc-800">
+						<div class="bg-white rounded-xl p-6 shadow-sm border border-zinc-200 flex flex-col sm:flex-row gap-6">
 							<div class="flex-1 space-y-3">
 								<div class="flex items-center gap-3 flex-wrap">
 									<span class={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-										badgeColor === 'red' ? 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/10 dark:text-red-400 dark:ring-red-800' :
-										badgeColor === 'amber' ? 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/10 dark:text-amber-400 dark:ring-amber-800' :
-										'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/10 dark:text-blue-400 dark:ring-blue-800'
+										badgeColor ==='red' ?'bg-red-50 text-red-700 ring-red-600/20' :
+										badgeColor ==='amber' ?'bg-amber-50 text-amber-700 ring-amber-600/20' :
+										'bg-blue-50 text-blue-700 ring-blue-600/20'
 									}`}>
 										{item.severity}
 									</span>
 									<Subheading>{item.title}</Subheading>
-									<span class="text-xs text-zinc-500 ml-auto sm:ml-0 dark:text-zinc-400">
+									<span class="text-xs text-zinc-500 ml-auto sm:ml-0">
 										{new Date(item.created_at).toLocaleString('ja-JP')}
 									</span>
 								</div>
@@ -130,23 +130,23 @@ const getBadgeColor = (severity: string) => {
 								{isBulkImageUpload && metadata && metadata.upload_items ? (
 									<div class="space-y-4">
 										<div class="flex gap-4 flex-wrap">
-											<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium dark:bg-blue-900/20 dark:text-blue-400">
+											<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
 												📦 {metadata.upload_items.length} products
 											</span>
-											<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium dark:bg-green-900/20 dark:text-green-400">
+											<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
 												🖼️ {metadata.total_images} images
 											</span>
 										</div>
 
 										<div class="space-y-3 max-h-96 overflow-y-auto">
 											{metadata.upload_items.map((uploadItem: any) => (
-												<div class="border border-zinc-200 rounded-lg p-3 space-y-2 dark:border-zinc-700">
+												<div class="border border-zinc-200 rounded-lg p-3 space-y-2">
 													<div class="flex items-center justify-between flex-wrap gap-2">
-														<p class="font-medium text-zinc-900 text-sm dark:text-white">
-															{uploadItem.product_title} <span class="text-zinc-500 text-xs dark:text-zinc-400">(ID: {uploadItem.product_id})</span>
+														<p class="font-medium text-zinc-900 text-sm">
+															{uploadItem.product_title} <span class="text-zinc-500 text-xs">(ID: {uploadItem.product_id})</span>
 														</p>
-														<span class="text-xs text-zinc-600 dark:text-zinc-400">
-															📷 {uploadItem.image_urls.length} image{uploadItem.image_urls.length !== 1 ? 's' : ''} | Existing: {uploadItem.existing_r2_images}
+														<span class="text-xs text-zinc-600">
+															📷 {uploadItem.image_urls.length} image{uploadItem.image_urls.length !== 1 ?'s' :''} | Existing: {uploadItem.existing_r2_images}
 														</span>
 													</div>
 													<div class="flex gap-2 overflow-x-auto">
@@ -154,7 +154,7 @@ const getBadgeColor = (severity: string) => {
 															<img
 																src={url}
 																alt="Preview"
-																class="w-16 h-16 object-cover rounded border border-zinc-300 flex-shrink-0 dark:border-zinc-700"
+																class="w-16 h-16 object-cover rounded border border-zinc-300 flex-shrink-0"
 																onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22%3E%3Crect fill=%22%23ddd%22 width=%2264%22 height=%2264%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2210%22%3EError%3C/text%3E%3C/svg%3E'"
 															/>
 														))}
@@ -164,15 +164,15 @@ const getBadgeColor = (severity: string) => {
 										</div>
 
 										{metadata.results && (
-											<div class="bg-green-50 border border-green-200 rounded-lg p-3 dark:bg-green-900/10 dark:border-green-800">
-												<p class="text-sm text-green-800 dark:text-green-400 font-medium">
+											<div class="bg-green-50 border border-green-200 rounded-lg p-3">
+												<p class="text-sm text-green-800 font-medium">
 													✅ Upload results: {metadata.results.succeeded || 0} succeeded, {metadata.results.failed || 0} failed
 												</p>
 											</div>
 										)}
 									</div>
 								) : (
-									<div class="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
+									<div class="text-sm text-zinc-700 whitespace-pre-wrap">
 										{parseBody(item.body)}
 									</div>
 								)}
@@ -184,7 +184,7 @@ const getBadgeColor = (severity: string) => {
 									<input type="hidden" name="action" value="approve" />
 									<button
 										type="submit"
-										class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors dark:bg-indigo-500 dark:hover:bg-indigo-400"
+										class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
 									>
 										✓ Approve
 									</button>
@@ -194,7 +194,7 @@ const getBadgeColor = (severity: string) => {
 									<input type="hidden" name="action" value="reject" />
 									<button
 										type="submit"
-										class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 transition-colors dark:bg-zinc-800 dark:hover:bg-zinc-700"
+										class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 transition-colors"
 									>
 										✕ Dismiss
 									</button>

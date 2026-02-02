@@ -1,11 +1,11 @@
 ---
 export const prerender = false;
 
-import Badge from '../../../components/Badge.astro';
-import { Alert } from '../../../components/catalyst/alert-banner';
-import Button from '../../../components/Button.astro';
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../../lib/api';
+import Badge from'../../../components/Badge.astro';
+import { Alert } from'../../../components/catalyst/alert-banner';
+import Button from'../../../components/Button.astro';
+import AdminLayout from'../../../layouts/AdminLayout.astro';
+import { getApiBase } from'../../../lib/api';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -29,27 +29,27 @@ let error: string | null = null;
 let successMessage: string | null = null;
 
 // Handle POST - Update page
-if (Astro.request.method === 'POST' && apiKey) {
+if (Astro.request.method ==='POST' && apiKey) {
 	try {
 		const formData = await Astro.request.formData();
-		const slug = formData.get('slug')?.toString().trim().toLowerCase() || '';
-		const title = formData.get('title')?.toString().trim() || '';
-		const meta_title = formData.get('meta_title')?.toString().trim() || '';
-		const meta_description = formData.get('meta_description')?.toString().trim() || '';
-		const body = formData.get('body')?.toString() || '';
-		const status = formData.get('status')?.toString() || 'draft';
+		const slug = formData.get('slug')?.toString().trim().toLowerCase() ||'';
+		const title = formData.get('title')?.toString().trim() ||'';
+		const meta_title = formData.get('meta_title')?.toString().trim() ||'';
+		const meta_description = formData.get('meta_description')?.toString().trim() ||'';
+		const body = formData.get('body')?.toString() ||'';
+		const status = formData.get('status')?.toString() ||'draft';
 
 		if (!slug) {
-			error = 'Slug is required';
+			error ='Slug is required';
 		} else if (!/^[a-z0-9-]+$/.test(slug)) {
-			error = 'Slug must contain only lowercase letters, numbers, and hyphens';
+			error ='Slug must contain only lowercase letters, numbers, and hyphens';
 		} else if (!title) {
-			error = 'Title is required';
+			error ='Title is required';
 		} else {
 			const res = await fetch(`${apiBase}/admin/pages/${id}`, {
-				method: 'PUT',
+				method:'PUT',
 				headers: {
-					'Content-Type': 'application/json',
+					'Content-Type':'application/json',
 					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({
@@ -65,15 +65,15 @@ if (Astro.request.method === 'POST' && apiKey) {
 			const data = await res.json();
 
 			if (!res.ok) {
-				error = data.message || 'Failed to update page';
+				error = data.message ||'Failed to update page';
 			} else {
 				page = data.page;
-				successMessage = 'Page updated successfully';
+				successMessage ='Page updated successfully';
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to update page. Please check your connection.';
+		error ='Failed to update page. Please check your connection.';
 	}
 }
 
@@ -81,12 +81,12 @@ if (Astro.request.method === 'POST' && apiKey) {
 if (!page && apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/pages/${id}`, {
-			headers: { 'x-admin-key': apiKey }
+			headers: {'x-admin-key': apiKey }
 		});
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error = 'Page not found';
+				error ='Page not found';
 			} else {
 				const data = await res.json();
 				error = data.message || `API Error: ${res.status}`;
@@ -98,17 +98,17 @@ if (!page && apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error || 'Failed to load page. Please check your connection.';
+		error = error ||'Failed to load page. Please check your connection.';
 	}
 } else if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing in server environment';
+	error ='ADMIN_API_KEY is missing in server environment';
 }
 
 // Re-fetch isCorePage after update
 if (page && apiKey && successMessage) {
 	try {
 		const res = await fetch(`${apiBase}/admin/pages/${id}`, {
-			headers: { 'x-admin-key': apiKey }
+			headers: {'x-admin-key': apiKey }
 		});
 		if (res.ok) {
 			const data = await res.json();
@@ -121,18 +121,18 @@ if (page && apiKey && successMessage) {
 
 const formatDate = (dateStr: string) => {
 	return new Date(dateStr).toLocaleString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit'
+		year:'numeric',
+		month:'2-digit',
+		day:'2-digit',
+		hour:'2-digit',
+		minute:'2-digit'
 	});
 };
 
 const canDelete = page && !isCorePage;
 ---
 
-<AdminLayout title={page ? `${page.title} - Admin` : 'Page - Admin'}>
+<AdminLayout title={page ? `${page.title} - Admin` :'Page - Admin'}>
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center gap-4">
 			<a href="/admin/pages" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
@@ -142,7 +142,7 @@ const canDelete = page && !isCorePage;
 				Pages
 			</a>
 			<h1 class="text-2xl font-semibold text-gray-900">
-				{page ? `Edit: ${page.title}` : 'Page'}
+				{page ? `Edit: ${page.title}` :'Page'}
 			</h1>
 			{page && (
 				<a
@@ -184,7 +184,7 @@ const canDelete = page && !isCorePage;
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-4">
-								{page.status === 'published' ? (
+								{page.status ==='published' ? (
 									<Badge severity="info">Published</Badge>
 								) : (
 									<Badge severity="secondary">Draft</Badge>
@@ -197,9 +197,9 @@ const canDelete = page && !isCorePage;
 								<button
 									type="button"
 									id="publish-btn"
-									class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${page.status === 'published' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+									class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${page.status ==='published' ?'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' :'bg-green-100 text-green-700 hover:bg-green-200'}`}
 								>
-									{page.status === 'published' ? 'Unpublish' : 'Publish'}
+									{page.status ==='published' ?'Unpublish' :'Publish'}
 								</button>
 							</Alert>
 						</Alert>
@@ -211,7 +211,7 @@ const canDelete = page && !isCorePage;
 
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 							<div>
-								<label for="title" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="title" class="block text-sm font-medium text-zinc-950 mb-2">
 									Title <span class="text-red-500">*</span>
 								</label>
 								<input
@@ -220,12 +220,12 @@ const canDelete = page && !isCorePage;
 									name="title"
 									required
 									value={page.title}
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 							</Alert>
 
 							<div>
-								<label for="slug" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="slug" class="block text-sm font-medium text-zinc-950 mb-2">
 									Slug <span class="text-red-500">*</span>
 								</label>
 								<div class="flex items-center gap-2">
@@ -237,23 +237,23 @@ const canDelete = page && !isCorePage;
 										required
 										value={page.slug}
 										pattern="^[a-z0-9-]+$"
-										class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+										class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 									/>
 								</Alert>
 								<p class="mt-1 text-xs text-[#86868b]">Only lowercase letters, numbers, and hyphens</p>
 							</Alert>
 
 							<div>
-								<label for="status" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="status" class="block text-sm font-medium text-zinc-950 mb-2">
 									Status
 								</label>
 								<select
 									id="status"
 									name="status"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all bg-white"
 								>
-									<option value="draft" selected={page.status === 'draft'}>Draft</option>
-									<option value="published" selected={page.status === 'published'}>Published</option>
+									<option value="draft" selected={page.status ==='draft'}>Draft</option>
+									<option value="published" selected={page.status ==='published'}>Published</option>
 								</select>
 							</Alert>
 						</Alert>
@@ -265,23 +265,23 @@ const canDelete = page && !isCorePage;
 
 						<div class="space-y-6">
 							<div>
-								<label for="meta_title" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="meta_title" class="block text-sm font-medium text-zinc-950 mb-2">
 									Meta Title
 								</label>
 								<input
 									type="text"
 									id="meta_title"
 									name="meta_title"
-									value={page.meta_title || ''}
+									value={page.meta_title ||''}
 									placeholder="Page Title - Site Name"
 									maxlength="255"
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 								/>
 								<p class="mt-1 text-xs text-[#86868b]">Used as the browser tab title and in search results</p>
 							</Alert>
 
 							<div>
-								<label for="meta_description" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+								<label for="meta_description" class="block text-sm font-medium text-zinc-950 mb-2">
 									Meta Description
 								</label>
 								<textarea
@@ -290,8 +290,8 @@ const canDelete = page && !isCorePage;
 									rows="2"
 									maxlength="500"
 									placeholder="Brief description of the page content..."
-									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
-								>{page.meta_description || ''}</textarea>
+									class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-none"
+								>{page.meta_description ||''}</textarea>
 								<p class="mt-1 text-xs text-[#86868b]">Displayed in search engine results</p>
 							</Alert>
 						</Alert>
@@ -331,7 +331,7 @@ const canDelete = page && !isCorePage;
 ```
 Code block
 ```"
-								class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
+								class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-zinc-950 font-mono focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-y"
 							>{page.body}</textarea>
 							<p class="mt-2 text-xs text-[#86868b]">
 								Supports Markdown syntax. HTML is also valid within Markdown.
@@ -350,11 +350,11 @@ Code block
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
 								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(page.created_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(page.created_at)}</dd>
 							</Alert>
 							<div>
 								<dt class="text-[#86868b]">Updated</dt>
-								<dd class="text-zinc-950 dark:text-white tabular-nums">{formatDate(page.updated_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(page.updated_at)}</dd>
 							</Alert>
 						</dl>
 					</Alert>
@@ -394,8 +394,8 @@ Code block
 </script>
 
 <script type="module">
-	import { marked } from 'marked';
-	import DOMPurify from 'isomorphic-dompurify';
+	import { marked } from'marked';
+	import DOMPurify from'isomorphic-dompurify';
 
 	const { apiBase, apiKey, pageId, canDelete, currentStatus } = window.__PAGE_CONFIG__;
 
@@ -418,29 +418,29 @@ Code block
 			previewContainer?.classList.remove('hidden');
 			if (previewContent && bodyTextarea) {
 				const markdown = bodyTextarea.value;
-				if (!markdown || markdown.trim() === '') {
-					previewContent.innerHTML = '<p class="text-[#86868b]">No content to preview...</p>';
+				if (!markdown || markdown.trim() ==='') {
+					previewContent.innerHTML ='<p class="text-[#86868b]">No content to preview...</p>';
 				} else {
 					try {
 						const html = await marked.parse(markdown);
 						// Sanitize HTML to prevent XSS
 						const sanitized = DOMPurify.sanitize(html, {
-							ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'u', 's', 'a', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'div', 'span'],
-							ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'id'],
+							ALLOWED_TAGS: ['h1','h2','h3','h4','h5','h6','p','br','strong','em','u','s','a','ul','ol','li','blockquote','code','pre','hr','table','thead','tbody','tr','th','td','img','div','span'],
+							ALLOWED_ATTR: ['href','target','rel','src','alt','title','class','id'],
 							ALLOW_DATA_ATTR: false,
 						});
 						previewContent.innerHTML = sanitized;
 					} catch (error) {
 						console.error('Failed to parse markdown:', error);
-						previewContent.innerHTML = '<p class="text-red-500">Failed to parse markdown. Please check your syntax.</p>';
+						previewContent.innerHTML ='<p class="text-red-500">Failed to parse markdown. Please check your syntax.</p>';
 					}
 				}
 			}
-			previewToggle.textContent = 'Edit';
+			previewToggle.textContent ='Edit';
 		} else {
 			editorContainer?.classList.remove('hidden');
 			previewContainer?.classList.add('hidden');
-			previewToggle.textContent = 'Toggle Preview';
+			previewToggle.textContent ='Toggle Preview';
 		}
 	});
 
@@ -453,15 +453,15 @@ Code block
 
 			try {
 				const res = await fetch(`${apiBase}/admin/pages/${pageId}`, {
-					method: 'DELETE',
-					headers: { 'x-admin-key': apiKey }
+					method:'DELETE',
+					headers: {'x-admin-key': apiKey }
 				});
 
 				if (res.ok) {
-					window.location.href = '/admin/pages';
+					window.location.href ='/admin/pages';
 				} else {
 					const data = await res.json();
-					alert(data.message || 'Failed to delete page');
+					alert(data.message ||'Failed to delete page');
 				}
 			} catch (e) {
 				alert('Failed to delete page. Please try again.');
@@ -472,12 +472,12 @@ Code block
 	// Publish/Unpublish button
 	if (publishBtn) {
 		publishBtn.addEventListener('click', async () => {
-			const action = currentStatus === 'published' ? 'unpublish' : 'publish';
+			const action = currentStatus ==='published' ?'unpublish' :'publish';
 
 			try {
 				const res = await fetch(`${apiBase}/admin/pages/${pageId}/${action}`, {
-					method: 'POST',
-					headers: { 'x-admin-key': apiKey }
+					method:'POST',
+					headers: {'x-admin-key': apiKey }
 				});
 
 				if (res.ok) {

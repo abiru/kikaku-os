@@ -1,19 +1,19 @@
 ---
 export const prerender = false;
 
-import Badge from '../../../components/Badge.astro';
-import { Alert } from '../../../components/catalyst/alert-banner';
-import Button from '../../../components/Button.astro';
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../../lib/api';
+import Badge from'../../../components/Badge.astro';
+import { Alert } from'../../../components/catalyst/alert-banner';
+import Button from'../../../components/Button.astro';
+import AdminLayout from'../../../layouts/AdminLayout.astro';
+import { getApiBase } from'../../../lib/api';
 
 const { name } = Astro.params;
-const categoryName = decodeURIComponent(name || '');
+const categoryName = decodeURIComponent(name ||'');
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
-const q = Astro.url.searchParams.get('q') || '';
-const page = Number(Astro.url.searchParams.get('page') || '1');
+const q = Astro.url.searchParams.get('q') ||'';
+const page = Number(Astro.url.searchParams.get('page') ||'1');
 const perPage = 20;
 
 type Product = {
@@ -47,7 +47,7 @@ if (apiKey) {
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error = 'Category not found';
+				error ='Category not found';
 			} else {
 				throw new Error(`API Error: ${res.status}`);
 			}
@@ -58,17 +58,17 @@ if (apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error || 'Failed to load category products. Please check your connection.';
+		error = error ||'Failed to load category products. Please check your connection.';
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error ='ADMIN_API_KEY is missing in server environment.';
 }
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
 
 const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
+	if (!dateStr) return'-';
 	return new Date(dateStr).toLocaleDateString('ja-JP');
 };
 ---
@@ -95,7 +95,7 @@ const formatDate = (dateStr: string | null) => {
 						name="q"
 						value={q}
 						placeholder="Search products in this category..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
+						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
 					/>
 					<svg
 						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
@@ -120,7 +120,7 @@ const formatDate = (dateStr: string | null) => {
 			{!error && (
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 					<div class="overflow-x-auto">
-						<table class="w-full text-left text-sm text-zinc-950 dark:text-white">
+						<table class="w-full text-left text-sm text-zinc-950">
 							<thead class="bg-gray-50 border-b border-gray-200">
 								<tr>
 									<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
@@ -138,7 +138,7 @@ const formatDate = (dateStr: string | null) => {
 												<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</div>
 											</td>
 											<td class="px-6 py-4">
-												{product.status === 'draft' ? (
+												{product.status ==='draft' ? (
 													<Badge severity="secondary">Draft</Badge>
 												) : (
 													<Badge severity="info">Active</Badge>
@@ -171,7 +171,7 @@ const formatDate = (dateStr: string | null) => {
 							</Alert>
 							<div class="flex gap-2">
 								<Button
-									href={hasPrev ? `?page=${page - 1}&q=${q}` : '#'}
+									href={hasPrev ? `?page=${page - 1}&q=${q}` :'#'}
 									disabled={!hasPrev}
 									size="sm"
 									variant="secondary"
@@ -179,7 +179,7 @@ const formatDate = (dateStr: string | null) => {
 									Previous
 								</Button>
 								<Button
-									href={hasNext ? `?page=${page + 1}&q=${q}` : '#'}
+									href={hasNext ? `?page=${page + 1}&q=${q}` :'#'}
 									disabled={!hasNext}
 									size="sm"
 									variant="secondary"

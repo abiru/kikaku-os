@@ -1,15 +1,13 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../../components/catalyst/alert-banner';
-import Badge from '../../../components/Badge.astro';
-import { Button } from '../../../components/catalyst/button';
-import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
-import { Heading, Subheading } from '../../../components/catalyst/heading';
-import { Input } from '../../../components/catalyst/input';
-import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../../lib/api';
+import { Alert } from'../../../components/catalyst/alert-banner';
+import Badge from'../../../components/Badge.astro';
+import { Button } from'../../../components/catalyst/button';
+import { Heading, Subheading } from'../../../components/catalyst/heading';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from'../../../components/catalyst/table';
+import AdminLayout from'../../../layouts/AdminLayout.astro';
+import { getApiBase } from'../../../lib/api';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -46,19 +44,19 @@ let error: string | null = null;
 let successMessage: string | null = null;
 
 // Handle POST - Update customer
-if (Astro.request.method === 'POST' && apiKey) {
+if (Astro.request.method ==='POST' && apiKey) {
 	try {
 		const formData = await Astro.request.formData();
-		const name = formData.get('name')?.toString().trim() || '';
+		const name = formData.get('name')?.toString().trim() ||'';
 		const email = formData.get('email')?.toString().trim() || null;
 
 		if (!name) {
-			error = 'Name is required';
+			error ='Name is required';
 		} else {
 			const res = await fetch(`${apiBase}/admin/customers/${id}`, {
-				method: 'PUT',
+				method:'PUT',
 				headers: {
-					'Content-Type': 'application/json',
+					'Content-Type':'application/json',
 					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({ name, email })
@@ -67,15 +65,15 @@ if (Astro.request.method === 'POST' && apiKey) {
 			const data = await res.json();
 
 			if (!res.ok) {
-				error = data.message || 'Failed to update customer';
+				error = data.message ||'Failed to update customer';
 			} else {
 				customer = data.customer;
-				successMessage = 'Customer updated successfully';
+				successMessage ='Customer updated successfully';
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to update customer. Please check your connection.';
+		error ='Failed to update customer. Please check your connection.';
 	}
 }
 
@@ -83,12 +81,12 @@ if (Astro.request.method === 'POST' && apiKey) {
 if (!customer && apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/customers/${id}`, {
-			headers: { 'x-admin-key': apiKey }
+			headers: {'x-admin-key': apiKey }
 		});
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error = 'Customer not found';
+				error ='Customer not found';
 			} else {
 				const data = await res.json();
 				error = data.message || `API Error: ${res.status}`;
@@ -101,17 +99,17 @@ if (!customer && apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error || 'Failed to load customer. Please check your connection.';
+		error = error ||'Failed to load customer. Please check your connection.';
 	}
 } else if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing in server environment';
+	error ='ADMIN_API_KEY is missing in server environment';
 }
 
 // Re-fetch orders and stats if customer was updated via POST
 if (customer && successMessage && apiKey) {
 	try {
 		const res = await fetch(`${apiBase}/admin/customers/${id}`, {
-			headers: { 'x-admin-key': apiKey }
+			headers: {'x-admin-key': apiKey }
 		});
 		if (res.ok) {
 			const data = await res.json();
@@ -124,19 +122,19 @@ if (customer && successMessage && apiKey) {
 }
 
 const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
+	if (!dateStr) return'-';
 	return new Date(dateStr).toLocaleString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit'
+		year:'numeric',
+		month:'2-digit',
+		day:'2-digit',
+		hour:'2-digit',
+		minute:'2-digit'
 	});
 };
 
-const formatCurrency = (amount: number, currency: string = 'JPY') => {
+const formatCurrency = (amount: number, currency: string ='JPY') => {
 	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
+		style:'currency',
 		currency: currency,
 		minimumFractionDigits: 0
 	}).format(amount);
@@ -144,19 +142,19 @@ const formatCurrency = (amount: number, currency: string = 'JPY') => {
 
 const getStatusBadge = (status: string) => {
 	switch (status) {
-		case 'paid':
-			return { severity: 'info' as const, label: 'Paid' };
-		case 'pending':
-			return { severity: 'warn' as const, label: 'Pending' };
-		case 'failed':
-			return { severity: 'critical' as const, label: 'Failed' };
+		case'paid':
+			return { severity:'info' as const, label:'Paid' };
+		case'pending':
+			return { severity:'warn' as const, label:'Pending' };
+		case'failed':
+			return { severity:'critical' as const, label:'Failed' };
 		default:
-			return { severity: 'secondary' as const, label: status };
+			return { severity:'secondary' as const, label: status };
 	}
 };
 ---
 
-<AdminLayout title={customer ? `${customer.name} - Admin` : 'Customer - Admin'}>
+<AdminLayout title={customer ? `${customer.name} - Admin` :'Customer - Admin'}>
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center gap-4">
 			<a href="/admin/customers" class="text-indigo-600 hover:underline text-sm flex items-center gap-1">
@@ -166,7 +164,7 @@ const getStatusBadge = (status: string) => {
 				Customers
 			</a>
 			<Heading>
-				{customer ? customer.name : 'Customer'}
+				{customer ? customer.name :'Customer'}
 			</Heading>
 		</div>
 			{successMessage && (
@@ -196,15 +194,15 @@ const getStatusBadge = (status: string) => {
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Total Orders</div>
-							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{stats.total_orders}</div>
+							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{stats.total_orders}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Total Spent</div>
-							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{formatCurrency(stats.total_spent)}</div>
+							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(stats.total_spent)}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 							<div class="text-sm text-[#86868b] mb-1">Avg. Order Value</div>
-							<div class="text-2xl font-semibold text-zinc-950 dark:text-white tabular-nums">{formatCurrency(Math.round(stats.avg_order_value))}</div>
+							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(Math.round(stats.avg_order_value))}</div>
 						</div>
 					</div>
 
@@ -212,27 +210,29 @@ const getStatusBadge = (status: string) => {
 					<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6 mb-8">
 						<Subheading>Customer Details</Subheading>
 
-						<Fieldset client:only="react">
-							<Field>
-								<Label>Name *</Label>
-								<Input
+						<div class="space-y-4">
+							<div>
+								<label class="block text-sm font-medium text-zinc-950 mb-2">Name *</label>
+								<input
 									type="text"
 									name="name"
 									required
 									value={customer.name}
+									class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
 								/>
-							</Field>
+							</div>
 
-							<Field>
-								<Label>Email</Label>
-								<Input
+							<div>
+								<label class="block text-sm font-medium text-zinc-950 mb-2">Email</label>
+								<input
 									type="email"
 									name="email"
-									value={customer.email || ''}
+									value={customer.email ||''}
 									placeholder="customer@example.com"
+									class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
 								/>
-							</Field>
-						</Fieldset>
+							</div>
+						</div>
 
 						<div class="pt-4 border-t border-gray-100">
 							<dl class="grid grid-cols-2 gap-4 text-sm">

@@ -1,15 +1,15 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../components/catalyst/alert-banner';
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { Heading } from '../../components/catalyst/heading';
-import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
-import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '../../components/catalyst/table';
-import { getApiBase } from '../../lib/api';
+import { Alert } from'../../components/catalyst/alert-banner';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import { Heading } from'../../components/catalyst/heading';
+import { Pagination, PaginationPrevious, PaginationNext } from'../../components/catalyst/pagination';
+import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from'../../components/catalyst/table';
+import { getApiBase } from'../../lib/api';
 
 const apiBase = getApiBase();
-const page = Number(Astro.url.searchParams.get('page') || '1');
+const page = Number(Astro.url.searchParams.get('page') ||'1');
 const perPage = 50;
 
 let entries: any[] = [];
@@ -24,7 +24,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		});
 		
 		const res = await fetch(`${apiBase}/admin/ledger?${query}`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+			headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
 		});
 
 		if (!res.ok) throw new Error(`API Error: ${res.status}`);
@@ -34,17 +34,17 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load ledger entries.';
+		error ='Failed to load ledger entries.';
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing.';
+	error ='ADMIN_API_KEY is missing.';
 }
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
 
 const formatCurrency = (amount: number, currency: string) => {
-	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);
+	return new Intl.NumberFormat('ja-JP', { style:'currency', currency }).format(amount);
 };
 ---
 
@@ -52,7 +52,7 @@ const formatCurrency = (amount: number, currency: string) => {
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
 			<Heading>Ledger</Heading>
-			<span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">{meta.totalCount} entries</span>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} entries</span>
 		</div>
 			{error && (
 				<Alert color="red" client:load>
@@ -60,7 +60,7 @@ const formatCurrency = (amount: number, currency: string) => {
 				</Alert>
 			)}
 
-			<div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
 				<div class="overflow-x-auto">
 					<Table client:load>
 						<TableHead>
@@ -77,33 +77,33 @@ const formatCurrency = (amount: number, currency: string) => {
 							{entries.length > 0 ? (
 								entries.map((entry) => (
 									<TableRow>
-										<TableCell className="text-zinc-500 dark:text-zinc-400 whitespace-nowrap font-sans">
+										<TableCell className="text-zinc-500 whitespace-nowrap font-sans">
 											{new Date(entry.created_at).toLocaleDateString()}
-                                            <div class="text-[10px]">{new Date(entry.created_at).toLocaleTimeString()}</div>
+ <div class="text-[10px]">{new Date(entry.created_at).toLocaleTimeString()}</div>
 										</TableCell>
 										<TableCell className="whitespace-nowrap font-sans">
-											<span class="text-xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                                                {entry.ref_type}
-                                            </span>
-                                            <div class="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate max-w-[80px]">#{entry.ref_id}</div>
+											<span class="text-xs px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-700">
+ {entry.ref_type}
+ </span>
+ <div class="text-[10px] text-zinc-500 mt-0.5 truncate max-w-[80px]">#{entry.ref_id}</div>
 										</TableCell>
-										<TableCell className="font-semibold text-zinc-950 dark:text-white font-sans">
+										<TableCell className="font-semibold text-zinc-950 font-sans">
 											{entry.account_name}
 										</TableCell>
-										<TableCell className="text-zinc-700 dark:text-zinc-300 truncate max-w-xs font-sans">
-											{entry.memo || '-'}
+										<TableCell className="text-zinc-700 truncate max-w-xs font-sans">
+											{entry.memo ||'-'}
 										</TableCell>
 										<TableCell className="font-mono">
-											{entry.debit > 0 ? formatCurrency(entry.debit, entry.currency) : ''}
+											{entry.debit > 0 ? formatCurrency(entry.debit, entry.currency) :''}
 										</TableCell>
-                                        <TableCell className="font-mono">
-											{entry.credit > 0 ? formatCurrency(entry.credit, entry.currency) : ''}
+ <TableCell className="font-mono">
+											{entry.credit > 0 ? formatCurrency(entry.credit, entry.currency) :''}
 										</TableCell>
 									</TableRow>
 								))
 							) : (
 								<TableRow>
-									<TableCell colSpan={6} className="text-center text-zinc-500 dark:text-zinc-400 font-sans">
+									<TableCell colSpan={6} className="text-center text-zinc-500 font-sans">
 										No ledger entries found.
 									</TableCell>
 								</TableRow>
@@ -113,8 +113,8 @@ const formatCurrency = (amount: number, currency: string) => {
 				</div>
 
 				{/* Pagination */}
-				<div class="border-t border-zinc-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between font-sans">
-					<div class="text-xs text-zinc-500 dark:text-zinc-400">
+				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between font-sans">
+					<div class="text-xs text-zinc-500">
 						Page {page} of {meta.totalPages}
 					</div>
 					<Pagination client:load>

@@ -1,10 +1,10 @@
 ---
 export const prerender = false;
 
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import Button from '../../../components/Button.astro';
-import Badge from '../../../components/Badge.astro';
-import { getApiBase } from '../../../lib/api';
+import AdminLayout from'../../../layouts/AdminLayout.astro';
+import Button from'../../../components/Button.astro';
+import Badge from'../../../components/Badge.astro';
+import { getApiBase } from'../../../lib/api';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -29,11 +29,11 @@ try {
 	hero = data.hero;
 } catch (e: any) {
 	console.error(e);
-	error = e.message || 'Failed to load hero section';
+	error = e.message ||'Failed to load hero section';
 }
 
 // Handle form submission
-if (Astro.request.method === 'POST' && hero) {
+if (Astro.request.method ==='POST' && hero) {
 	try {
 		const formData = await Astro.request.formData();
 		const title = formData.get('title') as string;
@@ -42,7 +42,7 @@ if (Astro.request.method === 'POST' && hero) {
 		const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
 		const ctaSecondaryText = formData.get('cta_secondary_text') as string;
 		const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
-		const position = Number(formData.get('position') || '0');
+		const position = Number(formData.get('position') ||'0');
 		const status = formData.get('status') as string;
 
 		const body: any = {};
@@ -58,9 +58,9 @@ if (Astro.request.method === 'POST' && hero) {
 
 		if (Object.keys(body).length > 0) {
 			const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-				method: 'PUT',
+				method:'PUT',
 				headers: {
-					'Content-Type': 'application/json',
+					'Content-Type':'application/json',
 					'x-admin-key': import.meta.env.ADMIN_API_KEY
 				},
 				body: JSON.stringify(body)
@@ -68,7 +68,7 @@ if (Astro.request.method === 'POST' && hero) {
 
 			if (!res.ok) {
 				const data = await res.json();
-				throw new Error(data.message || 'Failed to update hero section');
+				throw new Error(data.message ||'Failed to update hero section');
 			}
 
 			success = true;
@@ -84,12 +84,12 @@ if (Astro.request.method === 'POST' && hero) {
 		}
 	} catch (e: any) {
 		console.error(e);
-		error = e.message || 'Failed to update hero section';
+		error = e.message ||'Failed to update hero section';
 	}
 }
 ---
 
-<AdminLayout title={hero ? `Edit Hero: ${hero.title}` : 'Edit Hero Section'}>
+<AdminLayout title={hero ? `Edit Hero: ${hero.title}` :'Edit Hero Section'}>
 	<div class="max-w-3xl space-y-6">
 		<div class="flex items-center gap-4">
 			<a href="/admin/home-heroes" class="text-[#0071e3] hover:underline text-sm">
@@ -101,9 +101,9 @@ if (Astro.request.method === 'POST' && hero) {
 			<div class="flex items-center justify-between">
 				<h1 class="text-2xl font-semibold text-gray-900">Edit Hero Section</h1>
 				<div class="flex items-center gap-2">
-					{hero.status === 'draft' ? (
+					{hero.status ==='draft' ? (
 						<Badge severity="secondary">Draft</Badge>
-					) : hero.status === 'archived' ? (
+					) : hero.status ==='archived' ? (
 						<Badge severity="critical">Archived</Badge>
 					) : (
 						<Badge severity="info">Active</Badge>
@@ -151,7 +151,7 @@ if (Astro.request.method === 'POST' && hero) {
 						type="text"
 						id="subtitle"
 						name="subtitle"
-						value={hero.subtitle || ''}
+						value={hero.subtitle ||''}
 						maxlength="500"
 						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
 					/>
@@ -167,7 +167,7 @@ if (Astro.request.method === 'POST' && hero) {
 							type="text"
 							id="cta_primary_text"
 							name="cta_primary_text"
-							value={hero.cta_primary_text || ''}
+							value={hero.cta_primary_text ||''}
 							maxlength="100"
 							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
 						/>
@@ -180,7 +180,7 @@ if (Astro.request.method === 'POST' && hero) {
 							type="text"
 							id="cta_primary_url"
 							name="cta_primary_url"
-							value={hero.cta_primary_url || ''}
+							value={hero.cta_primary_url ||''}
 							maxlength="500"
 							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
 						/>
@@ -197,7 +197,7 @@ if (Astro.request.method === 'POST' && hero) {
 							type="text"
 							id="cta_secondary_text"
 							name="cta_secondary_text"
-							value={hero.cta_secondary_text || ''}
+							value={hero.cta_secondary_text ||''}
 							maxlength="100"
 							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
 						/>
@@ -210,7 +210,7 @@ if (Astro.request.method === 'POST' && hero) {
 							type="text"
 							id="cta_secondary_url"
 							name="cta_secondary_url"
-							value={hero.cta_secondary_url || ''}
+							value={hero.cta_secondary_url ||''}
 							maxlength="500"
 							class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
 						/>
@@ -243,9 +243,9 @@ if (Astro.request.method === 'POST' && hero) {
 						name="status"
 						class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3]"
 					>
-						<option value="draft" selected={hero.status === 'draft'}>Draft</option>
-						<option value="active" selected={hero.status === 'active'}>Active</option>
-						<option value="archived" selected={hero.status === 'archived'}>Archived</option>
+						<option value="draft" selected={hero.status ==='draft'}>Draft</option>
+						<option value="active" selected={hero.status ==='active'}>Active</option>
+						<option value="archived" selected={hero.status ==='archived'}>Archived</option>
 					</select>
 				</div>
 

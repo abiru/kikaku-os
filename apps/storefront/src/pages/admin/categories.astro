@@ -1,17 +1,17 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../components/catalyst/alert-banner';
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../lib/api';
-import { Badge } from '../../components/catalyst/badge';
-import { Fieldset, Field, Label } from '../../components/catalyst/fieldset';
-import { Heading } from '../../components/catalyst/heading';
-import { Input } from '../../components/catalyst/input';
-import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
+import { Alert } from'../../components/catalyst/alert-banner';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import { getApiBase } from'../../lib/api';
+import { Badge } from'../../components/catalyst/badge';
+import { Fieldset, Field, Label } from'../../components/catalyst/fieldset';
+import { Heading } from'../../components/catalyst/heading';
+import { Input } from'../../components/catalyst/input';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from'../../components/catalyst/table';
 
 const apiBase = getApiBase();
-const q = Astro.url.searchParams.get('q') || '';
+const q = Astro.url.searchParams.get('q') ||'';
 
 type Category = {
 	category: string;
@@ -40,10 +40,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		categories = data.categories || [];
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load categories. Please check your admin key.';
+		error ='Failed to load categories. Please check your admin key.';
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error ='ADMIN_API_KEY is missing in server environment.';
 }
 ---
 
@@ -146,28 +146,29 @@ if (import.meta.env.ADMIN_API_KEY) {
 				<form id="rename-form" class="p-6 space-y-4">
 					<input type="hidden" id="rename-old-name" name="oldName" value="" />
 
-					<Fieldset client:only="react">
-						<Field>
-							<Label>Current Name</Label>
-							<Input
+					<div class="space-y-4">
+						<div>
+							<label for="rename-current" class="block text-sm font-medium text-zinc-950 mb-2">Current Name</label>
+							<input
 								type="text"
 								id="rename-current"
-								readOnly
-								className="text-zinc-500 bg-zinc-50"
+								readonly
+								class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-500 bg-zinc-50"
 							/>
-						</Field>
+						</div>
 
-						<Field>
-							<Label>New Name *</Label>
-							<Input
+						<div>
+							<label for="rename-new" class="block text-sm font-medium text-zinc-950 mb-2">New Name *</label>
+							<input
 								type="text"
 								id="rename-new"
 								name="newName"
 								required
 								placeholder="Enter new category name"
+								class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
 							/>
-						</Field>
-					</Fieldset>
+						</div>
+					</div>
 
 					<div id="rename-error" class="hidden">
 						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
@@ -202,23 +203,22 @@ if (import.meta.env.ADMIN_API_KEY) {
 					<input type="hidden" id="delete-name" name="deleteName" value="" />
 
 					<p class="text-sm text-zinc-950">
-						Are you sure you want to delete the category "<span id="delete-category-name" class="font-medium"></span>"?
+						Are you sure you want to delete the category"<span id="delete-category-name" class="font-medium"></span>"?
 					</p>
 					<p class="text-sm text-zinc-500">
 						<span id="delete-product-count"></span> product(s) will have their category removed.
 					</p>
 
-					<Fieldset client:only="react">
-						<Field>
-							<Label>Move products to (optional)</Label>
-							<Input
-								type="text"
-								id="delete-move-to"
-								name="moveTo"
-								placeholder="Leave empty to remove category from products"
-							/>
-						</Field>
-					</Fieldset>
+					<div>
+						<label for="delete-move-to" class="block text-sm font-medium text-zinc-950 mb-2">Move products to (optional)</label>
+						<input
+							type="text"
+							id="delete-move-to"
+							name="moveTo"
+							placeholder="Leave empty to remove category from products"
+							class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+						/>
+					</div>
 
 					<div id="delete-error" class="hidden">
 						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
@@ -268,7 +268,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 	function showRenameModal(category) {
 		renameOldName.value = category;
 		renameCurrent.value = category;
-		renameNew.value = '';
+		renameNew.value ='';
 		renameError.classList.add('hidden');
 		renameModal.classList.remove('hidden');
 		renameNew.focus();
@@ -283,7 +283,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		deleteName.value = category;
 		deleteCategoryName.textContent = category;
 		deleteProductCount.textContent = count;
-		deleteMoveTo.value = '';
+		deleteMoveTo.value ='';
 		deleteError.classList.add('hidden');
 		deleteModal.classList.remove('hidden');
 	}
@@ -334,20 +334,20 @@ if (import.meta.env.ADMIN_API_KEY) {
 		const newName = renameNew.value.trim();
 
 		if (!newName) {
-			showError(renameError, 'New name is required');
+			showError(renameError,'New name is required');
 			return;
 		}
 
 		if (newName === oldName) {
-			showError(renameError, 'New name must be different from current name');
+			showError(renameError,'New name must be different from current name');
 			return;
 		}
 
 		try {
 			const res = await fetch(`${apiBase}/admin/categories/${encodeURIComponent(oldName)}`, {
-				method: 'PUT',
+				method:'PUT',
 				headers: {
-					'Content-Type': 'application/json',
+					'Content-Type':'application/json',
 					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({ newName })
@@ -356,13 +356,13 @@ if (import.meta.env.ADMIN_API_KEY) {
 			const data = await res.json();
 
 			if (!res.ok) {
-				showError(renameError, data.message || 'Failed to rename category');
+				showError(renameError, data.message ||'Failed to rename category');
 				return;
 			}
 
 			location.reload();
 		} catch (err) {
-			showError(renameError, 'An error occurred. Please try again.');
+			showError(renameError,'An error occurred. Please try again.');
 		}
 	});
 
@@ -374,9 +374,9 @@ if (import.meta.env.ADMIN_API_KEY) {
 
 		try {
 			const res = await fetch(`${apiBase}/admin/categories/${encodeURIComponent(name)}`, {
-				method: 'DELETE',
+				method:'DELETE',
 				headers: {
-					'Content-Type': 'application/json',
+					'Content-Type':'application/json',
 					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({ moveTo })
@@ -385,13 +385,13 @@ if (import.meta.env.ADMIN_API_KEY) {
 			const data = await res.json();
 
 			if (!res.ok) {
-				showError(deleteError, data.message || 'Failed to delete category');
+				showError(deleteError, data.message ||'Failed to delete category');
 				return;
 			}
 
 			location.reload();
 		} catch (err) {
-			showError(deleteError, 'An error occurred. Please try again.');
+			showError(deleteError,'An error occurred. Please try again.');
 		}
 	});
 </script>

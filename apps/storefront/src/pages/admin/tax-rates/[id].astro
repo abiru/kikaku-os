@@ -1,10 +1,10 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../../components/catalyst/alert-banner';
-import Button from '../../../components/Button.astro';
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../../lib/api';
+import { Alert } from'../../../components/catalyst/alert-banner';
+import Button from'../../../components/Button.astro';
+import AdminLayout from'../../../layouts/AdminLayout.astro';
+import { getApiBase } from'../../../lib/api';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -28,67 +28,67 @@ let success: string | null = null;
 
 // Fetch tax rate
 if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing';
+	error ='ADMIN_API_KEY is missing';
 } else {
 	try {
 		const res = await fetch(`${apiBase}/admin/tax-rates/${id}`, {
-			headers: { 'x-admin-key': apiKey }
+			headers: {'x-admin-key': apiKey }
 		});
 
 		if (res.ok) {
 			taxRate = await res.json();
 		} else if (res.status === 404) {
-			error = 'Tax rate not found';
+			error ='Tax rate not found';
 		} else {
 			error = `Failed to load tax rate: ${res.status}`;
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load tax rate';
+		error ='Failed to load tax rate';
 	}
 }
 
 // Handle form submission
-if (Astro.request.method === 'POST' && taxRate) {
+if (Astro.request.method ==='POST' && taxRate) {
 	try {
 		const formData = await Astro.request.formData();
 		const action = formData.get('action')?.toString();
 
-		if (action === 'delete') {
+		if (action ==='delete') {
 			// Delete tax rate
 			const res = await fetch(`${apiBase}/admin/tax-rates/${id}`, {
-				method: 'DELETE',
-				headers: { 'x-admin-key': apiKey! }
+				method:'DELETE',
+				headers: {'x-admin-key': apiKey! }
 			});
 
 			if (res.ok) {
 				return Astro.redirect('/admin/tax-rates');
 			} else {
 				const data = await res.json();
-				error = data.message || 'Failed to delete tax rate';
+				error = data.message ||'Failed to delete tax rate';
 			}
 		} else {
 			// Update tax rate
-			const name = formData.get('name')?.toString().trim() || '';
-			const rateStr = formData.get('rate')?.toString() || '';
-			const applicable_from = formData.get('applicable_from')?.toString() || '';
-			const applicable_to = formData.get('applicable_to')?.toString() || '';
-			const description = formData.get('description')?.toString().trim() || '';
-			const is_active = formData.get('is_active') === 'true';
+			const name = formData.get('name')?.toString().trim() ||'';
+			const rateStr = formData.get('rate')?.toString() ||'';
+			const applicable_from = formData.get('applicable_from')?.toString() ||'';
+			const applicable_to = formData.get('applicable_to')?.toString() ||'';
+			const description = formData.get('description')?.toString().trim() ||'';
+			const is_active = formData.get('is_active') ==='true';
 
 			const rate = parseFloat(rateStr);
 
 			if (!name) {
-				error = 'Name is required';
+				error ='Name is required';
 			} else if (isNaN(rate) || rate < 0 || rate > 1) {
-				error = 'Rate must be between 0 and 1';
+				error ='Rate must be between 0 and 1';
 			} else if (!applicable_from) {
-				error = 'Applicable from date is required';
+				error ='Applicable from date is required';
 			} else {
 				const res = await fetch(`${apiBase}/admin/tax-rates/${id}`, {
-					method: 'PUT',
+					method:'PUT',
 					headers: {
-						'Content-Type': 'application/json',
+						'Content-Type':'application/json',
 						'x-admin-key': apiKey!
 					},
 					body: JSON.stringify({
@@ -103,23 +103,23 @@ if (Astro.request.method === 'POST' && taxRate) {
 
 				if (res.ok) {
 					taxRate = await res.json();
-					success = 'Tax rate updated successfully';
+					success ='Tax rate updated successfully';
 				} else {
 					const data = await res.json();
-					error = data.message || 'Failed to update tax rate';
+					error = data.message ||'Failed to update tax rate';
 				}
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to process request';
+		error ='Failed to process request';
 	}
 }
 
 const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 ---
 
-<AdminLayout title={taxRate ? `Edit Tax Rate: ${taxRate.name}` : 'Tax Rate - Admin'}>
+<AdminLayout title={taxRate ? `Edit Tax Rate: ${taxRate.name}` :'Tax Rate - Admin'}>
 	<div class="space-y-6 max-w-2xl">
 		<div class="flex items-center gap-4">
 			<a href="/admin/tax-rates" class="text-indigo-600 hover:text-indigo-500 text-sm flex items-center gap-1">
@@ -129,7 +129,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 				Tax Rates
 			</a>
 			<h1 class="text-2xl font-semibold text-gray-900">
-				{taxRate ? `Edit: ${taxRate.name}` : 'Tax Rate'}
+				{taxRate ? `Edit: ${taxRate.name}` :'Tax Rate'}
 			</h1>
 		</div>
 
@@ -150,7 +150,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div class="md:col-span-2">
-							<label for="name" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+							<label for="name" class="block text-sm font-medium text-zinc-950 mb-2">
 								Name <span class="text-red-500">*</span>
 							</label>
 							<input
@@ -159,12 +159,12 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 								name="name"
 								required
 								value={taxRate.name}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 							/>
 						</div>
 
 						<div>
-							<label for="rate" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+							<label for="rate" class="block text-sm font-medium text-zinc-950 mb-2">
 								Rate (decimal) <span class="text-red-500">*</span>
 							</label>
 							<input
@@ -176,13 +176,13 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 								min="0"
 								max="1"
 								value={taxRate.rate}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 							/>
 							<p class="text-xs text-[#86868b] mt-1">Current: {formatRate(taxRate.rate)}</p>
 						</div>
 
 						<div>
-							<label for="applicable_from" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+							<label for="applicable_from" class="block text-sm font-medium text-zinc-950 mb-2">
 								Applicable From <span class="text-red-500">*</span>
 							</label>
 							<input
@@ -191,34 +191,34 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 								name="applicable_from"
 								required
 								value={taxRate.applicable_from}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 							/>
 						</div>
 
 						<div>
-							<label for="applicable_to" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+							<label for="applicable_to" class="block text-sm font-medium text-zinc-950 mb-2">
 								Applicable To
 							</label>
 							<input
 								type="date"
 								id="applicable_to"
 								name="applicable_to"
-								value={taxRate.applicable_to || ''}
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+								value={taxRate.applicable_to ||''}
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
 							/>
 							<p class="text-xs text-[#86868b] mt-1">Leave empty for no end date</p>
 						</div>
 
 						<div class="md:col-span-2">
-							<label for="description" class="block text-sm font-medium text-zinc-950 dark:text-white mb-2">
+							<label for="description" class="block text-sm font-medium text-zinc-950 mb-2">
 								Description
 							</label>
 							<textarea
 								id="description"
 								name="description"
 								rows="3"
-								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
-							>{taxRate.description || ''}</textarea>
+								class="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all"
+							>{taxRate.description ||''}</textarea>
 						</div>
 
 						<div class="md:col-span-2">
@@ -230,7 +230,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 									checked={taxRate.is_active === 1}
 									class="w-5 h-5 text-[#0071e3] border-gray-300 rounded focus:ring-[#0071e3] focus:ring-2"
 								/>
-								<span class="text-sm font-medium text-zinc-950 dark:text-white">Active</span>
+								<span class="text-sm font-medium text-zinc-950">Active</span>
 							</label>
 						</div>
 					</div>
@@ -264,11 +264,11 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 				<div class="bg-gray-50 rounded-lg p-4 text-sm text-[#86868b]">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
-							<div class="font-medium text-zinc-950 dark:text-white">Created</div>
+							<div class="font-medium text-zinc-950">Created</div>
 							<div>{new Date(taxRate.created_at).toLocaleString('ja-JP')}</div>
 						</div>
 						<div>
-							<div class="font-medium text-zinc-950 dark:text-white">Updated</div>
+							<div class="font-medium text-zinc-950">Updated</div>
 							<div>{new Date(taxRate.updated_at).toLocaleString('ja-JP')}</div>
 						</div>
 					</div>

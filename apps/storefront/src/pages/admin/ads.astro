@@ -1,23 +1,23 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../components/catalyst/alert-banner';
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import { Button } from '../../components/catalyst/button';
-import { Badge } from '../../components/catalyst/badge';
-import { Fieldset, Field, Label } from '../../components/catalyst/fieldset';
-import { Heading } from '../../components/catalyst/heading';
-import { Input } from '../../components/catalyst/input';
-import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
-import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '../../components/catalyst/table';
-import { getApiBase } from '../../lib/api';
+import { Alert } from'../../components/catalyst/alert-banner';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import { Button } from'../../components/catalyst/button';
+import { Badge } from'../../components/catalyst/badge';
+import { Fieldset, Field, Label } from'../../components/catalyst/fieldset';
+import { Heading } from'../../components/catalyst/heading';
+import { Input } from'../../components/catalyst/input';
+import { Pagination, PaginationPrevious, PaginationNext } from'../../components/catalyst/pagination';
+import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from'../../components/catalyst/table';
+import { getApiBase } from'../../lib/api';
 
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const apiBase = getApiBase();
 
-const q = Astro.url.searchParams.get('q') || '';
-const status = Astro.url.searchParams.get('status') || 'all';
-const page = Number(Astro.url.searchParams.get('page') || '1');
+const q = Astro.url.searchParams.get('q') ||'';
+const status = Astro.url.searchParams.get('status') ||'all';
+const page = Number(Astro.url.searchParams.get('page') ||'1');
 
 let drafts: any[] = [];
 let totalCount = 0;
@@ -25,46 +25,46 @@ let totalPages = 0;
 let error: string | null = null;
 
 if (apiKey) {
-  try {
-    const params = new URLSearchParams({
-      q,
-      status,
-      page: page.toString(),
-      perPage: '20',
-    });
+ try {
+ const params = new URLSearchParams({
+ q,
+ status,
+ page: page.toString(),
+ perPage:'20',
+ });
 
-    const response = await fetch(`${apiBase}/admin/ads/drafts?${params}`, {
-      headers: { 'x-admin-key': apiKey },
-    });
+ const response = await fetch(`${apiBase}/admin/ads/drafts?${params}`, {
+ headers: {'x-admin-key': apiKey },
+ });
 
-    if (response.ok) {
-      const data = await response.json();
-      drafts = data.drafts || [];
-      totalCount = data.meta?.totalCount || 0;
-      totalPages = data.meta?.totalPages || 0;
-    } else {
-      error = 'Failed to load ad drafts';
-    }
-  } catch (e) {
-    error = 'Failed to connect to API';
-    console.error(e);
-  }
+ if (response.ok) {
+ const data = await response.json();
+ drafts = data.drafts || [];
+ totalCount = data.meta?.totalCount || 0;
+ totalPages = data.meta?.totalPages || 0;
+ } else {
+ error ='Failed to load ad drafts';
+ }
+ } catch (e) {
+ error ='Failed to connect to API';
+ console.error(e);
+ }
 }
 
 const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+ if (!dateStr) return'-';
+ return new Date(dateStr).toLocaleDateString('ja-JP', {
+ year:'numeric',
+ month:'2-digit',
+ day:'2-digit',
+ hour:'2-digit',
+ minute:'2-digit',
+ });
 };
 
 const getStatusColor = (status: string) => {
-  if (status === 'ready') return 'lime';
-  return 'zinc';
+ if (status ==='ready') return'lime';
+ return'zinc';
 };
 
 const hasPrev = page > 1;
@@ -72,191 +72,193 @@ const hasNext = page < totalPages;
 ---
 
 <AdminLayout title="Google Ads Drafts">
-  <div class="max-w-7xl mx-auto px-6 py-8">
-    {/* Header */}
-    <div class="flex items-center justify-between mb-8">
-      <div>
-        <Heading>Google Ads</Heading>
-        <p class="text-sm text-zinc-500 mt-1">Manage ad drafts and AI-generated copy</p>
-      </div>
-      <Button href="/admin/ads/new" color="indigo" client:load>
-        + New Ad Draft
-      </Button>
-    </div>
+ <div class="max-w-7xl mx-auto px-6 py-8">
+ {/* Header */}
+ <div class="flex items-center justify-between mb-8">
+ <div>
+ <Heading>Google Ads</Heading>
+ <p class="text-sm text-zinc-500 mt-1">Manage ad drafts and AI-generated copy</p>
+ </div>
+ <Button href="/admin/ads/new" color="indigo" client:load>
+ + New Ad Draft
+ </Button>
+ </div>
 
-    {/* Error Message */}
-    {error && (
-      <Alert color="red" client:load>
-        {error}
-      </Alert>
-    )}
+ {/* Error Message */}
+ {error && (
+ <Alert color="red" client:load>
+ {error}
+ </Alert>
+ )}
 
-    {/* Filters */}
-    <div class="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 mb-6">
-      <form method="GET" class="space-y-4">
-        <Fieldset client:only="react">
-          <Field>
-            <Label>Search</Label>
-            <Input
-              type="text"
-              name="q"
-              value={q}
-              placeholder="Search by campaign name or product..."
-            />
-          </Field>
-        </Fieldset>
+ {/* Filters */}
+ <div class="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 mb-6">
+ <form method="GET" class="space-y-4">
+ <div class="space-y-2">
+ <label for="search" class="block text-sm font-medium text-zinc-950">
+ Search
+ </label>
+ <input
+ id="search"
+ type="text"
+ name="q"
+ value={q}
+ placeholder="Search by campaign name or product..."
+ class="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-950 placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+ />
+ </div>
 
-        {/* Status Filter */}
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-sm font-medium text-zinc-950">Status:</span>
-          <a
-            href={`?status=all&q=${q}`}
-            class={`px-3 py-1 rounded-lg text-sm transition-colors ${
-              status === 'all'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-            }`}
-          >
-            All
-          </a>
-          <a
-            href={`?status=draft&q=${q}`}
-            class={`px-3 py-1 rounded-lg text-sm transition-colors ${
-              status === 'draft'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-            }`}
-          >
-            Draft
-          </a>
-          <a
-            href={`?status=ready&q=${q}`}
-            class={`px-3 py-1 rounded-lg text-sm transition-colors ${
-              status === 'ready'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-            }`}
-          >
-            Ready
-          </a>
-        </div>
+ {/* Status Filter */}
+ <div class="flex items-center gap-2 flex-wrap">
+ <span class="text-sm font-medium text-zinc-950">Status:</span>
+ <a
+ href={`?status=all&q=${q}`}
+ class={`px-3 py-1 rounded-lg text-sm transition-colors ${
+ status ==='all'
+ ?'bg-indigo-600 text-white'
+ :'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+ }`}
+ >
+ All
+ </a>
+ <a
+ href={`?status=draft&q=${q}`}
+ class={`px-3 py-1 rounded-lg text-sm transition-colors ${
+ status ==='draft'
+ ?'bg-indigo-600 text-white'
+ :'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+ }`}
+ >
+ Draft
+ </a>
+ <a
+ href={`?status=ready&q=${q}`}
+ class={`px-3 py-1 rounded-lg text-sm transition-colors ${
+ status ==='ready'
+ ?'bg-indigo-600 text-white'
+ :'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+ }`}
+ >
+ Ready
+ </a>
+ </div>
 
-        <div class="flex gap-2">
-          <button
-            type="submit"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-[#0077ed] transition-colors"
-          >
-            Search
-          </button>
-          {(q || status !== 'all') && (
-            <a
-              href="/admin/ads"
-              class="px-4 py-2 bg-white text-zinc-950 border border-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-50/50 transition-colors"
-            >
-              Clear
-            </a>
-          )}
-        </div>
-      </form>
-    </div>
+ <div class="flex gap-2">
+ <button
+ type="submit"
+ class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-[#0077ed] transition-colors"
+ >
+ Search
+ </button>
+ {(q || status !=='all') && (
+ <a
+ href="/admin/ads"
+ class="px-4 py-2 bg-white text-zinc-950 border border-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-50/50 transition-colors"
+ >
+ Clear
+ </a>
+ )}
+ </div>
+ </form>
+ </div>
 
-    {/* Results */}
-    <div class="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
-      {drafts.length === 0 ? (
-        <div class="text-center py-16">
-          <svg class="mx-auto h-12 w-12 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 class="mt-4 text-lg font-medium text-zinc-950">No ad drafts found</h3>
-          <p class="mt-1 text-sm text-zinc-500">
-            {q || status !== 'all' ? 'Try adjusting your filters' : 'Get started by creating a new ad draft'}
-          </p>
-          {!q && status === 'all' && (
-            <div class="mt-6">
-              <Button href="/admin/ads/new" color="indigo" client:load>
-                + Create Ad Draft
-              </Button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <>
-          <div class="overflow-x-auto">
-            <Table client:load>
-              <TableHead>
-                <TableRow>
-                  <TableHeader>Campaign</TableHeader>
-                  <TableHeader>Type</TableHeader>
-                  <TableHeader>Status</TableHeader>
-                  <TableHeader>Product</TableHeader>
-                  <TableHeader>Updated</TableHeader>
-                  <TableHeader>Actions</TableHeader>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {drafts.map((draft) => (
-                  <TableRow href={`/admin/ads/${draft.id}`}>
-                    <TableCell>
-                      <div class="font-medium">{draft.campaign_name}</div>
-                      <div class="text-xs text-zinc-500 mt-1">
-                        {draft.final_url}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span class="text-zinc-700 capitalize">{draft.ad_type}</span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge color={getStatusColor(draft.status)} client:only="react">
-                        {draft.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {draft.product_name ? (
-                        <span class="text-zinc-700">{draft.product_name}</span>
-                      ) : (
-                        <span class="text-zinc-400">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-zinc-500">
-                      {formatDate(draft.updated_at)}
-                    </TableCell>
-                    <TableCell>
-                      <div class="flex items-center gap-2">
-                        <a
-                          href={`/admin/ads/${draft.id}`}
-                          class="text-indigo-600 hover:underline text-sm font-medium"
-                        >
-                          Edit
-                        </a>
-                        <span class="text-zinc-300">|</span>
-                        <a
-                          href={`/admin/ads/${draft.id}/history`}
-                          class="text-zinc-500 hover:underline text-sm"
-                        >
-                          History
-                        </a>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+ {/* Results */}
+ <div class="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+ {drafts.length === 0 ? (
+ <div class="text-center py-16">
+ <svg class="mx-auto h-12 w-12 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+ </svg>
+ <h3 class="mt-4 text-lg font-medium text-zinc-950">No ad drafts found</h3>
+ <p class="mt-1 text-sm text-zinc-500">
+ {q || status !=='all' ?'Try adjusting your filters' :'Get started by creating a new ad draft'}
+ </p>
+ {!q && status ==='all' && (
+ <div class="mt-6">
+ <Button href="/admin/ads/new" color="indigo" client:load>
+ + Create Ad Draft
+ </Button>
+ </div>
+ )}
+ </div>
+ ) : (
+ <>
+ <div class="overflow-x-auto">
+ <Table client:load>
+ <TableHead>
+ <TableRow>
+ <TableHeader>Campaign</TableHeader>
+ <TableHeader>Type</TableHeader>
+ <TableHeader>Status</TableHeader>
+ <TableHeader>Product</TableHeader>
+ <TableHeader>Updated</TableHeader>
+ <TableHeader>Actions</TableHeader>
+ </TableRow>
+ </TableHead>
+ <TableBody>
+ {drafts.map((draft) => (
+ <TableRow href={`/admin/ads/${draft.id}`}>
+ <TableCell>
+ <div class="font-medium">{draft.campaign_name}</div>
+ <div class="text-xs text-zinc-500 mt-1">
+ {draft.final_url}
+ </div>
+ </TableCell>
+ <TableCell>
+ <span class="text-zinc-700 capitalize">{draft.ad_type}</span>
+ </TableCell>
+ <TableCell>
+ <Badge color={getStatusColor(draft.status)} client:only="react">
+ {draft.status}
+ </Badge>
+ </TableCell>
+ <TableCell>
+ {draft.product_name ? (
+ <span class="text-zinc-700">{draft.product_name}</span>
+ ) : (
+ <span class="text-zinc-400">-</span>
+ )}
+ </TableCell>
+ <TableCell className="text-zinc-500">
+ {formatDate(draft.updated_at)}
+ </TableCell>
+ <TableCell>
+ <div class="flex items-center gap-2">
+ <a
+ href={`/admin/ads/${draft.id}`}
+ class="text-indigo-600 hover:underline text-sm font-medium"
+ >
+ Edit
+ </a>
+ <span class="text-zinc-300">|</span>
+ <a
+ href={`/admin/ads/${draft.id}/history`}
+ class="text-zinc-500 hover:underline text-sm"
+ >
+ History
+ </a>
+ </div>
+ </TableCell>
+ </TableRow>
+ ))}
+ </TableBody>
+ </Table>
+ </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div class="px-6 py-4 border-t border-zinc-200 flex items-center justify-between">
-              <div class="text-sm text-zinc-500">
-                Showing page {page} of {totalPages} ({totalCount} total)
-              </div>
-              <Pagination client:load>
-                <PaginationPrevious href={hasPrev ? `?page=${page - 1}&status=${status}&q=${q}` : null} />
-                <PaginationNext href={hasNext ? `?page=${page + 1}&status=${status}&q=${q}` : null} />
-              </Pagination>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  </div>
+ {/* Pagination */}
+ {totalPages > 1 && (
+ <div class="px-6 py-4 border-t border-zinc-200 flex items-center justify-between">
+ <div class="text-sm text-zinc-500">
+ Showing page {page} of {totalPages} ({totalCount} total)
+ </div>
+ <Pagination client:load>
+ <PaginationPrevious href={hasPrev ? `?page=${page - 1}&status=${status}&q=${q}` : null} />
+ <PaginationNext href={hasNext ? `?page=${page + 1}&status=${status}&q=${q}` : null} />
+ </Pagination>
+ </div>
+ )}
+ </>
+ )}
+ </div>
+ </div>
 </AdminLayout>

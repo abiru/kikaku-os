@@ -1,27 +1,27 @@
 ---
 export const prerender = false;
 
-import { Alert } from '../../components/catalyst/alert-banner';
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import Button from '../../components/Button.astro';
-import { Badge } from '../../components/catalyst/badge';
-import { Heading, Subheading } from '../../components/catalyst/heading';
-import { getApiBase } from '../../lib/api';
+import { Alert } from'../../components/catalyst/alert-banner';
+import AdminLayout from'../../layouts/AdminLayout.astro';
+import Button from'../../components/Button.astro';
+import { Badge } from'../../components/catalyst/badge';
+import { Heading, Subheading } from'../../components/catalyst/heading';
+import { getApiBase } from'../../lib/api';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
 
 type Setting = {
-  id: number;
-  key: string;
-  value: string;
-  category: string;
-  data_type: string;
-  description: string | null;
-  display_order: number;
-  is_active: number;
-  created_at: string;
-  updated_at: string;
+ id: number;
+ key: string;
+ value: string;
+ category: string;
+ data_type: string;
+ description: string | null;
+ display_order: number;
+ is_active: number;
+ created_at: string;
+ updated_at: string;
 };
 
 type GroupedSettings = Record<string, Setting[]>;
@@ -32,204 +32,204 @@ let success: string | null = null;
 
 // Fetch settings
 if (!apiKey) {
-  error = 'ADMIN_API_KEY is missing in server environment';
+ error ='ADMIN_API_KEY is missing in server environment';
 } else {
-  try {
-    const res = await fetch(`${apiBase}/admin/settings`, {
-      headers: { 'x-admin-key': apiKey }
-    });
+ try {
+ const res = await fetch(`${apiBase}/admin/settings`, {
+ headers: {'x-admin-key': apiKey }
+ });
 
-    if (res.ok) {
-      const data = await res.json();
-      grouped = data.grouped || {};
-    } else {
-      error = `Failed to load settings: ${res.status}`;
-    }
-  } catch (e) {
-    console.error(e);
-    error = 'Failed to load settings';
-  }
+ if (res.ok) {
+ const data = await res.json();
+ grouped = data.grouped || {};
+ } else {
+ error = `Failed to load settings: ${res.status}`;
+ }
+ } catch (e) {
+ console.error(e);
+ error ='Failed to load settings';
+ }
 }
 
 // Handle POST submission
-if (Astro.request.method === 'POST') {
-  try {
-    const formData = await Astro.request.formData();
-    const updates: { key: string; value: string }[] = [];
+if (Astro.request.method ==='POST') {
+ try {
+ const formData = await Astro.request.formData();
+ const updates: { key: string; value: string }[] = [];
 
-    // Build updates from all settings (including unchecked checkboxes)
-    for (const category of Object.values(grouped)) {
-      for (const setting of category) {
-        const formKey = `setting_${setting.key}`;
-        const formValue = formData.get(formKey);
+ // Build updates from all settings (including unchecked checkboxes)
+ for (const category of Object.values(grouped)) {
+ for (const setting of category) {
+ const formKey = `setting_${setting.key}`;
+ const formValue = formData.get(formKey);
 
-        if (setting.data_type === 'boolean') {
-          // Checkbox: true if checked, false otherwise
-          updates.push({ key: setting.key, value: formValue === 'true' ? 'true' : 'false' });
-        } else if (formValue !== null) {
-          // Other types: only add if present in form
-          updates.push({ key: setting.key, value: formValue.toString() });
-        }
-      }
-    }
+ if (setting.data_type ==='boolean') {
+ // Checkbox: true if checked, false otherwise
+ updates.push({ key: setting.key, value: formValue ==='true' ?'true' :'false' });
+ } else if (formValue !== null) {
+ // Other types: only add if present in form
+ updates.push({ key: setting.key, value: formValue.toString() });
+ }
+ }
+ }
 
-    if (updates.length > 0) {
-      const res = await fetch(`${apiBase}/admin/settings/bulk`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': apiKey!
-        },
-        body: JSON.stringify({ settings: updates })
-      });
+ if (updates.length > 0) {
+ const res = await fetch(`${apiBase}/admin/settings/bulk`, {
+ method:'POST',
+ headers: {
+'Content-Type':'application/json',
+'x-admin-key': apiKey!
+ },
+ body: JSON.stringify({ settings: updates })
+ });
 
-      const data = await res.json();
+ const data = await res.json();
 
-      if (res.ok) {
-        success = `Successfully updated ${data.results?.length || 0} setting(s)`;
-        if (data.errors && data.errors.length > 0) {
-          error = `Some settings failed: ${data.errors.map((e: any) => e.key).join(', ')}`;
-        }
+ if (res.ok) {
+ success = `Successfully updated ${data.results?.length || 0} setting(s)`;
+ if (data.errors && data.errors.length > 0) {
+ error = `Some settings failed: ${data.errors.map((e: any) => e.key).join(',')}`;
+ }
 
-        // Refresh settings
-        const refreshRes = await fetch(`${apiBase}/admin/settings`, {
-          headers: { 'x-admin-key': apiKey! }
-        });
-        if (refreshRes.ok) {
-          const refreshData = await refreshRes.json();
-          grouped = refreshData.grouped || {};
-        }
-      } else {
-        error = data.message || 'Failed to update settings';
-      }
-    }
-  } catch (e) {
-    console.error(e);
-    error = 'Failed to save settings';
-  }
+ // Refresh settings
+ const refreshRes = await fetch(`${apiBase}/admin/settings`, {
+ headers: {'x-admin-key': apiKey! }
+ });
+ if (refreshRes.ok) {
+ const refreshData = await refreshRes.json();
+ grouped = refreshData.grouped || {};
+ }
+ } else {
+ error = data.message ||'Failed to update settings';
+ }
+ }
+ } catch (e) {
+ console.error(e);
+ error ='Failed to save settings';
+ }
 }
 
 const categoryLabels: Record<string, string> = {
-  shipping: '配送設定',
-  company: '会社情報',
-  store: 'ストア設定',
-  general: '一般設定'
+ shipping:'配送設定',
+ company:'会社情報',
+ store:'ストア設定',
+ general:'一般設定'
 };
 
 const getInputType = (dataType: string) => {
-  switch (dataType) {
-    case 'integer': return 'number';
-    case 'email': return 'email';
-    case 'url': return 'url';
-    case 'boolean': return 'checkbox';
-    default: return 'text';
-  }
+ switch (dataType) {
+ case'integer': return'number';
+ case'email': return'email';
+ case'url': return'url';
+ case'boolean': return'checkbox';
+ default: return'text';
+ }
 };
 
 const formatValue = (value: string, dataType: string) => {
-  if (dataType === 'boolean') {
-    return ['true', '1'].includes(value.toLowerCase());
-  }
-  return value;
+ if (dataType ==='boolean') {
+ return ['true','1'].includes(value.toLowerCase());
+ }
+ return value;
 };
 ---
 
 <AdminLayout title="Settings - Admin">
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <Heading>Application Settings</Heading>
-        <span class="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-full">
-          {Object.values(grouped).flat().length} settings
-        </span>
-      </div>
-    </div>
+ <div class="space-y-6">
+ <div class="flex items-center justify-between">
+ <div class="flex items-center gap-4">
+ <Heading>Application Settings</Heading>
+ <span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">
+ {Object.values(grouped).flat().length} settings
+ </span>
+ </div>
+ </div>
 
-    {error && (
-      <Alert color="red" client:load>
-        {error}
-      </Alert>
-    )}
+ {error && (
+ <Alert color="red" client:load>
+ {error}
+ </Alert>
+ )}
 
-    {success && (
-      <Alert color="green" client:load>
-        {success}
-      </Alert>
-    )}
+ {success && (
+ <Alert color="green" client:load>
+ {success}
+ </Alert>
+ )}
 
-    <form method="POST" class="space-y-6">
-      {Object.entries(grouped).map(([category, settings]) => (
-        <div class="bg-white rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
-            <Subheading>
-              {categoryLabels[category] || category}
-            </Subheading>
-          </div>
+ <form method="POST" class="space-y-6">
+ {Object.entries(grouped).map(([category, settings]) => (
+ <div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+ <div class="px-6 py-4 border-b border-zinc-200 bg-zinc-50">
+ <Subheading>
+ {categoryLabels[category] || category}
+ </Subheading>
+ </div>
 
-          <div class="p-6 space-y-6">
-            {settings.map((setting) => (
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                <div class="md:col-span-1">
-                  <label for={`setting_${setting.key}`} class="block text-sm font-medium text-zinc-950 dark:text-white">
-                    {setting.description || setting.key}
-                  </label>
-                  <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                    {setting.key}
-                  </p>
-                  <Badge color="zinc" client:only="react" className="mt-2 text-xs">
-                    {setting.data_type}
-                  </Badge>
-                </div>
+ <div class="p-6 space-y-6">
+ {settings.map((setting) => (
+ <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+ <div class="md:col-span-1">
+ <label for={`setting_${setting.key}`} class="block text-sm font-medium text-zinc-950">
+ {setting.description || setting.key}
+ </label>
+ <p class="text-xs text-zinc-500 mt-1">
+ {setting.key}
+ </p>
+ <Badge color="zinc" client:only="react" className="mt-2 text-xs">
+ {setting.data_type}
+ </Badge>
+ </div>
 
-                <div class="md:col-span-2">
-                  {setting.data_type === 'text' ? (
-                    <textarea
-                      id={`setting_${setting.key}`}
-                      name={`setting_${setting.key}`}
-                      rows={3}
-                      class="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    >{setting.value}</textarea>
-                  ) : setting.data_type === 'boolean' ? (
-                    <label class="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        id={`setting_${setting.key}`}
-                        name={`setting_${setting.key}`}
-                        value="true"
-                        checked={formatValue(setting.value, setting.data_type)}
-                        class="w-5 h-5 text-indigo-600 border-zinc-300 dark:border-zinc-700 rounded focus:ring-indigo-500 focus:ring-2"
-                      />
-                      <span class="text-sm text-zinc-700 dark:text-zinc-300">Enabled</span>
-                    </label>
-                  ) : (
-                    <input
-                      type={getInputType(setting.data_type)}
-                      id={`setting_${setting.key}`}
-                      name={`setting_${setting.key}`}
-                      value={setting.value}
-                      step={setting.data_type === 'integer' ? '1' : undefined}
-                      class="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-950 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+ <div class="md:col-span-2">
+ {setting.data_type ==='text' ? (
+ <textarea
+ id={`setting_${setting.key}`}
+ name={`setting_${setting.key}`}
+ rows={3}
+ class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+ >{setting.value}</textarea>
+ ) : setting.data_type ==='boolean' ? (
+ <label class="flex items-center gap-3 cursor-pointer">
+ <input
+ type="checkbox"
+ id={`setting_${setting.key}`}
+ name={`setting_${setting.key}`}
+ value="true"
+ checked={formatValue(setting.value, setting.data_type)}
+ class="w-5 h-5 text-indigo-600 border-zinc-300 rounded focus:ring-indigo-500 focus:ring-2"
+ />
+ <span class="text-sm text-zinc-700">Enabled</span>
+ </label>
+ ) : (
+ <input
+ type={getInputType(setting.data_type)}
+ id={`setting_${setting.key}`}
+ name={`setting_${setting.key}`}
+ value={setting.value}
+ step={setting.data_type ==='integer' ?'1' : undefined}
+ class="w-full px-4 py-2 border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+ />
+ )}
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+ ))}
 
-      <div class="flex gap-3 sticky bottom-4 bg-white p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-lg">
-        <Button type="submit" variant="primary" size="sm">
-          Save All Settings
-        </Button>
-        <Button href="/admin/" variant="secondary" size="sm">
-          Cancel
-        </Button>
-      </div>
-    </form>
+ <div class="flex gap-3 sticky bottom-4 bg-white p-4 rounded-xl border border-zinc-200 shadow-lg">
+ <Button type="submit" variant="primary" size="sm">
+ Save All Settings
+ </Button>
+ <Button href="/admin/" variant="secondary" size="sm">
+ Cancel
+ </Button>
+ </div>
+ </form>
 
-    <Alert color="blue" client:load>
-      <strong>Note:</strong> Settings apply immediately after saving. Secret keys (Stripe, Clerk) must be managed through environment variables.
-    </Alert>
-  </div>
+ <Alert color="blue" client:load>
+ <strong>Note:</strong> Settings apply immediately after saving. Secret keys (Stripe, Clerk) must be managed through environment variables.
+ </Alert>
+ </div>
 </AdminLayout>
