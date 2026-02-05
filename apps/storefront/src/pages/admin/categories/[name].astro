@@ -121,9 +121,8 @@ const formatDate = (dateStr: string | null) => {
 		)}
 
 		{!error && (
-			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-				<div class="overflow-x-auto">
-					<Table client:only="react">
+			<>
+				<Table client:only="react">
 						<TableHead>
 							<TableRow>
 								<TableHeader>Title</TableHeader>
@@ -163,12 +162,11 @@ const formatDate = (dateStr: string | null) => {
 								</TableRow>
 							)}
 						</TableBody>
-					</Table>
-				</div>
+				</Table>
 
 				{/* Pagination */}
 				{meta.totalPages > 1 && (
-					<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+					<div class="flex items-center justify-between mt-4">
 						<div class="text-xs text-zinc-500">
 							Page {page} of {meta.totalPages}
 						</div>
@@ -202,7 +200,7 @@ const formatDate = (dateStr: string | null) => {
 						</div>
 					</div>
 				)}
-			</div>
+			</>
 		)}
 	</div>
 </AdminLayout>

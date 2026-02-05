@@ -1,15 +1,15 @@
 ---
 export const prerender = false;
 
-import { Alert } from'../../components/catalyst/alert-banner';
-import AdminLayout from'../../layouts/AdminLayout.astro';
-import { Heading } from'../../components/catalyst/heading';
-import { Pagination, PaginationPrevious, PaginationNext } from'../../components/catalyst/pagination';
-import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from'../../components/catalyst/table';
-import { getApiBase } from'../../lib/api';
+import { Alert } from '../../components/catalyst/alert-banner';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Heading } from '../../components/catalyst/heading';
+import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
+import { getApiBase } from '../../lib/api';
+import ReportsTable from '../../components/admin/ReportsTable';
 
 const apiBase = getApiBase();
-const page = Number(Astro.url.searchParams.get('page') ||'1');
+const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
 let reports: any[] = [];
@@ -22,9 +22,9 @@ if (import.meta.env.ADMIN_API_KEY) {
 			page: page.toString(),
 			perPage: perPage.toString()
 		});
-		
+
 		const res = await fetch(`${apiBase}/admin/reports?${query}`, {
-			headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
+			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
 		});
 
 		if (!res.ok) throw new Error(`API Error: ${res.status}`);
@@ -34,10 +34,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load reports.';
+		error = 'Failed to load reports.';
 	}
 } else {
-	error ='ADMIN_API_KEY is missing.';
+	error = 'ADMIN_API_KEY is missing.';
 }
 
 const hasNext = page < meta.totalPages;
@@ -46,8 +46,14 @@ const hasPrev = page > 1;
 // Helper to construct secure download link (via document ID)
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const getReportLink = (id: number) => {
-	return `${apiBase}/admin/documents/${id}/download?x-admin-key=${encodeURIComponent(apiKey ||'')}`;
+	return `${apiBase}/admin/documents/${id}/download?x-admin-key=${encodeURIComponent(apiKey || '')}`;
 };
+
+// Add downloadUrl to each report
+const reportsWithUrls = reports.map(r => ({
+	...r,
+	downloadUrl: getReportLink(r.id)
+}));
 ---
 
 <AdminLayout title="Daily Reports - Admin">
@@ -56,69 +62,24 @@ const getReportLink = (id: number) => {
 			<Heading>Reports</Heading>
 			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} reports</span>
 		</div>
-			{error && (
-				<Alert color="red" client:load>
-					{error}
-				</Alert>
-			)}
 
-			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-				<div class="overflow-x-auto">
-					<Table client:only="react">
-						<TableHead>
-							<TableRow>
-								<TableHeader>Date</TableHeader>
-								<TableHeader>Type</TableHeader>
-								<TableHeader>Generated At</TableHeader>
-								<TableHeader>Action</TableHeader>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{reports.length > 0 ? (
-								reports.map((report) => (
-									<TableRow>
-										<TableCell>
-											{new Date(report.date).toLocaleDateString()}
-										</TableCell>
-										<TableCell className="text-zinc-500">
-											Daily Close
-										</TableCell>
-										<TableCell className="text-zinc-500 tabular-nums">
-											{new Date(report.created_at).toLocaleString()}
-										</TableCell>
-										<TableCell>
-											<a
-												href={getReportLink(report.id)}
-												target="_blank"
-												rel="noopener noreferrer"
-												class="text-indigo-600 hover:underline font-medium"
-											>
-												View Report
-											</a>
-										</TableCell>
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell colSpan={4} className="text-center text-zinc-500">
-										No reports found.
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</div>
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
 
-				{/* Pagination */}
-				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-zinc-500">
-						Page {page} of {meta.totalPages}
-					</div>
-					<Pagination client:load>
-						<PaginationPrevious href={hasPrev ? `?page=${page - 1}` : null} />
-						<PaginationNext href={hasNext ? `?page=${page + 1}` : null} />
-					</Pagination>
-				</div>
+		<ReportsTable client:only="react" reports={reportsWithUrls} />
+
+		{/* Pagination */}
+		<div class="flex items-center justify-between">
+			<div class="text-xs text-zinc-500">
+				Page {page} of {meta.totalPages}
 			</div>
+			<Pagination client:load>
+				<PaginationPrevious href={hasPrev ? `?page=${page - 1}` : null} />
+				<PaginationNext href={hasNext ? `?page=${page + 1}` : null} />
+			</Pagination>
+		</div>
 	</div>
 </AdminLayout>

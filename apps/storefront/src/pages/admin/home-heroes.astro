@@ -2,12 +2,11 @@
 export const prerender = false;
 
 import { Alert } from '../../components/catalyst/alert-banner';
-import { Badge } from '../../components/catalyst/badge';
 import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
-import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
+import HomeHeroesPage from '../../components/admin/HomeHeroesPage';
 
 const apiBase = getApiBase();
 const status = Astro.url.searchParams.get('status') || 'all';
@@ -50,6 +49,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
+const apiKey = import.meta.env.ADMIN_API_KEY || '';
 ---
 
 <AdminLayout title="Home Heroes - Admin">
@@ -59,7 +59,7 @@ const hasPrev = page > 1;
 				<Heading>Home Hero Sections</Heading>
 				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
 			</div>
-			<Button href="/admin/home-heroes/new"  color="indigo" client:load>
+			<Button href="/admin/home-heroes/new" color="indigo" client:load>
 				+ New Hero Section
 			</Button>
 		</div>
@@ -98,85 +98,12 @@ const hasPrev = page > 1;
 			</Alert>
 		)}
 
-		{/* Hero Sections Table */}
-		<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-			<div class="overflow-x-auto">
-				<Table client:only="react">
-					<TableHead>
-						<TableRow>
-							<TableHeader>Position</TableHeader>
-							<TableHeader>Title</TableHeader>
-							<TableHeader>Status</TableHeader>
-							<TableHeader>Updated</TableHeader>
-							<TableHeader className="text-right">Action</TableHeader>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{heroes.length > 0 ? (
-							heroes.map((hero) => (
-								<TableRow href={`/admin/home-heroes/${hero.id}`}>
-									<TableCell>
-										<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-zinc-100 text-xs font-medium">
-											{hero.position}
-										</span>
-									</TableCell>
-									<TableCell>
-										<div class="font-medium">{hero.title}</div>
-										<div class="text-xs text-zinc-500 truncate max-w-xs">{hero.subtitle}</div>
-									</TableCell>
-									<TableCell>
-										{hero.status === 'draft' ? (
-											<Badge color="zinc" client:only="react">Draft</Badge>
-										) : hero.status === 'archived' ? (
-											<Badge color="red" client:only="react">Archived</Badge>
-										) : (
-											<Badge color="blue" client:only="react">Active</Badge>
-										)}
-									</TableCell>
-									<TableCell className="text-zinc-500 tabular-nums">
-										{new Date(hero.updated_at).toLocaleDateString('ja-JP')}
-									</TableCell>
-									<TableCell className="text-right">
-										<div class="flex items-center justify-end gap-2">
-											<a
-												href={`/admin/home-heroes/${hero.id}`}
-												class="text-indigo-600 hover:underline text-xs font-medium"
-											>
-												Edit
-											</a>
-											{hero.status !== 'archived' && (
-												<button
-													data-id={hero.id}
-													data-action="archive"
-													class="archive-btn text-red-600 hover:underline text-xs font-medium"
-												>
-													Archive
-												</button>
-											)}
-											{hero.status === 'archived' && (
-												<button
-													data-id={hero.id}
-													data-action="restore"
-													class="restore-btn text-green-600 hover:underline text-xs font-medium"
-												>
-													Restore
-												</button>
-											)}
-										</div>
-									</TableCell>
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell colSpan={5} className="text-center text-zinc-500">
-									No hero sections found. Create your first one!
-								</TableCell>
-							</TableRow>
-						)}
-					</TableBody>
-				</Table>
-			</div>
-		</div>
+		<HomeHeroesPage
+			client:only="react"
+			heroes={heroes}
+			apiBase={apiBase}
+			apiKey={apiKey}
+		/>
 
 		{/* Pagination */}
 		{meta.totalPages > 1 && (
@@ -216,48 +143,3 @@ const hasPrev = page > 1;
 		)}
 	</div>
 </AdminLayout>
-
-<script define:vars={{ apiBase, adminKey: import.meta.env.ADMIN_API_KEY }}>
-	document.querySelectorAll('.archive-btn').forEach(btn => {
-		btn.addEventListener('click', async (e) => {
-			const id = e.target.dataset.id;
-			if (!confirm('Archive this hero section?')) return;
-
-			try {
-				const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-					method: 'DELETE',
-					headers: { 'x-admin-key': adminKey }
-				});
-
-				if (res.ok) {
-					window.location.reload();
-				} else {
-					alert('Failed to archive hero section');
-				}
-			} catch (error) {
-				alert('Error: ' + error.message);
-			}
-		});
-	});
-
-	document.querySelectorAll('.restore-btn').forEach(btn => {
-		btn.addEventListener('click', async (e) => {
-			const id = e.target.dataset.id;
-
-			try {
-				const res = await fetch(`${apiBase}/admin/home/heroes/${id}/restore`, {
-					method: 'POST',
-					headers: { 'x-admin-key': adminKey }
-				});
-
-				if (res.ok) {
-					window.location.reload();
-				} else {
-					alert('Failed to restore hero section');
-				}
-			} catch (error) {
-				alert('Error: ' + error.message);
-			}
-		});
-	});
-</script>

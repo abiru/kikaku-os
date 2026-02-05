@@ -264,7 +264,7 @@ const getStatusColor = (status: string) => {
 					{/* Recent Activity */}
 					<div class="grid lg:grid-cols-2 gap-6">
 						{/* Recent Orders */}
-						<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+						<div>
 							<div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
 								<Subheading>Recent Orders</Subheading>
 								<Button client:load href="/admin/orders" plain>View All</Button>
@@ -298,7 +298,7 @@ const getStatusColor = (status: string) => {
 						</Alert>
 
 						{/* Recent Inbox */}
-						<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+						<div>
 							<div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
 								<Subheading>Pending Inbox</Subheading>
 								<Button client:load href="/admin/inbox" plain>View All</Button>

@@ -2,16 +2,11 @@
 export const prerender = false;
 
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import { Alert } from '../../../components/catalyst/alert-banner';
+import { AiGenerationForm } from '../../../components/admin/ads/AiGenerationForm';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
 import { getApiBase } from '../../../lib/api';
-import { Input } from '../../../components/catalyst/input';
-import { Textarea } from '../../../components/catalyst/textarea';
-import { Select } from '../../../components/catalyst/select';
-import { Field } from '../../../components/catalyst/fieldset';
-import { Button } from '../../../components/catalyst/button';
 
-const apiKey = import.meta.env.ADMIN_API_KEY;
+const apiKey = import.meta.env.ADMIN_API_KEY || '';
 const apiBase = getApiBase();
 ---
 
@@ -29,132 +24,10 @@ const apiBase = getApiBase();
     </div>
 
     {/* AI Generation Section */}
-    <div id="ai-generation-section" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
-      <h2 class="text-xl font-semibold text-zinc-950 mb-4">AI Ad Generation</h2>
-      <p class="text-sm text-gray-600 mb-6">
-        Generate multiple ad variations using AI. Fill in the product details below and click "Generate with AI".
-      </p>
-
-      <form id="generate-form" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field>
-            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Product Name <span class="text-red-500">*</span></label>
-            <Input
-              type="text"
-              id="gen_productName"
-              required
-              client:load
-            />
-          </Field>
-
-          <Field>
-            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Landing Page URL <span class="text-red-500">*</span></label>
-            <Input
-              type="url"
-              id="gen_finalUrl"
-              required
-              placeholder="https://example.com/product"
-              client:load
-            />
-          </Field>
-        </div>
-
-        <Field>
-          <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Product Description <span class="text-red-500">*</span></label>
-          <Textarea
-            id="gen_productDescription"
-            required
-            rows={3}
-            client:load
-          />
-        </Field>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field>
-            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Target Audience <span class="text-red-500">*</span></label>
-            <Input
-              type="text"
-              id="gen_targetAudience"
-              required
-              placeholder="e.g., Small business owners"
-              client:load
-            />
-          </Field>
-
-          <Field>
-            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Keywords <span class="text-red-500">*</span></label>
-            <Input
-              type="text"
-              id="gen_keywords"
-              required
-              placeholder="keyword1, keyword2, keyword3"
-              client:load
-            />
-          </Field>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Field>
-            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Tone</label>
-            <Select
-              id="gen_tone"
-              client:load
-            >
-              <option value="professional">Professional</option>
-              <option value="casual">Casual</option>
-              <option value="urgent">Urgent</option>
-              <option value="informative">Informative</option>
-            </Select>
-          </Field>
-
-          <Field>
-            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Language</label>
-            <Select
-              id="gen_language"
-              client:load
-            >
-              <option value="ja">Japanese</option>
-              <option value="en">English</option>
-            </Select>
-          </Field>
-
-          <Field>
-            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Ad Type</label>
-            <Select
-              id="gen_adType"
-              client:load
-            >
-              <option value="search">Search</option>
-              <option value="display">Display</option>
-              <option value="performance_max">Performance Max</option>
-            </Select>
-          </Field>
-        </div>
-
-        <div>
-          <Button
-            type="submit"
-            id="generate-btn"
-            color="indigo"
-            client:load
-          >
-            Generate with AI
-          </Button>
-        </div>
-      </form>
-
-      <div id="generation-error" class="hidden mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-      </div>
-
-      <div id="generation-loading" class="hidden mt-6 text-center py-8">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0071e3]"></div>
-        <p class="mt-4 text-sm text-gray-600">Generating ad variations with AI...</p>
-        <p class="mt-2 text-xs text-gray-500">Results will be sent to inbox for review.</p>
-      </div>
-    </div>
+    <AiGenerationForm client:load apiKey={apiKey} apiBase={apiBase} />
 
     {/* Manual Form Section */}
-    <div id="form-section">
+    <div>
       <h2 class="text-xl font-semibold text-zinc-950 mb-4">Ad Details</h2>
       <p class="text-sm text-gray-600 mb-6">
         Fill in the ad details manually or use AI generation above to auto-populate.
@@ -166,78 +39,5 @@ const apiBase = getApiBase();
         apiBase={apiBase}
       />
     </div>
-  </Alert>
-
-  <script define:vars={{ apiKey, apiBase }}>
-    const generateForm = document.getElementById('generate-form');
-    const generateBtn = document.getElementById('generate-btn');
-    const loadingDiv = document.getElementById('generation-loading');
-    const errorDiv = document.getElementById('generation-error');
-
-    generateForm?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const productName = document.getElementById('gen_productName').value;
-      const productDescription = document.getElementById('gen_productDescription').value;
-      const targetAudience = document.getElementById('gen_targetAudience').value;
-      const keywordsStr = document.getElementById('gen_keywords').value;
-      const tone = document.getElementById('gen_tone').value;
-      const language = document.getElementById('gen_language').value;
-      const adType = document.getElementById('gen_adType').value;
-      const finalUrl = document.getElementById('gen_finalUrl').value;
-
-      const keywords = keywordsStr.split(',').map((k) => k.trim()).filter((k) => k);
-
-      if (keywords.length === 0) {
-        errorDiv.textContent = 'Please enter at least one keyword';
-        errorDiv.classList.remove('hidden');
-        return;
-      }
-
-      // Show loading, hide error
-      loadingDiv.classList.remove('hidden');
-      errorDiv.classList.add('hidden');
-      generateBtn.disabled = true;
-
-      try {
-        const response = await fetch(`${apiBase}/admin/ads/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-key': apiKey,
-          },
-          body: JSON.stringify({
-            productName,
-            productDescription,
-            targetAudience,
-            keywords,
-            tone,
-            language,
-            adType,
-            finalUrl,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Failed to generate ad copy');
-        }
-
-        // Hide loading
-        loadingDiv.classList.add('hidden');
-
-        // Redirect to inbox for human review (following "AIは信頼しない" principle)
-        alert('Ad copy generated successfully! Redirecting to inbox for review...');
-        window.location.href = '/admin/inbox';
-
-      } catch (error) {
-        loadingDiv.classList.add('hidden');
-        errorDiv.textContent = error.message;
-        errorDiv.classList.remove('hidden');
-      } finally {
-        generateBtn.disabled = false;
-      }
-    });
-  </script>
+  </div>
 </AdminLayout>
