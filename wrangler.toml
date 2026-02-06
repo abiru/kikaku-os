@@ -28,9 +28,7 @@ enabled = true
 [[d1_databases]]
 binding = "DB"
 database_name = "ledkikaku-os"
-# IMPORTANT: Replace with actual database_id after running:
-# wrangler d1 create ledkikaku-os
-database_id = "DUMMY_REPLACE"
+database_id = "5f3d773f-5a31-43d5-8439-594fe5583397"
 
 [[r2_buckets]]
 binding = "R2"
@@ -50,12 +48,10 @@ COMPANY_ADDRESS = "東京都渋谷区..."
 COMPANY_PHONE = "03-1234-5678"
 COMPANY_EMAIL = "info@led-kikaku.com"
 COMPANY_LOGO_URL = ""
-# IMPORTANT: Replace with your production Stripe publishable key (pk_live_...)
-# This is a public key, safe to commit, but must be your LIVE key for production
-STRIPE_PUBLISHABLE_KEY = "YOUR_STRIPE_PUBLISHABLE_KEY"
 
 # Secrets (configured via GitHub Actions or `wrangler secret put`):
 # - ADMIN_API_KEY
+# - STRIPE_PUBLISHABLE_KEY
 # - STRIPE_SECRET_KEY
 # - STRIPE_WEBHOOK_SECRET
 # - CLAUDE_API_KEY
@@ -65,4 +61,3 @@ STRIPE_PUBLISHABLE_KEY = "YOUR_STRIPE_PUBLISHABLE_KEY"
 # - SENTRY_DSN (optional)
 # - AI_GATEWAY_ACCOUNT_ID (optional - for AI Gateway proxy)
 # - AI_GATEWAY_ID (optional - for AI Gateway proxy)
-

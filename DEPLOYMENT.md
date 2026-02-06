@@ -120,7 +120,7 @@ database_id = "abc123-def456-ghi789"  # Your actual ID
 Also update these values:
 - Line 17: `DEV_MODE = "false"` (already done)
 - Line 18: `STOREFRONT_BASE_URL` - update after custom domain setup
-- Line 28: `STRIPE_PUBLISHABLE_KEY` - update with production key
+- `STRIPE_PUBLISHABLE_KEY` - set via GitHub Actions secret (not `wrangler.toml`)
 
 **Commit changes**:
 ```bash
@@ -139,6 +139,7 @@ See `docs/GITHUB_SECRETS.md` for detailed instructions.
 | `CLOUDFLARE_API_TOKEN` | Dashboard → My Profile → API Tokens | CRITICAL |
 | `CLOUDFLARE_ACCOUNT_ID` | Dashboard → Workers & Pages → Account ID | CRITICAL |
 | `ADMIN_API_KEY` | Generate: `openssl rand -base64 32` | CRITICAL |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe → Developers → API Keys (pk_live_...) | HIGH |
 | `STRIPE_SECRET_KEY` | Stripe → Developers → API Keys (sk_live_...) | CRITICAL |
 | `STRIPE_WEBHOOK_SECRET` | Created after first deployment | HIGH |
 | `CLERK_SECRET_KEY` | Clerk → API Keys (sk_live_...) | CRITICAL |
