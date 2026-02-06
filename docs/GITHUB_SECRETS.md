@@ -100,10 +100,22 @@ Create an API key with sending permissions.
 Example: `noreply@your-domain.com`
 
 ### SENTRY_DSN
-**Priority**: MEDIUM (for error tracking)
-**Source**: Sentry.io → Create Project → Get DSN
+**Priority**: MEDIUM (highly recommended for production error tracking)
+**Source**: Sentry.io → Projects → Create Project → Get DSN
+
+1. Go to https://sentry.io
+2. Create a new project (JavaScript / Cloudflare Workers)
+3. Copy the DSN from project settings
 
 Example: `https://[key]@[org].ingest.sentry.io/[project]`
+
+**Features enabled**:
+- Automatic error capture and reporting
+- Request context (path, method, user ID)
+- Performance monitoring (10% sample rate in production)
+- Release tracking via Cloudflare version metadata
+
+**Note**: The SDK uses `@sentry/cloudflare` with the official Hono integration. See [Sentry Hono on Cloudflare docs](https://docs.sentry.io/platforms/javascript/guides/cloudflare/frameworks/hono/) for details
 
 ## Verification
 

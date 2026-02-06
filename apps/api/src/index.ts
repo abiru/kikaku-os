@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import * as Sentry from '@sentry/cloudflare';
 import type { Env } from './env';
 import { jsonError, jsonOk } from './lib/http';
 import { clerkAuth } from './middleware/clerkAuth';
 import { requestLogger } from './middleware/logging';
 import { sendAlert } from './lib/alerts';
-import { captureException } from './lib/sentry';
+import { captureException, getSentryConfig } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
 import { registerRoutes } from './routes';
 import { generateDailyReport } from './services/dailyReport';
@@ -208,11 +209,56 @@ const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
   }
 };
 
-export default {
-  fetch: app.fetch,
-  scheduled: async (_event: ScheduledEvent, env: Env['Bindings'], ctx: ExecutionContext) => {
-    const date = buildJstYesterday();
-    ctx.waitUntil(runDailyCloseArtifacts(env, date));
-    ctx.waitUntil(runAnomalyChecks(env, date));
-  }
+/**
+ * Create the worker export with optional Sentry wrapping.
+ * If SENTRY_DSN is configured, wrap with Sentry for error tracking.
+ * Otherwise, export the app directly.
+ */
+const createWorkerExport = () => {
+  const baseExport = {
+    fetch: app.fetch,
+    scheduled: async (
+      controller: ScheduledController,
+      env: Env['Bindings'],
+      ctx: ExecutionContext
+    ) => {
+      const date = buildJstYesterday();
+
+      // Wrap with Sentry monitor if configured
+      if (env.SENTRY_DSN) {
+        ctx.waitUntil(
+          Sentry.withMonitor('daily-close', async () => {
+            await runDailyCloseArtifacts(env, date);
+          })
+        );
+        ctx.waitUntil(
+          Sentry.withMonitor('anomaly-checks', async () => {
+            await runAnomalyChecks(env, date);
+          })
+        );
+      } else {
+        ctx.waitUntil(runDailyCloseArtifacts(env, date));
+        ctx.waitUntil(runAnomalyChecks(env, date));
+      }
+    }
+  };
+
+  // Wrap with Sentry if configured
+  // Note: Sentry.withSentry expects a function that returns config, and the app
+  return Sentry.withSentry(
+    (env: Env['Bindings']) => {
+      const config = getSentryConfig(env);
+      if (!config) {
+        // Return minimal config that effectively disables Sentry
+        return {
+          dsn: '',
+          enabled: false
+        };
+      }
+      return config;
+    },
+    baseExport
+  );
 };
+
+export default createWorkerExport();
