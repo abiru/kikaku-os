@@ -321,6 +321,13 @@ const handlePaymentIntentSucceeded = async (
     eventId: event.id
   });
 
+  // Send order confirmation email (non-blocking)
+  if (!paymentResult.duplicate) {
+    sendOrderConfirmationEmail(env, orderId).catch((err) => {
+      console.error('Failed to send order confirmation email:', err);
+    });
+  }
+
   return { received: true, duplicate: paymentResult.duplicate };
 };
 

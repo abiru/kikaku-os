@@ -60,6 +60,12 @@ export const createFulfillmentSchema = z.object({
     .optional()
     .nullable()
     .transform((v) => v?.trim() || null),
+  carrier: z
+    .string()
+    .max(50, 'Carrier must be 50 characters or less')
+    .optional()
+    .nullable()
+    .transform((v) => v?.trim() || null),
 });
 
 export const updateFulfillmentSchema = z.object({
@@ -67,6 +73,12 @@ export const updateFulfillmentSchema = z.object({
   tracking_number: z
     .string()
     .max(100, 'Tracking number must be 100 characters or less')
+    .optional()
+    .nullable()
+    .transform((v) => v?.trim() || null),
+  carrier: z
+    .string()
+    .max(50, 'Carrier must be 50 characters or less')
     .optional()
     .nullable()
     .transform((v) => v?.trim() || null),
