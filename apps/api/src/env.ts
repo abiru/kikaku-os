@@ -29,5 +29,7 @@ export type Env = {
     COMPANY_PHONE?: string;
     COMPANY_EMAIL?: string;
     COMPANY_LOGO_URL?: string;
+    SENTRY_DSN?: string;
+    CF_VERSION_METADATA?: { id: string };
   };
 };
