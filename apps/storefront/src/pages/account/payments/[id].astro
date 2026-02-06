@@ -1,0 +1,283 @@
+---
+import Container from '../../../components/Container.astro';
+import Layout from '../../../layouts/Layout.astro';
+import { Button } from '../../../components/catalyst/button';
+import { t } from '../../../i18n';
+
+const { id } = Astro.params;
+
+// Get auth token for API calls
+const auth = Astro.locals.auth();
+let token: string | null = null;
+try {
+  token = await auth.getToken();
+} catch {
+  // Token retrieval failed
+}
+
+// Fetch payment detail
+let payment: any = null;
+let error: string | null = null;
+
+if (token && id) {
+  try {
+    const apiBase = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
+    const response = await fetch(`${apiBase}/store/account/payments/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      payment = data.payment || null;
+    } else if (response.status === 404) {
+      error = 'Payment not found';
+    } else {
+      error = 'Failed to load payment details';
+    }
+  } catch (e) {
+    console.error('Failed to fetch payment:', e);
+    error = 'Failed to load payment details';
+  }
+}
+
+const formatPrice = (amount: number, currency: string = 'JPY') => {
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency: currency
+  }).format(amount);
+};
+
+const formatDate = (dateStr: string) => {
+  return new Intl.DateTimeFormat('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(dateStr));
+};
+
+const getMethodLabel = (method: string | null) => {
+  if (!method) return t('account.paymentMethods.unknown');
+  const key = `account.paymentMethods.${method}` as const;
+  return t(key) || method;
+};
+
+const getStatusLabel = (status: string) => {
+  const key = `account.paymentStatuses.${status}` as const;
+  return t(key) || status;
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'succeeded':
+      return 'bg-green-100 text-green-800';
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'failed':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+---
+
+<Layout title={`${t('account.paymentDetail')} - Led Kikaku`}>
+  <Container class="py-12">
+    <div class="max-w-3xl mx-auto">
+      {/* Back button */}
+      <a
+        href="/account/payments"
+        class="inline-flex items-center gap-2 text-[#0071e3] hover:text-[#0077ed] mb-6"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        {t('account.backToPayments')}
+      </a>
+
+      {error && (
+        <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <p class="text-red-800 text-lg mb-4">{error}</p>
+          <Button href="/account/payments" color="indigo" client:load>
+            {t('account.backToPayments')}
+          </Button>
+        </div>
+      )}
+
+      {payment && (
+        <div class="space-y-6">
+          {/* Payment Summary Card */}
+          <div class="bg-white rounded-2xl shadow-sm p-8">
+            <div class="flex items-center justify-between mb-6">
+              <h1 class="text-2xl font-semibold text-[#1d1d1f]">
+                {t('account.paymentDetail')}
+              </h1>
+              <span class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(payment.status)}`}>
+                {getStatusLabel(payment.status)}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6 mb-6">
+              <div>
+                <p class="text-sm text-[#86868b] mb-1">{t('account.paymentId')}</p>
+                <p class="font-medium text-[#1d1d1f]">#{payment.id}</p>
+              </div>
+              <div>
+                <p class="text-sm text-[#86868b] mb-1">{t('account.orderId')}</p>
+                <p class="font-medium text-[#1d1d1f]">#{payment.order_id}</p>
+              </div>
+              <div>
+                <p class="text-sm text-[#86868b] mb-1">{t('account.method')}</p>
+                <p class="font-medium text-[#1d1d1f]">{getMethodLabel(payment.method)}</p>
+              </div>
+              <div>
+                <p class="text-sm text-[#86868b] mb-1">{t('account.date')}</p>
+                <p class="font-medium text-[#1d1d1f]">{formatDate(payment.created_at)}</p>
+              </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-100">
+              <div class="flex justify-between items-center">
+                <span class="text-lg text-[#1d1d1f]">{t('account.amount')}</span>
+                <span class="text-2xl font-semibold text-[#1d1d1f]">
+                  {formatPrice(payment.amount, payment.currency)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Transfer Info (if applicable) */}
+          {payment.bankTransferInfo && (
+            <div class="bg-blue-50 rounded-2xl p-6">
+              <h2 class="text-lg font-semibold text-[#1d1d1f] mb-4">
+                {t('account.bankTransferInfo')}
+              </h2>
+              <div class="space-y-3">
+                {payment.bankTransferInfo.financial_addresses?.map((addr: any) => (
+                  <div class="bg-white rounded-xl p-4 space-y-2">
+                    <div class="flex justify-between">
+                      <span class="text-sm text-[#86868b]">{t('account.bankName')}</span>
+                      <span class="font-medium">{addr.zengin?.bank_name}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-[#86868b]">{t('account.branchName')}</span>
+                      <span class="font-medium">{addr.zengin?.branch_name}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-[#86868b]">{t('account.accountType')}</span>
+                      <span class="font-medium">{addr.zengin?.account_type}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-[#86868b]">{t('account.accountNumber')}</span>
+                      <span class="font-medium font-mono">{addr.zengin?.account_number}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-sm text-[#86868b]">{t('account.accountHolder')}</span>
+                      <span class="font-medium">{addr.zengin?.account_holder_name}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Order Details */}
+          {payment.order && (
+            <div class="bg-white rounded-2xl shadow-sm p-8">
+              <h2 class="text-lg font-semibold text-[#1d1d1f] mb-6">
+                {t('account.orderDetails')}
+              </h2>
+
+              {/* Items */}
+              <div class="space-y-4 mb-6">
+                <h3 class="text-sm font-medium text-[#86868b]">{t('account.items')}</h3>
+                {payment.order.items?.map((item: any) => (
+                  <div class="flex justify-between py-3 border-b border-gray-100 last:border-0">
+                    <div>
+                      <p class="font-medium text-[#1d1d1f]">{item.title}</p>
+                      <p class="text-sm text-[#86868b]">{t('checkout.quantity')}: {item.quantity}</p>
+                    </div>
+                    <p class="font-medium text-[#1d1d1f]">
+                      {formatPrice(item.unit_price * item.quantity, payment.currency)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Price Breakdown */}
+              <div class="space-y-3 pt-4 border-t border-gray-100">
+                <div class="flex justify-between text-[#1d1d1f]">
+                  <span>{t('account.subtotal')}</span>
+                  <span>{formatPrice(payment.order.subtotal || 0, payment.currency)}</span>
+                </div>
+                <div class="flex justify-between text-[#1d1d1f]">
+                  <span>{t('account.tax')}</span>
+                  <span>{formatPrice(payment.order.tax_amount || 0, payment.currency)}</span>
+                </div>
+                {payment.order.shipping_fee > 0 && (
+                  <div class="flex justify-between text-[#1d1d1f]">
+                    <span>{t('account.shipping')}</span>
+                    <span>{formatPrice(payment.order.shipping_fee, payment.currency)}</span>
+                  </div>
+                )}
+                {payment.order.discount > 0 && (
+                  <div class="flex justify-between text-green-600">
+                    <span>{t('account.discount')}</span>
+                    <span>-{formatPrice(payment.order.discount, payment.currency)}</span>
+                  </div>
+                )}
+                <div class="flex justify-between text-lg font-semibold text-[#1d1d1f] pt-3 border-t border-gray-100">
+                  <span>{t('account.total')}</span>
+                  <span>{formatPrice(payment.order.total || payment.amount, payment.currency)}</span>
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              {payment.order.shipping && (
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                  <h3 class="text-sm font-medium text-[#86868b] mb-3">{t('checkout.shippingAddress')}</h3>
+                  <div class="text-[#1d1d1f]">
+                    {payment.order.shipping.name && <p class="font-medium">{payment.order.shipping.name}</p>}
+                    {payment.order.shipping.address && (
+                      <>
+                        {payment.order.shipping.address.postal_code && (
+                          <p class="text-sm">{payment.order.shipping.address.postal_code}</p>
+                        )}
+                        {payment.order.shipping.address.state && payment.order.shipping.address.city && (
+                          <p class="text-sm">{payment.order.shipping.address.state}{payment.order.shipping.address.city}</p>
+                        )}
+                        {payment.order.shipping.address.line1 && (
+                          <p class="text-sm">{payment.order.shipping.address.line1}</p>
+                        )}
+                        {payment.order.shipping.address.line2 && (
+                          <p class="text-sm">{payment.order.shipping.address.line2}</p>
+                        )}
+                      </>
+                    )}
+                    {payment.order.shipping.phone && (
+                      <p class="text-sm mt-2">{t('checkout.phone')}: {payment.order.shipping.phone}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div class="flex justify-center gap-4">
+            <Button href="/account/payments" outline client:load>
+              {t('account.backToPayments')}
+            </Button>
+            <Button href="/products" color="indigo" client:load>
+              {t('cart.continueShopping')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  </Container>
+</Layout>

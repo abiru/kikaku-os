@@ -124,6 +124,9 @@ const formatPrice = (amount: number, currency: string) => {
 					<Button href="/products" color="indigo" client:load>
 						{t('cart.continueShopping')}
 					</Button>
+					<Button href="/account/payments" outline client:load>
+						{t('account.paymentHistory')}
+					</Button>
 					<Button href="/" plain client:load>
 						{t('checkout.returnToHome')}
 					</Button>

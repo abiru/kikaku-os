@@ -2,10 +2,12 @@ import { Hono } from 'hono';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
+import { optionalClerkAuth } from '../../middleware/clerkAuth';
 
 const payments = new Hono<Env>();
 
-payments.post('/payments/intent', async (c) => {
+// Optional Clerk auth - allows guest checkout but links authenticated users
+payments.post('/payments/intent', optionalClerkAuth, async (c) => {
   const stripeKey = c.env.STRIPE_SECRET_KEY ?? (c.env as any).STRIPE_API_KEY;
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
   if (stripeKey.startsWith('pk_')) {
@@ -69,18 +71,44 @@ payments.post('/payments/intent', async (c) => {
   let customerId: number | null = null;
   let stripeCustomerId: string | null = null;
 
-  const existingCustomer = await c.env.DB.prepare(
-    `SELECT id, stripe_customer_id FROM customers WHERE email=?`
-  ).bind(email).first<{ id: number; stripe_customer_id: string | null }>();
+  // Check if user is authenticated with Clerk
+  const authUser = c.get('authUser');
+  const clerkUserId = authUser?.userId && authUser.method === 'clerk' ? authUser.userId : null;
+
+  // First try to find customer by clerk_user_id (if authenticated)
+  let existingCustomer: { id: number; stripe_customer_id: string | null } | null = null;
+
+  if (clerkUserId) {
+    existingCustomer = await c.env.DB.prepare(
+      `SELECT id, stripe_customer_id FROM customers WHERE clerk_user_id = ?`
+    ).bind(clerkUserId).first<{ id: number; stripe_customer_id: string | null }>();
+  }
+
+  // Fall back to email lookup
+  if (!existingCustomer) {
+    existingCustomer = await c.env.DB.prepare(
+      `SELECT id, stripe_customer_id FROM customers WHERE email = ?`
+    ).bind(email).first<{ id: number; stripe_customer_id: string | null }>();
+  }
 
   if (existingCustomer?.id) {
     customerId = existingCustomer.id;
     stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
+
+    // Link Clerk user if authenticated and not already linked
+    if (clerkUserId) {
+      await c.env.DB.prepare(
+        `UPDATE customers
+         SET clerk_user_id = COALESCE(clerk_user_id, ?),
+             updated_at = datetime('now')
+         WHERE id = ?`
+      ).bind(clerkUserId, customerId).run();
+    }
   } else {
     const res = await c.env.DB.prepare(
-      `INSERT INTO customers (name, email, created_at, updated_at)
-       VALUES (?, ?, datetime('now'), datetime('now'))`
-    ).bind('Storefront Customer', email).run();
+      `INSERT INTO customers (name, email, clerk_user_id, created_at, updated_at)
+       VALUES (?, ?, ?, datetime('now'), datetime('now'))`
+    ).bind('Storefront Customer', email, clerkUserId).run();
     customerId = Number(res.meta.last_row_id);
     stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
   }

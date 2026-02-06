@@ -1,0 +1,186 @@
+---
+import Container from '../../../components/Container.astro';
+import Layout from '../../../layouts/Layout.astro';
+import { Button } from '../../../components/catalyst/button';
+import { t } from '../../../i18n';
+
+// Get auth token for API calls
+const auth = Astro.locals.auth();
+let token: string | null = null;
+try {
+  token = await auth.getToken();
+} catch {
+  // Token retrieval failed, will show login required
+}
+
+// Fetch payment history
+let payments: any[] = [];
+let error: string | null = null;
+let meta = { page: 1, perPage: 10, totalCount: 0, totalPages: 0 };
+
+const page = Number(Astro.url.searchParams.get('page')) || 1;
+
+if (token) {
+  try {
+    const apiBase = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
+    const response = await fetch(`${apiBase}/store/account/payments?page=${page}&perPage=10`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      payments = data.payments || [];
+      meta = data.meta || meta;
+    } else {
+      error = 'Failed to load payment history';
+    }
+  } catch (e) {
+    console.error('Failed to fetch payments:', e);
+    error = 'Failed to load payment history';
+  }
+}
+
+const formatPrice = (amount: number, currency: string = 'JPY') => {
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency: currency
+  }).format(amount);
+};
+
+const formatDate = (dateStr: string) => {
+  return new Intl.DateTimeFormat('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(dateStr));
+};
+
+const getMethodLabel = (method: string | null) => {
+  if (!method) return t('account.paymentMethods.unknown');
+  const key = `account.paymentMethods.${method}` as const;
+  return t(key) || method;
+};
+
+const getStatusLabel = (status: string) => {
+  const key = `account.paymentStatuses.${status}` as const;
+  return t(key) || status;
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'succeeded':
+      return 'bg-green-100 text-green-800';
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'failed':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+---
+
+<Layout title={`${t('account.paymentHistory')} - Led Kikaku`}>
+  <Container class="py-12">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-3xl font-semibold text-[#1d1d1f] mb-8">
+        {t('account.paymentHistory')}
+      </h1>
+
+      {error && (
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+          <p class="text-red-800">{error}</p>
+        </div>
+      )}
+
+      {payments.length === 0 && !error ? (
+        <div class="text-center py-16 bg-white rounded-2xl shadow-sm">
+          <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-medium text-[#1d1d1f] mb-2">{t('account.noPayments')}</h2>
+          <p class="text-[#86868b] mb-6">{t('account.noPaymentsDescription')}</p>
+          <Button href="/products" color="indigo" client:load>
+            {t('cart.continueShopping')}
+          </Button>
+        </div>
+      ) : (
+        <div class="space-y-4">
+          {payments.map((payment) => (
+            <a
+              href={`/account/payments/${payment.id}`}
+              class="block bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-[#f5f5f7] rounded-full flex items-center justify-center">
+                    {payment.method === 'card' ? (
+                      <svg class="w-6 h-6 text-[#1d1d1f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    ) : (
+                      <svg class="w-6 h-6 text-[#1d1d1f]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p class="font-medium text-[#1d1d1f]">
+                      {t('admin.order')} #{payment.order_id}
+                    </p>
+                    <p class="text-sm text-[#86868b]">
+                      {formatDate(payment.created_at)}
+                    </p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-lg font-semibold text-[#1d1d1f]">
+                    {formatPrice(payment.amount, payment.currency)}
+                  </p>
+                  <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
+                    {getStatusLabel(payment.status)}
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-sm text-[#86868b]">
+                <span>{getMethodLabel(payment.method)}</span>
+                <span class="flex items-center gap-1">
+                  {t('account.viewOrder')}
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </a>
+          ))}
+
+          {/* Pagination */}
+          {meta.totalPages > 1 && (
+            <div class="flex items-center justify-center gap-4 pt-8">
+              {meta.page > 1 && (
+                <Button href={`/account/payments?page=${meta.page - 1}`} outline client:load>
+                  {t('admin.previous')}
+                </Button>
+              )}
+              <span class="text-[#86868b]">
+                {t('admin.page')} {meta.page} / {meta.totalPages}
+              </span>
+              {meta.page < meta.totalPages && (
+                <Button href={`/account/payments?page=${meta.page + 1}`} outline client:load>
+                  {t('admin.next')}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  </Container>
+</Layout>

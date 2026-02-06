@@ -25,6 +25,7 @@ import stripe from './webhooks/stripe';
 
 // Storefront
 import storefront from './storefront/storefront';
+import account from './storefront/account';
 
 // Checkout
 import checkout from './checkout/checkout';
@@ -82,6 +83,9 @@ export function registerRoutes(app: Hono<Env>) {
   // Storefront (public)
   app.route('/store', storefront);
 
+  // Customer Account (requires Clerk auth)
+  app.route('/store/account', account);
+
   // Checkout & Payments (public + authenticated)
   app.route('/', checkout);
   app.route('/', payments);
@@ -130,6 +134,7 @@ export {
   stripe,
   // Storefront
   storefront,
+  account,
   // Checkout
   checkout,
   payments,
