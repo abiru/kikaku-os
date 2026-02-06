@@ -126,17 +126,30 @@ async function triageWithClaude(
     rawText.match(/```json\n?([\s\S]*?)\n?```/) ||
     rawText.match(/```\n?([\s\S]*?)\n?```/);
   const jsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
-  const data = JSON.parse(jsonText) as InboxTriageResult;
+  try {
+    const data = JSON.parse(jsonText) as InboxTriageResult;
 
-  return {
-    result: {
-      classification: data.classification,
-      suggestedAction: String(data.suggestedAction || '').slice(0, 50),
-      reasoning: String(data.reasoning || '').slice(0, 100),
-    },
-    tokens: response.usage.total_tokens,
-    rawText,
-  };
+    // Validate and normalize classification
+    const validClassifications = ['urgent', 'normal', 'low'] as const;
+    const normalizedClassification = validClassifications.includes(
+      data.classification as (typeof validClassifications)[number]
+    )
+      ? data.classification
+      : 'normal';
+
+    return {
+      result: {
+        classification: normalizedClassification,
+        suggestedAction: String(data.suggestedAction || '').slice(0, 50),
+        reasoning: String(data.reasoning || '').slice(0, 100),
+      },
+      tokens: response.usage.total_tokens,
+      rawText,
+    };
+  } catch (parseErr) {
+    console.error('Failed to parse triage result:', parseErr);
+    throw new Error(`Failed to parse AI response: ${(parseErr as Error).message}`);
+  }
 }
 
 /**
