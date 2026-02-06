@@ -1,0 +1,13 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Container from '../components/Container.astro';
+import { SignUp as ClerkSignUp } from '@clerk/astro/components';
+---
+
+<Layout title="新規登録 - Led Kikaku Store">
+  <Container class="py-16">
+    <div class="flex justify-center">
+      <ClerkSignUp />
+    </div>
+  </Container>
+</Layout>

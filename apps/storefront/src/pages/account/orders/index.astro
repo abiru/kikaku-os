@@ -1,0 +1,171 @@
+---
+import AccountLayout from '../../../layouts/AccountLayout.astro';
+import Container from '../../../components/Container.astro';
+import { t } from '../../../i18n';
+
+const API_BASE = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
+
+const authHeader = Astro.request.headers.get('authorization');
+const url = new URL(Astro.request.url);
+const page = parseInt(url.searchParams.get('page') || '1');
+const perPage = 10;
+
+type Order = {
+  id: number;
+  status: string;
+  total_amount: number;
+  currency: string;
+  created_at: string;
+  paid_at: string | null;
+};
+
+let orders: Order[] = [];
+let meta = { page: 1, perPage: 10, totalCount: 0, totalPages: 0 };
+let error = null;
+
+try {
+  const response = await fetch(`${API_BASE}/store/account/orders?page=${page}&perPage=${perPage}`, {
+    headers: {
+      'Authorization': authHeader || '',
+    },
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    if (data.ok) {
+      orders = data.orders || [];
+      meta = data.meta || meta;
+    }
+  }
+} catch (e) {
+  error = 'Failed to load orders';
+}
+
+const formatCurrency = (amount: number, currency = 'JPY') => {
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+};
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+const statusLabels: Record<string, string> = {
+  completed: t('account.completed'),
+  paid: t('account.paid'),
+  pending: t('account.pending'),
+};
+---
+
+<AccountLayout title="注文履歴 - Led Kikaku Store" activeTab="orders">
+  <Container class="py-8">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-2xl font-semibold text-[#1d1d1f] mb-6">
+        {t('account.orders')}
+      </h1>
+
+      {orders.length === 0 ? (
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+          <div class="text-[#86868b] mb-4">{t('account.noOrders')}</div>
+          <a
+            href="/products"
+            class="inline-flex items-center justify-center px-6 py-2.5 bg-[#0071e3] text-white rounded-full text-sm font-medium hover:bg-[#0077ed] transition-colors"
+          >
+            {t('account.startShopping')}
+          </a>
+        </div>
+      ) : (
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* Desktop Table Header */}
+          <div class="hidden md:grid md:grid-cols-4 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-[#86868b]">
+            <div>{t('account.orderNumber')}</div>
+            <div>{t('account.orderDate')}</div>
+            <div>{t('account.orderStatus')}</div>
+            <div class="text-right">{t('account.orderTotal')}</div>
+          </div>
+
+          {/* Orders List */}
+          <div class="divide-y divide-gray-200">
+            {orders.map((order) => (
+              <a
+                href={`/account/orders/${order.id}`}
+                class="block p-4 hover:bg-gray-50 transition-colors"
+              >
+                {/* Mobile Layout */}
+                <div class="md:hidden">
+                  <div class="flex justify-between items-start mb-2">
+                    <div class="font-medium text-[#1d1d1f]">#{order.id}</div>
+                    <div class={`text-sm px-2 py-0.5 rounded-full ${
+                      order.status === 'completed' || order.status === 'paid'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {statusLabels[order.status] || order.status}
+                    </div>
+                  </div>
+                  <div class="flex justify-between text-sm text-[#86868b]">
+                    <div>{formatDate(order.created_at)}</div>
+                    <div class="font-medium text-[#1d1d1f]">
+                      {formatCurrency(order.total_amount, order.currency)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop Layout */}
+                <div class="hidden md:grid md:grid-cols-4 gap-4 items-center">
+                  <div class="font-medium text-[#1d1d1f]">#{order.id}</div>
+                  <div class="text-[#86868b]">{formatDate(order.created_at)}</div>
+                  <div>
+                    <span class={`text-sm px-2 py-0.5 rounded-full ${
+                      order.status === 'completed' || order.status === 'paid'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {statusLabels[order.status] || order.status}
+                    </span>
+                  </div>
+                  <div class="text-right font-medium text-[#1d1d1f]">
+                    {formatCurrency(order.total_amount, order.currency)}
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {meta.totalPages > 1 && (
+            <div class="p-4 border-t border-gray-200 flex justify-center gap-2">
+              {page > 1 && (
+                <a
+                  href={`/account/orders?page=${page - 1}`}
+                  class="px-4 py-2 text-sm font-medium text-[#0071e3] hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  前へ
+                </a>
+              )}
+
+              <span class="px-4 py-2 text-sm text-[#86868b]">
+                {meta.page} / {meta.totalPages}
+              </span>
+
+              {page < meta.totalPages && (
+                <a
+                  href={`/account/orders?page=${page + 1}`}
+                  class="px-4 py-2 text-sm font-medium text-[#0071e3] hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  次へ
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  </Container>
+</AccountLayout>
