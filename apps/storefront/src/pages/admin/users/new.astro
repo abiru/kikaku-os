@@ -1,0 +1,175 @@
+---
+export const prerender = false;
+
+import { Button } from '../../../components/catalyst/button';
+import { Fieldset, Field } from '../../../components/catalyst/fieldset';
+import { Heading, Subheading } from '../../../components/catalyst/heading';
+import { Input } from '../../../components/catalyst/input';
+import { Select } from '../../../components/catalyst/select';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../../lib/api';
+
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+
+type Role = {
+	id: string;
+	name: string;
+	description: string | null;
+	priority: number;
+};
+
+let roles: Role[] = [];
+let error: string | null = null;
+let formData = {
+	clerk_user_id: '',
+	email: '',
+	name: '',
+	role_id: 'viewer'
+};
+
+// Fetch roles list
+if (apiKey) {
+	try {
+		const rolesRes = await fetch(`${apiBase}/admin/roles`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+		if (rolesRes.ok) {
+			const rolesData = await rolesRes.json();
+			roles = rolesData.roles || [];
+		}
+	} catch (e) {
+		console.error('Failed to fetch roles:', e);
+	}
+}
+
+// Handle POST - Create user
+if (Astro.request.method === 'POST' && apiKey) {
+	try {
+		const data = await Astro.request.formData();
+		formData = {
+			clerk_user_id: data.get('clerk_user_id')?.toString().trim() || '',
+			email: data.get('email')?.toString().trim() || '',
+			name: data.get('name')?.toString().trim() || '',
+			role_id: data.get('role_id')?.toString() || 'viewer'
+		};
+
+		if (!formData.clerk_user_id) {
+			error = 'Clerk User ID is required';
+		} else if (!formData.email) {
+			error = 'Email is required';
+		} else {
+			const res = await fetch(`${apiBase}/admin/users`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-admin-key': apiKey
+				},
+				body: JSON.stringify({
+					clerk_user_id: formData.clerk_user_id,
+					email: formData.email,
+					name: formData.name || null,
+					role_id: formData.role_id
+				})
+			});
+
+			const result = await res.json();
+
+			if (!res.ok) {
+				error = result.error || 'Failed to create user';
+			} else {
+				return Astro.redirect(`/admin/users/${result.user.id}?created=true`);
+			}
+		}
+	} catch (e) {
+		console.error(e);
+		error = 'Failed to create user. Please check your connection.';
+	}
+} else if (!apiKey) {
+	error = 'ADMIN_API_KEY is missing in server environment';
+}
+---
+
+<AdminLayout title="New User - Admin">
+	<div class="space-y-6 max-w-2xl">
+		<div class="flex items-center gap-4">
+			<a href="/admin/users" class="text-indigo-600 hover:underline text-sm flex items-center gap-1">
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+				</svg>
+				Users
+			</a>
+			<Heading>New Admin User</Heading>
+		</div>
+
+		{error && (
+			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+				{error}
+			</div>
+		)}
+
+		<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+			<Subheading>User Details</Subheading>
+
+			<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+				<p class="font-medium mb-1">Important: Clerk User ID</p>
+				<p>The Clerk User ID must match an existing user in your Clerk application. You can find this ID in the <a href="https://dashboard.clerk.com" target="_blank" class="underline">Clerk Dashboard</a> under Users.</p>
+			</div>
+
+			<Fieldset client:load>
+				<Field>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Clerk User ID *</label>
+					<Input
+						type="text"
+						name="clerk_user_id"
+						required
+						value={formData.clerk_user_id}
+						placeholder="user_2abc123..."
+					/>
+					<p class="text-xs text-zinc-500 mt-1">This ID links the admin user to their Clerk authentication.</p>
+				</Field>
+
+				<Field>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Email *</label>
+					<Input
+						type="email"
+						name="email"
+						required
+						value={formData.email}
+						placeholder="user@example.com"
+					/>
+				</Field>
+
+				<Field>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Name</label>
+					<Input
+						type="text"
+						name="name"
+						value={formData.name}
+						placeholder="Display name (optional)"
+					/>
+				</Field>
+
+				<Field>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Role</label>
+					<Select name="role_id">
+						{roles.map(role => (
+							<option value={role.id} selected={formData.role_id === role.id}>
+								{role.name} - {role.description}
+							</option>
+						))}
+					</Select>
+				</Field>
+			</Fieldset>
+
+			<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+				<Button href="/admin/users" outline client:load>
+					Cancel
+				</Button>
+				<Button type="submit" color="indigo" client:load>
+					Create User
+				</Button>
+			</div>
+		</form>
+	</div>
+</AdminLayout>

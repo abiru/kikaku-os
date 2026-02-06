@@ -29,6 +29,7 @@ import {
   EnvelopeIcon,
   MegaphoneIcon,
   PhotoIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
@@ -39,31 +40,42 @@ type UserInfo = {
   imageUrl: string | null;
 };
 
+type RbacUserInfo = {
+  role: string;
+  permissions: string[];
+};
+
 type NavigationItem = {
   name: string
   href: string
   icon: React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement>>
+  permission?: string  // Required permission to view this nav item
 }
 
+// Navigation items with their required permissions
 const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/admin/', icon: HomeIcon },
-  { name: 'Inbox', href: '/admin/inbox', icon: InboxIcon },
-  { name: 'Orders', href: '/admin/orders', icon: ShoppingCartIcon },
-  { name: 'Customers', href: '/admin/customers', icon: UsersIcon },
-  { name: 'Shipping', href: '/admin/shipping', icon: TruckIcon },
-  { name: 'Events', href: '/admin/events', icon: CalendarIcon },
-  { name: 'Products', href: '/admin/products', icon: CubeIcon },
-  { name: 'Home Heroes', href: '/admin/home-heroes', icon: PhotoIcon },
-  { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon },
-  { name: 'Categories', href: '/admin/categories', icon: FolderIcon },
-  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },
-  { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon },
-  { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon },
-  { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon },
-  { name: 'Google Ads', href: '/admin/ads', icon: MegaphoneIcon },
-  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
-  { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
+  { name: 'Dashboard', href: '/admin/', icon: HomeIcon, permission: 'dashboard:read' },
+  { name: 'Inbox', href: '/admin/inbox', icon: InboxIcon, permission: 'inbox:read' },
+  { name: 'Orders', href: '/admin/orders', icon: ShoppingCartIcon, permission: 'orders:read' },
+  { name: 'Customers', href: '/admin/customers', icon: UsersIcon, permission: 'customers:read' },
+  { name: 'Shipping', href: '/admin/shipping', icon: TruckIcon, permission: 'orders:read' },
+  { name: 'Events', href: '/admin/events', icon: CalendarIcon, permission: 'orders:read' },
+  { name: 'Products', href: '/admin/products', icon: CubeIcon, permission: 'products:read' },
+  { name: 'Home Heroes', href: '/admin/home-heroes', icon: PhotoIcon, permission: 'products:write' },
+  { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon, permission: 'products:write' },
+  { name: 'Categories', href: '/admin/categories', icon: FolderIcon, permission: 'products:read' },
+  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'products:write' },
+  { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon, permission: 'inventory:read' },
+  { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon, permission: 'settings:write' },
+  { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon, permission: 'settings:write' },
+  { name: 'Google Ads', href: '/admin/ads', icon: MegaphoneIcon, permission: 'settings:write' },
+  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon, permission: 'reports:read' },
+  { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon, permission: 'ledger:read' },
+  { name: 'Users', href: '/admin/users', icon: UserGroupIcon, permission: 'users:read' },
 ]
+
+// Settings requires settings:read permission
+const settingsPermission = 'settings:read';
 
 const getInitials = (user: UserInfo | null): string => {
   if (!user) return 'A';
@@ -159,9 +171,10 @@ function useClerkAuth() {
 type Props = {
   currentPath: string
   children: React.ReactNode
+  rbacUser?: RbacUserInfo | null  // RBAC info from server
 }
 
-export default function AdminSidebar({ currentPath, children }: Props) {
+export default function AdminSidebar({ currentPath, children, rbacUser }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isLoaded, isSignedIn, user, signOut } = useClerkAuth()
 
@@ -182,6 +195,19 @@ export default function AdminSidebar({ currentPath, children }: Props) {
       </div>
     );
   }
+
+  // Filter navigation based on permissions
+  const hasPermission = (permission: string | undefined): boolean => {
+    // If no permission required, show the item
+    if (!permission) return true;
+    // If no RBAC info, show all (fallback for backward compatibility)
+    if (!rbacUser) return true;
+    // Check if user has the required permission
+    return rbacUser.permissions.includes(permission);
+  };
+
+  const filteredNavigation = navigation.filter(item => hasPermission(item.permission));
+  const canViewSettings = hasPermission(settingsPermission);
 
   const isActive = (href: string) => {
     if (href === '/admin/') {
@@ -222,7 +248,7 @@ export default function AdminSidebar({ currentPath, children }: Props) {
                 <ul role="list" className="flex flex-1 flex-col gap-y-7">
                   <li>
                     <ul role="list" className="-mx-2 space-y-1">
-                      {navigation.map((item) => (
+                      {filteredNavigation.map((item) => (
                         <li key={item.name}>
                           <a
                             href={item.href}
@@ -246,18 +272,20 @@ export default function AdminSidebar({ currentPath, children }: Props) {
                       ))}
                     </ul>
                   </li>
-                  <li className="mt-auto">
-                    <a
-                      href="/admin/settings"
-                      className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
-                    >
-                      <Cog6ToothIcon
-                        aria-hidden="true"
-                        className="size-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
-                      />
-                      Settings
-                    </a>
-                  </li>
+                  {canViewSettings && (
+                    <li className="mt-auto">
+                      <a
+                        href="/admin/settings"
+                        className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
+                      >
+                        <Cog6ToothIcon
+                          aria-hidden="true"
+                          className="size-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                        />
+                        Settings
+                      </a>
+                    </li>
+                  )}
                 </ul>
               </nav>
             </div>
@@ -277,7 +305,7 @@ export default function AdminSidebar({ currentPath, children }: Props) {
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
-                  {navigation.map((item) => (
+                  {filteredNavigation.map((item) => (
                     <li key={item.name}>
                       <a
                         href={item.href}
@@ -301,18 +329,20 @@ export default function AdminSidebar({ currentPath, children }: Props) {
                   ))}
                 </ul>
               </li>
-              <li className="mt-auto">
-                <a
-                  href="/admin/settings"
-                  className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
-                >
-                  <Cog6ToothIcon
-                    aria-hidden="true"
-                    className="size-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
-                  />
-                  Settings
-                </a>
-              </li>
+              {canViewSettings && (
+                <li className="mt-auto">
+                  <a
+                    href="/admin/settings"
+                    className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
+                  >
+                    <Cog6ToothIcon
+                      aria-hidden="true"
+                      className="size-6 shrink-0 text-gray-400 group-hover:text-indigo-600"
+                    />
+                    Settings
+                  </a>
+                </li>
+              )}
             </ul>
           </nav>
         </div>
@@ -335,6 +365,12 @@ export default function AdminSidebar({ currentPath, children }: Props) {
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
+              {/* Role badge */}
+              {rbacUser && (
+                <span className="hidden lg:inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 capitalize">
+                  {rbacUser.role}
+                </span>
+              )}
               {/* Profile dropdown */}
               <Menu as="div" className="relative">
                 <MenuButton className="-m-1.5 flex items-center p-1.5">

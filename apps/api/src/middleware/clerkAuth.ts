@@ -9,6 +9,9 @@ export type AuthUser = {
   method: 'clerk' | 'api-key';
 };
 
+// Note: For RBAC functionality, use the rbacUser context variable
+// which is set by the loadRbac middleware (see middleware/rbac.ts)
+
 declare module 'hono' {
   interface ContextVariableMap {
     authUser: AuthUser | null;
