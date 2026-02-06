@@ -82,10 +82,25 @@ const recordNotification = async (
        VALUES ('email', 'sent', ?, datetime('now'))`
     ).bind(payloadJson).run();
   } else {
+    // Record failed notification
     await env.DB.prepare(
       `INSERT INTO notifications (channel, status, payload, response)
        VALUES ('email', 'failed', ?, ?)`
     ).bind(payloadJson, error || '').run();
+
+    // Create inbox alert for admin review
+    await env.DB.prepare(
+      `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)
+       VALUES (?, ?, 'warning', 'open', 'email_failure', datetime('now'), datetime('now'))`
+    ).bind(
+      `メール送信失敗: ${payload.subject}`,
+      JSON.stringify({
+        to: payload.to,
+        subject: payload.subject,
+        error: error || 'Unknown error',
+        timestamp: new Date().toISOString(),
+      })
+    ).run();
   }
 };
 

@@ -430,18 +430,21 @@ describe('Fulfillment Schemas', () => {
       expect(result.success).toBe(true);
       expect(result.data).toEqual({
         status: 'pending',
-        tracking_number: null
+        tracking_number: null,
+        carrier: null
       });
     });
 
     it('accepts full data', () => {
       const result = createFulfillmentSchema.safeParse({
         status: 'shipped',
-        tracking_number: 'TRACK123'
+        tracking_number: 'TRACK123',
+        carrier: 'ヤマト運輸'
       });
       expect(result.success).toBe(true);
       expect(result.data?.status).toBe('shipped');
       expect(result.data?.tracking_number).toBe('TRACK123');
+      expect(result.data?.carrier).toBe('ヤマト運輸');
     });
 
     it('trims tracking number', () => {
@@ -450,6 +453,14 @@ describe('Fulfillment Schemas', () => {
       });
       expect(result.success).toBe(true);
       expect(result.data?.tracking_number).toBe('TRACK123');
+    });
+
+    it('trims carrier', () => {
+      const result = createFulfillmentSchema.safeParse({
+        carrier: '  佐川急便  '
+      });
+      expect(result.success).toBe(true);
+      expect(result.data?.carrier).toBe('佐川急便');
     });
   });
 
