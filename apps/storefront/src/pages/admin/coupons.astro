@@ -2,13 +2,12 @@
 export const prerender = false;
 
 import { Alert } from '../../components/catalyst/alert-banner';
-import { Badge } from '../../components/catalyst/badge';
 import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
-import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '../../components/catalyst/table';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
+import CouponsTable from '../../components/admin/CouponsTable';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -69,27 +68,6 @@ if (import.meta.env.ADMIN_API_KEY) {
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
-
-const formatValue = (coupon: Coupon) => {
-	if (coupon.type === 'percentage') {
-		return `${coupon.value}%`;
-	}
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency: coupon.currency,
-		minimumFractionDigits: 0
-	}).format(coupon.value);
-};
-
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	return new Date(dateStr).toLocaleDateString('ja-JP');
-};
-
-const isExpired = (coupon: Coupon) => {
-	if (!coupon.expires_at) return false;
-	return new Date(coupon.expires_at) < new Date();
-};
 ---
 
 <AdminLayout title="Coupons - Admin">
@@ -103,130 +81,67 @@ const isExpired = (coupon: Coupon) => {
 				+ New Coupon
 			</Button>
 		</div>
-			{/* Search & Filter */}
-			<div class="mb-6 flex flex-col sm:flex-row gap-4">
-				<form method="get" class="relative flex-1 max-w-md">
-					<input
-						type="search"
-						name="q"
-						value={q}
-						placeholder="Search by code..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
-					/>
-					<input type="hidden" name="status" value={status} />
-					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-				</form>
-				<div class="flex gap-2">
-					<a
-						href={`?q=${q}&status=all`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
-					>
-						All
-					</a>
-					<a
-						href={`?q=${q}&status=active`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'active' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
-					>
-						Active
-					</a>
-					<a
-						href={`?q=${q}&status=inactive`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'inactive' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
-					>
-						Inactive
-					</a>
-				</div>
+
+		{/* Search & Filter */}
+		<div class="mb-6 flex flex-col sm:flex-row gap-4">
+			<form method="get" class="relative flex-1 max-w-md">
+				<input
+					type="search"
+					name="q"
+					value={q}
+					placeholder="Search by code..."
+					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
+				/>
+				<input type="hidden" name="status" value={status} />
+				<svg
+					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+				</svg>
+			</form>
+			<div class="flex gap-2">
+				<a
+					href={`?q=${q}&status=all`}
+					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+				>
+					All
+				</a>
+				<a
+					href={`?q=${q}&status=active`}
+					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'active' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+				>
+					Active
+				</a>
+				<a
+					href={`?q=${q}&status=inactive`}
+					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'inactive' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+				>
+					Inactive
+				</a>
 			</div>
+		</div>
 
-			{error && (
-				<Alert color="red" client:load>
-					{error}
-				</Alert>
-			)}
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
 
-			{/* Coupon Table */}
-			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-				<div class="overflow-x-auto">
-					<Table client:load>
-						<TableHead>
-							<TableRow>
-								<TableHeader>Code</TableHeader>
-								<TableHeader>Type</TableHeader>
-								<TableHeader>Value</TableHeader>
-								<TableHeader>Status</TableHeader>
-								<TableHeader>Usage</TableHeader>
-								<TableHeader>Expires</TableHeader>
-								<TableHeader>Action</TableHeader>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{coupons.length > 0 ? (
-								coupons.map((coupon) => (
-									<TableRow href={`/admin/coupons/${coupon.id}`}>
-										<TableCell>
-											<div class="font-mono font-medium">{coupon.code}</div>
-											{coupon.min_order_amount > 0 && (
-												<div class="text-xs text-zinc-500">
-													Min: {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: coupon.currency, minimumFractionDigits: 0 }).format(coupon.min_order_amount)}
-												</div>
-											)}
-										</TableCell>
-										<TableCell>
-											<Badge color="zinc" client:only="react">
-												{coupon.type === 'percentage' ? 'Percentage' : 'Fixed'}
-											</Badge>
-										</TableCell>
-										<TableCell className="font-medium tabular-nums">
-											{formatValue(coupon)}
-										</TableCell>
-										<TableCell>
-											{isExpired(coupon) ? (
-												<Badge color="amber" client:only="react">Expired</Badge>
-											) : coupon.status === 'active' ? (
-												<Badge color="lime" client:only="react">Active</Badge>
-											) : (
-												<Badge color="zinc" client:only="react">Inactive</Badge>
-											)}
-										</TableCell>
-										<TableCell className="text-zinc-500 tabular-nums">
-											{coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ''}
-										</TableCell>
-										<TableCell className="text-zinc-500 tabular-nums">
-											{formatDate(coupon.expires_at)}
-										</TableCell>
-										<TableCell>
-											<a href={`/admin/coupons/${coupon.id}`} class="text-indigo-600 hover:underline font-medium">Edit</a>
-										</TableCell>
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell colSpan={7} className="text-center text-zinc-500">
-										No coupons found.
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</div>
+		{/* Coupon Table */}
+		<CouponsTable client:only="react" coupons={coupons} />
 
-				{/* Pagination */}
-				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-zinc-500">
-						Page {page} of {meta.totalPages}
-					</div>
-					<Pagination client:load>
-						<PaginationPrevious href={hasPrev ? `?page=${page - 1}&q=${q}&status=${status}` : null} />
-						<PaginationNext href={hasNext ? `?page=${page + 1}&q=${q}&status=${status}` : null} />
-					</Pagination>
-				</div>
+		{/* Pagination */}
+		<div class="flex items-center justify-between">
+			<div class="text-xs text-zinc-500">
+				Page {page} of {meta.totalPages}
 			</div>
+			<Pagination client:load>
+				<PaginationPrevious href={hasPrev ? `?page=${page - 1}&q=${q}&status=${status}` : null} />
+				<PaginationNext href={hasNext ? `?page=${page + 1}&q=${q}&status=${status}` : null} />
+			</Pagination>
+		</div>
 	</div>
 </AdminLayout>

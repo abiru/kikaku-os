@@ -1,9 +1,11 @@
 ---
 export const prerender = false;
 
-import Badge from '../../../components/Badge.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
-import Button from '../../../components/Button.astro';
+import { Badge } from '../../../components/catalyst/badge';
+import { Button } from '../../../components/catalyst/button';
+import { Heading } from '../../../components/catalyst/heading';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 
@@ -82,114 +84,123 @@ const formatDate = (dateStr: string | null) => {
 				</svg>
 				Categories
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">
-				{categoryName}
-			</h1>
-			<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} products</span>
-		</Alert>
-			{/* Search Bar */}
-			<div class="mb-6">
-				<form method="get" class="relative max-w-md">
-					<input
-						type="search"
-						name="q"
-						value={q}
-						placeholder="Search products in this category..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all shadow-sm"
-					/>
-					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-				</form>
-			</Alert>
+			<Heading>{categoryName}</Heading>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} products</span>
+		</div>
 
-			{error && (
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-					<div class="text-red-600 mb-4">{error}</div>
-					<Button href="/admin/categories" variant="secondary" size="sm">
+		{/* Search Bar */}
+		<div class="mb-6">
+			<form method="get" class="relative max-w-md">
+				<input
+					type="search"
+					name="q"
+					value={q}
+					placeholder="Search products in this category..."
+					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
+				/>
+				<svg
+					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+				</svg>
+			</form>
+		</div>
+
+		{error && (
+			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm p-8 text-center">
+				<Alert color="red" client:load>{error}</Alert>
+				<div class="mt-4">
+					<Button href="/admin/categories" outline client:load>
 						Back to Categories
 					</Button>
-				</Alert>
-			)}
+				</div>
+			</div>
+		)}
 
-			{!error && (
-				<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-					<div class="overflow-x-auto">
-						<table class="w-full text-left text-sm text-zinc-950">
-							<thead class="bg-gray-50 border-b border-gray-200">
-								<tr>
-									<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
-									<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-									<th class="px-6 py-3 font-medium text-[#86868b]">Updated</th>
-									<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
-								</tr>
-							</thead>
-							<tbody class="divide-y divide-gray-100">
-								{products.length > 0 ? (
-									products.map((product) => (
-										<tr class="hover:bg-gray-50 transition-colors group">
-											<td class="px-6 py-4">
-												<div class="font-medium">{product.title}</div>
-												<div class="text-xs text-[#86868b] truncate max-w-xs">{product.description}</div>
-											</td>
-											<td class="px-6 py-4">
-												{product.status === 'draft' ? (
-													<Badge severity="secondary">Draft</Badge>
-												) : (
-													<Badge severity="info">Active</Badge>
-												)}
-											</td>
-											<td class="px-6 py-4 text-[#86868b] tabular-nums">
-												{formatDate(product.updated_at)}
-											</td>
-											<td class="px-6 py-4 text-right">
-												<a href={`/admin/products/${product.id}`} class="text-[#0071e3] hover:underline font-medium">Edit</a>
-											</td>
-										</tr>
-									))
-								) : (
-									<tr>
-										<td colspan="4" class="px-6 py-12 text-center text-[#86868b]">
-											No products found in this category.
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
-					</Alert>
+		{!error && (
+			<>
+				<Table client:only="react">
+						<TableHead>
+							<TableRow>
+								<TableHeader>Title</TableHeader>
+								<TableHeader>Status</TableHeader>
+								<TableHeader>Updated</TableHeader>
+								<TableHeader className="text-right">Action</TableHeader>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{products.length > 0 ? (
+								products.map((product) => (
+									<TableRow href={`/admin/products/${product.id}`}>
+										<TableCell>
+											<div class="font-medium">{product.title}</div>
+											<div class="text-xs text-zinc-500 truncate max-w-xs">{product.description}</div>
+										</TableCell>
+										<TableCell>
+											{product.status === 'draft' ? (
+												<Badge color="zinc" client:only="react">Draft</Badge>
+											) : (
+												<Badge color="blue" client:only="react">Active</Badge>
+											)}
+										</TableCell>
+										<TableCell className="text-zinc-500 tabular-nums">
+											{formatDate(product.updated_at)}
+										</TableCell>
+										<TableCell className="text-right">
+											<a href={`/admin/products/${product.id}`} class="text-indigo-600 hover:underline font-medium">Edit</a>
+										</TableCell>
+									</TableRow>
+								))
+							) : (
+								<TableRow>
+									<TableCell colSpan={4} className="text-center text-zinc-500">
+										No products found in this category.
+									</TableCell>
+								</TableRow>
+							)}
+						</TableBody>
+				</Table>
 
-					{/* Pagination */}
-					{meta.totalPages > 1 && (
-						<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-							<div class="text-xs text-[#86868b]">
-								Page {page} of {meta.totalPages}
-							</Alert>
-							<div class="flex gap-2">
+				{/* Pagination */}
+				{meta.totalPages > 1 && (
+					<div class="flex items-center justify-between mt-4">
+						<div class="text-xs text-zinc-500">
+							Page {page} of {meta.totalPages}
+						</div>
+						<div class="flex gap-2">
+							{hasPrev ? (
 								<Button
-									href={hasPrev ? `?page=${page - 1}&q=${q}` : '#'}
-									disabled={!hasPrev}
-									size="sm"
-									variant="secondary"
+									href={`?page=${page - 1}&q=${q}`}
+									outline
+									client:load
 								>
 									Previous
 								</Button>
+							) : (
+								<Button plain disabled client:load>
+									Previous
+								</Button>
+							)}
+							{hasNext ? (
 								<Button
-									href={hasNext ? `?page=${page + 1}&q=${q}` : '#'}
-									disabled={!hasNext}
-									size="sm"
-									variant="secondary"
+									href={`?page=${page + 1}&q=${q}`}
+									outline
+									client:load
 								>
 									Next
 								</Button>
-							</Alert>
-						</Alert>
-					)}
-				</Alert>
-			)}
-	</Alert>
+							) : (
+								<Button plain disabled client:load>
+									Next
+								</Button>
+							)}
+						</div>
+					</div>
+				)}
+			</>
+		)}
+	</div>
 </AdminLayout>

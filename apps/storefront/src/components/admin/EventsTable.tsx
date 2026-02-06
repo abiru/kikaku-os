@@ -47,9 +47,8 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 	};
 
 	return (
-		<div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-			<div className="overflow-x-auto">
-				<Table>
+		<>
+			<Table>
 					<TableHead>
 						<TableRow>
 							<TableHeader>Received</TableHeader>
@@ -99,12 +98,11 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 							</TableRow>
 						)}
 					</TableBody>
-				</Table>
-			</div>
+			</Table>
 
 			{/* Pagination */}
 			{totalPages > 1 && (
-				<div className="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+				<div className="flex items-center justify-between mt-4">
 					<div className="text-sm text-zinc-500">
 						Page {currentPage} of {totalPages}
 					</div>
@@ -114,6 +112,6 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 					</Pagination>
 				</div>
 			)}
-		</div>
+		</>
 	);
 }

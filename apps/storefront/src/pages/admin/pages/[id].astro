@@ -246,7 +246,7 @@ const canDelete = page && !isCorePage;
 										client:load
 									/>
 								</div>
-								<Description>Only lowercase letters, numbers, and hyphens</Description>
+								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Only lowercase letters, numbers, and hyphens</p>
 							</Field>
 						</div>
 
@@ -280,7 +280,7 @@ const canDelete = page && !isCorePage;
 								maxLength={255}
 								client:load
 							/>
-							<Description>Used as the browser tab title and in search results</Description>
+							<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Used as the browser tab title and in search results</p>
 						</Field>
 
 						<Field>
@@ -293,7 +293,7 @@ const canDelete = page && !isCorePage;
 								placeholder="Brief description of the page content..."
 								client:load
 							>{page.meta_description || ''}</Textarea>
-							<Description>Displayed in search engine results</Description>
+							<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Displayed in search engine results</p>
 						</Field>
 					</div>
 				</div>
@@ -336,9 +336,9 @@ Code block
 								className="font-mono resize-y"
 								client:load
 							>{page.body}</Textarea>
-							<Description>
+							<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">
 								Supports Markdown syntax. HTML is also valid within Markdown.
-							</Description>
+							</p>
 						</Field>
 					</div>
 

@@ -8,7 +8,7 @@ import { getApiBase } from '../../../lib/api';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
 import { Checkbox } from '../../../components/catalyst/checkbox';
-import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -154,6 +154,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div class="md:col-span-2">
+				<Fieldset client:load>
 							<Field>
 								<Label htmlFor="name">Name <span class="text-red-500">*</span></Label>
 								<Input client:load
@@ -179,7 +180,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 									max="1"
 									value={taxRate.rate}
 								/>
-								<Description>Current: {formatRate(taxRate.rate)}</Description>
+								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Current: {formatRate(taxRate.rate)}</p>
 							</Field>
 						</div>
 
@@ -205,7 +206,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 									name="applicable_to"
 									value={taxRate.applicable_to || ''}
 								/>
-								<Description>Leave empty for no end date</Description>
+								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for no end date</p>
 							</Field>
 						</div>
 
@@ -232,14 +233,15 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 									<label for="is_active" class="text-base/6 text-zinc-950 select-none sm:text-sm/6">Active</label>
 								</div>
 							</Field>
+				</Fieldset>
 						</div>
 					</div>
 
 					<div class="flex gap-3 pt-4 border-t border-gray-200">
-						<Button type="submit" color="indigo" client:load>
+						<Button type="submit" color="indigo" client:load >
 							Save Changes
 						</Button>
-						<Button href="/admin/tax-rates" outline client:load>
+						<Button href="/admin/tax-rates" outline client:load >
 							Cancel
 						</Button>
 					</div>
@@ -250,14 +252,14 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 					<p class="text-sm text-[#86868b] mb-4">
 						Deactivate this tax rate. It will no longer be assignable to products.
 					</p>
-					<input type="hidden" name="action" value="delete" />
-					<button
-						type="submit"
-						onclick="return confirm('Are you sure you want to deactivate this tax rate?')"
-						class="relative isolate inline-flex items-baseline justify-center gap-x-2 rounded-lg border text-base/6 font-semibold px-[calc(var(--spacing)*3.5-1px)] py-[calc(var(--spacing)*2.5-1px)] sm:px-[calc(var(--spacing)*3-1px)] sm:py-[calc(var(--spacing)*1.5-1px)] sm:text-sm/6 border-transparent text-white cursor-default [--btn-bg:var(--color-red-600)] [--btn-border:var(--color-red-700)]/90 bg-[--btn-border] before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-[--btn-bg] before:shadow-sm"
-					>
-						Deactivate Tax Rate
-					</button>
+						<input type="hidden" name="action" value="delete" />
+						<button
+							type="submit"
+							onclick="return confirm('Are you sure you want to deactivate this tax rate?')"
+							class="relative isolate inline-flex items-baseline justify-center gap-x-2 rounded-lg border text-base/6 font-semibold px-[calc(var(--spacing)*3.5-1px)] py-[calc(var(--spacing)*2.5-1px)] sm:px-[calc(var(--spacing)*3-1px)] sm:py-[calc(var(--spacing)*1.5-1px)] sm:text-sm/6 border-transparent text-white cursor-default [--btn-bg:var(--color-red-600)] [--btn-border:var(--color-red-700)]/90 bg-[--btn-border] before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-[--btn-bg] before:shadow-sm"
+						>
+							Deactivate Tax Rate
+						</button>
 				</form>
 
 				<div class="bg-gray-50 rounded-lg p-4 text-sm text-[#86868b]">

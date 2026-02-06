@@ -4,11 +4,8 @@ export const prerender = false;
 import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
-import { Badge } from '../../components/catalyst/badge';
 import { Heading } from '../../components/catalyst/heading';
-import { Input } from '../../components/catalyst/input';
-import { Field, Label } from '../../components/catalyst/fieldset';
-import { Button } from '../../components/catalyst/button';
+import ShippingPage from '../../components/admin/ShippingPage';
 
 const apiBase = getApiBase();
 
@@ -42,17 +39,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 	error = 'ADMIN_API_KEY is missing.';
 }
 
-const formatCurrency = (amount: number) => {
-	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount);
-};
-
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	const d = new Date(dateStr);
-	return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-};
-
-const apiKey = import.meta.env.ADMIN_API_KEY;
+const apiKey = import.meta.env.ADMIN_API_KEY || '';
 ---
 
 <AdminLayout title="Shipping - Admin">
@@ -61,213 +48,17 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			<Heading>Shipping</Heading>
 			<span class="text-xs text-white bg-indigo-600 px-2 py-1 rounded-full font-medium">{orders.length} ready</span>
 		</div>
-			{error && (
-				<Alert color="red" client:load>
-					{error}
-				</Alert>
-			)}
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
 
-			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950">
-						<thead class="bg-zinc-50 border-b border-zinc-200">
-							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500">Order</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Customer</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Paid At</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Total</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Actions</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-zinc-100">
-							{orders.length > 0 ? (
-								orders.map((order) => (
-									<tr class="hover:bg-zinc-50 transition-colors">
-										<td class="px-6 py-4 font-medium">
-											<a href={`/admin/orders/${order.order_id}`} class="text-indigo-600 hover:underline">
-												#{order.order_id}
-											</a>
-										</td>
-										<td class="px-6 py-4">
-											<div class="text-zinc-950">{order.customer_email || 'Guest'}</div>
-										</td>
-										<td class="px-6 py-4 text-zinc-500 tabular-nums">
-											{formatDate(order.paid_at)}
-										</td>
-										<td class="px-6 py-4">
-											<Badge color="zinc" client:only="react">
-												{order.fulfillment_status || 'Unfulfilled'}
-											</Badge>
-										</td>
-										<td class="px-6 py-4 text-right font-medium tabular-nums">
-											{formatCurrency(order.total)}
-										</td>
-										<td class="px-6 py-4 text-right">
-											<Button
-												type="button"
-												className="ship-btn"
-												color="indigo"
-												client:load
-												data-order-id={order.order_id}
-												data-fulfillment-id={order.fulfillment_id || ''}
-											>
-												Ship
-											</Button>
-										</td>
-									</tr>
-								))
-							) : (
-								<tr>
-									<td colspan="6" class="px-6 py-12 text-center text-zinc-500">
-										No orders ready to ship.
-									</td>
-								</tr>
-							)}
-						</tbody>
-					</table>
-				</div>
-			</div>
-
-		<!-- Ship Modal -->
-		<div id="ship-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
-				<div class="p-6 border-b border-zinc-200">
-					<h3 class="text-lg font-semibold text-zinc-950">Ship Order</h3>
-					<p id="ship-subtitle" class="text-sm text-zinc-500 mt-1"></p>
-				</div>
-				<form id="ship-form" class="p-6 space-y-4">
-					<input type="hidden" id="ship-order-id" name="orderId" />
-					<input type="hidden" id="ship-fulfillment-id" name="fulfillmentId" />
-
-					<Field>
-						<Label htmlFor="ship-tracking">Tracking Number</Label>
-						<Input client:load
-							type="text"
-							id="ship-tracking"
-							name="tracking_number"
-							placeholder="Optional tracking number"
-						/>
-					</Field>
-
-					<div id="ship-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
-
-					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200">
-						<Button client:load type="button" id="cancel-ship-btn" plain>
-							Cancel
-						</Button>
-						<Button client:load type="submit" color="indigo">
-							Mark as Shipped
-						</Button>
-					</div>
-				</form>
-			</div>
-		</div>
+		<ShippingPage
+			client:only="react"
+			orders={orders}
+			apiBase={apiBase}
+			apiKey={apiKey}
+		/>
 	</div>
 </AdminLayout>
-
-<script define:vars={{ apiBase, apiKey }}>
-	// Wait for DOM to be fully ready (including after React hydration)
-	function initShippingPage() {
-		const modal = document.getElementById('ship-modal');
-		const form = document.getElementById('ship-form');
-		const subtitle = document.getElementById('ship-subtitle');
-		const orderIdInput = document.getElementById('ship-order-id');
-		const fulfillmentIdInput = document.getElementById('ship-fulfillment-id');
-		const trackingInput = document.getElementById('ship-tracking');
-		const errorEl = document.getElementById('ship-error');
-		const cancelBtn = document.getElementById('cancel-ship-btn');
-
-		// If elements don't exist yet (React still loading), retry
-		if (!modal || !form) {
-			setTimeout(initShippingPage, 100);
-			return;
-		}
-
-		function showModal(orderId, fulfillmentId) {
-			orderIdInput.value = orderId;
-			fulfillmentIdInput.value = fulfillmentId || '';
-			subtitle.textContent = `Order #${orderId}`;
-			trackingInput.value = '';
-			errorEl.classList.add('hidden');
-			modal.classList.remove('hidden');
-		}
-
-		function hideModal() {
-			modal.classList.add('hidden');
-			form.reset();
-		}
-
-		function showError(message) {
-			errorEl.textContent = message;
-			errorEl.classList.remove('hidden');
-		}
-
-		// Event listeners for Ship buttons using event delegation
-		document.addEventListener('click', (e) => {
-			const btn = e.target.closest('.ship-btn');
-			if (btn) {
-				const orderId = btn.dataset.orderId;
-				const fulfillmentId = btn.dataset.fulfillmentId;
-				showModal(orderId, fulfillmentId);
-			}
-		});
-
-		cancelBtn?.addEventListener('click', hideModal);
-
-		modal?.addEventListener('click', (e) => {
-			if (e.target === modal) hideModal();
-		});
-
-		// Form submission
-		form?.addEventListener('submit', async (e) => {
-			e.preventDefault();
-
-			const orderId = orderIdInput.value;
-			const fulfillmentId = fulfillmentIdInput.value;
-			const tracking_number = trackingInput.value.trim() || null;
-
-			try {
-				let res;
-				if (fulfillmentId) {
-					// Update existing fulfillment
-					res = await fetch(`${apiBase}/admin/fulfillments/${fulfillmentId}`, {
-						method: 'PUT',
-						headers: {
-							'Content-Type': 'application/json',
-							'x-admin-key': apiKey
-						},
-						body: JSON.stringify({ status: 'shipped', tracking_number })
-					});
-				} else {
-					// Create new fulfillment
-					res = await fetch(`${apiBase}/admin/orders/${orderId}/fulfillments`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'x-admin-key': apiKey
-						},
-						body: JSON.stringify({ status: 'shipped', tracking_number })
-					});
-				}
-
-				if (!res.ok) {
-					const data = await res.json();
-					showError(data.message || 'Failed to update shipping status');
-					return;
-				}
-
-				location.reload();
-			} catch (err) {
-				showError('An error occurred. Please try again.');
-			}
-		});
-	}
-
-	// Start initialization
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', initShippingPage);
-	} else {
-		initShippingPage();
-	}
-</script>

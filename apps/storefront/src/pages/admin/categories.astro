@@ -4,12 +4,9 @@ export const prerender = false;
 import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
-import { Badge } from '../../components/catalyst/badge';
-import { Button } from '../../components/catalyst/button';
-import { Fieldset, Field, Label } from '../../components/catalyst/fieldset';
 import { Heading } from '../../components/catalyst/heading';
 import { Input } from '../../components/catalyst/input';
-import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
+import CategoriesPage from '../../components/admin/CategoriesPage';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -46,6 +43,8 @@ if (import.meta.env.ADMIN_API_KEY) {
 } else {
 	error = 'ADMIN_API_KEY is missing in server environment.';
 }
+
+const apiKey = import.meta.env.ADMIN_API_KEY || '';
 ---
 
 <AdminLayout title="Categories - Admin">
@@ -56,329 +55,39 @@ if (import.meta.env.ADMIN_API_KEY) {
 				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{categories.length} items</span>
 			</div>
 		</div>
-			{/* Search Bar */}
-			<div class="mb-6">
-				<form method="get" class="relative max-w-md">
-					<Input
-						type="search"
-						name="q"
-						value={q}
-						placeholder="Search categories..."
-						className="pl-10"
-					/>
-					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-				</form>
-			</div>
 
-			{error && (
-				<Alert color="red" client:load>
-					{error}
-				</Alert>
-			)}
-
-			{/* Category Table */}
-			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-				<div class="overflow-x-auto">
-					<Table client:load>
-						<TableHead>
-							<TableRow>
-								<TableHeader>Category Name</TableHeader>
-								<TableHeader>Products</TableHeader>
-								<TableHeader>Actions</TableHeader>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{categories.length > 0 ? (
-								categories.map((cat) => (
-									<TableRow data-category={cat.category}>
-										<TableCell>
-											<a href={`/admin/categories/${encodeURIComponent(cat.category)}`} class="font-medium text-zinc-950 hover:text-indigo-600">
-												{cat.category}
-											</a>
-										</TableCell>
-										<TableCell>
-											<Badge color="zinc" client:only="react">{cat.product_count} products</Badge>
-										</TableCell>
-										<TableCell>
-											<div class="flex items-center gap-3">
-												<button
-													type="button"
-													class="rename-btn text-indigo-600 hover:underline font-medium"
-													data-category={cat.category}
-												>
-													Rename
-												</button>
-												<button
-													type="button"
-													class="delete-btn text-red-600 hover:underline font-medium"
-													data-category={cat.category}
-													data-count={cat.product_count}
-												>
-													Delete
-												</button>
-											</div>
-										</TableCell>
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell colSpan={3} className="text-center text-zinc-500">
-										No categories found. Categories are created automatically when you assign them to products.
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</div>
-			</div>
-		{/* Rename Modal */}
-		<div id="rename-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
-				<div class="p-6 border-b border-zinc-200">
-					<h3 class="text-lg font-semibold text-zinc-950">Rename Category</h3>
-				</div>
-				<form id="rename-form" class="p-6 space-y-4">
-					<input type="hidden" id="rename-old-name" name="oldName" value="" />
-
-					<Fieldset client:load>
-						<Field>
-							<Label>Current Name</Label>
-							<Input
-								type="text"
-								id="rename-current"
-								readOnly
-								className="text-zinc-500 bg-zinc-50"
-							/>
-						</Field>
-
-						<Field>
-							<Label>New Name *</Label>
-							<Input
-								type="text"
-								id="rename-new"
-								name="newName"
-								required
-								placeholder="Enter new category name"
-							/>
-						</Field>
-					</Fieldset>
-
-					<div id="rename-error" class="hidden">
-						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
-					</div>
-
-					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200">
-						<Button type="button" id="rename-cancel-btn" plain client:load>
-							Cancel
-						</Button>
-						<Button type="submit" color="indigo" client:load>
-							Rename
-						</Button>
-					</div>
-				</form>
-			</div>
+		{/* Search Bar */}
+		<div class="mb-6">
+			<form method="get" class="relative max-w-md">
+				<Input
+					type="search"
+					name="q"
+					value={q}
+					placeholder="Search categories..."
+					className="pl-10"
+				/>
+				<svg
+					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+				</svg>
+			</form>
 		</div>
 
-		{/* Delete Modal */}
-		<div id="delete-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-			<div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
-				<div class="p-6 border-b border-zinc-200">
-					<h3 class="text-lg font-semibold text-zinc-950">Delete Category</h3>
-				</div>
-				<form id="delete-form" class="p-6 space-y-4">
-					<input type="hidden" id="delete-name" name="deleteName" value="" />
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
 
-					<p class="text-sm text-zinc-950">
-						Are you sure you want to delete the category "<span id="delete-category-name" class="font-medium"></span>"?
-					</p>
-					<p class="text-sm text-zinc-500">
-						<span id="delete-product-count"></span> product(s) will have their category removed.
-					</p>
-
-					<Fieldset client:load>
-						<Field>
-							<Label>Move products to (optional)</Label>
-							<Input
-								type="text"
-								id="delete-move-to"
-								name="moveTo"
-								placeholder="Leave empty to remove category from products"
-							/>
-						</Field>
-					</Fieldset>
-
-					<div id="delete-error" class="hidden">
-						<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
-					</div>
-
-					<div class="flex justify-end gap-3 pt-4 border-t border-zinc-200">
-						<Button type="button" id="delete-cancel-btn" plain client:load>
-							Cancel
-						</Button>
-						<Button type="submit" color="red" client:load>
-							Delete
-						</Button>
-					</div>
-				</form>
-			</div>
-		</div>
+		<CategoriesPage
+			client:only="react"
+			categories={categories}
+			apiBase={apiBase}
+			apiKey={apiKey}
+		/>
 	</div>
 </AdminLayout>
-
-<script define:vars={{ apiBase, apiKey: import.meta.env.ADMIN_API_KEY }}>
-	// Rename Modal
-	const renameModal = document.getElementById('rename-modal');
-	const renameForm = document.getElementById('rename-form');
-	const renameOldName = document.getElementById('rename-old-name');
-	const renameCurrent = document.getElementById('rename-current');
-	const renameNew = document.getElementById('rename-new');
-	const renameError = document.getElementById('rename-error');
-	const renameCancelBtn = document.getElementById('rename-cancel-btn');
-
-	// Delete Modal
-	const deleteModal = document.getElementById('delete-modal');
-	const deleteForm = document.getElementById('delete-form');
-	const deleteName = document.getElementById('delete-name');
-	const deleteCategoryName = document.getElementById('delete-category-name');
-	const deleteProductCount = document.getElementById('delete-product-count');
-	const deleteMoveTo = document.getElementById('delete-move-to');
-	const deleteError = document.getElementById('delete-error');
-	const deleteCancelBtn = document.getElementById('delete-cancel-btn');
-
-	function showRenameModal(category) {
-		renameOldName.value = category;
-		renameCurrent.value = category;
-		renameNew.value = '';
-		renameError.classList.add('hidden');
-		renameModal.classList.remove('hidden');
-		renameNew.focus();
-	}
-
-	function hideRenameModal() {
-		renameModal.classList.add('hidden');
-		renameForm.reset();
-	}
-
-	function showDeleteModal(category, count) {
-		deleteName.value = category;
-		deleteCategoryName.textContent = category;
-		deleteProductCount.textContent = count;
-		deleteMoveTo.value = '';
-		deleteError.classList.add('hidden');
-		deleteModal.classList.remove('hidden');
-	}
-
-	function hideDeleteModal() {
-		deleteModal.classList.add('hidden');
-		deleteForm.reset();
-	}
-
-	function showError(element, message) {
-		const errorDiv = element.querySelector('div');
-		if (errorDiv) {
-			errorDiv.textContent = message;
-			element.classList.remove('hidden');
-		}
-	}
-
-	// Rename button handlers
-	document.querySelectorAll('.rename-btn').forEach(btn => {
-		btn.addEventListener('click', () => {
-			showRenameModal(btn.dataset.category);
-		});
-	});
-
-	// Delete button handlers
-	document.querySelectorAll('.delete-btn').forEach(btn => {
-		btn.addEventListener('click', () => {
-			showDeleteModal(btn.dataset.category, btn.dataset.count);
-		});
-	});
-
-	// Modal close handlers
-	renameCancelBtn?.addEventListener('click', hideRenameModal);
-	deleteCancelBtn?.addEventListener('click', hideDeleteModal);
-
-	renameModal?.addEventListener('click', (e) => {
-		if (e.target === renameModal) hideRenameModal();
-	});
-
-	deleteModal?.addEventListener('click', (e) => {
-		if (e.target === deleteModal) hideDeleteModal();
-	});
-
-	// Rename form submit
-	renameForm?.addEventListener('submit', async (e) => {
-		e.preventDefault();
-		const oldName = renameOldName.value;
-		const newName = renameNew.value.trim();
-
-		if (!newName) {
-			showError(renameError, 'New name is required');
-			return;
-		}
-
-		if (newName === oldName) {
-			showError(renameError, 'New name must be different from current name');
-			return;
-		}
-
-		try {
-			const res = await fetch(`${apiBase}/admin/categories/${encodeURIComponent(oldName)}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
-				},
-				body: JSON.stringify({ newName })
-			});
-
-			const data = await res.json();
-
-			if (!res.ok) {
-				showError(renameError, data.message || 'Failed to rename category');
-				return;
-			}
-
-			location.reload();
-		} catch (err) {
-			showError(renameError, 'An error occurred. Please try again.');
-		}
-	});
-
-	// Delete form submit
-	deleteForm?.addEventListener('submit', async (e) => {
-		e.preventDefault();
-		const name = deleteName.value;
-		const moveTo = deleteMoveTo.value.trim() || null;
-
-		try {
-			const res = await fetch(`${apiBase}/admin/categories/${encodeURIComponent(name)}`, {
-				method: 'DELETE',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
-				},
-				body: JSON.stringify({ moveTo })
-			});
-
-			const data = await res.json();
-
-			if (!res.ok) {
-				showError(deleteError, data.message || 'Failed to delete category');
-				return;
-			}
-
-			location.reload();
-		} catch (err) {
-			showError(deleteError, 'An error occurred. Please try again.');
-		}
-	});
-</script>

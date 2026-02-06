@@ -3,7 +3,7 @@ export const prerender = false;
 
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Fieldset, Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import { Badge } from '../../../components/catalyst/badge';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
@@ -39,73 +39,74 @@ try {
 
 // Handle form submission
 if (Astro.request.method === 'POST' && hero) {
-	try {
-		const formData = await Astro.request.formData();
-		const title = formData.get('title') as string;
-		const subtitle = formData.get('subtitle') as string;
-		const ctaPrimaryText = formData.get('cta_primary_text') as string;
-		const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
-		const ctaSecondaryText = formData.get('cta_secondary_text') as string;
-		const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
-		const position = Number(formData.get('position') || '0');
-		const status = formData.get('status') as string;
-
-		const body: any = {};
-
-		if (title !== hero.title) body.title = title;
-		if (subtitle !== hero.subtitle) body.subtitle = subtitle || null;
-		if (ctaPrimaryText !== hero.cta_primary_text) body.cta_primary_text = ctaPrimaryText || null;
-		if (ctaPrimaryUrl !== hero.cta_primary_url) body.cta_primary_url = ctaPrimaryUrl || null;
-		if (ctaSecondaryText !== hero.cta_secondary_text) body.cta_secondary_text = ctaSecondaryText || null;
-		if (ctaSecondaryUrl !== hero.cta_secondary_url) body.cta_secondary_url = ctaSecondaryUrl || null;
-		if (position !== hero.position) body.position = position;
-		if (status !== hero.status) body.status = status;
-
-		if (Object.keys(body).length > 0) {
-			const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': import.meta.env.ADMIN_API_KEY
-				},
-				body: JSON.stringify(body)
-			});
-
-			if (!res.ok) {
-				const data = await res.json();
-				throw new Error(data.message || 'Failed to update hero section');
-			}
-
-			success = true;
-
-			// Reload hero data
-			const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-				headers: {
-					'x-admin-key': import.meta.env.ADMIN_API_KEY
-				}
-			});
-			const refreshData = await refreshRes.json();
-			hero = refreshData.hero;
-		}
-	} catch (e: any) {
-		console.error(e);
-		error = e.message || 'Failed to update hero section';
-		// Extract detailed error from JSON response
-		if (e.message.includes('Invalid input')) {
-			error = 'Validation error: Please check all required fields';
-		}
-	}
-}
-
-// Handle image upload
-if (Astro.request.method === 'POST' && hero) {
 	const formData = await Astro.request.formData();
 	const imageFile = formData.get('image_upload');
 	const imageType = formData.get('image_type');
 	const deleteImageType = formData.get('delete_image_type');
 
+	// Check if this is a hero data update (not an image operation)
+	const isImageOperation = imageFile instanceof File && imageFile.size > 0 || deleteImageType;
+
+	if (!isImageOperation) {
+		try {
+			const title = formData.get('title') as string;
+			const subtitle = formData.get('subtitle') as string;
+			const ctaPrimaryText = formData.get('cta_primary_text') as string;
+			const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
+			const ctaSecondaryText = formData.get('cta_secondary_text') as string;
+			const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
+			const position = Number(formData.get('position') || '0');
+			const status = formData.get('status') as string || 'draft';
+
+			const body: any = {};
+
+			if (title !== hero.title) body.title = title;
+			if (subtitle !== hero.subtitle) body.subtitle = subtitle || null;
+			if (ctaPrimaryText !== hero.cta_primary_text) body.cta_primary_text = ctaPrimaryText || null;
+			if (ctaPrimaryUrl !== hero.cta_primary_url) body.cta_primary_url = ctaPrimaryUrl || null;
+			if (ctaSecondaryText !== hero.cta_secondary_text) body.cta_secondary_text = ctaSecondaryText || null;
+			if (ctaSecondaryUrl !== hero.cta_secondary_url) body.cta_secondary_url = ctaSecondaryUrl || null;
+			if (position !== hero.position) body.position = position;
+			if (status !== hero.status) body.status = status;
+
+			if (Object.keys(body).length > 0) {
+				const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': import.meta.env.ADMIN_API_KEY
+					},
+					body: JSON.stringify(body)
+				});
+
+				if (!res.ok) {
+					const data = await res.json();
+					throw new Error(data.message || 'Failed to update hero section');
+				}
+
+				success = true;
+
+				// Reload hero data
+				const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+					headers: {
+						'x-admin-key': import.meta.env.ADMIN_API_KEY
+					}
+				});
+				const refreshData = await refreshRes.json();
+				hero = refreshData.hero;
+			}
+		} catch (e: any) {
+			console.error(e);
+			error = e.message || 'Failed to update hero section';
+			// Extract detailed error from JSON response
+			if (e.message.includes('Invalid input')) {
+				error = 'Validation error: Please check all required fields';
+			}
+		}
+	}
+
 	// Handle image deletion
-	if (deleteImageType) {
+	else if (deleteImageType) {
 		try {
 			const res = await fetch(`${apiBase}/admin/home/heroes/${id}/image/${deleteImageType}`, {
 				method: 'DELETE',
@@ -224,9 +225,9 @@ if (Astro.request.method === 'POST' && hero) {
 				<Fieldset client:load>
 				{/* Title */}
 				<Field>
-					<Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">
 						Title <span class="text-red-500">*</span>
-					</Label>
+					</label>
 					<Input
 						type="text"
 						id="title"
@@ -234,45 +235,45 @@ if (Astro.request.method === 'POST' && hero) {
 						value={hero.title}
 						required
 						maxLength={255}
-						client:load
+
 					/>
 				</Field>
 
 				{/* Subtitle */}
 				<Field>
-					<Label>Subtitle</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Subtitle</label>
 					<Input
 						type="text"
 						id="subtitle"
 						name="subtitle"
 						value={hero.subtitle || ''}
 						maxLength={500}
-						client:load
+
 					/>
 				</Field>
 
 				{/* Primary CTA */}
 				<div class="grid grid-cols-2 gap-4">
 					<Field>
-						<Label>Primary Button Text</Label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Primary Button Text</label>
 						<Input
 							type="text"
 							id="cta_primary_text"
 							name="cta_primary_text"
 							value={hero.cta_primary_text || ''}
 							maxLength={100}
-							client:load
+
 						/>
 					</Field>
 					<Field>
-						<Label>Primary Button URL</Label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Primary Button URL</label>
 						<Input
 							type="text"
 							id="cta_primary_url"
 							name="cta_primary_url"
 							value={hero.cta_primary_url || ''}
 							maxLength={500}
-							client:load
+
 						/>
 					</Field>
 				</div>
@@ -280,63 +281,64 @@ if (Astro.request.method === 'POST' && hero) {
 				{/* Secondary CTA */}
 				<div class="grid grid-cols-2 gap-4">
 					<Field>
-						<Label>Secondary Button Text</Label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Secondary Button Text</label>
 						<Input
 							type="text"
 							id="cta_secondary_text"
 							name="cta_secondary_text"
 							value={hero.cta_secondary_text || ''}
 							maxLength={100}
-							client:load
+
 						/>
 					</Field>
 					<Field>
-						<Label>Secondary Button URL</Label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Secondary Button URL</label>
 						<Input
 							type="text"
 							id="cta_secondary_url"
 							name="cta_secondary_url"
 							value={hero.cta_secondary_url || ''}
 							maxLength={500}
-							client:load
+
 						/>
 					</Field>
 				</div>
 
 				{/* Position */}
 				<Field>
-					<Label>Position (Display Order)</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Position (Display Order)</label>
 					<Input
 						type="number"
 						id="position"
 						name="position"
 						value={hero.position}
 						min="0"
-						client:load
+
 					/>
-					<Description>Lower numbers appear first on the homepage</Description>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Lower numbers appear first on the homepage</p>
 				</Field>
 
 				{/* Status */}
 				<Field>
-					<Label>Status</Label>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
 					<Select
 						id="status"
 						name="status"
+						defaultValue={hero.status}
 						client:load
 					>
-						<option value="draft" selected={hero.status === 'draft'}>Draft</option>
-						<option value="active" selected={hero.status === 'active'}>Active</option>
-						<option value="archived" selected={hero.status === 'archived'}>Archived</option>
+						<option value="draft">Draft</option>
+						<option value="active">Active</option>
+						<option value="archived">Archived</option>
 					</Select>
 				</Field>
 
 				{/* Submit Button */}
 				<div class="flex gap-3 pt-4">
-					<Button type="submit" color="indigo" client:load>
+					<Button type="submit" color="indigo">
 						Save Changes
 					</Button>
-					<Button href="/admin/home-heroes" color="zinc" client:load>
+					<Button href="/admin/home-heroes" color="zinc">
 						Cancel
 					</Button>
 				</div>
@@ -402,7 +404,7 @@ if (Astro.request.method === 'POST' && hero) {
 							<p class="mt-1 text-xs text-gray-500">
 								JPG, PNG, WebP, GIF up to 5MB
 							</p>
-							<Button type="submit" outline className="mt-2">
+							<Button type="submit" outline className="mt-2" client:load>
 								Upload Main Image
 							</Button>
 						</form>
@@ -457,7 +459,7 @@ if (Astro.request.method === 'POST' && hero) {
 							<p class="mt-1 text-xs text-gray-500">
 								JPG, PNG, WebP, GIF up to 5MB
 							</p>
-							<Button type="submit" outline className="mt-2">
+							<Button type="submit" outline className="mt-2" client:load>
 								Upload Small Image
 							</Button>
 						</form>

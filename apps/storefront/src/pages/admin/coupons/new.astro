@@ -4,7 +4,7 @@ export const prerender = false;
 import { Alert } from '../../../components/catalyst/alert-banner';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
@@ -121,6 +121,7 @@ if (Astro.request.method === 'POST') {
 		<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<div class="md:col-span-2">
+				<Fieldset client:load>
 					<Field>
 						<Label>
 							Coupon Code <span class="text-red-500">*</span>
@@ -135,7 +136,7 @@ if (Astro.request.method === 'POST') {
 							placeholder="SUMMER2024"
 							client:load
 						/>
-						<Description>Will be converted to uppercase</Description>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Will be converted to uppercase</p>
 					</Field>
 				</div>
 
@@ -168,7 +169,7 @@ if (Astro.request.method === 'POST') {
 						placeholder="10"
 						client:load
 					/>
-					<Description>For percentage, enter 10 for 10% off</Description>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">For percentage, enter 10 for 10% off</p>
 				</Field>
 
 				<Field>
@@ -197,7 +198,7 @@ if (Astro.request.method === 'POST') {
 						placeholder="Unlimited"
 						client:load
 					/>
-					<Description>Leave empty for unlimited</Description>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for unlimited</p>
 				</Field>
 
 				<Field>
@@ -235,7 +236,7 @@ if (Astro.request.method === 'POST') {
 						value={formValues.starts_at}
 						client:load
 					/>
-					<Description>Leave empty for immediate</Description>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for immediate</p>
 				</Field>
 
 				<Field>
@@ -247,8 +248,9 @@ if (Astro.request.method === 'POST') {
 						value={formValues.expires_at}
 						client:load
 					/>
-					<Description>Leave empty for no expiration</Description>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for no expiration</p>
 				</Field>
+				</Fieldset>
 			</div>
 
 			<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">

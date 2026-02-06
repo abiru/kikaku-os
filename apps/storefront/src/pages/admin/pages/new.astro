@@ -5,7 +5,7 @@ import { Alert } from '../../../components/catalyst/alert-banner';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
 import { Select } from '../../../components/catalyst/select';
-import { Field, Label, Description } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
@@ -106,6 +106,7 @@ if (!apiKey) {
 					<h2 class="text-sm font-medium text-[#86868b]">Basic Information</h2>
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<Fieldset client:load>
 						<Field>
 							<Label>
 								Title <span class="text-red-500">*</span>
@@ -138,7 +139,7 @@ if (!apiKey) {
 										client:load
 									/>
 								</div>
-								<Description>Only lowercase letters, numbers, and hyphens</Description>
+								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Only lowercase letters, numbers, and hyphens</p>
 							</Field>
 						</div>
 
@@ -171,7 +172,7 @@ if (!apiKey) {
 								maxLength={255}
 								client:load
 							/>
-							<Description>Used as the browser tab title and in search results</Description>
+							<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Used as the browser tab title and in search results</p>
 						</Field>
 
 						<Field>
@@ -184,7 +185,7 @@ if (!apiKey) {
 								placeholder="Brief description of the page content..."
 								client:load
 							/>
-							<Description>Displayed in search engine results</Description>
+							<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Displayed in search engine results</p>
 						</Field>
 					</div>
 				</div>
@@ -227,10 +228,11 @@ Code block
 								className="font-mono resize-y"
 								client:load
 							/>
-							<Description>
+							<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">
 								Supports Markdown syntax. HTML is also valid within Markdown.
-							</Description>
+							</p>
 						</Field>
+				</Fieldset>
 					</div>
 
 					<div id="preview-container" class="hidden">

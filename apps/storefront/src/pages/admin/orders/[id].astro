@@ -10,7 +10,7 @@ import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Field, Label } from '../../../components/catalyst/fieldset';
+import { Fieldset, Field } from '../../../components/catalyst/fieldset';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -75,7 +75,7 @@ const getStatusColor = (status: string) => {
 		case 'succeeded':
 			return 'blue';
 		case 'pending':
-			return 'amber';
+			return 'yellow';
 		case 'failed':
 		case 'refunded':
 			return 'red';
@@ -87,11 +87,11 @@ const getStatusColor = (status: string) => {
 const getFulfillmentStatusColor = (status: string) => {
 	switch (status) {
 		case 'delivered':
-			return 'blue';
+			return 'green';
 		case 'shipped':
 			return 'blue';
 		case 'processing':
-			return 'amber';
+			return 'yellow';
 		case 'pending':
 			return 'amber';
 		case 'cancelled':
@@ -219,7 +219,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							)}
 						</div>
 						<div class="overflow-x-auto">
-							<Table client:load>
+							<Table client:only="react">
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
@@ -263,7 +263,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<Table client:load>
+							<Table client:only="react">
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
@@ -299,7 +299,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<Table client:load>
+							<Table client:only="react">
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
@@ -337,7 +337,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
 						</div>
 						<div class="overflow-x-auto">
-							<Table client:load>
+							<Table client:only="react">
 								<TableHead>
 									<TableRow>
 										<TableHeader>Event ID</TableHeader>
@@ -376,8 +376,9 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<p class="text-sm text-[#86868b] mt-1">Order #{id}</p>
 					</div>
 					<form id="create-fulfillment-form" class="p-6 space-y-4">
+						<Fieldset client:load>
 						<Field>
-							<Label htmlFor="create-status">Status</Label>
+							<label for="create-status" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
 							<Select client:load id="create-status" name="status">
 								<option value="pending">Pending</option>
 								<option value="processing">Processing</option>
@@ -387,7 +388,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						</Field>
 
 						<Field>
-							<Label htmlFor="create-tracking">Tracking Number</Label>
+							<label for="create-tracking" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Tracking Number</label>
 							<Input client:load
 								type="text"
 								id="create-tracking"
@@ -395,6 +396,8 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								placeholder="Optional tracking number"
 							/>
 						</Field>
+
+						</Fieldset>
 
 						<div id="create-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 
@@ -427,8 +430,9 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<form id="edit-fulfillment-form" class="p-6 space-y-4">
 						<input type="hidden" id="edit-fulfillment-id" name="fulfillmentId" />
 
+						<Fieldset client:load>
 						<Field>
-							<Label htmlFor="edit-status">Status</Label>
+							<label for="edit-status" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
 							<Select client:load id="edit-status" name="status">
 								<option value="pending">Pending</option>
 								<option value="processing">Processing</option>
@@ -439,7 +443,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						</Field>
 
 						<Field>
-							<Label htmlFor="edit-tracking">Tracking Number</Label>
+							<label for="edit-tracking" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Tracking Number</label>
 							<Input client:load
 								type="text"
 								id="edit-tracking"
@@ -447,6 +451,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								placeholder="Optional tracking number"
 							/>
 						</Field>
+						</Fieldset>
 
 						<div id="edit-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
 

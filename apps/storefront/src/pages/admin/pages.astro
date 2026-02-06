@@ -2,11 +2,11 @@
 export const prerender = false;
 
 import { Alert } from '../../components/catalyst/alert-banner';
-import { Badge } from '../../components/catalyst/badge';
-import Button from '../../components/Button.astro';
+import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
+import PagesTable from '../../components/admin/PagesTable';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -63,14 +63,6 @@ if (import.meta.env.ADMIN_API_KEY) {
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
 
-const formatDate = (dateStr: string) => {
-	return new Date(dateStr).toLocaleDateString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit'
-	});
-};
-
 const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 ---
 
@@ -81,134 +73,102 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 				<Heading>Pages</Heading>
 				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
 			</div>
-			<Button href="/admin/pages/new" size="sm" variant="primary">
+			<Button href="/admin/pages/new" color="indigo" client:load>
 				+ New Page
 			</Button>
 		</div>
-			{/* Search & Filter */}
-			<div class="mb-6 flex flex-col sm:flex-row gap-4">
-				<form method="get" class="relative flex-1 max-w-md">
-					<input
-						type="search"
-						name="q"
-						value={q}
-						placeholder="Search by title or slug..."
-						class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
-					/>
-					<input type="hidden" name="status" value={status} />
-					<svg
-						class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-				</form>
-				<div class="flex gap-2">
-					<a
-						href={`?q=${q}&status=all`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
-					>
-						All
-					</a>
-					<a
-						href={`?q=${q}&status=published`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'published' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
-					>
-						Published
-					</a>
-					<a
-						href={`?q=${q}&status=draft`}
-						class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
-					>
-						Draft
-					</a>
-				</div>
+
+		{/* Search & Filter */}
+		<div class="mb-6 flex flex-col sm:flex-row gap-4">
+			<form method="get" class="relative flex-1 max-w-md">
+				<input
+					type="search"
+					name="q"
+					value={q}
+					placeholder="Search by title or slug..."
+					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
+				/>
+				<input type="hidden" name="status" value={status} />
+				<svg
+					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+				</svg>
+			</form>
+			<div class="flex gap-2">
+				<a
+					href={`?q=${q}&status=all`}
+					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+				>
+					All
+				</a>
+				<a
+					href={`?q=${q}&status=published`}
+					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'published' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+				>
+					Published
+				</a>
+				<a
+					href={`?q=${q}&status=draft`}
+					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
+				>
+					Draft
+				</a>
 			</div>
+		</div>
 
-			{error && (
-				<Alert color="red" client:load>
-					{error}
-				</Alert>
-			)}
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
 
-			{/* Pages Table */}
-			<div class="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-				<div class="overflow-x-auto">
-					<table class="w-full text-left text-sm text-zinc-950">
-						<thead class="bg-zinc-50 border-b border-zinc-200">
-							<tr>
-								<th class="px-6 py-3 font-medium text-zinc-500">Title</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Slug</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Status</th>
-								<th class="px-6 py-3 font-medium text-zinc-500">Updated</th>
-								<th class="px-6 py-3 font-medium text-zinc-500 text-right">Action</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-zinc-100">
-							{pages.length > 0 ? (
-								pages.map((p) => (
-									<tr class="hover:bg-zinc-50 transition-colors group">
-										<td class="px-6 py-4">
-											<div class="font-medium">{p.title}</div>
-											{CORE_SLUGS.includes(p.slug) && (
-												<span class="text-xs text-zinc-500">Core page</span>
-											)}
-										</td>
-										<td class="px-6 py-4">
-											<code class="text-xs bg-zinc-100 px-2 py-1 rounded">/{p.slug}</code>
-										</td>
-										<td class="px-6 py-4">
-											{p.status === 'published' ? (
-												<Badge color="lime" client:only="react">Published</Badge>
-											) : (
-												<Badge color="zinc" client:only="react">Draft</Badge>
-											)}
-										</td>
-										<td class="px-6 py-4 text-zinc-500 tabular-nums">
-											{formatDate(p.updated_at)}
-										</td>
-										<td class="px-6 py-4 text-right">
-											<a href={`/admin/pages/${p.id}`} class="text-indigo-600 hover:underline font-medium">Edit</a>
-										</td>
-									</tr>
-								))
-							) : (
-								<tr>
-									<td colspan="5" class="px-6 py-12 text-center text-zinc-500">
-										No pages found.
-									</td>
-								</tr>
-							)}
-						</tbody>
-					</table>
-				</div>
+		{/* Pages Table */}
+		<PagesTable client:only="react" pages={pages} coreSlugs={CORE_SLUGS} />
 
-				{/* Pagination */}
-				<div class="border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
-					<div class="text-xs text-zinc-500">
-						Page {page} of {meta.totalPages}
-					</div>
-					<div class="flex gap-2">
-						<Button
-							href={hasPrev ? `?page=${page - 1}&q=${q}&status=${status}` : '#'}
-							disabled={!hasPrev}
-							size="sm"
-							variant="secondary"
-						>
-							Previous
-						</Button>
-						<Button
-							href={hasNext ? `?page=${page + 1}&q=${q}&status=${status}` : '#'}
-							disabled={!hasNext}
-							size="sm"
-							variant="secondary"
-						>
-							Next
-						</Button>
-					</div>
-				</div>
+		{/* Pagination */}
+		<div class="flex items-center justify-between">
+			<div class="text-xs text-zinc-500">
+				Page {page} of {meta.totalPages}
+			</div>
+			<div class="flex gap-2">
+				{hasPrev ? (
+					<Button
+						href={`?page=${page - 1}&q=${q}&status=${status}`}
+						outline
+						client:load
+					>
+						Previous
+					</Button>
+				) : (
+					<Button
+						plain
+						disabled
+						client:load
+					>
+						Previous
+					</Button>
+				)}
+				{hasNext ? (
+					<Button
+						href={`?page=${page + 1}&q=${q}&status=${status}`}
+						outline
+						client:load
+					>
+						Next
+					</Button>
+				) : (
+					<Button
+						plain
+						disabled
+						client:load
+					>
+						Next
+					</Button>
+				)}
 			</div>
 		</div>
 	</div>

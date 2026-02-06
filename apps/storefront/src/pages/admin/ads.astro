@@ -5,7 +5,7 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Button } from '../../components/catalyst/button';
 import { Badge } from '../../components/catalyst/badge';
-import { Fieldset, Field, Label } from '../../components/catalyst/fieldset';
+import { Fieldset, Field } from '../../components/catalyst/fieldset';
 import { Heading } from '../../components/catalyst/heading';
 import { Input } from '../../components/catalyst/input';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
@@ -96,7 +96,7 @@ const hasNext = page < totalPages;
       <form method="GET" class="space-y-4">
         <Fieldset client:load>
           <Field>
-            <Label>Search</Label>
+            <label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Search</label>
             <Input
               type="text"
               name="q"
@@ -179,7 +179,7 @@ const hasNext = page < totalPages;
       ) : (
         <>
           <div class="overflow-x-auto">
-            <Table client:load>
+            <Table client:only="react">
               <TableHead>
                 <TableRow>
                   <TableHeader>Campaign</TableHeader>

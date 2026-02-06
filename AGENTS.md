@@ -1,34 +1,42 @@
-# AGENTS
+# Repository Guidelines
 
-## Repo invariants
-- Monorepo layout must stay: `apps/api`, `apps/storefront`, `migrations`.
-- Package manager is pnpm; do not replace with npm/yarn.
+## Project Structure & Module Organization
+- `apps/api`: Cloudflare Workers + Hono API (TypeScript). Core code is in `apps/api/src`, organized by domain (`routes/`, `services/`, `lib/`, `middleware/`, `__tests__/`).
+- `apps/storefront`: Astro SSR storefront/admin app. Main code is in `apps/storefront/src` (`components/`, `pages/`, `layouts/`, `lib/`, `styles/`).
+- `migrations/` and `apps/api/migrations/`: D1 schema and migration SQL.
+- `docs/`: deployment and operational runbooks. `scripts/`: local/dev automation and smoke helpers.
+- `.github/workflows/`: CI and deployment pipelines; treat these as the source of truth for required checks.
 
-## Secrets policy
-- Never commit secrets or API keys to tracked files.
-- Use `.dev.vars` for Wrangler dev and `.env` for app configs; only `.env.example`/`.dev.vars.example` are tracked.
+## Build, Test, and Development Commands
+- `pnpm env:setup`: create local env files from templates.
+- `pnpm db:migrate`: apply local D1 migrations.
+- `pnpm dev`: run API (`:8787`) and storefront (`:4321`) together.
+- `pnpm dev:api` / `pnpm dev:store`: run each app independently.
+- `pnpm build`: build both apps; use `pnpm build:api` or `pnpm build:store` for scoped builds.
+- `pnpm test`: run API tests from repo root.
+- `pnpm -C apps/api test:coverage`: API coverage report (text/json/html).
+- `pnpm -C apps/storefront test`: storefront Vitest suite.
 
-## Dependency workflow
-- Keep npm globally updated: `npm i -g npm@latest`.
-- Install/update via pnpm and commit lockfile changes as needed.
-- Avoid unnecessary dependency churn.
+## Coding Style & Naming Conventions
+- Language: TypeScript/ESM. Follow existing style in touched files; avoid unrelated reformatting.
+- Use `camelCase` for functions/variables, `PascalCase` for React/Astro component files, and descriptive route files like `adminProducts.ts`.
+- API responses should use shared helpers (`jsonOk`, `jsonError`) rather than ad-hoc shapes.
+- Keep modules domain-focused: route handlers in `routes/*`, business logic in `services/*`, shared utilities in `lib/*`.
 
-## Migrations
-- Add new migrations under `migrations/` with incremental numbering.
-- Verify local D1 with `pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local`.
+## Testing Guidelines
+- Framework: Vitest in both apps.
+- API tests: `apps/api/src/__tests__/**/*.test.ts`; integration tests must end with `*.integration.test.ts`.
+- API coverage thresholds are enforced at 50% (lines/functions/branches/statements).
+- Storefront tests live near source as `src/**/*.test.ts`.
+- Add or update tests with every behavior change, especially for routes, services, and checkout/payment flows.
 
-## Testing rules
-- Always add or update tests with changes.
-- Documentation-only changes may skip tests, but note the omission in the final summary.
-- Run and pass:
-  - `pnpm -C apps/api test`
-  - `pnpm -C apps/storefront build` (or tests if added)
+## Commit & Pull Request Guidelines
+- Follow Conventional Commit style seen in history: `feat:`, `fix:`, `refactor:`, `test:`.
+- Prefer concise, imperative subjects; include issue/PR refs when relevant (example: `feat: add X (Issue #123)`).
+- PRs should include: scope summary, linked issue, test commands run, and screenshots/GIFs for UI changes.
+- Ensure CI-equivalent checks pass locally before review (`typecheck`, tests, build).
 
-## Post-change checklist
-- `pnpm -C apps/api install`
-- `pnpm -C apps/api test`
-- `pnpm -C apps/storefront install`
-- `pnpm -C apps/storefront build`
-
-## Documentation hygiene
-- When you change API surface area or env vars, update README.md and PLANS.md accordingly.
+## Security & Configuration Tips
+- Never commit secrets (`.dev.vars`, `.env`); keep local values in ignored files and use `.dev.vars.example` as a template.
+- For production, use Wrangler/Cloudflare secrets, not plaintext files.
+- Dev seed endpoints are for local mode only (`DEV_MODE=true`).

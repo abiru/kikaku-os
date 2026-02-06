@@ -1,10 +1,12 @@
 ---
 export const prerender = false;
 
-import { Badge } from '../../components/catalyst/badge';
+import { Alert } from '../../components/catalyst/alert-banner';
 import { Button } from '../../components/catalyst/button';
+import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
+import HomeHeroesPage from '../../components/admin/HomeHeroesPage';
 
 const apiBase = getApiBase();
 const status = Astro.url.searchParams.get('status') || 'all';
@@ -47,14 +49,15 @@ if (import.meta.env.ADMIN_API_KEY) {
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
+const apiKey = import.meta.env.ADMIN_API_KEY || '';
 ---
 
 <AdminLayout title="Home Heroes - Admin">
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<h1 class="text-2xl font-semibold text-gray-900">Home Hero Sections</h1>
-				<span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				<Heading>Home Hero Sections</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
 			</div>
 			<Button href="/admin/home-heroes/new" color="indigo" client:load>
 				+ New Hero Section
@@ -65,186 +68,78 @@ const hasPrev = page > 1;
 		<div class="flex gap-2">
 			<a
 				href="?status=all"
-				class={`px-4 py-2 text-sm rounded-lg ${status === 'all' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 			>
 				All
 			</a>
 			<a
 				href="?status=active"
-				class={`px-4 py-2 text-sm rounded-lg ${status === 'active' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'active' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 			>
 				Active
 			</a>
 			<a
 				href="?status=draft"
-				class={`px-4 py-2 text-sm rounded-lg ${status === 'draft' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 			>
 				Draft
 			</a>
 			<a
 				href="?status=archived"
-				class={`px-4 py-2 text-sm rounded-lg ${status === 'archived' ? 'bg-[#0071e3] text-white' : 'bg-gray-100 text-[#1d1d1f]'}`}
+				class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'archived' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 			>
 				Archived
 			</a>
 		</div>
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+			<Alert color="red" client:load>
 				{error}
-			</div>
+			</Alert>
 		)}
 
-		{/* Hero Sections Table */}
-		<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-			<div class="overflow-x-auto">
-				<table class="w-full text-left text-sm text-[#1d1d1f]">
-					<thead class="bg-gray-50 border-b border-gray-200">
-						<tr>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Position</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Title</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Status</th>
-							<th class="px-6 py-3 font-medium text-[#86868b]">Updated</th>
-							<th class="px-6 py-3 font-medium text-[#86868b] text-right">Action</th>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-gray-100">
-						{heroes.length > 0 ? (
-							heroes.map((hero) => (
-								<tr class="hover:bg-gray-50 transition-colors group">
-									<td class="px-6 py-4">
-										<span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-xs font-medium">
-											{hero.position}
-										</span>
-									</td>
-									<td class="px-6 py-4">
-										<div class="font-medium">{hero.title}</div>
-										<div class="text-xs text-[#86868b] truncate max-w-xs">{hero.subtitle}</div>
-									</td>
-									<td class="px-6 py-4">
-										{hero.status === 'draft' ? (
-											<Badge color="zinc" client:load>Draft</Badge>
-										) : hero.status === 'archived' ? (
-											<Badge color="red" client:load>Archived</Badge>
-										) : (
-											<Badge color="blue" client:load>Active</Badge>
-										)}
-									</td>
-									<td class="px-6 py-4 text-[#86868b] tabular-nums">
-										{new Date(hero.updated_at).toLocaleDateString('ja-JP')}
-									</td>
-									<td class="px-6 py-4 text-right">
-										<div class="flex items-center justify-end gap-2">
-											<a
-												href={`/admin/home-heroes/${hero.id}`}
-												class="text-[#0071e3] hover:underline text-xs font-medium"
-											>
-												Edit
-											</a>
-											{hero.status !== 'archived' && (
-												<button
-													data-id={hero.id}
-													data-action="archive"
-													class="archive-btn text-red-600 hover:underline text-xs font-medium"
-												>
-													Archive
-												</button>
-											)}
-											{hero.status === 'archived' && (
-												<button
-													data-id={hero.id}
-													data-action="restore"
-													class="restore-btn text-green-600 hover:underline text-xs font-medium"
-												>
-													Restore
-												</button>
-											)}
-										</div>
-									</td>
-								</tr>
-							))
-						) : (
-							<tr>
-								<td colspan="5" class="px-6 py-8 text-center text-[#86868b]">
-									No hero sections found. Create your first one!
-								</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
-			</div>
-		</div>
+		<HomeHeroesPage
+			client:only="react"
+			heroes={heroes}
+			apiBase={apiBase}
+			apiKey={apiKey}
+		/>
 
 		{/* Pagination */}
 		{meta.totalPages > 1 && (
 			<div class="flex items-center justify-between">
-				<div class="text-sm text-[#86868b]">
+				<div class="text-sm text-zinc-500">
 					Page {page} of {meta.totalPages}
 				</div>
 				<div class="flex gap-2">
-					{hasPrev && (
-						<a
+					{hasPrev ? (
+						<Button
 							href={`?status=${status}&page=${page - 1}`}
-							class="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg text-[#1d1d1f] hover:bg-gray-50"
+							outline
+							client:load
 						>
-							← Previous
-						</a>
+							Previous
+						</Button>
+					) : (
+						<Button plain disabled client:load>
+							Previous
+						</Button>
 					)}
-					{hasNext && (
-						<a
+					{hasNext ? (
+						<Button
 							href={`?status=${status}&page=${page + 1}`}
-							class="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg text-[#1d1d1f] hover:bg-gray-50"
+							outline
+							client:load
 						>
-							Next →
-						</a>
+							Next
+						</Button>
+					) : (
+						<Button plain disabled client:load>
+							Next
+						</Button>
 					)}
 				</div>
 			</div>
 		)}
 	</div>
 </AdminLayout>
-
-<script define:vars={{ apiBase, adminKey: import.meta.env.ADMIN_API_KEY }}>
-	document.querySelectorAll('.archive-btn').forEach(btn => {
-		btn.addEventListener('click', async (e) => {
-			const id = e.target.dataset.id;
-			if (!confirm('Archive this hero section?')) return;
-
-			try {
-				const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-					method: 'DELETE',
-					headers: { 'x-admin-key': adminKey }
-				});
-
-				if (res.ok) {
-					window.location.reload();
-				} else {
-					alert('Failed to archive hero section');
-				}
-			} catch (error) {
-				alert('Error: ' + error.message);
-			}
-		});
-	});
-
-	document.querySelectorAll('.restore-btn').forEach(btn => {
-		btn.addEventListener('click', async (e) => {
-			const id = e.target.dataset.id;
-
-			try {
-				const res = await fetch(`${apiBase}/admin/home/heroes/${id}/restore`, {
-					method: 'POST',
-					headers: { 'x-admin-key': adminKey }
-				});
-
-				if (res.ok) {
-					window.location.reload();
-				} else {
-					alert('Failed to restore hero section');
-				}
-			} catch (error) {
-				alert('Error: ' + error.message);
-			}
-		});
-	});
-</script>
