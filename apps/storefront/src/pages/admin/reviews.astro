@@ -1,0 +1,13 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import ReviewsTable from '../../components/admin/ReviewsTable';
+import { getApiBase } from '../../lib/api';
+
+const apiBase = getApiBase();
+---
+
+<AdminLayout title="Reviews - Admin">
+	<ReviewsTable apiBase={apiBase} client:load />
+</AdminLayout>

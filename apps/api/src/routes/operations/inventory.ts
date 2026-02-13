@@ -15,14 +15,18 @@ inventory.get('/inventory/low', async (c) => {
     const res = await c.env.DB.prepare(
       `SELECT t.variant_id as variant_id,
               COALESCE(SUM(m.delta), 0) as on_hand,
-              t.threshold as threshold
+              t.threshold as threshold,
+              v.title as variant_title,
+              p.title as product_title
        FROM inventory_thresholds t
        LEFT JOIN inventory_movements m ON m.variant_id = t.variant_id
+       LEFT JOIN variants v ON v.id = t.variant_id
+       LEFT JOIN products p ON p.id = v.product_id
        GROUP BY t.variant_id
        HAVING on_hand < t.threshold
        ORDER BY (t.threshold - on_hand) DESC
        LIMIT ?`
-    ).bind(limit).all<{ variant_id: number; on_hand: number; threshold: number }>();
+    ).bind(limit).all<{ variant_id: number; on_hand: number; threshold: number; variant_title: string | null; product_title: string | null }>();
     return jsonOk(c, { items: res.results || [] });
   } catch (err) {
     console.error(err);

@@ -121,7 +121,12 @@ const formatPrice = (amount: number, currency: string) => {
 
 				{/* Next Actions */}
 				<div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-					<Button href="/products" color="indigo" client:load>
+					{orderId && (
+						<Button href={`/orders/${orderId}`} color="indigo" client:load>
+							{t('orderTracking.viewOrder')}
+						</Button>
+					)}
+					<Button href="/products" outline client:load>
 						{t('cart.continueShopping')}
 					</Button>
 					<Button href="/" plain client:load>

@@ -1,0 +1,49 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { Alert } from '../../../components/catalyst/alert-banner';
+import InquiryDetail from '../../../components/admin/InquiryDetail';
+import { getApiBase } from '../../../lib/api';
+
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+const { id } = Astro.params;
+
+let inquiry: any = null;
+let error = null;
+
+if (apiKey && id) {
+	try {
+		const res = await fetch(`${apiBase}/admin/inquiries/${id}`, {
+			headers: { 'x-admin-key': apiKey },
+		});
+		if (!res.ok) throw new Error(`API Error: ${res.status}`);
+		const data = await res.json();
+		inquiry = data.inquiry || null;
+	} catch (e) {
+		console.error(e);
+		error = 'お問い合わせの読み込みに失敗しました。';
+	}
+} else if (!apiKey) {
+	error = 'ADMIN_API_KEY is missing.';
+}
+---
+
+<AdminLayout title={inquiry ? `お問い合わせ #${id} - Admin` : 'お問い合わせ - Admin'}>
+	<div class="space-y-6 max-w-3xl">
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
+
+		{inquiry ? (
+			<InquiryDetail client:load inquiry={inquiry} apiBase={apiBase} />
+		) : !error ? (
+			<Alert color="amber" client:load>
+				お問い合わせが見つかりません。
+			</Alert>
+		) : null}
+	</div>
+</AdminLayout>

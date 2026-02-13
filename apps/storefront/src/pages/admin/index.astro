@@ -50,8 +50,18 @@ type AnalyticsData = {
 	};
 };
 
+type LowStockItem = {
+	variant_id: number;
+	on_hand: number;
+	threshold: number;
+	variant_title?: string;
+	product_title?: string;
+};
+
 let data: DashboardData | null = null;
 let analyticsData: AnalyticsData | null = null;
+let lowStockItems: LowStockItem[] = [];
+let lowStockCount = 0;
 let error: string | null = null;
 
 // Get period from query params (default: 7 days)
@@ -73,12 +83,15 @@ const periodLabels: Record<number, string> = {
 
 if (import.meta.env.ADMIN_API_KEY) {
 	try {
-		// Fetch dashboard data and analytics in parallel
-		const [dashboardRes, analyticsRes] = await Promise.all([
+		// Fetch dashboard data, analytics, and low stock in parallel
+		const [dashboardRes, analyticsRes, lowStockRes] = await Promise.all([
 			fetch(`${apiBase}/admin/dashboard`, {
 				headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
 			}),
 			fetch(`${apiBase}/admin/analytics?from=${fromStr}&to=${todayStr}`, {
+				headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+			}),
+			fetch(`${apiBase}/inventory/low?limit=10`, {
 				headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
 			})
 		]);
@@ -92,6 +105,12 @@ if (import.meta.env.ADMIN_API_KEY) {
 		data = dashboardJson as DashboardData;
 		if (analyticsJson.ok) {
 			analyticsData = analyticsJson as AnalyticsData;
+		}
+
+		if (lowStockRes.ok) {
+			const lowStockJson = await lowStockRes.json() as { items?: LowStockItem[] };
+			lowStockItems = lowStockJson.items || [];
+			lowStockCount = lowStockItems.length;
 		}
 	} catch (e) {
 		console.error(e);
@@ -328,6 +347,45 @@ const getStatusColor = (status: string) => {
 							</Alert>
 						</Alert>
 					</Alert>
+
+					{/* Low Stock Alerts */}
+					{lowStockCount > 0 && (
+						<div class="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+							<div class="px-6 py-4 border-b border-amber-100 flex items-center justify-between bg-amber-50">
+								<div class="flex items-center gap-2">
+									<svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+									</svg>
+									<Subheading>Low Stock Alerts</Subheading>
+									<Badge client:load color="amber">{lowStockCount}</Badge>
+								</div>
+								<Button client:load href="/admin/inventory?status=low" plain>View All</Button>
+							</div>
+							<div class="divide-y divide-zinc-100">
+								{lowStockItems.slice(0, 5).map((item) => (
+									<div class="flex items-center justify-between px-6 py-3">
+										<div class="flex flex-col">
+											<span class="text-sm font-medium text-zinc-950">
+												{item.product_title || `Variant #${item.variant_id}`}
+											</span>
+											{item.variant_title && (
+												<span class="text-xs text-zinc-500">{item.variant_title}</span>
+											)}
+										</div>
+										<div class="flex items-center gap-3">
+											<div class="text-right">
+												<span class="text-sm font-semibold tabular-nums text-zinc-950">{item.on_hand}</span>
+												<span class="text-xs text-zinc-500"> / {item.threshold}</span>
+											</div>
+											<Badge client:load color={item.on_hand <= 0 ? 'red' : 'amber'}>
+												{item.on_hand <= 0 ? 'Out' : 'Low'}
+											</Badge>
+										</div>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
 				</>
 			)}
 	</Alert>

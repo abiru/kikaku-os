@@ -3,7 +3,8 @@ import { zValidator } from '@hono/zod-validator';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { validationErrorHandler } from '../../lib/validation';
-import { orderIdParamSchema, orderListQuerySchema } from '../../lib/schemas';
+import { getActor } from '../../middleware/clerkAuth';
+import { orderIdParamSchema, orderListQuerySchema, createRefundSchema } from '../../lib/schemas';
 
 const adminOrders = new Hono<Env>();
 
@@ -74,7 +75,9 @@ adminOrders.get('/admin/orders/ready-to-ship', async (c) => {
               o.total_net as total,
               o.paid_at as paid_at,
               f.id as fulfillment_id,
-              f.status as fulfillment_status
+              f.status as fulfillment_status,
+              f.tracking_number,
+              f.metadata as fulfillment_metadata
        FROM orders o
        LEFT JOIN customers c ON c.id = o.customer_id
        LEFT JOIN fulfillments f ON f.order_id = o.id
@@ -89,9 +92,33 @@ adminOrders.get('/admin/orders/ready-to-ship', async (c) => {
         paid_at: string | null;
         fulfillment_id: number | null;
         fulfillment_status: string | null;
+        tracking_number: string | null;
+        fulfillment_metadata: string | null;
       }>();
 
-    return jsonOk(c, { orders: res.results || [] });
+    const orders = (res.results || []).map((row) => {
+      let carrier: string | null = null;
+      if (row.fulfillment_metadata) {
+        try {
+          const meta = JSON.parse(row.fulfillment_metadata);
+          carrier = meta.carrier || null;
+        } catch {
+          // ignore
+        }
+      }
+      return {
+        order_id: row.order_id,
+        customer_email: row.customer_email,
+        total: row.total,
+        paid_at: row.paid_at,
+        fulfillment_id: row.fulfillment_id,
+        fulfillment_status: row.fulfillment_status,
+        tracking_number: row.tracking_number,
+        carrier,
+      };
+    });
+
+    return jsonOk(c, { orders });
   } catch (err) {
     console.error(err);
     return jsonError(c, 'Failed to fetch ready-to-ship orders');
@@ -165,6 +192,135 @@ adminOrders.get(
     } catch (err) {
       console.error(err);
       return jsonError(c, 'Failed to fetch order details');
+    }
+  }
+);
+
+// Create Refund for Order
+adminOrders.post(
+  '/admin/orders/:id/refunds',
+  zValidator('param', orderIdParamSchema, validationErrorHandler),
+  zValidator('json', createRefundSchema, validationErrorHandler),
+  async (c) => {
+    const { id: orderId } = c.req.valid('param');
+    const { amount, reason } = c.req.valid('json');
+
+    try {
+      // Get order
+      const order = await c.env.DB.prepare(
+        'SELECT id, status, total_net, currency FROM orders WHERE id = ?'
+      ).bind(orderId).first<{ id: number; status: string; total_net: number; currency: string }>();
+
+      if (!order) {
+        return jsonError(c, 'Order not found', 404);
+      }
+
+      if (order.status !== 'paid' && order.status !== 'partially_refunded') {
+        return jsonError(c, 'Order is not eligible for refund', 400);
+      }
+
+      // Get payment with Stripe payment intent ID
+      const payment = await c.env.DB.prepare(
+        'SELECT id, provider_payment_id, amount FROM payments WHERE order_id = ? AND status = ? ORDER BY created_at DESC LIMIT 1'
+      ).bind(orderId, 'succeeded').first<{ id: number; provider_payment_id: string | null; amount: number }>();
+
+      if (!payment || !payment.provider_payment_id) {
+        return jsonError(c, 'No successful payment found for this order', 400);
+      }
+
+      // Calculate already refunded amount
+      const refundedRes = await c.env.DB.prepare(
+        `SELECT COALESCE(SUM(r.amount), 0) as total_refunded
+         FROM refunds r
+         WHERE r.payment_id = ? AND r.status IN ('succeeded', 'pending')`
+      ).bind(payment.id).first<{ total_refunded: number }>();
+
+      const alreadyRefunded = refundedRes?.total_refunded ?? 0;
+      const maxRefundable = payment.amount - alreadyRefunded;
+
+      if (maxRefundable <= 0) {
+        return jsonError(c, 'This order has already been fully refunded', 400);
+      }
+
+      const refundAmount = amount ?? maxRefundable;
+
+      if (refundAmount > maxRefundable) {
+        return jsonError(c, `Refund amount exceeds maximum refundable amount (${maxRefundable} ${order.currency})`, 400);
+      }
+
+      // Call Stripe Refunds API
+      const stripeKey = c.env.STRIPE_SECRET_KEY ?? c.env.STRIPE_API_KEY;
+      if (!stripeKey) {
+        return jsonError(c, 'Stripe API key not configured', 500);
+      }
+
+      const params = new URLSearchParams();
+      params.set('payment_intent', payment.provider_payment_id);
+      params.set('amount', String(refundAmount));
+      params.set('reason', 'requested_by_customer');
+      params.set('metadata[reason]', reason);
+      params.set('metadata[order_id]', String(orderId));
+      params.set('metadata[actor]', getActor(c));
+
+      const stripeRes = await fetch('https://api.stripe.com/v1/refunds', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${stripeKey}`,
+          'content-type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      });
+
+      if (!stripeRes.ok) {
+        const errorBody = await stripeRes.text();
+        console.error('Stripe refund failed:', errorBody);
+        return jsonError(c, 'Failed to create refund with Stripe', 500);
+      }
+
+      const stripeRefund = await stripeRes.json() as { id: string; status: string; amount: number };
+
+      // Insert refund record (webhook will also handle this, but we record immediately for UI feedback)
+      await c.env.DB.prepare(
+        `INSERT INTO refunds (payment_id, status, amount, currency, reason, provider_refund_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      ).bind(
+        payment.id,
+        stripeRefund.status === 'succeeded' ? 'succeeded' : 'pending',
+        refundAmount,
+        order.currency,
+        reason,
+        stripeRefund.id
+      ).run();
+
+      // Update order refund tracking
+      const newRefundedTotal = alreadyRefunded + refundAmount;
+      const newStatus = newRefundedTotal >= payment.amount ? 'refunded' : 'partially_refunded';
+
+      await c.env.DB.prepare(
+        `UPDATE orders SET refunded_amount = ?, refund_count = refund_count + 1, status = ?, updated_at = datetime('now') WHERE id = ?`
+      ).bind(newRefundedTotal, newStatus, orderId).run();
+
+      // Audit log
+      await c.env.DB.prepare(
+        'INSERT INTO audit_logs (actor, action, target, metadata) VALUES (?, ?, ?, ?)'
+      ).bind(
+        getActor(c),
+        'create_refund',
+        `order:${orderId}`,
+        JSON.stringify({ amount: refundAmount, reason, stripe_refund_id: stripeRefund.id })
+      ).run();
+
+      return jsonOk(c, {
+        refund: {
+          id: stripeRefund.id,
+          amount: refundAmount,
+          status: stripeRefund.status,
+          reason,
+        },
+      });
+    } catch (err) {
+      console.error('Refund creation error:', err);
+      return jsonError(c, 'Failed to create refund');
     }
   }
 );

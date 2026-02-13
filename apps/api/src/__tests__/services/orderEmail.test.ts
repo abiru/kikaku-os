@@ -3,6 +3,12 @@ import {
   sendOrderConfirmationEmail,
   sendShippingNotificationEmail,
   getOrderWithCustomer,
+  getOrderItems,
+  buildOrderItemsHtml,
+  buildOrderItemsText,
+  buildShippingAddressHtml,
+  buildShippingAddressText,
+  OrderItem,
 } from '../../services/orderEmail';
 
 // Mock the email service
@@ -14,7 +20,10 @@ vi.mock('../../services/email', () => ({
 
 import { sendEmail, getEmailTemplate, renderTemplate } from '../../services/email';
 
-const createMockDB = () => {
+const createMockDB = (options?: {
+  orderItems?: OrderItem[];
+  orderMetadata?: string | null;
+}) => {
   const orders: Record<number, any> = {
     1: {
       id: 1,
@@ -25,6 +34,7 @@ const createMockDB = () => {
       customer_id: 1,
       customer_name: '田中太郎',
       customer_email: 'tanaka@example.com',
+      metadata: options?.orderMetadata ?? null,
     },
     2: {
       id: 2,
@@ -35,8 +45,11 @@ const createMockDB = () => {
       customer_id: null,
       customer_name: null,
       customer_email: null,
+      metadata: null,
     },
   };
+
+  const items = options?.orderItems ?? [];
 
   return {
     prepare: vi.fn((sql: string) => ({
@@ -47,6 +60,12 @@ const createMockDB = () => {
             return orders[orderId] || null;
           }
           return null;
+        }),
+        all: vi.fn(async () => {
+          if (sql.includes('FROM order_items')) {
+            return { results: items };
+          }
+          return { results: [] };
         }),
       })),
     })),
@@ -71,6 +90,149 @@ describe('getOrderWithCustomer', () => {
     const result = await getOrderWithCustomer(env as any, 999);
 
     expect(result).toBeNull();
+  });
+});
+
+describe('getOrderItems', () => {
+  it('returns order items', async () => {
+    const items: OrderItem[] = [
+      { product_title: 'LED照明', variant_title: 'Default', quantity: 2, unit_price: 3000 },
+      { product_title: 'ケーブル', variant_title: '1m', quantity: 1, unit_price: 500 },
+    ];
+    const mockDB = createMockDB({ orderItems: items });
+    const env = { DB: mockDB };
+
+    const result = await getOrderItems(env as any, 1);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].product_title).toBe('LED照明');
+    expect(result[1].variant_title).toBe('1m');
+  });
+
+  it('returns empty array when no items', async () => {
+    const mockDB = createMockDB({ orderItems: [] });
+    const env = { DB: mockDB };
+
+    const result = await getOrderItems(env as any, 1);
+
+    expect(result).toHaveLength(0);
+  });
+});
+
+describe('buildOrderItemsHtml', () => {
+  it('renders items as HTML table', () => {
+    const items: OrderItem[] = [
+      { product_title: 'LED照明', variant_title: 'Default', quantity: 2, unit_price: 3000 },
+      { product_title: 'ケーブル', variant_title: '1m', quantity: 1, unit_price: 500 },
+    ];
+
+    const html = buildOrderItemsHtml(items, 'JPY');
+
+    expect(html).toContain('<table');
+    expect(html).toContain('LED照明');
+    expect(html).toContain('ケーブル - 1m');
+    expect(html).toContain('商品名');
+    expect(html).toContain('数量');
+    expect(html).toContain('単価');
+    expect(html).toContain('小計');
+  });
+
+  it('uses product title only when variant is Default', () => {
+    const items: OrderItem[] = [
+      { product_title: 'LED照明', variant_title: 'Default', quantity: 1, unit_price: 3000 },
+    ];
+
+    const html = buildOrderItemsHtml(items, 'JPY');
+
+    expect(html).toContain('LED照明');
+    expect(html).not.toContain('Default');
+  });
+
+  it('returns empty string for empty items', () => {
+    const html = buildOrderItemsHtml([], 'JPY');
+    expect(html).toBe('');
+  });
+});
+
+describe('buildOrderItemsText', () => {
+  it('renders items as plain text list', () => {
+    const items: OrderItem[] = [
+      { product_title: 'LED照明', variant_title: 'Default', quantity: 2, unit_price: 3000 },
+      { product_title: 'ケーブル', variant_title: '1m', quantity: 1, unit_price: 500 },
+    ];
+
+    const text = buildOrderItemsText(items, 'JPY');
+
+    expect(text).toContain('LED照明 x2');
+    expect(text).toContain('ケーブル - 1m x1');
+    expect(text).toContain('6,000円');
+    expect(text).toContain('500円');
+  });
+
+  it('returns empty string for empty items', () => {
+    const text = buildOrderItemsText([], 'JPY');
+    expect(text).toBe('');
+  });
+});
+
+describe('buildShippingAddressHtml', () => {
+  it('renders full shipping address', () => {
+    const shipping = {
+      name: '田中太郎',
+      address: {
+        postal_code: '100-0001',
+        state: '東京都',
+        city: '千代田区',
+        line1: '丸の内1-1-1',
+        line2: 'ビル5F',
+      },
+      phone: '03-1234-5678',
+    };
+
+    const html = buildShippingAddressHtml(shipping);
+
+    expect(html).toContain('配送先');
+    expect(html).toContain('田中太郎');
+    expect(html).toContain('〒100-0001');
+    expect(html).toContain('東京都');
+    expect(html).toContain('丸の内1-1-1');
+    expect(html).toContain('TEL: 03-1234-5678');
+  });
+
+  it('handles partial address', () => {
+    const shipping = { name: '田中太郎' };
+
+    const html = buildShippingAddressHtml(shipping);
+
+    expect(html).toContain('田中太郎');
+    expect(html).not.toContain('〒');
+  });
+});
+
+describe('buildShippingAddressText', () => {
+  it('renders full shipping address as text', () => {
+    const shipping = {
+      name: '田中太郎',
+      address: {
+        postal_code: '100-0001',
+        state: '東京都',
+        city: '千代田区',
+        line1: '丸の内1-1-1',
+      },
+      phone: '03-1234-5678',
+    };
+
+    const text = buildShippingAddressText(shipping);
+
+    expect(text).toContain('配送先:');
+    expect(text).toContain('田中太郎');
+    expect(text).toContain('〒100-0001');
+    expect(text).toContain('TEL: 03-1234-5678');
+  });
+
+  it('returns empty string for empty shipping', () => {
+    const text = buildShippingAddressText({});
+    expect(text).toBe('');
   });
 });
 
@@ -99,21 +261,11 @@ describe('sendOrderConfirmationEmail', () => {
     expect(result.error).toBe('Customer email not found');
   });
 
-  it('returns error when email template is not found', async () => {
-    const mockDB = createMockDB();
-    const env = { DB: mockDB };
-
-    vi.mocked(getEmailTemplate).mockResolvedValue(null);
-
-    const result = await sendOrderConfirmationEmail(env as any, 1);
-
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Email template not found');
-    expect(getEmailTemplate).toHaveBeenCalledWith(env, 'order-confirmation');
-  });
-
-  it('sends order confirmation email successfully', async () => {
-    const mockDB = createMockDB();
+  it('sends email with DB template when available', async () => {
+    const items: OrderItem[] = [
+      { product_title: 'LED照明', variant_title: 'Default', quantity: 1, unit_price: 10000 },
+    ];
+    const mockDB = createMockDB({ orderItems: items });
     const env = { DB: mockDB };
 
     const mockTemplate = {
@@ -121,9 +273,9 @@ describe('sendOrderConfirmationEmail', () => {
       slug: 'order-confirmation',
       name: 'Order Confirmation',
       subject: 'ご注文確認 #{{order_number}}',
-      body_html: '<p>{{customer_name}}様、ご注文ありがとうございます。</p>',
-      body_text: '{{customer_name}}様、ご注文ありがとうございます。',
-      variables: '["customer_name", "order_number"]',
+      body_html: '<p>{{customer_name}}様、ご注文ありがとうございます。{{items_html}}</p>',
+      body_text: '{{customer_name}}様、ご注文ありがとうございます。{{items_text}}',
+      variables: '["customer_name", "order_number", "items_html", "items_text"]',
       created_at: '2025-01-01',
       updated_at: '2025-01-01',
     };
@@ -140,11 +292,124 @@ describe('sendOrderConfirmationEmail', () => {
 
     expect(result.success).toBe(true);
     expect(result.messageId).toBe('msg_123');
+    expect(renderTemplate).toHaveBeenCalledWith(
+      mockTemplate,
+      expect.objectContaining({
+        customer_name: '田中太郎',
+        order_number: '1',
+        items_html: expect.stringContaining('LED照明'),
+        items_text: expect.stringContaining('LED照明'),
+      })
+    );
     expect(sendEmail).toHaveBeenCalledWith(
       env,
       expect.objectContaining({
         to: 'tanaka@example.com',
         subject: 'ご注文確認 #1',
+      })
+    );
+  });
+
+  it('uses fallback template when DB template is not found', async () => {
+    const items: OrderItem[] = [
+      { product_title: 'LED照明', variant_title: 'Default', quantity: 2, unit_price: 3000 },
+    ];
+    const mockDB = createMockDB({ orderItems: items });
+    const env = { DB: mockDB };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_fallback' });
+
+    const result = await sendOrderConfirmationEmail(env as any, 1);
+
+    expect(result.success).toBe(true);
+    expect(sendEmail).toHaveBeenCalledWith(
+      env,
+      expect.objectContaining({
+        to: 'tanaka@example.com',
+        subject: 'ご注文確認 #1',
+        html: expect.stringContaining('ご注文確認'),
+        text: expect.stringContaining('ご注文確認'),
+      })
+    );
+    // Verify fallback HTML includes items
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    expect(callArgs.html).toContain('LED照明');
+    expect(callArgs.text).toContain('LED照明');
+  });
+
+  it('includes shipping address in fallback template', async () => {
+    const shippingMetadata = JSON.stringify({
+      shipping: {
+        name: '田中太郎',
+        address: {
+          postal_code: '100-0001',
+          state: '東京都',
+          city: '千代田区',
+          line1: '丸の内1-1-1',
+        },
+        phone: '03-1234-5678',
+      },
+    });
+    const mockDB = createMockDB({
+      orderItems: [],
+      orderMetadata: shippingMetadata,
+    });
+    const env = { DB: mockDB };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_ship' });
+
+    const result = await sendOrderConfirmationEmail(env as any, 1);
+
+    expect(result.success).toBe(true);
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    expect(callArgs.html).toContain('配送先');
+    expect(callArgs.html).toContain('〒100-0001');
+    expect(callArgs.text).toContain('配送先');
+    expect(callArgs.text).toContain('東京都');
+  });
+
+  it('passes shipping data as template variables when using DB template', async () => {
+    const shippingMetadata = JSON.stringify({
+      shipping: {
+        name: '田中太郎',
+        address: { postal_code: '100-0001', state: '東京都', city: '千代田区', line1: '丸の内1-1-1' },
+      },
+    });
+    const mockDB = createMockDB({
+      orderItems: [],
+      orderMetadata: shippingMetadata,
+    });
+    const env = { DB: mockDB };
+
+    const mockTemplate = {
+      id: 1,
+      slug: 'order-confirmation',
+      name: 'Order Confirmation',
+      subject: 'ご注文確認 #{{order_number}}',
+      body_html: '<p>{{shipping_html}}</p>',
+      body_text: '{{shipping_text}}',
+      variables: '[]',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+    };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(mockTemplate);
+    vi.mocked(renderTemplate).mockReturnValue({
+      subject: 'ご注文確認 #1',
+      html: '<p>配送先あり</p>',
+      text: '配送先あり',
+    });
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_tmpl' });
+
+    await sendOrderConfirmationEmail(env as any, 1);
+
+    expect(renderTemplate).toHaveBeenCalledWith(
+      mockTemplate,
+      expect.objectContaining({
+        shipping_html: expect.stringContaining('配送先'),
+        shipping_text: expect.stringContaining('配送先'),
       })
     );
   });

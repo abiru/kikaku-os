@@ -44,12 +44,17 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 						<a href="/terms" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/terms' ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.support')}</a>
 					</nav>
 
-					{/* Utilities: Search, Cart & Account */}
+					{/* Utilities: Search, Wishlist, Cart & Account */}
 					<div class="flex items-center gap-6">
 						<button id="search-btn" type="button" class="text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
 							<span class="sr-only">{t('common.search')}</span>
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 						</button>
+						<a href="/wishlist" id="wishlist-link" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
+							<span class="sr-only">{t('wishlist.openWishlist')}</span>
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+							<span id="wishlist-badge" class="hidden absolute -top-2 -right-2 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">0</span>
+						</a>
 						<a href="/cart" id="cart-link" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
 							<span class="sr-only">{t('nav.openCart')}</span>
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -113,7 +118,8 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 						<div class="flex gap-4">
 							<a href="/privacy" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">{t('footer.privacyPolicy')}</a>
 							<a href="/terms" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">{t('footer.termsOfUse')}</a>
-							<a href="/refund" class="hover:underline">{t('footer.salesAndRefunds')}</a>
+							<a href="/refund" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">{t('footer.salesAndRefunds')}</a>
+							<a href="/contact" class="hover:underline">{t('footer.contact')}</a>
 						</div>
 					</div>
 				</Container>
@@ -125,6 +131,7 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 
 		<script>
 			import { $cartCount } from '../lib/cart';
+			import { $wishlistCount } from '../lib/wishlist';
 
 			const updateCartBadge = () => {
 				const badge = document.getElementById('cart-badge');
@@ -139,11 +146,26 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 				}
 			};
 
+			const updateWishlistBadge = () => {
+				const badge = document.getElementById('wishlist-badge');
+				if (!badge) return;
+
+				const count = $wishlistCount.get();
+				if (count > 0) {
+					badge.textContent = String(count > 99 ? '99+' : count);
+					badge.classList.remove('hidden');
+				} else {
+					badge.classList.add('hidden');
+				}
+			};
+
 			// Initial update
 			updateCartBadge();
+			updateWishlistBadge();
 
-			// Subscribe to cart changes
+			// Subscribe to changes
 			$cartCount.subscribe(updateCartBadge);
+			$wishlistCount.subscribe(updateWishlistBadge);
 
 			// Search functionality
 			const searchBtn = document.getElementById('search-btn');

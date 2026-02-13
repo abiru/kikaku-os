@@ -9,6 +9,8 @@ type ReadyToShipOrder = {
   paid_at: string | null
   fulfillment_id: number | null
   fulfillment_status: string | null
+  tracking_number?: string | null
+  carrier?: string | null
 }
 
 type Props = {
@@ -26,57 +28,85 @@ const formatDate = (dateStr: string | null) => {
   return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 }
 
+const getStatusBadge = (status: string | null): { label: string; color: 'zinc' | 'yellow' | 'blue' | 'green' } => {
+  switch (status) {
+    case 'shipped':
+      return { label: '発送済み', color: 'blue' }
+    case 'processing':
+      return { label: '準備中', color: 'yellow' }
+    case 'delivered':
+      return { label: '配達済み', color: 'green' }
+    default:
+      return { label: '未発送', color: 'zinc' }
+  }
+}
+
 export default function ShippingTable({ orders, onShipClick }: Props) {
   return (
     <Table>
       <TableHead>
         <TableRow>
-          <TableHeader>Order</TableHeader>
-          <TableHeader>Customer</TableHeader>
-          <TableHeader>Paid At</TableHeader>
-          <TableHeader>Status</TableHeader>
-          <TableHeader className="text-right">Total</TableHeader>
-          <TableHeader className="text-right">Actions</TableHeader>
+          <TableHeader>注文</TableHeader>
+          <TableHeader>顧客</TableHeader>
+          <TableHeader>支払日時</TableHeader>
+          <TableHeader>ステータス</TableHeader>
+          <TableHeader>配送情報</TableHeader>
+          <TableHeader className="text-right">合計</TableHeader>
+          <TableHeader className="text-right">アクション</TableHeader>
         </TableRow>
       </TableHead>
       <TableBody>
         {orders.length > 0 ? (
-          orders.map((order) => (
-            <TableRow key={order.order_id}>
-              <TableCell className="font-medium">
-                <a href={`/admin/orders/${order.order_id}`} className="text-indigo-600 hover:underline">
-                  #{order.order_id}
-                </a>
-              </TableCell>
-              <TableCell>
-                <div className="text-zinc-950">{order.customer_email || 'Guest'}</div>
-              </TableCell>
-              <TableCell className="text-zinc-500 tabular-nums">
-                {formatDate(order.paid_at)}
-              </TableCell>
-              <TableCell>
-                <Badge color="zinc">
-                  {order.fulfillment_status || 'Unfulfilled'}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right font-medium tabular-nums">
-                {formatCurrency(order.total)}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  type="button"
-                  color="indigo"
-                  onClick={() => onShipClick(order.order_id, order.fulfillment_id)}
-                >
-                  Ship
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))
+          orders.map((order) => {
+            const badge = getStatusBadge(order.fulfillment_status)
+            return (
+              <TableRow key={order.order_id}>
+                <TableCell className="font-medium">
+                  <a href={`/admin/orders/${order.order_id}`} className="text-indigo-600 hover:underline">
+                    #{order.order_id}
+                  </a>
+                </TableCell>
+                <TableCell>
+                  <div className="text-zinc-950">{order.customer_email || 'ゲスト'}</div>
+                </TableCell>
+                <TableCell className="text-zinc-500 tabular-nums">
+                  {formatDate(order.paid_at)}
+                </TableCell>
+                <TableCell>
+                  <Badge color={badge.color}>
+                    {badge.label}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {order.carrier && (
+                    <div className="text-sm text-zinc-700">{order.carrier}</div>
+                  )}
+                  {order.tracking_number && (
+                    <div className="text-xs font-mono text-zinc-500">{order.tracking_number}</div>
+                  )}
+                  {!order.carrier && !order.tracking_number && (
+                    <span className="text-xs text-zinc-400">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right font-medium tabular-nums">
+                  {formatCurrency(order.total)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    type="button"
+                    color="indigo"
+                    onClick={() => onShipClick(order.order_id, order.fulfillment_id)}
+                  >
+                    発送
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )
+          })
         ) : (
           <TableRow>
-            <TableCell colSpan={6} className="text-center text-zinc-500">
-              No orders ready to ship.
+            <TableCell colSpan={7} className="text-center text-zinc-500">
+              出荷待ちの注文はありません。
             </TableCell>
           </TableRow>
         )}

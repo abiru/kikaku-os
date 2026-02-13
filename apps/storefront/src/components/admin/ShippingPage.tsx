@@ -4,7 +4,16 @@ import { useState } from 'react'
 import ShippingTable from './ShippingTable'
 import { Button } from '../catalyst/button'
 import { Input } from '../catalyst/input'
+import { Select } from '../catalyst/select'
 import { Field, Label } from '../catalyst/fieldset'
+
+const CARRIERS = [
+  { value: '', label: '選択してください' },
+  { value: 'ヤマト運輸', label: 'ヤマト運輸' },
+  { value: '佐川急便', label: '佐川急便' },
+  { value: '日本郵便', label: '日本郵便' },
+  { value: 'other', label: 'その他' },
+] as const
 
 type ReadyToShipOrder = {
   order_id: number
@@ -25,12 +34,16 @@ export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<{ orderId: number; fulfillmentId: number | null } | null>(null)
   const [trackingNumber, setTrackingNumber] = useState('')
+  const [carrierSelect, setCarrierSelect] = useState('')
+  const [customCarrier, setCustomCarrier] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleShipClick = (orderId: number, fulfillmentId: number | null) => {
     setSelectedOrder({ orderId, fulfillmentId })
     setTrackingNumber('')
+    setCarrierSelect('')
+    setCustomCarrier('')
     setError(null)
     setIsModalOpen(true)
   }
@@ -39,7 +52,14 @@ export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
     setIsModalOpen(false)
     setSelectedOrder(null)
     setTrackingNumber('')
+    setCarrierSelect('')
+    setCustomCarrier('')
     setError(null)
+  }
+
+  const getCarrierName = (): string | null => {
+    if (carrierSelect === 'other') return customCarrier.trim() || null
+    return carrierSelect || null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +72,9 @@ export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
     try {
       let res: Response
       const tracking_number = trackingNumber.trim() || null
+      const carrier = getCarrierName()
+
+      const body = JSON.stringify({ status: 'shipped', tracking_number, carrier })
 
       if (selectedOrder.fulfillmentId) {
         res = await fetch(`${apiBase}/admin/fulfillments/${selectedOrder.fulfillmentId}`, {
@@ -60,7 +83,7 @@ export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
             'Content-Type': 'application/json',
             'x-admin-key': apiKey
           },
-          body: JSON.stringify({ status: 'shipped', tracking_number })
+          body
         })
       } else {
         res = await fetch(`${apiBase}/admin/orders/${selectedOrder.orderId}/fulfillments`, {
@@ -69,19 +92,19 @@ export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
             'Content-Type': 'application/json',
             'x-admin-key': apiKey
           },
-          body: JSON.stringify({ status: 'shipped', tracking_number })
+          body
         })
       }
 
       if (!res.ok) {
         const data = await res.json()
-        setError(data.message || 'Failed to update shipping status')
+        setError(data.message || '発送ステータスの更新に失敗しました')
         return
       }
 
       window.location.reload()
     } catch {
-      setError('An error occurred. Please try again.')
+      setError('エラーが発生しました。もう一度お試しください。')
     } finally {
       setIsSubmitting(false)
     }
@@ -102,19 +125,43 @@ export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
         >
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
             <div className="p-6 border-b border-zinc-200">
-              <h3 className="text-lg font-semibold text-zinc-950">Ship Order</h3>
+              <h3 className="text-lg font-semibold text-zinc-950">出荷処理</h3>
               <p className="text-sm text-zinc-500 mt-1">
-                Order #{selectedOrder?.orderId}
+                注文 #{selectedOrder?.orderId}
               </p>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <Field>
-                <Label>Tracking Number</Label>
+                <Label>配送業者</Label>
+                <Select
+                  value={carrierSelect}
+                  onChange={(e) => setCarrierSelect(e.target.value)}
+                >
+                  {CARRIERS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </Select>
+              </Field>
+
+              {carrierSelect === 'other' && (
+                <Field>
+                  <Label>配送業者名</Label>
+                  <Input
+                    type="text"
+                    value={customCarrier}
+                    onChange={(e) => setCustomCarrier(e.target.value)}
+                    placeholder="配送業者名を入力"
+                  />
+                </Field>
+              )}
+
+              <Field>
+                <Label>追跡番号</Label>
                 <Input
                   type="text"
                   value={trackingNumber}
                   onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="Optional tracking number"
+                  placeholder="追跡番号を入力（任意）"
                 />
               </Field>
 
@@ -126,10 +173,10 @@ export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
 
               <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
                 <Button type="button" plain onClick={handleClose}>
-                  Cancel
+                  キャンセル
                 </Button>
                 <Button type="submit" color="indigo" disabled={isSubmitting}>
-                  {isSubmitting ? 'Shipping...' : 'Mark as Shipped'}
+                  {isSubmitting ? '処理中...' : '発送済みにする'}
                 </Button>
               </div>
             </form>

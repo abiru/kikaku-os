@@ -20,6 +20,8 @@ import adminStripeEvents from './admin/adminStripeEvents';
 import adminTaxRates from './admin/adminTaxRates';
 import adminProductFetch from './admin/adminProductFetch';
 import adminUsers from './admin/adminUsers';
+import adminInquiries from './admin/adminInquiries';
+import adminReviews from './admin/adminReviews';
 
 // Webhooks
 import stripe from './webhooks/stripe';
@@ -27,6 +29,8 @@ import stripe from './webhooks/stripe';
 // Storefront
 import storefront from './storefront/storefront';
 import storeAccount from './storefront/storeAccount';
+import contact from './storefront/contact';
+import storeReviews from './storefront/reviews';
 
 // Checkout
 import checkout from './checkout/checkout';
@@ -78,6 +82,8 @@ export function registerRoutes(app: Hono<Env>) {
   app.route('/admin', adminHomeHeroes);
   app.route('/admin', adminProductFetch);
   app.route('/admin', adminUsers);
+  app.route('/admin', adminInquiries);
+  app.route('/admin', adminReviews);
 
   // Webhooks (public, signature-verified)
   app.route('/', stripe);
@@ -86,6 +92,8 @@ export function registerRoutes(app: Hono<Env>) {
   app.route('/store', storefront);
   // Customer account (requires Clerk auth)
   app.route('/store/account', storeAccount);
+  app.route('/store', contact);
+  app.route('/store', storeReviews);
 
   // Checkout & Payments (public + authenticated)
   app.route('/', checkout);
@@ -132,11 +140,15 @@ export {
   adminTaxRates,
   adminProductFetch,
   adminUsers,
+  adminInquiries,
+  adminReviews,
   // Webhooks
   stripe,
   // Storefront
   storefront,
   storeAccount,
+  contact,
+  storeReviews,
   // Checkout
   checkout,
   payments,

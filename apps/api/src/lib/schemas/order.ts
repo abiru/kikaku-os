@@ -84,6 +84,20 @@ export const updateFulfillmentSchema = z.object({
     .transform((v) => v?.trim() || null),
 });
 
+// === Refund Schemas ===
+
+export const createRefundSchema = z.object({
+  amount: z
+    .number()
+    .int('Amount must be an integer')
+    .min(1, 'Amount must be at least 1')
+    .optional(),
+  reason: z
+    .string()
+    .min(1, 'Reason is required')
+    .max(500, 'Reason must be 500 characters or less'),
+});
+
 // Type exports
 export type OrderIdParam = z.infer<typeof orderIdParamSchema>;
 export type OrderListQuery = z.infer<typeof orderListQuerySchema>;
@@ -91,3 +105,4 @@ export type FulfillmentIdParam = z.infer<typeof fulfillmentIdParamSchema>;
 export type OrderFulfillmentParam = z.infer<typeof orderFulfillmentParamSchema>;
 export type CreateFulfillmentInput = z.infer<typeof createFulfillmentSchema>;
 export type UpdateFulfillmentInput = z.infer<typeof updateFulfillmentSchema>;
+export type CreateRefundInput = z.infer<typeof createRefundSchema>;

@@ -21,6 +21,8 @@ import {
   PhotoIcon,
   ChevronDownIcon,
   UserGroupIcon,
+  StarIcon,
+  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline'
 import { SidebarLayout } from '../catalyst/sidebar-layout'
 import {
@@ -70,7 +72,9 @@ const navigation: NavigationItem[] = [
   { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon, permission: 'products:write' },
   { name: 'Categories', href: '/admin/categories', icon: FolderIcon, permission: 'products:read' },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'products:write' },
+  { name: 'Reviews', href: '/admin/reviews', icon: StarIcon, permission: 'products:read' },
   { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon, permission: 'inventory:read' },
+  { name: 'Inquiries', href: '/admin/inquiries', icon: ChatBubbleLeftRightIcon, permission: 'inbox:read' },
   { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon, permission: 'settings:write' },
   { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon, permission: 'settings:write' },
   { name: 'Google Ads', href: '/admin/ads', icon: MegaphoneIcon, permission: 'settings:write' },
@@ -162,9 +166,10 @@ type Props = {
   currentPath: string
   children: React.ReactNode
   rbacUser?: RbacUserInfo | null // RBAC info from server
+  lowStockCount?: number
 }
 
-export default function AdminLayout({ currentPath, children, rbacUser }: Props) {
+export default function AdminLayout({ currentPath, children, rbacUser, lowStockCount = 0 }: Props) {
   // Authentication is already handled by middleware (src/middleware.ts)
   // If this component is rendering, the user is authenticated
   // We only fetch user info for display purposes (avatar, name)
@@ -219,10 +224,16 @@ export default function AdminLayout({ currentPath, children, rbacUser }: Props) 
               {filteredNavigation.map((item) => {
                 const Icon = item.icon
                 const isCurrent = isActive(item.href)
+                const showBadge = item.href === '/admin/inventory' && lowStockCount > 0
                 return (
                   <SidebarItem key={item.name} href={item.href} current={isCurrent}>
                     <Icon data-slot="icon" />
                     <SidebarLabel>{item.name}</SidebarLabel>
+                    {showBadge && (
+                      <span className="ml-auto inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        {lowStockCount}
+                      </span>
+                    )}
                   </SidebarItem>
                 )
               })}

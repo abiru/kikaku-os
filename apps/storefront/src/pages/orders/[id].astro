@@ -1,0 +1,98 @@
+---
+import Container from '../../components/Container.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import Layout from '../../layouts/Layout.astro';
+import OrderTracking from '../../components/OrderTracking';
+import { fetchJson, getApiBase } from '../../lib/api';
+import { t } from '../../i18n';
+
+const apiBase = getApiBase();
+const { id } = Astro.params;
+const encodedId = encodeURIComponent(id || '');
+export const prerender = false;
+
+type OrderData = {
+	id: number;
+	status: string;
+	subtotal: number;
+	tax_amount: number;
+	total_amount: number;
+	shipping_fee: number;
+	total_discount: number;
+	currency: string;
+	created_at: string;
+	paid_at: string | null;
+	customer_email: string | null;
+	shipping: {
+		name?: string;
+		phone?: string;
+		address?: {
+			postal_code?: string;
+			state?: string;
+			city?: string;
+			line1?: string;
+			line2?: string;
+		};
+	} | null;
+	fulfillments: Array<{
+		id: number;
+		status: string;
+		tracking_number: string | null;
+		carrier: string | null;
+		created_at: string;
+		updated_at: string;
+	}>;
+	items: Array<{
+		title: string;
+		quantity: number;
+		unit_price: number;
+	}>;
+};
+
+let order: OrderData | null = null;
+let loadState: 'ready' | 'not-found' | 'unavailable' = 'ready';
+
+try {
+	const data = await fetchJson(`${apiBase}/store/orders/${encodedId}`) as { order: OrderData | null };
+	order = data?.order ?? null;
+	if (!order) {
+		loadState = 'not-found';
+	}
+} catch (error) {
+	const status = typeof error === 'object' && error ? (error as { status?: number }).status : undefined;
+	loadState = status === 404 ? 'not-found' : 'unavailable';
+	order = null;
+}
+---
+
+<Layout title={order ? `${t('orderTracking.title')} #${order.id}` : t('orderTracking.pageTitle')}>
+	{loadState === 'ready' && order ? (
+		<div class="min-h-screen bg-[#f5f5f7]">
+			<Container class="py-10">
+				<OrderTracking order={order} client:load />
+			</Container>
+		</div>
+	) : loadState === 'unavailable' ? (
+		<div class="min-h-screen bg-[#f5f5f7] flex items-center">
+			<Container class="py-16">
+				<EmptyState
+					title={t('orderTracking.unavailable')}
+					description={t('orderTracking.unavailableDescription')}
+					ctaLabel={t('orderTracking.backToHome')}
+					ctaHref="/"
+				/>
+			</Container>
+		</div>
+	) : (
+		<div class="min-h-screen bg-[#f5f5f7] flex items-center">
+			<Container class="py-16">
+				<EmptyState
+					title={t('orderTracking.notFound')}
+					description={t('orderTracking.notFoundDescription')}
+					ctaLabel={t('orderTracking.backToHome')}
+					ctaHref="/"
+				/>
+			</Container>
+		</div>
+	)}
+</Layout>

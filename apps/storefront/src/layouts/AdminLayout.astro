@@ -1,5 +1,6 @@
 ---
 import AdminLayoutComponent from '../components/admin/AdminLayout';
+import { getApiBase } from '../lib/api';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
@@ -14,6 +15,23 @@ import '../styles/global.css';
 
 const { title = 'Admin - Led Kikaku OS' } = Astro.props;
 const currentPath = Astro.url.pathname;
+
+// Fetch low stock count for sidebar badge
+let lowStockCount = 0;
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const apiBase = getApiBase();
+		const res = await fetch(`${apiBase}/inventory/low?limit=200`, {
+			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+		});
+		if (res.ok) {
+			const data = await res.json() as { items?: unknown[] };
+			lowStockCount = data.items?.length ?? 0;
+		}
+	} catch {
+		// Non-critical: silently fail
+	}
+}
 ---
 
 <!doctype html>
@@ -26,7 +44,7 @@ const currentPath = Astro.url.pathname;
 		<title>{title}</title>
 	</head>
 	<body class="h-full font-sans antialiased bg-white text-zinc-950">
-		<AdminLayoutComponent client:load currentPath={currentPath}>
+		<AdminLayoutComponent client:load currentPath={currentPath} lowStockCount={lowStockCount}>
 			<slot />
 		</AdminLayoutComponent>
 	</body>

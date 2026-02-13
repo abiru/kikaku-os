@@ -30,6 +30,8 @@ import {
   MegaphoneIcon,
   PhotoIcon,
   UserGroupIcon,
+  ChatBubbleLeftRightIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
@@ -65,7 +67,9 @@ const navigation: NavigationItem[] = [
   { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon, permission: 'products:write' },
   { name: 'Categories', href: '/admin/categories', icon: FolderIcon, permission: 'products:read' },
   { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'products:write' },
+  { name: 'Reviews', href: '/admin/reviews', icon: StarIcon, permission: 'products:read' },
   { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon, permission: 'inventory:read' },
+  { name: 'Inquiries', href: '/admin/inquiries', icon: ChatBubbleLeftRightIcon, permission: 'inbox:read' },
   { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon, permission: 'settings:write' },
   { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon, permission: 'settings:write' },
   { name: 'Google Ads', href: '/admin/ads', icon: MegaphoneIcon, permission: 'settings:write' },

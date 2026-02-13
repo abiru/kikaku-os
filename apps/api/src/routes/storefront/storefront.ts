@@ -334,12 +334,25 @@ type OrderItemRow = {
 type OrderRow = {
   id: number;
   status: string;
+  subtotal: number;
+  tax_amount: number;
   total_amount: number;
   currency: string;
   created_at: string;
   paid_at: string | null;
   metadata: string | null;
   customer_email: string | null;
+  shipping_fee: number;
+  total_discount: number;
+};
+
+type FulfillmentRow = {
+  id: number;
+  status: string;
+  tracking_number: string | null;
+  metadata: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 storefront.get('/orders/:id', async (c) => {
@@ -351,7 +364,8 @@ storefront.get('/orders/:id', async (c) => {
   const poll = c.req.query('poll') === 'true';
 
   const order = await c.env.DB.prepare(`
-    SELECT o.id, o.status, o.total_amount, o.currency,
+    SELECT o.id, o.status, o.subtotal, o.tax_amount, o.total_amount,
+           o.shipping_fee, o.total_discount, o.currency,
            o.created_at, o.paid_at, o.metadata,
            c.email as customer_email
     FROM orders o
@@ -368,16 +382,24 @@ storefront.get('/orders/:id', async (c) => {
     return c.json({ ok: true, status: 'pending' }, 202);
   }
 
-  const itemsRes = await c.env.DB.prepare(`
-    SELECT p.title as product_title,
-           v.title as variant_title,
-           oi.quantity,
-           oi.unit_price
-    FROM order_items oi
-    LEFT JOIN variants v ON v.id = oi.variant_id
-    LEFT JOIN products p ON p.id = v.product_id
-    WHERE oi.order_id = ?
-  `).bind(order.id).all<OrderItemRow>();
+  const [itemsRes, fulfillmentsRes] = await Promise.all([
+    c.env.DB.prepare(`
+      SELECT p.title as product_title,
+             v.title as variant_title,
+             oi.quantity,
+             oi.unit_price
+      FROM order_items oi
+      LEFT JOIN variants v ON v.id = oi.variant_id
+      LEFT JOIN products p ON p.id = v.product_id
+      WHERE oi.order_id = ?
+    `).bind(order.id).all<OrderItemRow>(),
+    c.env.DB.prepare(`
+      SELECT id, status, tracking_number, metadata, created_at, updated_at
+      FROM fulfillments
+      WHERE order_id = ?
+      ORDER BY created_at DESC
+    `).bind(order.id).all<FulfillmentRow>(),
+  ]);
 
   // Parse shipping info from metadata if available
   let shipping = null;
@@ -390,16 +412,41 @@ storefront.get('/orders/:id', async (c) => {
     }
   }
 
+  const fulfillments = (fulfillmentsRes.results || []).map(f => {
+    let carrier = null;
+    if (f.metadata) {
+      try {
+        const meta = JSON.parse(f.metadata);
+        carrier = meta.carrier || null;
+      } catch {
+        // Ignore parse errors
+      }
+    }
+    return {
+      id: f.id,
+      status: f.status,
+      tracking_number: f.tracking_number,
+      carrier,
+      created_at: f.created_at,
+      updated_at: f.updated_at,
+    };
+  });
+
   return jsonOk(c, {
     order: {
       id: order.id,
       status: order.status,
+      subtotal: order.subtotal,
+      tax_amount: order.tax_amount,
       total_amount: order.total_amount,
+      shipping_fee: order.shipping_fee,
+      total_discount: order.total_discount,
       currency: order.currency,
       created_at: order.created_at,
       paid_at: order.paid_at,
       customer_email: order.customer_email,
       shipping,
+      fulfillments,
       items: (itemsRes.results || []).map(item => ({
         title: item.variant_title !== 'Default'
           ? `${item.product_title} - ${item.variant_title}`
