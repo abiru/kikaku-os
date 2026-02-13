@@ -1,7 +1,7 @@
 ---
 import Container from '../components/Container.astro';
 import SearchModal from '../components/SearchModal';
-import { SignedIn, SignedOut, UserButton } from '@clerk/astro/components';
+import { UserButton } from '@clerk/astro/components';
 import { t } from '../i18n';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -15,7 +15,18 @@ import '@fontsource/noto-sans-jp/700.css';
 import '@fontsource/noto-sans-jp/900.css';
 import '../styles/global.css';
 
-const { title = 'Led Kikaku Store' } = Astro.props;
+interface Props {
+  title?: string;
+  activeTab?: 'dashboard' | 'orders' | 'profile';
+}
+
+const { title = 'My Account - Led Kikaku Store', activeTab = 'dashboard' } = Astro.props;
+
+const navItems = [
+  { id: 'dashboard', href: '/account', label: t('account.dashboard') },
+  { id: 'orders', href: '/account/orders', label: t('account.orders') },
+  { id: 'profile', href: '/account/profile', label: t('account.profile') },
+];
 ---
 
 <!doctype html>
@@ -29,22 +40,19 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 	</head>
 	<body class="font-sans text-[#1d1d1f] antialiased bg-[#f5f5f7]">
 		<div class="min-h-screen flex flex-col">
-			{/* Apple-style Global Nav: Sticky, Backdrop Blur, Minimal */}
+			{/* Global Nav */}
 			<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50">
 				<Container class="flex h-[48px] items-center justify-between">
-					{/* Logo Area */}
 					<a href="/" class="flex items-center gap-2 group transition-opacity hover:opacity-80">
 						<span class="text-[17px] font-semibold tracking-tight">LED Kikaku</span>
 					</a>
 
-					{/* Desktop Nav - Centered & Subtle */}
 					<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-[#1d1d1f]/80 overflow-x-auto whitespace-nowrap">
-						<a href="/" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/' ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.store')}</a>
-						<a href="/products" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/products') ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.products')}</a>
-						<a href="/terms" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/terms' ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.support')}</a>
+						<a href="/" class="transition-colors hover:text-[#1d1d1f]">{t('nav.store')}</a>
+						<a href="/products" class="transition-colors hover:text-[#1d1d1f]">{t('nav.products')}</a>
+						<a href="/terms" class="transition-colors hover:text-[#1d1d1f]">{t('nav.support')}</a>
 					</nav>
 
-					{/* Utilities: Search, Cart & Account */}
 					<div class="flex items-center gap-6">
 						<button id="search-btn" type="button" class="text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
 							<span class="sr-only">{t('common.search')}</span>
@@ -55,60 +63,38 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
 							<span id="cart-badge" class="hidden absolute -top-2 -right-2 h-4 w-4 rounded-full bg-[#0071e3] text-[10px] font-medium text-white flex items-center justify-center">0</span>
 						</a>
-						<SignedOut>
-							<a href="/sign-in" class="text-[12px] font-medium text-[#0071e3] hover:underline">
-								ログイン
-							</a>
-						</SignedOut>
-						<SignedIn>
-							<UserButton />
-						</SignedIn>
+						<UserButton />
 					</div>
 				</Container>
 			</header>
 
 			<main class="flex-1">
+				{/* Account Navigation */}
+				<div class="bg-white border-b border-gray-200">
+					<Container>
+						<div class="flex items-center gap-8 h-12 overflow-x-auto">
+							{navItems.map((item) => (
+								<a
+									href={item.href}
+									class={`text-[13px] font-medium transition-colors whitespace-nowrap border-b-2 h-full flex items-center ${
+										activeTab === item.id
+											? 'text-[#1d1d1f] border-[#0071e3]'
+											: 'text-[#86868b] border-transparent hover:text-[#1d1d1f]'
+									}`}
+								>
+									{item.label}
+								</a>
+							))}
+						</div>
+					</Container>
+				</div>
+
 				<slot />
 			</main>
 
 			<footer class="bg-[#f5f5f7] border-t border-gray-200 py-10 text-[11px] text-[#86868b]">
 				<Container>
-					<div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5 mb-8">
-						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.shopAndLearn')}</h3>
-							<ul class="space-y-2">
-								<li><a href="/products" class="hover:underline">{t('footer.store')}</a></li>
-								<li><a href="#" class="hover:underline">{t('footer.mac')}</a></li>
-								<li><a href="#" class="hover:underline">{t('footer.ipad')}</a></li>
-							</ul>
-						</div>
-						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.account')}</h3>
-							<ul class="space-y-2">
-								<li><a href="#" class="hover:underline">{t('footer.manageYourId')}</a></li>
-								<li><a href="#" class="hover:underline">{t('footer.storeAccount')}</a></li>
-								<li><a href="#" class="hover:underline">{t('footer.iCloud')}</a></li>
-							</ul>
-						</div>
-						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.values')}</h3>
-							<ul class="space-y-2">
-								<li><a href="#" class="hover:underline">{t('footer.accessibility')}</a></li>
-								<li><a href="#" class="hover:underline">{t('footer.education')}</a></li>
-								<li><a href="#" class="hover:underline">{t('footer.environment')}</a></li>
-							</ul>
-						</div>
-						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.about')}</h3>
-							<ul class="space-y-2">
-								<li><a href="#" class="hover:underline">{t('footer.newsroom')}</a></li>
-								<li><a href="#" class="hover:underline">{t('footer.leadership')}</a></li>
-								<li><a href="#" class="hover:underline">{t('footer.investors')}</a></li>
-							</ul>
-						</div>
-					</div>
-
-					<div class="pt-4 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+					<div class="pt-4 flex flex-col md:flex-row justify-between items-center gap-4">
 						<p>{t('footer.copyright')}</p>
 						<div class="flex gap-4">
 							<a href="/privacy" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">{t('footer.privacyPolicy')}</a>
@@ -120,7 +106,6 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 			</footer>
 		</div>
 
-		{/* Search Modal */}
 		<SearchModal client:only="react" />
 
 		<script>
@@ -139,19 +124,14 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 				}
 			};
 
-			// Initial update
 			updateCartBadge();
-
-			// Subscribe to cart changes
 			$cartCount.subscribe(updateCartBadge);
 
-			// Search functionality
 			const searchBtn = document.getElementById('search-btn');
 			searchBtn?.addEventListener('click', () => {
 				window.dispatchEvent(new CustomEvent('open-search'));
 			});
 
-			// Cmd+K / Ctrl+K shortcut
 			document.addEventListener('keydown', (e) => {
 				if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 					e.preventDefault();

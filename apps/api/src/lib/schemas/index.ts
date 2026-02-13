@@ -1,4 +1,5 @@
 // Re-export all schemas from domain-specific files
+export * from './account';
 export * from './product';
 export * from './order';
 export * from './customer';
