@@ -20,6 +20,7 @@ import {
   MegaphoneIcon,
   PhotoIcon,
   ChevronDownIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline'
 import { SidebarLayout } from '../catalyst/sidebar-layout'
 import {
@@ -35,6 +36,7 @@ import {
 import { Dropdown, DropdownButton, DropdownMenu, DropdownItem } from '../catalyst/dropdown'
 import { Avatar } from '../catalyst/avatar'
 import { Navbar, NavbarItem } from '../catalyst/navbar'
+import { Badge } from '../catalyst/badge'
 
 type UserInfo = {
   email: string | null
@@ -43,31 +45,42 @@ type UserInfo = {
   imageUrl: string | null
 }
 
+type RbacUserInfo = {
+  role: string
+  permissions: string[]
+}
+
 type NavigationItem = {
   name: string
   href: string
   icon: React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement>>
+  permission?: string // Required permission to view this nav item
 }
 
+// Navigation items with their required permissions
 const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/admin/', icon: HomeIcon },
-  { name: 'Inbox', href: '/admin/inbox', icon: InboxIcon },
-  { name: 'Orders', href: '/admin/orders', icon: ShoppingCartIcon },
-  { name: 'Customers', href: '/admin/customers', icon: UsersIcon },
-  { name: 'Shipping', href: '/admin/shipping', icon: TruckIcon },
-  { name: 'Events', href: '/admin/events', icon: CalendarIcon },
-  { name: 'Products', href: '/admin/products', icon: CubeIcon },
-  { name: 'Home Heroes', href: '/admin/home-heroes', icon: PhotoIcon },
-  { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon },
-  { name: 'Categories', href: '/admin/categories', icon: FolderIcon },
-  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon },
-  { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon },
-  { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon },
-  { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon },
-  { name: 'Google Ads', href: '/admin/ads', icon: MegaphoneIcon },
-  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon },
-  { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon },
+  { name: 'Dashboard', href: '/admin/', icon: HomeIcon, permission: 'dashboard:read' },
+  { name: 'Inbox', href: '/admin/inbox', icon: InboxIcon, permission: 'inbox:read' },
+  { name: 'Orders', href: '/admin/orders', icon: ShoppingCartIcon, permission: 'orders:read' },
+  { name: 'Customers', href: '/admin/customers', icon: UsersIcon, permission: 'customers:read' },
+  { name: 'Shipping', href: '/admin/shipping', icon: TruckIcon, permission: 'orders:read' },
+  { name: 'Events', href: '/admin/events', icon: CalendarIcon, permission: 'orders:read' },
+  { name: 'Products', href: '/admin/products', icon: CubeIcon, permission: 'products:read' },
+  { name: 'Home Heroes', href: '/admin/home-heroes', icon: PhotoIcon, permission: 'products:write' },
+  { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon, permission: 'products:write' },
+  { name: 'Categories', href: '/admin/categories', icon: FolderIcon, permission: 'products:read' },
+  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'products:write' },
+  { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon, permission: 'inventory:read' },
+  { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon, permission: 'settings:write' },
+  { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon, permission: 'settings:write' },
+  { name: 'Google Ads', href: '/admin/ads', icon: MegaphoneIcon, permission: 'settings:write' },
+  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon, permission: 'reports:read' },
+  { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon, permission: 'ledger:read' },
+  { name: 'Users', href: '/admin/users', icon: UserGroupIcon, permission: 'users:read' },
 ]
+
+// Settings requires settings:read permission
+const settingsPermission = 'settings:read'
 
 const getInitials = (user: UserInfo | null): string => {
   if (!user) return 'A'
@@ -148,13 +161,27 @@ function useClerkUser() {
 type Props = {
   currentPath: string
   children: React.ReactNode
+  rbacUser?: RbacUserInfo | null // RBAC info from server
 }
 
-export default function AdminLayout({ currentPath, children }: Props) {
+export default function AdminLayout({ currentPath, children, rbacUser }: Props) {
   // Authentication is already handled by middleware (src/middleware.ts)
   // If this component is rendering, the user is authenticated
   // We only fetch user info for display purposes (avatar, name)
   const { user, signOut } = useClerkUser()
+
+  // Filter navigation based on permissions
+  const hasPermission = (permission: string | undefined): boolean => {
+    // If no permission required, show the item
+    if (!permission) return true
+    // If no RBAC info, show all (fallback for backward compatibility)
+    if (!rbacUser) return true
+    // Check if user has the required permission
+    return rbacUser.permissions.includes(permission)
+  }
+
+  const filteredNavigation = navigation.filter((item) => hasPermission(item.permission))
+  const canViewSettings = hasPermission(settingsPermission)
 
   const isActive = (href: string) => {
     if (href === '/admin/') {
@@ -170,6 +197,13 @@ export default function AdminLayout({ currentPath, children }: Props) {
           <NavbarItem href="/admin/" className="max-lg:hidden">
             <span className="text-lg font-semibold text-zinc-950">Led Kikaku OS</span>
           </NavbarItem>
+          {rbacUser && (
+            <div className="ml-auto flex items-center gap-2">
+              <Badge color="zinc" className="capitalize">
+                {rbacUser.role}
+              </Badge>
+            </div>
+          )}
         </Navbar>
       }
       sidebar={
@@ -182,7 +216,7 @@ export default function AdminLayout({ currentPath, children }: Props) {
 
           <SidebarBody>
             <SidebarSection>
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const Icon = item.icon
                 const isCurrent = isActive(item.href)
                 return (
@@ -196,12 +230,14 @@ export default function AdminLayout({ currentPath, children }: Props) {
 
             <SidebarSpacer />
 
-            <SidebarSection>
-              <SidebarItem href="/admin/settings" current={currentPath === '/admin/settings'}>
-                <Cog6ToothIcon data-slot="icon" />
-                <SidebarLabel>Settings</SidebarLabel>
-              </SidebarItem>
-            </SidebarSection>
+            {canViewSettings && (
+              <SidebarSection>
+                <SidebarItem href="/admin/settings" current={currentPath === '/admin/settings'}>
+                  <Cog6ToothIcon data-slot="icon" />
+                  <SidebarLabel>Settings</SidebarLabel>
+                </SidebarItem>
+              </SidebarSection>
+            )}
           </SidebarBody>
 
           <SidebarFooter>

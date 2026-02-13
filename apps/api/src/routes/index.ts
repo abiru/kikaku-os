@@ -19,6 +19,7 @@ import adminSettings from './admin/adminSettings';
 import adminStripeEvents from './admin/adminStripeEvents';
 import adminTaxRates from './admin/adminTaxRates';
 import adminProductFetch from './admin/adminProductFetch';
+import adminUsers from './admin/adminUsers';
 
 // Webhooks
 import stripe from './webhooks/stripe';
@@ -76,6 +77,7 @@ export function registerRoutes(app: Hono<Env>) {
   app.route('/admin/settings', adminSettings);
   app.route('/admin', adminHomeHeroes);
   app.route('/admin', adminProductFetch);
+  app.route('/admin', adminUsers);
 
   // Webhooks (public, signature-verified)
   app.route('/', stripe);
@@ -129,6 +131,7 @@ export {
   adminStripeEvents,
   adminTaxRates,
   adminProductFetch,
+  adminUsers,
   // Webhooks
   stripe,
   // Storefront

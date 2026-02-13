@@ -10,3 +10,4 @@ export * from './page';
 export * from './email';
 export * from './googleAds';
 export * from './settings';
+export * from './rbac';

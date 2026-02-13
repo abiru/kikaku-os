@@ -1,0 +1,172 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Alert } from '../../components/catalyst/alert-banner';
+import { getApiBase } from '../../lib/api';
+import { Heading } from '../../components/catalyst/heading';
+import UsersTable from '../../components/admin/UsersTable';
+
+const apiBase = getApiBase();
+const q = Astro.url.searchParams.get('q') || '';
+const roleFilter = Astro.url.searchParams.get('role') || '';
+const activeFilter = Astro.url.searchParams.get('active') || 'all';
+const page = Number(Astro.url.searchParams.get('page') || '1');
+const perPage = 20;
+
+type AdminUser = {
+	id: number;
+	clerk_user_id: string;
+	email: string;
+	name: string | null;
+	role_id: string;
+	role_name: string;
+	role_priority: number;
+	is_active: number;
+	last_login_at: string | null;
+	created_at: string;
+	updated_at: string;
+};
+
+type Role = {
+	id: string;
+	name: string;
+	description: string | null;
+	priority: number;
+};
+
+let users: AdminUser[] = [];
+let roles: Role[] = [];
+let meta = { totalCount: 0, totalPages: 1 };
+let error: string | null = null;
+
+// SSR Data Fetching
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		// Fetch roles for filter dropdown
+		const rolesRes = await fetch(`${apiBase}/admin/roles`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY
+			}
+		});
+
+		if (rolesRes.ok) {
+			const rolesData = await rolesRes.json();
+			roles = rolesData.roles || [];
+		}
+
+		// Fetch users
+		const query = new URLSearchParams({
+			q,
+			page: page.toString(),
+			perPage: perPage.toString(),
+			active: activeFilter
+		});
+		if (roleFilter) {
+			query.set('role', roleFilter);
+		}
+
+		const res = await fetch(`${apiBase}/admin/users?${query}`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY
+			}
+		});
+
+		if (!res.ok) {
+			const errorData = await res.json().catch(() => ({}));
+			throw new Error(errorData.error || `API Error: ${res.status}`);
+		}
+
+		const data = await res.json();
+		users = data.users || [];
+		meta = data.meta || meta;
+	} catch (e) {
+		console.error(e);
+		error = e instanceof Error ? e.message : 'Failed to load users. Please check your admin key.';
+	}
+} else {
+	error = 'ADMIN_API_KEY is missing in server environment.';
+}
+---
+
+<AdminLayout title="Users - Admin">
+	<div class="space-y-6">
+		<div class="flex items-center justify-between gap-4">
+			<div class="flex items-center gap-4">
+				<Heading>Admin Users</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} users</span>
+			</div>
+			<a
+				href="/admin/users/new"
+				class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
+			>
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+				</svg>
+				Add User
+			</a>
+		</div>
+
+		{/* Filters */}
+		<div class="flex flex-wrap items-center gap-4">
+			{/* Search */}
+			<form method="get" class="relative flex-1 max-w-md">
+				<input type="hidden" name="role" value={roleFilter} />
+				<input type="hidden" name="active" value={activeFilter} />
+				<input
+					type="search"
+					name="q"
+					value={q}
+					placeholder="Search by name or email..."
+					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
+				/>
+				<svg
+					class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+				</svg>
+			</form>
+
+			{/* Role Filter */}
+			<select
+				onchange="window.location.href = window.location.pathname + '?q=' + encodeURIComponent(document.querySelector('[name=q]').value) + '&role=' + this.value + '&active=' + document.querySelector('[name=activeFilter]').value"
+				class="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+			>
+				<option value="" selected={!roleFilter}>All Roles</option>
+				{roles.map(role => (
+					<option value={role.id} selected={roleFilter === role.id}>{role.name}</option>
+				))}
+			</select>
+
+			{/* Active Filter */}
+			<select
+				name="activeFilter"
+				onchange="window.location.href = window.location.pathname + '?q=' + encodeURIComponent(document.querySelector('[name=q]').value) + '&role=' + (document.querySelector('[name=roleSelect]')?.value || '') + '&active=' + this.value"
+				class="px-3 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+			>
+				<option value="all" selected={activeFilter === 'all'}>All Status</option>
+				<option value="true" selected={activeFilter === 'true'}>Active</option>
+				<option value="false" selected={activeFilter === 'false'}>Inactive</option>
+			</select>
+		</div>
+
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
+
+		<UsersTable
+			users={users}
+			currentPage={page}
+			totalPages={meta.totalPages}
+			searchQuery={q}
+			roleFilter={roleFilter}
+			activeFilter={activeFilter}
+			client:load
+		/>
+	</div>
+</AdminLayout>
