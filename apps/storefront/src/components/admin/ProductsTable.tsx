@@ -18,8 +18,6 @@ type Props = {
   totalPages: number
   searchQuery: string
   statusFilter: string
-  apiBase: string
-  apiKey: string
 }
 
 const getStatusBadgeColor = (status: string) => {
@@ -35,13 +33,12 @@ const getStatusBadgeColor = (status: string) => {
   }
 }
 
-const handleArchive = async (productId: number, productTitle: string, apiBase: string, apiKey: string) => {
+const handleArchive = async (productId: number, productTitle: string) => {
   if (!confirm(`Archive "${productTitle}"?`)) return
 
   try {
-    const res = await fetch(`${apiBase}/admin/products/${productId}`, {
+    const res = await fetch(`/api/admin/products/${productId}`, {
       method: 'DELETE',
-      headers: { 'x-admin-key': apiKey },
     })
 
     if (res.ok) {
@@ -55,13 +52,12 @@ const handleArchive = async (productId: number, productTitle: string, apiBase: s
   }
 }
 
-const handleRestore = async (productId: number, productTitle: string, apiBase: string, apiKey: string) => {
+const handleRestore = async (productId: number, productTitle: string) => {
   if (!confirm(`Restore "${productTitle}"?`)) return
 
   try {
-    const res = await fetch(`${apiBase}/admin/products/${productId}/restore`, {
+    const res = await fetch(`/api/admin/products/${productId}/restore`, {
       method: 'POST',
-      headers: { 'x-admin-key': apiKey },
     })
 
     if (res.ok) {
@@ -81,8 +77,6 @@ export default function ProductsTable({
   totalPages,
   searchQuery,
   statusFilter,
-  apiBase,
-  apiKey,
 }: Props) {
   return (
     <div>
@@ -123,7 +117,7 @@ export default function ProductsTable({
                     {product.status !== 'archived' && (
                       <Button
                         plain
-                        onClick={() => handleArchive(product.id, product.title, apiBase, apiKey)}
+                        onClick={() => handleArchive(product.id, product.title)}
                         className="text-red-600 hover:text-red-800"
                       >
                         Archive
@@ -132,7 +126,7 @@ export default function ProductsTable({
                     {product.status === 'archived' && (
                       <Button
                         plain
-                        onClick={() => handleRestore(product.id, product.title, apiBase, apiKey)}
+                        onClick={() => handleRestore(product.id, product.title)}
                         className="text-green-600 hover:text-green-800"
                       >
                         Restore

@@ -26,11 +26,9 @@ type ReadyToShipOrder = {
 
 type Props = {
   orders: ReadyToShipOrder[]
-  apiBase: string
-  apiKey: string
 }
 
-export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
+export default function ShippingPage({ orders }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<{ orderId: number; fulfillmentId: number | null } | null>(null)
   const [trackingNumber, setTrackingNumber] = useState('')
@@ -77,20 +75,18 @@ export default function ShippingPage({ orders, apiBase, apiKey }: Props) {
       const body = JSON.stringify({ status: 'shipped', tracking_number, carrier })
 
       if (selectedOrder.fulfillmentId) {
-        res = await fetch(`${apiBase}/admin/fulfillments/${selectedOrder.fulfillmentId}`, {
+        res = await fetch(`/api/admin/fulfillments/${selectedOrder.fulfillmentId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-key': apiKey
           },
           body
         })
       } else {
-        res = await fetch(`${apiBase}/admin/orders/${selectedOrder.orderId}/fulfillments`, {
+        res = await fetch(`/api/admin/orders/${selectedOrder.orderId}/fulfillments`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-key': apiKey
           },
           body
         })

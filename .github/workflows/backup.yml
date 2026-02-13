@@ -1,0 +1,43 @@
+name: Weekly Database Backup
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Every Sunday at midnight UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  backup:
+    name: Backup D1 Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run database backup
+        run: bash scripts/backup-db.sh
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          BACKUP_DIR: ./backups
+          CLEANUP_R2: "true"
+          RETENTION_DAYS: "56"
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: ./backups/*.tar.gz
+          retention-days: 30

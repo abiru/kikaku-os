@@ -459,15 +459,16 @@ describe('Storefront API', () => {
       expect(json.message).toContain('not found');
     });
 
-    it('returns null for invalid order ID', async () => {
+    it('returns 404 for invalid order token', async () => {
       const db = createMockDb({ productRows: [] });
       const { fetch } = createApp(db);
 
       const res = await fetch('/store/orders/invalid');
-      const json = await res.json();
 
-      expect(json.ok).toBe(true);
-      expect(json.order).toBeNull();
+      expect(res.status).toBe(404);
+      const json = await res.json();
+      expect(json.ok).toBe(false);
+      expect(json.message).toContain('not found');
     });
   });
 

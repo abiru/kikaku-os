@@ -7,8 +7,8 @@ import { fetchJson, getApiBase } from '../../lib/api';
 import { t } from '../../i18n';
 
 const apiBase = getApiBase();
-const { id } = Astro.params;
-const encodedId = encodeURIComponent(id || '');
+const { id: token } = Astro.params;
+const encodedToken = encodeURIComponent(token || '');
 export const prerender = false;
 
 type OrderData = {
@@ -53,7 +53,7 @@ let order: OrderData | null = null;
 let loadState: 'ready' | 'not-found' | 'unavailable' = 'ready';
 
 try {
-	const data = await fetchJson(`${apiBase}/store/orders/${encodedId}`) as { order: OrderData | null };
+	const data = await fetchJson(`${apiBase}/store/orders/${encodedToken}`) as { order: OrderData | null };
 	order = data?.order ?? null;
 	if (!order) {
 		loadState = 'not-found';

@@ -77,8 +77,6 @@ if (apiKey && id) {
         <AdDraftForm
           client:load
           initialDraft={draft}
-          apiKey={apiKey}
-          apiBase={apiBase}
           draftId={parseInt(id || '0', 10)}
         />
 
@@ -100,7 +98,7 @@ if (apiKey && id) {
   </Alert>
 
   {draft && (
-    <script define:vars={{ apiKey, apiBase, id }}>
+    <script define:vars={{ id }}>
       const deleteBtn = document.getElementById('delete-btn');
 
       deleteBtn?.addEventListener('click', async () => {
@@ -109,9 +107,8 @@ if (apiKey && id) {
         }
 
         try {
-          const response = await fetch(`${apiBase}/admin/ads/drafts/${id}`, {
+          const response = await fetch(`/api/admin/ads/drafts/${id}`, {
             method: 'DELETE',
-            headers: { 'x-admin-key': apiKey },
           });
 
           if (response.ok) {

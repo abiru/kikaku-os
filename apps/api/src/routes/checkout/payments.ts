@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
+import { generatePublicToken } from '../../lib/token';
 
 const payments = new Hono<Env>();
 
@@ -86,15 +87,16 @@ payments.post('/payments/intent', async (c) => {
   }
 
   // Create order record
+  const orderPublicToken = generatePublicToken();
   const orderRes = await c.env.DB.prepare(
     `INSERT INTO orders (
        customer_id, status, quote_id,
        subtotal, tax_amount, total_net,
        total_discount, shipping_fee, total_amount,
        coupon_code, total_fee, currency, metadata,
-       created_at, updated_at
+       public_token, created_at, updated_at
      )
-     VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, datetime('now'), datetime('now'))`
+     VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, datetime('now'), datetime('now'))`
   ).bind(
     customerId,
     quoteId,
@@ -111,7 +113,8 @@ payments.post('/payments/intent', async (c) => {
       email,
       items: JSON.parse(quote.items_json),
       tax_breakdown: { subtotal: quote.subtotal, tax_amount: quote.tax_amount }
-    })
+    }),
+    orderPublicToken
   ).run();
 
   const orderId = Number(orderRes.meta.last_row_id);
@@ -203,6 +206,7 @@ payments.post('/payments/intent', async (c) => {
   return jsonOk(c, {
     clientSecret: paymentIntent.client_secret,
     orderId,
+    orderPublicToken,
     publishableKey
   });
 });

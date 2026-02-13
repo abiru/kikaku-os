@@ -6,7 +6,7 @@ import Layout from '../../layouts/Layout.astro';
 const { id } = Astro.params;
 const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
 
-if (!id || isNaN(Number(id))) {
+if (!id) {
   return Astro.redirect('/products');
 }
 
@@ -355,6 +355,8 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 </style>
 
 <script define:vars={{ apiUrl, quotation: quotationData.quotation }}>
+  const quotationToken = quotation.public_token || quotation.id;
+
   const handleDownloadPDF = async () => {
     const btn = document.getElementById('download-pdf-btn');
     const errorMessageEl = document.getElementById('error-message');
@@ -367,7 +369,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 
     try {
       // Fetch HTML
-      const response = await fetch(`${apiUrl}/quotations/${quotation.id}/html`);
+      const response = await fetch(`${apiUrl}/quotations/${quotationToken}/html`);
       if (!response.ok) {
         throw new Error('HTMLの取得に失敗しました');
       }
@@ -424,7 +426,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
     errorMessageEl.style.display = 'none';
 
     try {
-      const response = await fetch(`${apiUrl}/quotations/${quotation.id}/accept`, {
+      const response = await fetch(`${apiUrl}/quotations/${quotationToken}/accept`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

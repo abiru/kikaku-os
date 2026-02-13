@@ -46,7 +46,7 @@ const hasPrev = page > 1;
 // Helper to construct secure download link (via document ID)
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const getReportLink = (id: number) => {
-	return `${apiBase}/admin/documents/${id}/download?x-admin-key=${encodeURIComponent(apiKey || '')}`;
+	return `/api/admin/documents/${id}/download`;
 };
 
 // Add downloadUrl to each report

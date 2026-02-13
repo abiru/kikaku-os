@@ -392,16 +392,16 @@ Code block
 	</div>
 </AdminLayout>
 
-<script define:vars={{ apiBase, apiKey, pageId: id, canDelete, currentStatus: page?.status }}>
+<script define:vars={{ pageId: id, canDelete, currentStatus: page?.status }}>
 	// Store server variables in window for module script access
-	window.__PAGE_CONFIG__ = { apiBase, apiKey, pageId, canDelete, currentStatus };
+	window.__PAGE_CONFIG__ = { pageId, canDelete, currentStatus };
 </script>
 
 <script type="module">
 	import { marked } from 'marked';
 	import DOMPurify from 'isomorphic-dompurify';
 
-	const { apiBase, apiKey, pageId, canDelete, currentStatus } = window.__PAGE_CONFIG__;
+	const { pageId, canDelete, currentStatus } = window.__PAGE_CONFIG__;
 
 	const deleteBtn = document.getElementById('delete-btn');
 	const publishBtn = document.getElementById('publish-btn');
@@ -456,9 +456,8 @@ Code block
 			}
 
 			try {
-				const res = await fetch(`${apiBase}/admin/pages/${pageId}`, {
+				const res = await fetch(`/api/admin/pages/${pageId}`, {
 					method: 'DELETE',
-					headers: { 'x-admin-key': apiKey }
 				});
 
 				if (res.ok) {
@@ -479,9 +478,8 @@ Code block
 			const action = currentStatus === 'published' ? 'unpublish' : 'publish';
 
 			try {
-				const res = await fetch(`${apiBase}/admin/pages/${pageId}/${action}`, {
+				const res = await fetch(`/api/admin/pages/${pageId}/${action}`, {
 					method: 'POST',
-					headers: { 'x-admin-key': apiKey }
 				});
 
 				if (res.ok) {

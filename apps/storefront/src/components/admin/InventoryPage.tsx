@@ -20,11 +20,9 @@ type InventoryItem = {
 
 type Props = {
   inventory: InventoryItem[]
-  apiBase: string
-  apiKey: string
 }
 
-export default function InventoryPage({ inventory, apiBase, apiKey }: Props) {
+export default function InventoryPage({ inventory }: Props) {
   const [adjustModal, setAdjustModal] = useState<{
     open: boolean
     variantId: number
@@ -73,11 +71,10 @@ export default function InventoryPage({ inventory, apiBase, apiKey }: Props) {
     const delta = adjustType === 'add' ? quantity : -quantity
 
     try {
-      const res = await fetch(`${apiBase}/admin/inventory/movements`, {
+      const res = await fetch(`/api/admin/inventory/movements`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': apiKey
         },
         body: JSON.stringify({ variant_id: adjustModal.variantId, delta, reason: adjustReason })
       })
@@ -105,11 +102,10 @@ export default function InventoryPage({ inventory, apiBase, apiKey }: Props) {
     }
 
     try {
-      const res = await fetch(`${apiBase}/admin/inventory/thresholds/${thresholdModal.variantId}`, {
+      const res = await fetch(`/api/admin/inventory/thresholds/${thresholdModal.variantId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': apiKey
         },
         body: JSON.stringify({ threshold })
       })

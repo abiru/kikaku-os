@@ -11,18 +11,15 @@ type Hero = {
 
 type Props = {
   heroes: Hero[]
-  apiBase: string
-  apiKey: string
 }
 
-export default function HomeHeroesPage({ heroes, apiBase, apiKey }: Props) {
+export default function HomeHeroesPage({ heroes }: Props) {
   const handleArchive = async (id: number) => {
     if (!confirm('Archive this hero section?')) return
 
     try {
-      const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
+      const res = await fetch(`/api/admin/home/heroes/${id}`, {
         method: 'DELETE',
-        headers: { 'x-admin-key': apiKey }
       })
 
       if (res.ok) {
@@ -37,9 +34,8 @@ export default function HomeHeroesPage({ heroes, apiBase, apiKey }: Props) {
 
   const handleRestore = async (id: number) => {
     try {
-      const res = await fetch(`${apiBase}/admin/home/heroes/${id}/restore`, {
+      const res = await fetch(`/api/admin/home/heroes/${id}/restore`, {
         method: 'POST',
-        headers: { 'x-admin-key': apiKey }
       })
 
       if (res.ok) {

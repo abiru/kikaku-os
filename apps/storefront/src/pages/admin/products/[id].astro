@@ -589,7 +589,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										data-image-id={image.id}
 									>
 										<img
-											src={`${apiBase}/r2?key=${encodeURIComponent(image.r2_key)}&x-admin-key=${encodeURIComponent(apiKey || '')}`}
+											src={`/api/r2?key=${encodeURIComponent(image.r2_key)}`}
 											alt={image.filename}
 											class="w-full h-full object-cover"
 											loading="lazy"
@@ -765,7 +765,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 	</div>
 </AdminLayout>
 
-<script define:vars={{ apiBase, apiKey, productId: id }}>
+<script define:vars={{ productId: id }}>
 	function initProductPage() {
 		// Image handling
 		const imageUpload = document.getElementById('image-upload');
@@ -801,9 +801,8 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			}
 
 			try {
-				const res = await fetch(`${apiBase}/admin/products/${productId}/images`, {
+				const res = await fetch(`/api/admin/products/${productId}/images`, {
 					method: 'POST',
-					headers: { 'x-admin-key': apiKey },
 					body: formData
 				});
 
@@ -831,9 +830,8 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			if (!confirm(`Delete image "${filename}"?`)) return;
 
 			try {
-				const res = await fetch(`${apiBase}/admin/products/${productId}/images/${imageId}`, {
+				const res = await fetch(`/api/admin/products/${productId}/images/${imageId}`, {
 					method: 'DELETE',
-					headers: { 'x-admin-key': apiKey }
 				});
 				if (res.ok) {
 					location.reload();
@@ -909,9 +907,8 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 				if (!confirm(`Delete variant "${variantTitle}"? This will also delete its prices.`)) return;
 
 				try {
-					const res = await fetch(`${apiBase}/admin/products/${productId}/variants/${variantId}`, {
+					const res = await fetch(`/api/admin/products/${productId}/variants/${variantId}`, {
 						method: 'DELETE',
-						headers: { 'x-admin-key': apiKey }
 					});
 					if (res.ok) {
 						location.reload();
@@ -949,14 +946,13 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			try {
 				// Create or update variant
 				const variantUrl = isEdit
-					? `${apiBase}/admin/products/${productId}/variants/${variantId}`
-					: `${apiBase}/admin/products/${productId}/variants`;
+					? `/api/admin/products/${productId}/variants/${variantId}`
+					: `/api/admin/products/${productId}/variants`;
 
 				const variantRes = await fetch(variantUrl, {
 					method: isEdit ? 'PUT' : 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'x-admin-key': apiKey
 					},
 					body: JSON.stringify({ title, sku })
 				});
@@ -971,11 +967,10 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 				const savedVariantId = variantData.variant?.id || variantId;
 
 				// Update prices
-				const priceRes = await fetch(`${apiBase}/admin/variants/${savedVariantId}/prices`, {
+				const priceRes = await fetch(`/api/admin/variants/${savedVariantId}/prices`, {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
-						'x-admin-key': apiKey
 					},
 					body: JSON.stringify({
 						prices: [{ currency: 'JPY', amount, provider_price_id }]
@@ -1113,11 +1108,10 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			try {
 				const productName = document.querySelector('input[name="title"]')?.value?.trim() || '';
-				const res = await fetch(`${apiBase}/admin/product-fetch`, {
+				const res = await fetch(`/api/admin/product-fetch`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'x-admin-key': apiKey
 					},
 					body: JSON.stringify({ url, productName })
 				});
@@ -1158,11 +1152,10 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			try {
 				// Create inbox item via API
-				const res = await fetch(`${apiBase}/inbox`, {
+				const res = await fetch(`/api/inbox`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'x-admin-key': apiKey
 					},
 					body: JSON.stringify({
 						title: `Product Update: ${document.querySelector('input[name="title"]')?.value || 'Unknown'}`,
@@ -1237,11 +1230,10 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 			try {
 				// Create inbox item via API
-				const res = await fetch(`${apiBase}/inbox`, {
+				const res = await fetch(`/api/inbox`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'x-admin-key': apiKey
 					},
 					body: JSON.stringify({
 						title: `Product Update: ${document.querySelector('input[name="title"]')?.value || 'Unknown'}`,
@@ -1284,9 +1276,8 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 		if (!confirm('Archive this product?')) return;
 
 		try {
-			const res = await fetch(`${apiBase}/admin/products/${productId}`, {
+			const res = await fetch(`/api/admin/products/${productId}`, {
 				method: 'DELETE',
-				headers: { 'x-admin-key': apiKey }
 			});
 
 			if (res.ok) {
@@ -1306,9 +1297,8 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 		if (!confirm('Restore this product?')) return;
 
 		try {
-			const res = await fetch(`${apiBase}/admin/products/${productId}/restore`, {
+			const res = await fetch(`/api/admin/products/${productId}/restore`, {
 				method: 'POST',
-				headers: { 'x-admin-key': apiKey }
 			});
 
 			if (res.ok) {

@@ -100,7 +100,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 		<div id="resultSection" class="hidden bg-white rounded-lg shadow p-6 space-y-4"></div>
 	</div>
 
-	<script define:vars={{ apiBase, apiKey }}>
+	<script>
 		let parsedResult = null;
 
 		const fileInput = document.getElementById('fileInput');
@@ -130,11 +130,8 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 				const formData = new FormData();
 				formData.append('file', file);
 
-				const response = await fetch(`${apiBase}/admin/bulk-image-upload/parse`, {
+				const response = await fetch(`/api/admin/bulk-image-upload/parse`, {
 					method: 'POST',
-					headers: {
-						'x-admin-key': apiKey
-					},
 					body: formData
 				});
 
@@ -164,10 +161,9 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 			sendToInboxBtn.textContent = 'Sending...';
 
 			try {
-				const response = await fetch(`${apiBase}/admin/bulk-image-upload/execute`, {
+				const response = await fetch(`/api/admin/bulk-image-upload/execute`, {
 					method: 'POST',
 					headers: {
-						'x-admin-key': apiKey,
 						'content-type': 'application/json'
 					},
 					body: JSON.stringify({

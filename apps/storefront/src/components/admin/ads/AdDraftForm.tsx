@@ -4,16 +4,12 @@ import { CharCount } from './CharCount';
 
 interface AdDraftFormProps {
   initialDraft?: Partial<AdDraft>;
-  apiKey: string;
-  apiBase: string;
   draftId?: number;
   onSaved?: (draft: AdDraft) => void;
 }
 
 export const AdDraftForm: FC<AdDraftFormProps> = ({
   initialDraft,
-  apiKey,
-  apiBase,
   draftId,
   onSaved,
 }) => {
@@ -118,14 +114,13 @@ export const AdDraftForm: FC<AdDraftFormProps> = ({
 
       const method = draftId ? 'PUT' : 'POST';
       const url = draftId
-        ? `${apiBase}/admin/ads/drafts/${draftId}`
-        : `${apiBase}/admin/ads/drafts`;
+        ? `/api/admin/ads/drafts/${draftId}`
+        : `/api/admin/ads/drafts`;
 
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': apiKey,
         },
         body: JSON.stringify(payload),
       });

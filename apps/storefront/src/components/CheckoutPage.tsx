@@ -30,6 +30,7 @@ type PaymentIntentResponse = {
 	ok: boolean;
 	clientSecret: string;
 	orderId: number;
+	orderPublicToken: string;
 	publishableKey: string;
 };
 
@@ -40,7 +41,7 @@ export default function CheckoutPage() {
 
 	const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
 	const [clientSecret, setClientSecret] = useState<string | null>(null);
-	const [orderId, setOrderId] = useState<number | null>(null);
+	const [orderToken, setOrderToken] = useState<string | null>(null);
 	const [publishableKey, setPublishableKey] = useState<string>('');
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export default function CheckoutPage() {
 			}
 
 			setClientSecret(intentData.clientSecret);
-			setOrderId(intentData.orderId);
+			setOrderToken(intentData.orderPublicToken || String(intentData.orderId));
 
 			// Use publishable key from API or fall back to env variable
 			const pubKey = intentData.publishableKey || import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -182,7 +183,7 @@ export default function CheckoutPage() {
 				<div className="lg:col-span-7">
 					<CheckoutForm
 						clientSecret={clientSecret}
-						orderId={orderId}
+						orderToken={orderToken}
 						publishableKey={publishableKey}
 					/>
 				</div>
