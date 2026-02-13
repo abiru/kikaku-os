@@ -171,7 +171,7 @@ database_id = "abc123-def456-ghi789"  # Replace with actual ID from step 1
 Also verify these values (already set correctly):
 - Line 17: `DEV_MODE = "false"`
 - Line 18: `STOREFRONT_BASE_URL` (update after custom domain setup)
-- Line 28: `STRIPE_PUBLISHABLE_KEY` (update with production key)
+- `STRIPE_PUBLISHABLE_KEY` is managed as a GitHub Actions secret
 
 **3. Configure GitHub Secrets** (30-45 minutes):
 
