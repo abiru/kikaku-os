@@ -24,7 +24,7 @@ const apiBase = getApiBase();
     </div>
 
     {/* AI Generation Section */}
-    <AiGenerationForm client:load apiKey={apiKey} apiBase={apiBase} />
+    <AiGenerationForm client:load />
 
     {/* Manual Form Section */}
     <div>
@@ -35,8 +35,6 @@ const apiBase = getApiBase();
 
       <AdDraftForm
         client:load
-        apiKey={apiKey}
-        apiBase={apiBase}
       />
     </div>
   </div>

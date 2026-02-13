@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env } from '../../env';
 import { ensureDate } from '../../lib/date';
 import { jsonError, jsonOk } from '../../lib/http';
+import { generatePublicToken } from '../../lib/token';
 
 type SeedRequest = {
   date?: string;
@@ -133,9 +134,9 @@ dev.post('/seed', async (c) => {
       const totalNet = randInt(10000, 50000);
       const status = i === 0 ? 'fulfilled' : 'paid';
       const res = await c.env.DB.prepare(
-        `INSERT INTO orders (customer_id, status, total_net, total_fee, currency, created_at, updated_at)
-         VALUES (?, ?, ?, 0, 'JPY', ?, ?)`
-      ).bind(customerId, status, totalNet, orderTime, orderTime).run();
+        `INSERT INTO orders (customer_id, status, total_net, total_fee, currency, public_token, created_at, updated_at)
+         VALUES (?, ?, ?, 0, 'JPY', ?, ?, ?)`
+      ).bind(customerId, status, totalNet, generatePublicToken(), orderTime, orderTime).run();
       const orderId = Number(res.meta.last_row_id);
       orders.push({ id: orderId, totalNet });
 

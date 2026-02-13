@@ -163,7 +163,7 @@ export default function ContactForm() {
         {errors.body && <p className="mt-1 text-sm text-red-600">{errors.body}</p>}
       </Field>
 
-      <Button type="submit" color="dark" className="w-full" disabled={submitting}>
+      <Button type="submit" color="dark/zinc" className="w-full" disabled={submitting}>
         {submitting ? '送信中...' : '送信する'}
       </Button>
     </form>

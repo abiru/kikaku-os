@@ -7,6 +7,7 @@ import { renderQuotationHtml, QuotationData } from '../../services/renderQuotati
 import { putText } from '../../lib/r2';
 import { upsertDocument } from '../../services/documents';
 import { ensureStripePriceForVariant } from '../../services/stripe';
+import { generatePublicToken } from '../../lib/token';
 
 const quotations = new Hono<Env>();
 
@@ -136,12 +137,13 @@ quotations.post('/quotations', async (c) => {
   const validUntil = validUntilDate.toISOString().split('T')[0];
 
   // Create quotation record (with placeholder number)
+  const publicToken = generatePublicToken();
   const quotationRes = await c.env.DB.prepare(
     `INSERT INTO quotations (
       quotation_number, customer_company, customer_name, customer_email, customer_phone,
       subtotal, tax_amount, total_amount, currency, valid_until, status, notes,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, datetime('now'), datetime('now'))`
+      public_token, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, datetime('now'), datetime('now'))`
   ).bind(
     'TEMP',
     customerCompany,
@@ -153,7 +155,8 @@ quotations.post('/quotations', async (c) => {
     totalAmount,
     currency,
     validUntil,
-    notes
+    notes,
+    publicToken
   ).run();
 
   const quotationId = Number(quotationRes.meta.last_row_id);
@@ -188,6 +191,7 @@ quotations.post('/quotations', async (c) => {
 
   return jsonOk(c, {
     id: quotationId,
+    publicToken,
     quotationNumber,
     subtotal,
     taxAmount,
@@ -197,16 +201,24 @@ quotations.post('/quotations', async (c) => {
   });
 });
 
-// GET /quotations/:id - Get quotation details
-quotations.get('/quotations/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
-  if (isNaN(id) || id <= 0) {
-    return jsonError(c, 'Invalid quotation ID', 400);
+// GET /quotations/:token - Get quotation details by public token or ID
+quotations.get('/quotations/:token', async (c) => {
+  const token = c.req.param('token');
+  if (!token) {
+    return jsonError(c, 'Invalid quotation identifier', 400);
   }
 
-  const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE id = ?`
-  ).bind(id).first();
+  // Support both numeric ID (legacy/admin) and public_token
+  const isNumericId = /^\d+$/.test(token);
+
+  if (isNumericId) {
+    const id = parseInt(token);
+    if (id <= 0) return jsonError(c, 'Invalid quotation ID', 400);
+  }
+
+  const quotation = isNumericId
+    ? await c.env.DB.prepare(`SELECT * FROM quotations WHERE id = ?`).bind(parseInt(token)).first()
+    : await c.env.DB.prepare(`SELECT * FROM quotations WHERE public_token = ?`).bind(token).first();
 
   if (!quotation) {
     return jsonError(c, 'Quotation not found', 404);
@@ -214,7 +226,7 @@ quotations.get('/quotations/:id', async (c) => {
 
   const items = await c.env.DB.prepare(
     `SELECT * FROM quotation_items WHERE quotation_id = ? ORDER BY id`
-  ).bind(id).all();
+  ).bind(quotation.id).all();
 
   return jsonOk(c, {
     quotation,
@@ -222,20 +234,23 @@ quotations.get('/quotations/:id', async (c) => {
   });
 });
 
-// GET /quotations/:id/html - Generate HTML for quotation
-quotations.get('/quotations/:id/html', async (c) => {
-  const id = parseInt(c.req.param('id'));
-  if (isNaN(id) || id <= 0) {
-    return jsonError(c, 'Invalid quotation ID', 400);
+// GET /quotations/:token/html - Generate HTML for quotation
+quotations.get('/quotations/:token/html', async (c) => {
+  const token = c.req.param('token');
+  if (!token) {
+    return jsonError(c, 'Invalid quotation identifier', 400);
   }
 
-  const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE id = ?`
-  ).bind(id).first();
+  const isNumericId = /^\d+$/.test(token);
+  const quotation = isNumericId
+    ? await c.env.DB.prepare(`SELECT * FROM quotations WHERE id = ?`).bind(parseInt(token)).first()
+    : await c.env.DB.prepare(`SELECT * FROM quotations WHERE public_token = ?`).bind(token).first();
 
   if (!quotation) {
     return jsonError(c, 'Quotation not found', 404);
   }
+
+  const id = quotation.id as number;
 
   const items = await c.env.DB.prepare(
     `SELECT product_title, variant_title, quantity, unit_price, subtotal
@@ -268,14 +283,22 @@ quotations.get('/quotations/:id/html', async (c) => {
   return c.html(html);
 });
 
-// POST /quotations/:id/accept - Accept quotation and create order
-quotations.post('/quotations/:id/accept', async (c) => {
+// POST /quotations/:token/accept - Accept quotation and create order
+quotations.post('/quotations/:token/accept', async (c) => {
   const stripeKey = c.env.STRIPE_SECRET_KEY ?? (c.env as any).STRIPE_API_KEY;
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
 
-  const id = parseInt(c.req.param('id'));
-  if (isNaN(id) || id <= 0) {
-    return jsonError(c, 'Invalid quotation ID', 400);
+  const token = c.req.param('token');
+  if (!token) {
+    return jsonError(c, 'Invalid quotation identifier', 400);
+  }
+
+  // Support both numeric ID (legacy/admin) and public_token
+  const isNumericId = /^\d+$/.test(token);
+
+  if (isNumericId) {
+    const id = parseInt(token);
+    if (id <= 0) return jsonError(c, 'Invalid quotation ID', 400);
   }
 
   let body: any;
@@ -287,14 +310,16 @@ quotations.post('/quotations/:id/accept', async (c) => {
 
   const email = normalizeString(body?.email);
 
-  // Get quotation
-  const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE id = ?`
-  ).bind(id).first<any>();
+  // Get quotation by token or ID
+  const quotation = isNumericId
+    ? await c.env.DB.prepare(`SELECT * FROM quotations WHERE id = ?`).bind(parseInt(token)).first<any>()
+    : await c.env.DB.prepare(`SELECT * FROM quotations WHERE public_token = ?`).bind(token).first<any>();
 
   if (!quotation) {
     return jsonError(c, 'Quotation not found', 404);
   }
+
+  const id = quotation.id as number;
 
   // Validate status
   if (quotation.status !== 'draft' && quotation.status !== 'sent') {
@@ -382,9 +407,10 @@ quotations.post('/quotations/:id/accept', async (c) => {
   }
 
   // Create order
+  const orderPublicToken = generatePublicToken();
   const orderRes = await c.env.DB.prepare(
-    `INSERT INTO orders (customer_id, status, total_net, total_fee, currency, metadata, created_at, updated_at)
-     VALUES (?, 'pending', ?, 0, ?, ?, datetime('now'), datetime('now'))`
+    `INSERT INTO orders (customer_id, status, total_net, total_fee, currency, metadata, public_token, created_at, updated_at)
+     VALUES (?, 'pending', ?, 0, ?, ?, ?, datetime('now'), datetime('now'))`
   ).bind(
     customerId,
     quotation.total_amount,
@@ -395,7 +421,8 @@ quotations.post('/quotations/:id/accept', async (c) => {
       quotation_number: quotation.quotation_number,
       customer_company: quotation.customer_company,
       customer_name: quotation.customer_name
-    })
+    }),
+    orderPublicToken
   ).run();
 
   const orderId = Number(orderRes.meta.last_row_id);
@@ -422,7 +449,7 @@ quotations.post('/quotations/:id/accept', async (c) => {
   // Build Stripe checkout session
   const baseUrl = c.env.STOREFRONT_BASE_URL || 'http://localhost:4321';
   const successUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${baseUrl}/quotations/${id}`;
+  const cancelUrl = `${baseUrl}/quotations/${quotation.public_token || id}`;
 
   const params = new URLSearchParams();
   params.set('mode', 'payment');

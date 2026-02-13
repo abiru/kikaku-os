@@ -416,7 +416,7 @@ const canDelete = coupon && coupon.current_uses === 0;
 	</div>
 </AdminLayout>
 
-<script define:vars={{ apiBase, apiKey, couponId: id, canDelete }}>
+<script define:vars={{ couponId: id, canDelete }}>
 	const deleteBtn = document.getElementById('delete-btn');
 	const toggleBtn = document.getElementById('toggle-btn');
 
@@ -427,9 +427,8 @@ const canDelete = coupon && coupon.current_uses === 0;
 			}
 
 			try {
-				const res = await fetch(`${apiBase}/admin/coupons/${couponId}`, {
+				const res = await fetch(`/api/admin/coupons/${couponId}`, {
 					method: 'DELETE',
-					headers: { 'x-admin-key': apiKey }
 				});
 
 				if (res.ok) {
@@ -447,9 +446,8 @@ const canDelete = coupon && coupon.current_uses === 0;
 	if (toggleBtn) {
 		toggleBtn.addEventListener('click', async () => {
 			try {
-				const res = await fetch(`${apiBase}/admin/coupons/${couponId}/toggle`, {
+				const res = await fetch(`/api/admin/coupons/${couponId}/toggle`, {
 					method: 'POST',
-					headers: { 'x-admin-key': apiKey }
 				});
 
 				if (res.ok) {

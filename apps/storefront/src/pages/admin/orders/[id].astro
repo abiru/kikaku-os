@@ -412,7 +412,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							</Select>
 						</Field>
 
-						<Field id="create-custom-carrier-field" class="hidden">
+						<Field id="create-custom-carrier-field" className="hidden">
 							<label for="create-custom-carrier" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">配送業者名</label>
 							<Input client:load
 								type="text"
@@ -488,7 +488,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							</Select>
 						</Field>
 
-						<Field id="edit-custom-carrier-field" class="hidden">
+						<Field id="edit-custom-carrier-field" className="hidden">
 							<label for="edit-custom-carrier" data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">配送業者名</label>
 							<Input client:load
 								type="text"
@@ -619,7 +619,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 	</div>
 </AdminLayout>
 
-<script define:vars={{ apiBase, apiKey, orderId: id, payments: JSON.stringify(payments), refundsData: JSON.stringify(refunds) }}>
+<script define:vars={{ orderId: id, payments: JSON.stringify(payments), refundsData: JSON.stringify(refunds) }}>
 	// Create Modal elements
 	const createModal = document.getElementById('create-fulfillment-modal');
 	const createForm = document.getElementById('create-fulfillment-form');
@@ -758,11 +758,10 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 		const carrier = getCarrierValue(createCarrier, createCustomCarrier);
 
 		try {
-			const res = await fetch(`${apiBase}/admin/orders/${orderId}/fulfillments`, {
+			const res = await fetch(`/api/admin/orders/${orderId}/fulfillments`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({ status, tracking_number, carrier })
 			});
@@ -789,11 +788,10 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 		const carrier = getCarrierValue(editCarrier, editCustomCarrier);
 
 		try {
-			const res = await fetch(`${apiBase}/admin/fulfillments/${fulfillmentId}`, {
+			const res = await fetch(`/api/admin/fulfillments/${fulfillmentId}`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({ status, tracking_number, carrier })
 			});
@@ -928,11 +926,10 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 				body.amount = pendingRefundData.amount;
 			}
 
-			const res = await fetch(apiBase + '/admin/orders/' + orderId + '/refunds', {
+			const res = await fetch('/api/admin/orders/' + orderId + '/refunds', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
 				},
 				body: JSON.stringify(body)
 			});

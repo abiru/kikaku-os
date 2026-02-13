@@ -226,12 +226,12 @@ describe('Quotations API', () => {
     });
 
     it('returns error for invalid ID', async () => {
-      const db = createMockDb({});
+      const db = createMockDb({ quotationRow: null });
       const { fetch } = createApp(db);
 
       const response = await fetch('/quotations/invalid');
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(404);
       const data = await response.json();
       expect(data.ok).toBe(false);
     });

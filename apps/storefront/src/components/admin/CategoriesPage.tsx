@@ -13,11 +13,9 @@ type Category = {
 
 type Props = {
   categories: Category[]
-  apiBase: string
-  apiKey: string
 }
 
-export default function CategoriesPage({ categories, apiBase, apiKey }: Props) {
+export default function CategoriesPage({ categories }: Props) {
   const [renameModal, setRenameModal] = useState<{ open: boolean; category: string }>({ open: false, category: '' })
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; category: string; count: number }>({ open: false, category: '', count: 0 })
   const [newName, setNewName] = useState('')
@@ -52,11 +50,10 @@ export default function CategoriesPage({ categories, apiBase, apiKey }: Props) {
     }
 
     try {
-      const res = await fetch(`${apiBase}/admin/categories/${encodeURIComponent(renameModal.category)}`, {
+      const res = await fetch(`/api/admin/categories/${encodeURIComponent(renameModal.category)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': apiKey
         },
         body: JSON.stringify({ newName: trimmedName })
       })
@@ -79,11 +76,10 @@ export default function CategoriesPage({ categories, apiBase, apiKey }: Props) {
     const moveToValue = moveTo.trim() || null
 
     try {
-      const res = await fetch(`${apiBase}/admin/categories/${encodeURIComponent(deleteModal.category)}`, {
+      const res = await fetch(`/api/admin/categories/${encodeURIComponent(deleteModal.category)}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': apiKey
         },
         body: JSON.stringify({ moveTo: moveToValue })
       })

@@ -7,12 +7,7 @@ import { Textarea } from '../../catalyst/textarea'
 import { Select } from '../../catalyst/select'
 import { Field, Label } from '../../catalyst/fieldset'
 
-type Props = {
-  apiKey: string
-  apiBase: string
-}
-
-export function AiGenerationForm({ apiKey, apiBase }: Props) {
+export function AiGenerationForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,11 +34,10 @@ export function AiGenerationForm({ apiKey, apiBase }: Props) {
     setError(null)
 
     try {
-      const response = await fetch(`${apiBase}/admin/ads/generate`, {
+      const response = await fetch(`/api/admin/ads/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': apiKey,
         },
         body: JSON.stringify({
           productName,

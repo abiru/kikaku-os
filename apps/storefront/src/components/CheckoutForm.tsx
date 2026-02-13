@@ -5,11 +5,11 @@ import { useTranslation } from '../i18n';
 
 type CheckoutFormProps = {
 	clientSecret: string | null;
-	orderId: number | null;
+	orderToken: string | null;
 	publishableKey: string;
 };
 
-function CheckoutFormInner({ orderId, email, onEmailChange }: { orderId: number | null; email: string; onEmailChange: (email: string) => void }) {
+function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: string | null; email: string; onEmailChange: (email: string) => void }) {
 	const { t } = useTranslation();
 	const stripe = useStripe();
 	const elements = useElements();
@@ -19,7 +19,7 @@ function CheckoutFormInner({ orderId, email, onEmailChange }: { orderId: number 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!stripe || !elements || !orderId) {
+		if (!stripe || !elements || !orderToken) {
 			return;
 		}
 
@@ -52,7 +52,7 @@ function CheckoutFormInner({ orderId, email, onEmailChange }: { orderId: number 
 			const { error } = await stripe.confirmPayment({
 				elements,
 				confirmParams: {
-					return_url: `${window.location.origin}/checkout/success?order_id=${orderId}`,
+					return_url: `${window.location.origin}/checkout/success?order_id=${orderToken}`,
 					receipt_email: email,
 					...(shippingData ? { shipping: shippingData } : {})
 				}
@@ -92,13 +92,13 @@ function CheckoutFormInner({ orderId, email, onEmailChange }: { orderId: number 
 		}
 
 		// Complete the payment
-		if (!stripe || !elements || !orderId) return;
+		if (!stripe || !elements || !orderToken) return;
 
 		try {
 			const { error } = await stripe.confirmPayment({
 				elements,
 				confirmParams: {
-					return_url: `${window.location.origin}/checkout/success?order_id=${orderId}`,
+					return_url: `${window.location.origin}/checkout/success?order_id=${orderToken}`,
 					...(shippingData ? { shipping: shippingData } : {})
 				}
 			});
@@ -198,7 +198,7 @@ function CheckoutFormInner({ orderId, email, onEmailChange }: { orderId: number 
 
 export default function CheckoutForm({
 	clientSecret,
-	orderId,
+	orderToken,
 	publishableKey
 }: CheckoutFormProps) {
 	const { t } = useTranslation();
@@ -243,7 +243,7 @@ export default function CheckoutForm({
 					locale: 'ja'
 				}}
 			>
-				<CheckoutFormInner orderId={orderId} email={email} onEmailChange={setEmail} />
+				<CheckoutFormInner orderToken={orderToken} email={email} onEmailChange={setEmail} />
 			</Elements>
 		</div>
 	);

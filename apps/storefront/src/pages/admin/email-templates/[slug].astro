@@ -265,7 +265,7 @@ const formatDate = (dateStr: string) => {
 	</div>
 </AdminLayout>
 
-<script define:vars={{ apiBase, apiKey, templateSlug: slug }}>
+<script define:vars={{ templateSlug: slug }}>
 	const previewHtmlBtn = document.getElementById('preview-html-btn');
 	const htmlEditorContainer = document.getElementById('html-editor-container');
 	const htmlPreviewContainer = document.getElementById('html-preview-container');
@@ -321,11 +321,10 @@ const formatDate = (dateStr: string) => {
 		sendPreviewBtn.textContent = 'Sending...';
 
 		try {
-			const res = await fetch(`${apiBase}/admin/email-templates/${templateSlug}/preview`, {
+			const res = await fetch(`/api/admin/email-templates/${templateSlug}/preview`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
 				},
 				body: JSON.stringify({ to: email })
 			});

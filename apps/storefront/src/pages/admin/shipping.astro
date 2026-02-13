@@ -39,7 +39,6 @@ if (import.meta.env.ADMIN_API_KEY) {
 	error = 'ADMIN_API_KEY is missing.';
 }
 
-const apiKey = import.meta.env.ADMIN_API_KEY || '';
 ---
 
 <AdminLayout title="Shipping - Admin">
@@ -57,8 +56,6 @@ const apiKey = import.meta.env.ADMIN_API_KEY || '';
 		<ShippingPage
 			client:only="react"
 			orders={orders}
-			apiBase={apiBase}
-			apiKey={apiKey}
 		/>
 	</div>
 </AdminLayout>

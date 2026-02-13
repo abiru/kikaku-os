@@ -44,7 +44,6 @@ if (import.meta.env.ADMIN_API_KEY) {
 	error = 'ADMIN_API_KEY is missing in server environment.';
 }
 
-const apiKey = import.meta.env.ADMIN_API_KEY || '';
 ---
 
 <AdminLayout title="Categories - Admin">
@@ -86,8 +85,6 @@ const apiKey = import.meta.env.ADMIN_API_KEY || '';
 		<CategoriesPage
 			client:only="react"
 			categories={categories}
-			apiBase={apiBase}
-			apiKey={apiKey}
 		/>
 	</div>
 </AdminLayout>

@@ -160,7 +160,7 @@ const formatDate = (dateStr: string) => {
     )}
   </Alert>
 
-  <script define:vars={{ apiKey, apiBase, id }}>
+  <script define:vars={{ id }}>
     document.querySelectorAll('.adopt-btn').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         const historyId = parseInt(e.target.dataset.historyId, 10);
@@ -170,11 +170,10 @@ const formatDate = (dateStr: string) => {
         }
 
         try {
-          const response = await fetch(`${apiBase}/admin/ads/drafts/${id}/select-history`, {
+          const response = await fetch(`/api/admin/ads/drafts/${id}/select-history`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-admin-key': apiKey,
             },
             body: JSON.stringify({ historyId }),
           });
