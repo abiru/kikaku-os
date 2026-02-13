@@ -93,6 +93,46 @@ const ensureFulfillmentExists = async (
 };
 
 /**
+ * Extracts coupon info from Stripe metadata and records usage after payment succeeds.
+ * Only records when couponId and discountAmount are valid positive numbers.
+ */
+const recordCouponUsage = async (
+  env: Env['Bindings'],
+  orderId: number,
+  metadata: Record<string, string> | null | undefined
+): Promise<void> => {
+  const couponId = metadata?.couponId ? Number(metadata.couponId) : null;
+  const discountAmount = metadata?.discountAmount
+    ? Number(metadata.discountAmount)
+    : null;
+  if (!couponId || !discountAmount) return;
+
+  const order = await env.DB.prepare(
+    `SELECT customer_id FROM orders WHERE id = ?`
+  )
+    .bind(orderId)
+    .first<{ customer_id: number | null }>();
+
+  if (!order) return;
+
+  await env.DB.prepare(
+    `INSERT INTO coupon_usages (coupon_id, order_id, customer_id, discount_amount, created_at)
+     VALUES (?, ?, ?, ?, datetime('now'))`
+  )
+    .bind(couponId, orderId, order.customer_id, discountAmount)
+    .run();
+
+  await env.DB.prepare(
+    `UPDATE coupons
+     SET current_uses = current_uses + 1,
+         updated_at = datetime('now')
+     WHERE id = ?`
+  )
+    .bind(couponId)
+    .run();
+};
+
+/**
  * Handles checkout.session.completed events
  * Updates order to paid, creates fulfillment, records payment, and sends confirmation email
  */
@@ -156,39 +196,7 @@ const handleCheckoutSessionCompleted = async (
     : null;
 
   // Record coupon usage (only after successful payment)
-  const couponId = dataObject.metadata?.couponId
-    ? Number(dataObject.metadata.couponId)
-    : null;
-  const discountAmount = dataObject.metadata?.discountAmount
-    ? Number(dataObject.metadata.discountAmount)
-    : null;
-  if (couponId && discountAmount) {
-    const order = await env.DB.prepare(
-      `SELECT customer_id FROM orders WHERE id = ?`
-    )
-      .bind(orderId)
-      .first<{ customer_id: number | null }>();
-
-    if (order) {
-      // Insert coupon usage record
-      await env.DB.prepare(
-        `INSERT INTO coupon_usages (coupon_id, order_id, customer_id, discount_amount, created_at)
-         VALUES (?, ?, ?, ?, datetime('now'))`
-      )
-        .bind(couponId, orderId, order.customer_id, discountAmount)
-        .run();
-
-      // Increment coupon usage count
-      await env.DB.prepare(
-        `UPDATE coupons
-         SET current_uses = current_uses + 1,
-             updated_at = datetime('now')
-         WHERE id = ?`
-      )
-        .bind(couponId)
-        .run();
-    }
-  }
+  await recordCouponUsage(env, orderId, dataObject.metadata);
 
   // Send order confirmation email (non-blocking)
   if (!paymentResult?.duplicate) {
@@ -277,40 +285,7 @@ const handlePaymentIntentSucceeded = async (
   }
 
   // Record coupon usage (only after successful payment)
-  const couponId = dataObject.metadata?.couponId
-    ? Number(dataObject.metadata.couponId)
-    : null;
-  const discountAmount = dataObject.metadata?.discountAmount
-    ? Number(dataObject.metadata.discountAmount)
-    : null;
-
-  if (couponId && discountAmount) {
-    const order = await env.DB.prepare(
-      `SELECT customer_id FROM orders WHERE id = ?`
-    )
-      .bind(orderId)
-      .first<{ customer_id: number | null }>();
-
-    if (order) {
-      // Insert coupon usage record
-      await env.DB.prepare(
-        `INSERT INTO coupon_usages (coupon_id, order_id, customer_id, discount_amount, created_at)
-         VALUES (?, ?, ?, ?, datetime('now'))`
-      )
-        .bind(couponId, orderId, order.customer_id, discountAmount)
-        .run();
-
-      // Increment coupon usage count
-      await env.DB.prepare(
-        `UPDATE coupons
-         SET current_uses = current_uses + 1,
-             updated_at = datetime('now')
-         WHERE id = ?`
-      )
-        .bind(couponId)
-        .run();
-    }
-  }
+  await recordCouponUsage(env, orderId, dataObject.metadata);
 
   const paymentResult = await insertPayment(env, {
     orderId,
