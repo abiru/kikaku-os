@@ -379,6 +379,39 @@
     "saved": "保存しました",
     "saveFailed": "保存に失敗しました"
   },
+  "category": {
+    "home": "ホーム",
+    "noProducts": "このカテゴリの商品はありません",
+    "noProductsDescription": "他のカテゴリをご覧いただくか、すべての商品をご確認ください。",
+    "itemCount": "件の商品",
+    "domesticShipping": "国内発送 2〜3日",
+    "internationalShipping": "海外発送 10日程"
+  },
+  "product": {
+    "relatedProducts": "関連商品"
+  },
+  "recentlyViewed": {
+    "title": "最近チェックした商品"
+  },
+  "breadcrumb": {
+    "home": "ホーム"
+  },
+  "cookie": {
+    "title": "Cookieの使用について",
+    "message": "当サイトでは、サービス向上のためにCookieを使用しています。サイトの利用を続けることで、Cookieの使用に同意したものとみなされます。",
+    "accept": "同意する",
+    "learnMore": "詳細を見る"
+  },
+  "newsletter": {
+    "title": "ニュースレター",
+    "description": "最新情報やお得な情報をお届けします。",
+    "placeholder": "メールアドレスを入力",
+    "subscribe": "登録",
+    "subscribing": "登録中...",
+    "success": "ニュースレターに登録しました。",
+    "error": "登録に失敗しました。しばらくしてからもう一度お試しください。",
+    "invalidEmail": "有効なメールアドレスを入力してください"
+  },
   "errors": {
     "storeUnavailable": "ストアが利用できません",
     "storeUnavailableDescription": "カタログを読み込めませんでした。しばらくしてからもう一度お試しください。",

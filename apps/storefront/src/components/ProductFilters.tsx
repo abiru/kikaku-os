@@ -113,18 +113,26 @@ export default function ProductFilters() {
 					<h3 className="text-sm font-semibold text-[#1d1d1f] mb-3">Category</h3>
 					<div className="space-y-2">
 						{options.categories.map((cat) => (
-							<label key={cat} className="flex items-center gap-2 cursor-pointer group">
-								<input
-									type="radio"
-									name="category"
-									checked={filters.category === cat}
-									onChange={() => setFilters((prev) => ({ ...prev, category: cat }))}
-									className="h-4 w-4 text-[#0071e3] border-gray-300 focus:ring-[#0071e3]"
-								/>
-								<span className="text-sm text-[#1d1d1f]/80 group-hover:text-[#1d1d1f] capitalize">
-									{cat}
-								</span>
-							</label>
+							<div key={cat} className="flex items-center justify-between group">
+								<label className="flex items-center gap-2 cursor-pointer flex-1">
+									<input
+										type="radio"
+										name="category"
+										checked={filters.category === cat}
+										onChange={() => setFilters((prev) => ({ ...prev, category: cat }))}
+										className="h-4 w-4 text-[#0071e3] border-gray-300 focus:ring-[#0071e3]"
+									/>
+									<span className="text-sm text-[#1d1d1f]/80 group-hover:text-[#1d1d1f] capitalize">
+										{cat}
+									</span>
+								</label>
+								<a
+									href={`/categories/${encodeURIComponent(cat)}`}
+									className="text-[10px] text-[#86868b] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#0071e3]"
+								>
+									&#8594;
+								</a>
+							</div>
 						))}
 						{filters.category && (
 							<button

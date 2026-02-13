@@ -1,6 +1,8 @@
 ---
 import Container from '../components/Container.astro';
 import SearchModal from '../components/SearchModal';
+import CookieConsent from '../components/CookieConsent';
+import NewsletterForm from '../components/NewsletterForm';
 import { SignedIn, SignedOut, UserButton } from '@clerk/astro/components';
 import { t } from '../i18n';
 import '@fontsource/inter/400.css';
@@ -15,7 +17,22 @@ import '@fontsource/noto-sans-jp/700.css';
 import '@fontsource/noto-sans-jp/900.css';
 import '../styles/global.css';
 
-const { title = 'Led Kikaku Store' } = Astro.props;
+interface Props {
+	title?: string;
+	description?: string;
+	image?: string;
+	url?: string;
+}
+
+const {
+	title = 'Led Kikaku Store',
+	description = 'Led Kikaku - LED照明製品のオンラインストア',
+	image = '/favicon.svg',
+	url,
+} = Astro.props;
+const siteUrl = Astro.site ?? 'https://led-kikaku.com';
+const canonicalURL = url ? new URL(url, siteUrl) : new URL(Astro.url.pathname, siteUrl);
+const ogImage = new URL(image, siteUrl).href;
 ---
 
 <!doctype html>
@@ -23,9 +40,29 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#ffffff" />
+		<meta name="format-detection" content="telephone=no" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="canonical" href={canonicalURL.href} />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+
+		<!-- Open Graph -->
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:url" content={canonicalURL.href} />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Led Kikaku Store" />
+
+		<!-- Twitter Card -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImage} />
+
+		<slot name="head" />
 	</head>
 	<body class="font-sans text-[#1d1d1f] antialiased bg-[#f5f5f7]">
 		<div class="min-h-screen flex flex-col">
@@ -111,6 +148,11 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 								<li><a href="#" class="hover:underline">{t('footer.investors')}</a></li>
 							</ul>
 						</div>
+						<div class="space-y-3 col-span-2 md:col-span-1">
+							<h3 class="font-semibold text-[#1d1d1f]">{t('newsletter.title')}</h3>
+							<p class="text-[11px] text-[#86868b]">{t('newsletter.description')}</p>
+							<NewsletterForm client:load />
+						</div>
 					</div>
 
 					<div class="pt-4 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -128,6 +170,9 @@ const { title = 'Led Kikaku Store' } = Astro.props;
 
 		{/* Search Modal */}
 		<SearchModal client:only="react" />
+
+		{/* Cookie Consent Banner */}
+		<CookieConsent client:only="react" />
 
 		<script>
 			import { $cartCount } from '../lib/cart';

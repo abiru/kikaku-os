@@ -1,5 +1,6 @@
 ---
 import Container from '../components/Container.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
 import Layout from '../layouts/Layout.astro';
 import WishlistPage from '../components/WishlistPage';
 import { t } from '../i18n';
@@ -9,6 +10,10 @@ import { t } from '../i18n';
 	<div class="bg-white min-h-screen">
 		<section class="pt-24 pb-12 sm:pt-32 border-b border-gray-200">
 			<Container>
+				<Breadcrumb items={[
+					{ label: t('breadcrumb.home'), href: '/' },
+					{ label: t('wishlist.title') },
+				]} />
 				<h1 class="text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
 					{t('wishlist.title')}
 				</h1>

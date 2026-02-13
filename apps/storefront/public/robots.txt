@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /checkout/
+
+Sitemap: https://led-kikaku.com/sitemap.xml

@@ -5,9 +5,11 @@ import Container from '../../components/Container.astro';
 import EmptyState from '../../components/EmptyState.astro';
 import WishlistButton from '../../components/WishlistButton';
 import ReviewSection from '../../components/ReviewSection';
+import RecentlyViewed from '../../components/RecentlyViewed';
 import Layout from '../../layouts/Layout.astro';
 import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 import { renderMarkdown } from '../../utils/markdown';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const { id } = Astro.params;
@@ -27,6 +29,22 @@ try {
 	const status = typeof error === 'object' && error ? (error as { status?: number }).status : undefined;
 	loadState = status === 404 ? 'not-found' : 'unavailable';
 	product = null;
+}
+
+// Fetch related products (same category, exclude current product)
+let relatedProducts: any[] = [];
+if (product?.category) {
+	try {
+		const params = new URLSearchParams();
+		params.set('category', product.category);
+		params.set('perPage', '5');
+		const relatedData = await fetchJson(buildStoreUrl(`/products?${params.toString()}`, apiBase)) as any;
+		relatedProducts = (relatedData?.products ?? [])
+			.filter((p: any) => p.id !== product.id)
+			.slice(0, 4);
+	} catch {
+		// Silently ignore - related products are not critical
+	}
 }
 
 const variant = product?.variants?.[0] ?? null;
@@ -71,7 +89,7 @@ const breadcrumbs = [
 	{ id: 1, name: 'Products', href: '/products' },
 ];
 if (product?.category) {
-	breadcrumbs.push({ id: 2, name: product.category, href: `/products?category=${encodeURIComponent(product.category)}` });
+	breadcrumbs.push({ id: 2, name: product.category, href: `/categories/${encodeURIComponent(product.category)}` });
 }
 
 // Product details/features
@@ -103,6 +121,7 @@ const policies = [
 
 <Layout title={product ? `${product.title} - Led Kikaku` : 'Product Detail'}>
 	{loadState === 'ready' && product ? (
+		<>
 		<div
 			id="product-page"
 			data-variant-id={variantId ?? ''}
@@ -196,6 +215,7 @@ const policies = [
 											id={index === 0 ? 'main-image' : undefined}
 											alt={image.alt}
 											src={image.src}
+											loading={image.primary ? 'eager' : 'lazy'}
 											class:list={[
 												'rounded-lg object-cover w-full',
 												image.primary ? 'lg:col-span-2 lg:row-span-2 aspect-square' : 'hidden lg:block aspect-square',
@@ -339,6 +359,52 @@ const policies = [
 				</div>
 			</div>
 		</div>
+		{/* Related Products */}
+		{relatedProducts.length > 0 && (
+			<section class="border-t border-gray-200 bg-[#f5f5f7] py-16">
+				<Container>
+					<h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+						{t('product.relatedProducts')}
+					</h2>
+					<div class="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 xl:gap-8">
+						{relatedProducts.map((related: any) => (
+							<a
+								href={`/products/${related.id}`}
+								class="group flex flex-col overflow-hidden rounded-2xl bg-white p-4 sm:p-6 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-lg hover:scale-[1.01]"
+							>
+								<div class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#f5f5f7] flex items-center justify-center">
+									{(related.mainImage || related.image) ? (
+										<img
+											src={related.mainImage || related.image}
+											alt={related.title}
+											class="w-full h-full object-cover"
+											loading="lazy"
+										/>
+									) : (
+										<div class="text-2xl font-bold text-gray-200 select-none">IMG</div>
+									)}
+								</div>
+								<h3 class="mt-4 text-sm font-semibold text-[#1d1d1f] group-hover:underline decoration-1 underline-offset-2 line-clamp-2">
+									{related.title}
+								</h3>
+								{related.variants?.[0]?.price && (
+									<p class="mt-1 text-sm text-[#86868b]">
+										{new Intl.NumberFormat('ja-JP', {
+											style: 'currency',
+											currency: related.variants[0].price.currency || 'JPY',
+											minimumFractionDigits: 0,
+										}).format(related.variants[0].price.amount)}
+									</p>
+								)}
+							</a>
+						))}
+					</div>
+				</Container>
+			</section>
+		)}
+		{/* Recently Viewed Products */}
+		<RecentlyViewed client:only="react" excludeId={product.id} />
+		</>
 	) : loadState === 'unavailable' ? (
 		<div class="mt-8">
 			<EmptyState
@@ -386,6 +452,7 @@ const policies = [
 
 	<script>
 		import { addToCart } from '../../lib/cart';
+		import { addToRecentlyViewed } from '../../lib/recentlyViewed';
 
 		const page = document.getElementById('product-page');
 		if (page) {
@@ -397,6 +464,17 @@ const policies = [
 			const currency = page.dataset.currency || 'JPY';
 			const taxRate = page.dataset.taxRate ? Number(page.dataset.taxRate) : 0.10;
 			const imageUrl = page.dataset.productImage || '';
+
+			// Track recently viewed product
+			if (productId) {
+				addToRecentlyViewed({
+					id: productId,
+					name: productTitle,
+					image: imageUrl || null,
+					price,
+					currency,
+				});
+			}
 
 			const buyButton = document.getElementById('buy-button');
 			const buyLabel = document.getElementById('buy-label');

@@ -94,6 +94,7 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'GET' && /^\/quotations\/\d+$/.test(c.req.path)) return next();
   if (c.req.method === 'GET' && /^\/quotations\/\d+\/html$/.test(c.req.path)) return next();
   if (c.req.method === 'POST' && /^\/quotations\/\d+\/accept$/.test(c.req.path)) return next();
+  if (c.req.method === 'POST' && c.req.path === '/store/newsletter/subscribe') return next();
   if (c.req.method === 'GET' && c.req.path === '/dev/ping') return next();
   // Public R2 image endpoint for Stripe checkout
   if (c.req.method === 'GET' && c.req.path === '/r2') return next();

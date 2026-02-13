@@ -226,6 +226,7 @@ const skeletonCards = Array.from({ length: 6 });
 					const img = document.createElement('img');
 					img.src = product.image;
 					img.alt = product.title ?? '';
+					img.loading = 'lazy';
 					img.className = 'w-full h-full object-cover';
 					imgContainer.appendChild(img);
 				} else {

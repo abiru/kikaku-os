@@ -1,11 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Container from '../components/Container.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
 import ContactForm from '../components/ContactForm';
+import { t } from '../i18n';
 ---
 
-<Layout title="お問い合わせ - Led Kikaku">
-	<section class="py-16">
+<Layout title={t('contact.pageTitle')}>
+	<Breadcrumb items={[
+		{ label: t('breadcrumb.home'), href: '/' },
+		{ label: t('contact.title') },
+	]} />
+	<section class="py-8">
 		<Container>
 			<div class="mx-auto max-w-xl">
 				<div class="mb-8 text-center">

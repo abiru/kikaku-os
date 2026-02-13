@@ -22,6 +22,7 @@ import adminProductFetch from './admin/adminProductFetch';
 import adminUsers from './admin/adminUsers';
 import adminInquiries from './admin/adminInquiries';
 import adminReviews from './admin/adminReviews';
+import adminNewsletter from './admin/adminNewsletter';
 
 // Webhooks
 import stripe from './webhooks/stripe';
@@ -31,6 +32,7 @@ import storefront from './storefront/storefront';
 import storeAccount from './storefront/storeAccount';
 import contact from './storefront/contact';
 import storeReviews from './storefront/reviews';
+import storeNewsletter from './storefront/newsletter';
 
 // Checkout
 import checkout from './checkout/checkout';
@@ -84,6 +86,7 @@ export function registerRoutes(app: Hono<Env>) {
   app.route('/admin', adminUsers);
   app.route('/admin', adminInquiries);
   app.route('/admin', adminReviews);
+  app.route('/admin/newsletter', adminNewsletter);
 
   // Webhooks (public, signature-verified)
   app.route('/', stripe);
@@ -94,6 +97,7 @@ export function registerRoutes(app: Hono<Env>) {
   app.route('/store/account', storeAccount);
   app.route('/store', contact);
   app.route('/store', storeReviews);
+  app.route('/store', storeNewsletter);
 
   // Checkout & Payments (public + authenticated)
   app.route('/', checkout);
@@ -142,6 +146,7 @@ export {
   adminUsers,
   adminInquiries,
   adminReviews,
+  adminNewsletter,
   // Webhooks
   stripe,
   // Storefront
@@ -149,6 +154,7 @@ export {
   storeAccount,
   contact,
   storeReviews,
+  storeNewsletter,
   // Checkout
   checkout,
   payments,

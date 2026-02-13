@@ -440,17 +440,31 @@ describe('sendShippingNotificationEmail', () => {
     expect(result.error).toBe('Customer email not found');
   });
 
-  it('returns error when email template is not found', async () => {
+  it('uses fallback template when DB template is not found', async () => {
     const mockDB = createMockDB();
     const env = { DB: mockDB };
 
     vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_fallback' });
 
     const result = await sendShippingNotificationEmail(env as any, 1, 'ヤマト運輸', '1234-5678-9012');
 
-    expect(result.success).toBe(false);
-    expect(result.error).toBe('Email template not found');
+    expect(result.success).toBe(true);
     expect(getEmailTemplate).toHaveBeenCalledWith(env, 'shipping-notification');
+    expect(sendEmail).toHaveBeenCalledWith(
+      env,
+      expect.objectContaining({
+        to: 'tanaka@example.com',
+        subject: '発送のお知らせ #1',
+        html: expect.stringContaining('発送のお知らせ'),
+        text: expect.stringContaining('発送のお知らせ'),
+      })
+    );
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    expect(callArgs.html).toContain('ヤマト運輸');
+    expect(callArgs.html).toContain('1234-5678-9012');
+    expect(callArgs.text).toContain('ヤマト運輸');
+    expect(callArgs.text).toContain('1234-5678-9012');
   });
 
   it('sends shipping notification email successfully', async () => {

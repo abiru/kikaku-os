@@ -1,11 +1,17 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
 import CheckoutPage from '../components/CheckoutPage';
 import { t } from '../i18n';
 ---
 
 <Layout title={t('checkout.pageTitle')}>
 	<div class="min-h-screen bg-gray-50">
+		<Breadcrumb items={[
+			{ label: t('breadcrumb.home'), href: '/' },
+			{ label: t('cart.title'), href: '/cart' },
+			{ label: t('checkout.title') },
+		]} />
 		<CheckoutPage client:load />
 	</div>
 </Layout>
