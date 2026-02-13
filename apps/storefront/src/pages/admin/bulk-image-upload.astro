@@ -5,10 +5,6 @@ import { Button } from '../../components/catalyst/button';
 import { Input } from '../../components/catalyst/input';
 import { Heading, Subheading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../lib/api';
-
-const apiBase = getApiBase();
-const apiKey = import.meta.env.ADMIN_API_KEY;
 ---
 
 <AdminLayout title="Bulk Image Upload - Admin">
@@ -100,7 +96,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 		<div id="resultSection" class="hidden bg-white rounded-lg shadow p-6 space-y-4"></div>
 	</div>
 
-	<script>
+	<script is:inline>
 		let parsedResult = null;
 
 		const fileInput = document.getElementById('fileInput');
