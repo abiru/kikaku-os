@@ -17,11 +17,14 @@ import {
   createMovementSchema,
   updateThresholdSchema,
   thresholdParamSchema,
+  setThresholdSchema,
   fulfillmentStatusSchema,
   fulfillmentIdParamSchema,
   orderFulfillmentParamSchema,
   createFulfillmentSchema,
-  updateFulfillmentSchema
+  updateFulfillmentSchema,
+  createInboxSchema,
+  backfillSchema,
 } from '../../../lib/schemas';
 
 describe('Product Schemas', () => {
@@ -476,6 +479,184 @@ describe('Fulfillment Schemas', () => {
         tracking_number: 'TRACK456'
       });
       expect(result.success).toBe(true);
+    });
+  });
+});
+
+describe('Inbox Schemas', () => {
+  describe('createInboxSchema', () => {
+    it('accepts valid inbox data with all fields', () => {
+      const result = createInboxSchema.safeParse({
+        title: 'Test alert',
+        body: 'Something happened',
+        kind: 'daily_close_anomaly',
+        severity: 'warning',
+        date: '2026-01-15',
+        metadata: '{"key":"value"}',
+      });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({
+        title: 'Test alert',
+        body: 'Something happened',
+        kind: 'daily_close_anomaly',
+        severity: 'warning',
+        date: '2026-01-15',
+        metadata: '{"key":"value"}',
+      });
+    });
+
+    it('accepts minimal data with defaults', () => {
+      const result = createInboxSchema.safeParse({ title: 'Alert' });
+      expect(result.success).toBe(true);
+      expect(result.data?.severity).toBe('info');
+    });
+
+    it('rejects empty title', () => {
+      const result = createInboxSchema.safeParse({ title: '' });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects missing title', () => {
+      const result = createInboxSchema.safeParse({ body: 'no title' });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects title over 500 characters', () => {
+      const result = createInboxSchema.safeParse({ title: 'x'.repeat(501) });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects invalid severity', () => {
+      const result = createInboxSchema.safeParse({
+        title: 'Test',
+        severity: 'urgent',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects invalid date format', () => {
+      const result = createInboxSchema.safeParse({
+        title: 'Test',
+        date: '01-15-2026',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects body over 10000 characters', () => {
+      const result = createInboxSchema.safeParse({
+        title: 'Test',
+        body: 'x'.repeat(10001),
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+});
+
+describe('setThresholdSchema', () => {
+  it('accepts valid threshold data', () => {
+    const result = setThresholdSchema.safeParse({
+      variant_id: 1,
+      threshold: 10,
+    });
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ variant_id: 1, threshold: 10 });
+  });
+
+  it('accepts zero threshold', () => {
+    const result = setThresholdSchema.safeParse({
+      variant_id: 1,
+      threshold: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects negative variant_id', () => {
+    const result = setThresholdSchema.safeParse({
+      variant_id: -1,
+      threshold: 5,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects non-integer variant_id', () => {
+    const result = setThresholdSchema.safeParse({
+      variant_id: 1.5,
+      threshold: 5,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative threshold', () => {
+    const result = setThresholdSchema.safeParse({
+      variant_id: 1,
+      threshold: -1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing variant_id', () => {
+    const result = setThresholdSchema.safeParse({ threshold: 5 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing threshold', () => {
+    const result = setThresholdSchema.safeParse({ variant_id: 1 });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('Daily Close Schemas', () => {
+  describe('backfillSchema', () => {
+    it('accepts valid date range', () => {
+      const result = backfillSchema.safeParse({
+        startDate: '2026-01-01',
+        endDate: '2026-01-31',
+      });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({
+        startDate: '2026-01-01',
+        endDate: '2026-01-31',
+        force: false,
+        skipExisting: true,
+      });
+    });
+
+    it('accepts optional force and skipExisting', () => {
+      const result = backfillSchema.safeParse({
+        startDate: '2026-01-01',
+        endDate: '2026-01-31',
+        force: true,
+        skipExisting: false,
+      });
+      expect(result.success).toBe(true);
+      expect(result.data?.force).toBe(true);
+      expect(result.data?.skipExisting).toBe(false);
+    });
+
+    it('rejects missing startDate', () => {
+      const result = backfillSchema.safeParse({ endDate: '2026-01-31' });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects missing endDate', () => {
+      const result = backfillSchema.safeParse({ startDate: '2026-01-01' });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects invalid startDate format', () => {
+      const result = backfillSchema.safeParse({
+        startDate: '01/01/2026',
+        endDate: '2026-01-31',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects invalid endDate format', () => {
+      const result = backfillSchema.safeParse({
+        startDate: '2026-01-01',
+        endDate: 'Jan 31',
+      });
+      expect(result.success).toBe(false);
     });
   });
 });

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { ensureDate } from '../../lib/date';
 import { jsonError, jsonOk } from '../../lib/http';
+import { backfillSchema } from '../../lib/schemas';
 import { generateDailyReport } from '../../services/dailyReport';
 import { generateStripeEvidence } from '../../services/stripeEvidence';
 import { renderDailyCloseHtml } from '../../services/renderDailyCloseHtml';
@@ -158,19 +159,16 @@ dailyCloseArtifacts.get('/daily-close/runs', async (c) => {
 
 // Backfill daily close for a date range
 dailyCloseArtifacts.post('/daily-close/backfill', async (c) => {
-  const body = await c.req.json<{
-    startDate: string;
-    endDate: string;
-    force?: boolean;
-    skipExisting?: boolean;
-  }>();
+  const raw = await c.req.json();
+  const parsed = backfillSchema.safeParse(raw);
 
-  const startDate = ensureDate(body.startDate);
-  const endDate = ensureDate(body.endDate);
-
-  if (!startDate || !endDate) {
-    return jsonError(c, 'Invalid startDate or endDate', 400);
+  if (!parsed.success) {
+    const messages = parsed.error.issues.map((e) => e.message).join(', ');
+    return jsonError(c, messages, 400);
   }
+
+  const startDate = parsed.data.startDate;
+  const endDate = parsed.data.endDate;
 
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -185,8 +183,8 @@ dailyCloseArtifacts.post('/daily-close/backfill', async (c) => {
     return jsonError(c, 'Date range cannot exceed 90 days', 400);
   }
 
-  const force = body.force === true;
-  const skipExisting = body.skipExisting !== false; // default true
+  const force = parsed.data.force;
+  const skipExisting = parsed.data.skipExisting;
 
   const results: DailyCloseRunResult[] = [];
   const current = new Date(start);
