@@ -171,6 +171,12 @@ export const createMockDb = (options?: MockDbOptions) => {
             const order = getOrCreateOrder(id);
             return { id: order.id, total_net: order.total_net, status: order.status };
           }
+          if (sql.includes('SELECT id, status FROM orders')) {
+            const id = Number(args[0]);
+            if (!Number.isFinite(id)) return null;
+            const order = getOrCreateOrder(id);
+            return { id: order.id, status: order.status };
+          }
           if (sql.includes('SELECT id FROM orders')) {
             const id = Number(args[0]);
             if (!Number.isFinite(id)) return null;
@@ -285,7 +291,7 @@ export const createMockDb = (options?: MockDbOptions) => {
               // Validation failed - no update
               return { meta: { last_row_id: 0, changes: 0 } };
             }
-          } else if (sql.includes('UPDATE orders SET status=?, refunded_amount=?, refund_count=?')) {
+          } else if (sql.includes('UPDATE orders') && sql.includes('SET status=?, refunded_amount=?, refund_count=?')) {
             const newStatus = String(args[0]);
             const newRefundedAmount = Number(args[1]);
             const newRefundCount = Number(args[2]);
@@ -295,7 +301,7 @@ export const createMockDb = (options?: MockDbOptions) => {
             order.refunded_amount = newRefundedAmount;
             order.refund_count = newRefundCount;
             order.updated_at = nextNow();
-          } else if (sql.includes('UPDATE orders SET status=?')) {
+          } else if (sql.includes('UPDATE orders') && sql.includes('SET status=?')) {
             const newStatus = String(args[0]);
             const orderId = Number(args[1]);
             const order = getOrCreateOrder(orderId);

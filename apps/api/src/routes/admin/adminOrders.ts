@@ -249,7 +249,7 @@ adminOrders.post(
       }
 
       // Call Stripe Refunds API
-      const stripeKey = c.env.STRIPE_SECRET_KEY ?? c.env.STRIPE_API_KEY;
+      const stripeKey = c.env.STRIPE_SECRET_KEY;
       if (!stripeKey) {
         return jsonError(c, 'Stripe API key not configured', 500);
       }
