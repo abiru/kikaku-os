@@ -8,6 +8,7 @@ import { putText } from '../../lib/r2';
 import { upsertDocument } from '../../services/documents';
 import { ensureStripePriceForVariant } from '../../services/stripe';
 import { generatePublicToken } from '../../lib/token';
+import { timingSafeCompare } from '../../middleware/clerkAuth';
 
 const quotations = new Hono<Env>();
 
@@ -490,7 +491,7 @@ quotations.post('/quotations/:token/accept', async (c) => {
 // DELETE /quotations/:id - Delete quotation (admin only, guarded)
 quotations.delete('/quotations/:id', async (c) => {
   const adminKey = c.req.header('x-admin-key');
-  if (!adminKey || !c.env.ADMIN_API_KEY || adminKey !== c.env.ADMIN_API_KEY) {
+  if (!adminKey || !c.env.ADMIN_API_KEY || !timingSafeCompare(adminKey, c.env.ADMIN_API_KEY)) {
     return jsonError(c, 'Unauthorized', 401);
   }
 

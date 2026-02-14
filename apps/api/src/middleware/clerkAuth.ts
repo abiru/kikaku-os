@@ -3,7 +3,7 @@ import { verifyToken } from '@clerk/backend';
 import type { Env } from '../env';
 import { jsonError } from '../lib/http';
 
-const timingSafeCompare = (a: string, b: string): boolean => {
+export const timingSafeCompare = (a: string, b: string): boolean => {
   const enc = new TextEncoder();
   const aBuf = enc.encode(a);
   const bBuf = enc.encode(b);
