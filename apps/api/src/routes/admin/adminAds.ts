@@ -32,7 +32,10 @@ app.post(
       }
 
       // Generate ad copy with Claude
-      const { candidates, promptUsed } = await generateAdCopy(request, apiKey);
+      const { candidates, promptUsed } = await generateAdCopy(request, apiKey, {
+        AI_GATEWAY_ACCOUNT_ID: c.env.AI_GATEWAY_ACCOUNT_ID,
+        AI_GATEWAY_ID: c.env.AI_GATEWAY_ID,
+      });
 
       // Following "AIは信頼しない" principle: Save to inbox for human approval
       const inboxItem = await c.env.DB.prepare(

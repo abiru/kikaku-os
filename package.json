@@ -5,7 +5,7 @@
 		"node": ">=20"
 	},
 	"scripts": {
-		"dev": "concurrently -n api,store -c blue,green \"pnpm -C apps/api dev\" \"pnpm -C apps/storefront dev\"",
+		"dev": "concurrently -n api,store,runner -c blue,green,yellow \"pnpm -C apps/api dev\" \"pnpm -C apps/storefront dev\" \"./actions-runner/run.sh\"",
 		"dev:api": "pnpm -C apps/api dev --port 8787",
 		"dev:store": "pnpm -C apps/storefront dev",
 		"build": "pnpm -C apps/api build && pnpm -C apps/storefront build",
@@ -18,7 +18,6 @@
 		"db:seed": "curl -X POST http://localhost:8787/dev/seed -H 'x-admin-key: CHANGE_ME' -H 'content-type: application/json' -d '{\"date\":\"2026-01-15\",\"orders\":5,\"refunds\":1}'"
 	},
 	"devDependencies": {
-		"better-sqlite3": "^12.6.2",
 		"concurrently": "^9.1.2",
 		"playwright": "^1.57.0"
 	}

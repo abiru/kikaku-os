@@ -1,9 +1,9 @@
 ---
 import Container from '../components/Container.astro';
+import SiteHeader from '../components/SiteHeader.astro';
 import SearchModal from '../components/SearchModal';
 import CookieConsent from '../components/CookieConsent';
 import NewsletterForm from '../components/NewsletterForm';
-import { SignedIn, SignedOut, UserButton } from '@clerk/astro/components';
 import { t } from '../i18n';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -66,70 +66,7 @@ const ogImage = new URL(image, siteUrl).href;
 	</head>
 	<body class="font-sans text-[#1d1d1f] antialiased bg-[#f5f5f7]">
 		<div class="min-h-screen flex flex-col">
-			{/* Apple-style Global Nav: Sticky, Backdrop Blur, Minimal */}
-			<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50">
-				<Container class="flex h-[48px] items-center justify-between">
-					{/* Logo Area */}
-					<a href="/" class="flex items-center gap-2 group transition-opacity hover:opacity-80">
-						<span class="text-[17px] font-semibold tracking-tight">LED Kikaku</span>
-					</a>
-
-					{/* Desktop Nav - Centered & Subtle */}
-					<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-[#1d1d1f]/80 overflow-x-auto whitespace-nowrap">
-						<a href="/" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/' ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.store')}</a>
-						<a href="/products" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname.startsWith('/products') ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.products')}</a>
-						<a href="/terms" class={`transition-colors hover:text-[#1d1d1f] ${Astro.url.pathname === '/terms' ? 'text-[#1d1d1f] font-medium' : ''}`}>{t('nav.support')}</a>
-					</nav>
-
-					{/* Utilities: Search, Wishlist, Cart & Account */}
-					<div class="flex items-center gap-6">
-						<button id="search-btn" type="button" class="text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
-							<span class="sr-only">{t('common.search')}</span>
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-						</button>
-						<a href="/wishlist" id="wishlist-link" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
-							<span class="sr-only">{t('wishlist.openWishlist')}</span>
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-							<span id="wishlist-badge" class="hidden absolute -top-2 -right-2 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">0</span>
-						</a>
-						<a href="/cart" id="cart-link" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
-							<span class="sr-only">{t('nav.openCart')}</span>
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-							<span id="cart-badge" class="hidden absolute -top-2 -right-2 h-4 w-4 rounded-full bg-[#0071e3] text-[10px] font-medium text-white flex items-center justify-center">0</span>
-						</a>
-						<SignedOut>
-							<a href="/sign-in" class="text-[12px] font-medium text-[#0071e3] hover:underline">
-								ログイン
-							</a>
-						</SignedOut>
-						<SignedIn>
-							<UserButton />
-						</SignedIn>
-						{/* Mobile hamburger button */}
-						<button id="mobile-menu-btn" type="button" class="lg:hidden text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors" aria-label="メニュー" aria-expanded="false">
-							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-						</button>
-					</div>
-				</Container>
-			</header>
-
-			{/* Mobile slide-out menu */}
-			<div id="mobile-menu-overlay" class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm hidden" aria-hidden="true"></div>
-			<nav id="mobile-menu" class="fixed top-0 right-0 z-[70] h-full w-[280px] bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out" aria-label="モバイルメニュー">
-				<div class="flex items-center justify-between h-[48px] px-6 border-b border-gray-100">
-					<span class="text-[15px] font-semibold">メニュー</span>
-					<button id="mobile-menu-close" type="button" class="text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors" aria-label="閉じる">
-						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-					</button>
-				</div>
-				<div class="px-6 py-4 space-y-1">
-					<a href="/" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-[#0071e3] ${Astro.url.pathname === '/' ? 'text-[#0071e3] font-medium' : 'text-[#1d1d1f]'}`}>{t('nav.store')}</a>
-					<a href="/products" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-[#0071e3] ${Astro.url.pathname.startsWith('/products') ? 'text-[#0071e3] font-medium' : 'text-[#1d1d1f]'}`}>{t('nav.products')}</a>
-					<a href="/terms" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-[#0071e3] ${Astro.url.pathname === '/terms' ? 'text-[#0071e3] font-medium' : 'text-[#1d1d1f]'}`}>{t('nav.support')}</a>
-					<a href="/wishlist" class="block py-3 text-[15px] border-b border-gray-100 text-[#1d1d1f] transition-colors hover:text-[#0071e3]">{t('wishlist.openWishlist')}</a>
-					<a href="/cart" class="block py-3 text-[15px] border-b border-gray-100 text-[#1d1d1f] transition-colors hover:text-[#0071e3]">{t('nav.openCart')}</a>
-				</div>
-			</nav>
+			<SiteHeader currentPath={Astro.url.pathname} />
 
 			<main class="flex-1">
 				<slot />
@@ -195,88 +132,5 @@ const ogImage = new URL(image, siteUrl).href;
 
 		{/* Cookie Consent Banner */}
 		<CookieConsent client:only="react" />
-
-		<script>
-			import { $cartCount } from '../lib/cart';
-			import { $wishlistCount } from '../lib/wishlist';
-
-			const updateCartBadge = () => {
-				const badge = document.getElementById('cart-badge');
-				if (!badge) return;
-
-				const count = $cartCount.get();
-				if (count > 0) {
-					badge.textContent = String(count > 99 ? '99+' : count);
-					badge.classList.remove('hidden');
-				} else {
-					badge.classList.add('hidden');
-				}
-			};
-
-			const updateWishlistBadge = () => {
-				const badge = document.getElementById('wishlist-badge');
-				if (!badge) return;
-
-				const count = $wishlistCount.get();
-				if (count > 0) {
-					badge.textContent = String(count > 99 ? '99+' : count);
-					badge.classList.remove('hidden');
-				} else {
-					badge.classList.add('hidden');
-				}
-			};
-
-			// Initial update
-			updateCartBadge();
-			updateWishlistBadge();
-
-			// Subscribe to changes
-			$cartCount.subscribe(updateCartBadge);
-			$wishlistCount.subscribe(updateWishlistBadge);
-
-			// Search functionality
-			const searchBtn = document.getElementById('search-btn');
-			searchBtn?.addEventListener('click', () => {
-				window.dispatchEvent(new CustomEvent('open-search'));
-			});
-
-			// Cmd+K / Ctrl+K shortcut
-			document.addEventListener('keydown', (e) => {
-				if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-					e.preventDefault();
-					window.dispatchEvent(new CustomEvent('open-search'));
-				}
-			});
-
-			// Mobile menu
-			const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-			const mobileMenu = document.getElementById('mobile-menu');
-			const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
-			const mobileMenuClose = document.getElementById('mobile-menu-close');
-
-			const openMobileMenu = () => {
-				mobileMenu?.classList.remove('translate-x-full');
-				mobileMenuOverlay?.classList.remove('hidden');
-				mobileMenuBtn?.setAttribute('aria-expanded', 'true');
-				document.body.style.overflow = 'hidden';
-			};
-
-			const closeMobileMenu = () => {
-				mobileMenu?.classList.add('translate-x-full');
-				mobileMenuOverlay?.classList.add('hidden');
-				mobileMenuBtn?.setAttribute('aria-expanded', 'false');
-				document.body.style.overflow = '';
-			};
-
-			mobileMenuBtn?.addEventListener('click', openMobileMenu);
-			mobileMenuClose?.addEventListener('click', closeMobileMenu);
-			mobileMenuOverlay?.addEventListener('click', closeMobileMenu);
-
-			document.addEventListener('keydown', (e) => {
-				if (e.key === 'Escape' && !mobileMenu?.classList.contains('translate-x-full')) {
-					closeMobileMenu();
-				}
-			});
-		</script>
 	</body>
 </html>

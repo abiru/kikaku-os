@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from '../i18n';
 import type { CartItem } from '../lib/cart';
+import { formatPrice } from '../lib/format';
 
 type QuoteBreakdown = {
 	subtotal: number;
@@ -16,13 +17,6 @@ type OrderSummaryProps = {
 	items: CartItem[];
 	breakdown: QuoteBreakdown | null;
 	onCouponApply: (couponCode?: string) => Promise<void>;
-};
-
-const formatPrice = (amount: number, currency: string) => {
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency: currency || 'JPY'
-	}).format(amount);
 };
 
 export default function OrderSummary({ items, breakdown, onCouponApply }: OrderSummaryProps) {

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import type { Env } from '../env';
 import { jsonOk, jsonError } from '../lib/http';
+import { timingSafeCompare } from '../middleware/clerkAuth';
 
 const health = new Hono<Env>();
 
@@ -53,7 +54,7 @@ health.get('/health', async (c) => {
 
   if (detailed) {
     const adminKey = c.req.header('x-admin-key');
-    if (!adminKey || adminKey !== c.env.ADMIN_API_KEY) {
+    if (!adminKey || !c.env.ADMIN_API_KEY || !timingSafeCompare(adminKey, c.env.ADMIN_API_KEY)) {
       return jsonError(c, 'Unauthorized', 401);
     }
     checks.secretsDetail = Object.fromEntries(

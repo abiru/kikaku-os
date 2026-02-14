@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StarRatingDisplay } from '../StarRating';
 import { useTranslation } from '../../i18n';
+import { formatDate } from '../../lib/format';
 
 type Review = {
   id: number;
@@ -69,14 +70,6 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
     } finally {
       setActioningId(null);
     }
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
   };
 
   const statusLabel = (status: string) => {
@@ -162,7 +155,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">
-                    {formatDate(review.created_at)}
+                    {formatDate(review.created_at, { year: 'numeric', month: 'short', day: 'numeric' })}
                   </td>
                   <td className="px-4 py-4 text-sm">
                     {review.status === 'pending' && (

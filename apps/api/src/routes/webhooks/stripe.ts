@@ -15,23 +15,14 @@ const handleWebhook = async (c: Context<Env>) => {
   const signature = c.req.header('stripe-signature') ?? null;
   const payload = await c.req.text();
 
-  // Enforce signature verification in production
-  const isDevMode = c.env.DEV_MODE === 'true';
-
   if (!secret) {
-    if (isDevMode) {
-      console.warn(
-        '⚠️  STRIPE_WEBHOOK_SECRET not set - skipping signature verification (DEV ONLY)'
-      );
-    } else {
-      return jsonError(c, 'Webhook signature verification is required in production', 500);
-    }
-  } else {
-    const valid = await verifyStripeSignature(payload, signature, secret, {
-      toleranceSeconds: 300
-    });
-    if (!valid) return jsonError(c, 'Invalid signature', 400);
+    return jsonError(c, 'STRIPE_WEBHOOK_SECRET is not configured', 500);
   }
+
+  const valid = await verifyStripeSignature(payload, signature, secret, {
+    toleranceSeconds: 300
+  });
+  if (!valid) return jsonError(c, 'Invalid signature', 400);
 
   let event: any;
   try {

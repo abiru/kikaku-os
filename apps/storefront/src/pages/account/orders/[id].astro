@@ -4,6 +4,7 @@ export const prerender = false;
 import AccountLayout from '../../../layouts/AccountLayout.astro';
 import Container from '../../../components/Container.astro';
 import { t } from '../../../i18n';
+import { formatDate } from '../../../lib/format';
 
 const API_BASE = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
@@ -73,14 +74,12 @@ const formatCurrency = (amount: number, currency = 'JPY') => {
   }).format(amount);
 };
 
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+const dateTimeLongOpts: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
 };
 
 const statusLabels: Record<string, string> = {
@@ -109,7 +108,7 @@ const statusLabels: Record<string, string> = {
             {t('account.orderNumber')} #{order.id}
           </h1>
           <p class="text-[#86868b] mt-1">
-            {formatDate(order.created_at)}
+            {formatDate(order.created_at, dateTimeLongOpts)}
           </p>
         </div>
         <div class={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${

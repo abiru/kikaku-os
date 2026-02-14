@@ -11,6 +11,7 @@ import { Select } from '../../../components/catalyst/select';
 import { Textarea } from '../../../components/catalyst/textarea';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { formatPrice, formatDate } from '../../../lib/format';
 import MarkdownPreview from '../../../components/MarkdownPreview';
 
 const { id } = Astro.params;
@@ -207,23 +208,12 @@ if (apiKey) {
 	}
 }
 
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	return new Date(dateStr).toLocaleString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit'
-	});
-};
-
-const formatPrice = (amount: number, currency: string = 'JPY') => {
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency: currency,
-		minimumFractionDigits: 0,
-	}).format(amount);
+const dateTimeOpts: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit'
 };
 
 const getExternalImageUrl = (metadata: string | null): string | null => {
@@ -356,11 +346,11 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
 								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(product.created_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(product.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Updated</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(product.updated_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(product.updated_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
 					</div>

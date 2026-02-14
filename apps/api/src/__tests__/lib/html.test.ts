@@ -86,8 +86,6 @@ describe('escapeHtml', () => {
 
   test('handles numbers by converting to string', () => {
     expect(escapeHtml(123 as any)).toBe('123');
-    // Note: 0 is falsy, so it returns empty string by design
-    // If you need to handle 0, convert to string before calling escapeHtml
-    expect(escapeHtml(0 as any)).toBe('');
+    expect(escapeHtml(0 as any)).toBe('0');
   });
 });

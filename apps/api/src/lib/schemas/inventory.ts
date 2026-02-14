@@ -35,7 +35,19 @@ export const thresholdParamSchema = z.object({
     .refine((v) => v > 0, 'Variant ID must be greater than 0'),
 });
 
+export const setThresholdSchema = z.object({
+  variant_id: z
+    .number()
+    .int('Variant ID must be an integer')
+    .positive('Variant ID must be positive'),
+  threshold: z
+    .number()
+    .int('Threshold must be an integer')
+    .min(0, 'Threshold must be 0 or greater'),
+});
+
 // Type exports
 export type CreateMovementInput = z.infer<typeof createMovementSchema>;
 export type UpdateThresholdInput = z.infer<typeof updateThresholdSchema>;
 export type ThresholdParam = z.infer<typeof thresholdParamSchema>;
+export type SetThresholdInput = z.infer<typeof setThresholdSchema>;

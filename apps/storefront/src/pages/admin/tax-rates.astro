@@ -8,6 +8,7 @@ import { Heading } from'../../components/catalyst/heading';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from'../../components/catalyst/table';
 import AdminLayout from'../../layouts/AdminLayout.astro';
 import { getApiBase } from'../../lib/api';
+import { formatDate } from '../../lib/format';
 
 const apiBase = getApiBase();
 
@@ -50,11 +51,6 @@ if (import.meta.env.ADMIN_API_KEY) {
 
 const formatRate = (rate: number) => {
 	return `${(rate * 100).toFixed(1)}%`;
-};
-
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return'-';
-	return new Date(dateStr).toLocaleDateString('ja-JP');
 };
 
 const isActive = (taxRate: TaxRate) => {

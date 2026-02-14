@@ -1,3 +1,4 @@
+import { escapeHtml } from '../lib/html';
 import { DailyReport } from './dailyReport';
 import { StripeEvidence } from './stripeEvidence';
 
@@ -18,18 +19,20 @@ export const renderDailyCloseHtml = (report: DailyReport, evidence: StripeEviden
 
   const anomalyClass = report.anomalies.level === 'critical' ? 'crit' : report.anomalies.level === 'warning' ? 'warn' : 'ok';
 
+  const h = escapeHtml;
+
   return `<!doctype html>
-<html><head><meta charset="utf-8"/><title>Daily Close ${report.date}</title><style>${style}</style></head>
+<html><head><meta charset="utf-8"/><title>Daily Close ${h(report.date)}</title><style>${style}</style></head>
 <body>
   <div class="card">
-    <div class="title">Daily Close ${report.date}</div>
+    <div class="title">Daily Close ${h(report.date)}</div>
     <div class="muted">Snapshotted KPI & evidence</div>
-    <div class="pill ${anomalyClass}" style="margin-top:10px;">${report.anomalies.message}</div>
+    <div class="pill ${anomalyClass}" style="margin-top:10px;">${h(report.anomalies.message)}</div>
   </div>
   <div class="grid">
-    <div class="card"><div class="muted">Orders</div><div class="title">¥${report.orders.totalNet.toLocaleString('ja-JP')}</div><div class="muted">count ${report.orders.count} / fee ¥${report.orders.totalFee.toLocaleString('ja-JP')}</div></div>
-    <div class="card"><div class="muted">Payments</div><div class="title">¥${report.payments.totalAmount.toLocaleString('ja-JP')}</div><div class="muted">count ${report.payments.count} / fee ¥${report.payments.totalFee.toLocaleString('ja-JP')}</div></div>
-    <div class="card"><div class="muted">Refunds</div><div class="title">¥${report.refunds.totalAmount.toLocaleString('ja-JP')}</div><div class="muted">count ${report.refunds.count}</div></div>
+    <div class="card"><div class="muted">Orders</div><div class="title">¥${h(report.orders.totalNet.toLocaleString('ja-JP'))}</div><div class="muted">count ${h(String(report.orders.count))} / fee ¥${h(report.orders.totalFee.toLocaleString('ja-JP'))}</div></div>
+    <div class="card"><div class="muted">Payments</div><div class="title">¥${h(report.payments.totalAmount.toLocaleString('ja-JP'))}</div><div class="muted">count ${h(String(report.payments.count))} / fee ¥${h(report.payments.totalFee.toLocaleString('ja-JP'))}</div></div>
+    <div class="card"><div class="muted">Refunds</div><div class="title">¥${h(report.refunds.totalAmount.toLocaleString('ja-JP'))}</div><div class="muted">count ${h(String(report.refunds.count))}</div></div>
   </div>
   <div class="card">
     <div class="title">Payments</div>
@@ -37,7 +40,7 @@ export const renderDailyCloseHtml = (report: DailyReport, evidence: StripeEviden
       ${evidence.payments
         .map(
           (p) =>
-            `<tr><td>${p.id}</td><td>¥${p.amount.toLocaleString('ja-JP')}</td><td>¥${p.fee.toLocaleString('ja-JP')}</td><td>${p.method || ''}</td><td>${p.provider || ''}</td><td>${p.created_at}</td></tr>`
+            `<tr><td>${h(String(p.id))}</td><td>¥${h(p.amount.toLocaleString('ja-JP'))}</td><td>¥${h(p.fee.toLocaleString('ja-JP'))}</td><td>${h(p.method)}</td><td>${h(p.provider)}</td><td>${h(p.created_at)}</td></tr>`
         )
         .join('')}
     </tbody></table>
@@ -45,7 +48,7 @@ export const renderDailyCloseHtml = (report: DailyReport, evidence: StripeEviden
   <div class="card">
     <div class="title">Refunds</div>
     <table><thead><tr><th>ID</th><th>Amount</th><th>Reason</th><th>Created</th></tr></thead><tbody>
-      ${evidence.refunds.map(r => `<tr><td>${r.id}</td><td>¥${r.amount.toLocaleString('ja-JP')}</td><td>${r.reason||''}</td><td>${r.created_at}</td></tr>`).join('')}
+      ${evidence.refunds.map(r => `<tr><td>${h(String(r.id))}</td><td>¥${h(r.amount.toLocaleString('ja-JP'))}</td><td>${h(r.reason)}</td><td>${h(r.created_at)}</td></tr>`).join('')}
     </tbody></table>
   </div>
 </body></html>`;

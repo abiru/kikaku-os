@@ -17,6 +17,7 @@ export type VariantPriceRow = {
   currency: string;
   provider_price_id: string | null;
   provider_product_id: string | null;
+  tax_rate?: number | null;
 };
 
 export const validateItem = (item: unknown): CheckoutItem | null => {

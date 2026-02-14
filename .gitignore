@@ -78,6 +78,12 @@ temp/
 .cache/
 codex-runs/
 
+# --- GitHub Actions self-hosted runner ---
+actions-runner/
+
 # --- Migration data ---
 shopify/
+
+# --- External UI kit (used components copied to apps/storefront/src/components/catalyst/) ---
+catalyst-ui-kit/
 

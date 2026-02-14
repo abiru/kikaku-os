@@ -1,18 +1,11 @@
 import { useStore } from '@nanostores/react';
 import { $recentlyViewedList, type RecentlyViewedItem } from '../lib/recentlyViewed';
 import { useTranslation } from '../i18n';
+import { formatPrice } from '../lib/format';
 
 interface Props {
 	excludeId?: number;
 }
-
-const formatPrice = (amount: number, currency: string = 'JPY') => {
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency,
-		minimumFractionDigits: 0,
-	}).format(amount);
-};
 
 export default function RecentlyViewed({ excludeId }: Props) {
 	const items = useStore($recentlyViewedList);

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
+import { calculateOrderTax, type TaxCalculationInput } from '../../services/tax';
 import { getCompanyInfo } from '../../lib/company';
 import { renderQuotationHtml, QuotationData } from '../../services/renderQuotationHtml';
 import { putText } from '../../lib/r2';
@@ -9,9 +10,9 @@ import { upsertDocument } from '../../services/documents';
 import { ensureStripePriceForVariant } from '../../services/stripe';
 import { generatePublicToken } from '../../lib/token';
 import { validateItem, type CheckoutItem, type VariantPriceRow } from '../../lib/schemas/checkout';
+import { timingSafeCompare } from '../../middleware/clerkAuth';
 
 const quotations = new Hono<Env>();
-
 const normalizeString = (value: unknown) => {
   if (!value) return null;
   const trimmed = String(value).trim();
@@ -69,10 +70,12 @@ quotations.post('/quotations', async (c) => {
             p.title as product_title,
             pr.id as price_id,
             pr.amount as amount,
-            pr.currency as currency
+            pr.currency as currency,
+            tr.rate as tax_rate
      FROM variants v
      JOIN products p ON p.id = v.product_id
      JOIN prices pr ON pr.variant_id = v.id
+     LEFT JOIN tax_rates tr ON tr.id = p.tax_rate_id
      WHERE v.id IN (${placeholders})
      ORDER BY pr.id DESC`
   ).bind(...variantIds).all<VariantPriceRow>();
@@ -93,17 +96,26 @@ quotations.post('/quotations', async (c) => {
     }
   }
 
-  // Calculate totals
-  let subtotal = 0;
-  let currency = 'JPY';
-  for (const item of items) {
+  // Calculate totals with proper tax rate lookup
+  const taxInputs: TaxCalculationInput[] = items.map((item) => {
     const row = variantMap.get(item.variantId)!;
-    subtotal += row.amount * item.quantity;
+    return {
+      unitPrice: row.amount,
+      quantity: item.quantity,
+      taxRate: row.tax_rate ?? 0.10
+    };
+  });
+
+  const taxCalculation = calculateOrderTax(taxInputs);
+  const subtotal = taxCalculation.subtotal;
+  const taxAmount = taxCalculation.taxAmount;
+  const totalAmount = taxCalculation.totalAmount;
+
+  let currency = 'JPY';
+  if (items.length > 0) {
+    const row = variantMap.get(items[0].variantId)!;
     currency = (row.currency || 'JPY').toUpperCase();
   }
-
-  const taxAmount = Math.floor(subtotal * 0.1);
-  const totalAmount = subtotal + taxAmount;
 
   // Calculate valid_until (30 days from now)
   const validUntilDate = new Date();
@@ -464,7 +476,7 @@ quotations.post('/quotations/:token/accept', async (c) => {
 // DELETE /quotations/:id - Delete quotation (admin only, guarded)
 quotations.delete('/quotations/:id', async (c) => {
   const adminKey = c.req.header('x-admin-key');
-  if (!adminKey || !c.env.ADMIN_API_KEY || adminKey !== c.env.ADMIN_API_KEY) {
+  if (!adminKey || !c.env.ADMIN_API_KEY || !timingSafeCompare(adminKey, c.env.ADMIN_API_KEY)) {
     return jsonError(c, 'Unauthorized', 401);
   }
 
