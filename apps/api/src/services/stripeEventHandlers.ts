@@ -25,7 +25,11 @@ import {
   getStatusChangeReason
 } from './orderStatus';
 import { sendOrderConfirmationEmail } from './orderEmail';
-import { deductStockForOrder } from './inventoryCheck';
+import {
+  consumeStockReservationForOrder,
+  deductStockForOrder,
+  releaseStockReservationForOrder
+} from './inventoryCheck';
 
 /**
  * Handler result type for consistency across all handlers
@@ -300,12 +304,16 @@ const handlePaymentIntentSucceeded = async (
   // Deduct inventory on successful payment (non-duplicate only)
   if (!paymentResult.duplicate) {
     try {
-      const orderItems = await env.DB.prepare(
-        `SELECT variant_id as variantId, quantity FROM order_items WHERE order_id = ?`
-      ).bind(orderId).all<{ variantId: number; quantity: number }>();
+      const consumedReservation = await consumeStockReservationForOrder(env.DB, orderId);
+      if (!consumedReservation) {
+        // Fallback for legacy orders created before reservation flow
+        const orderItems = await env.DB.prepare(
+          `SELECT variant_id as variantId, quantity FROM order_items WHERE order_id = ?`
+        ).bind(orderId).all<{ variantId: number; quantity: number }>();
 
-      if (orderItems.results && orderItems.results.length > 0) {
-        await deductStockForOrder(env.DB, orderId, orderItems.results);
+        if (orderItems.results && orderItems.results.length > 0) {
+          await deductStockForOrder(env.DB, orderId, orderItems.results);
+        }
       }
     } catch (err) {
       console.error('Failed to deduct inventory for order:', orderId, err);
@@ -496,6 +504,86 @@ const handleRefundEvents = async (
 };
 
 /**
+ * Handles payment_intent.payment_failed / payment_intent.canceled events
+ * Releases reserved stock and marks pending orders as payment_failed.
+ */
+const handlePaymentIntentFailedOrCanceled = async (
+  env: Env['Bindings'],
+  event: StripeEvent,
+  dataObject: any
+): Promise<HandlerResult> => {
+  const orderId = extractOrderId(dataObject.metadata);
+  if (!orderId) {
+    return { received: true, ignored: true };
+  }
+
+  const order = await env.DB.prepare(
+    `SELECT id, status FROM orders WHERE id=?`
+  )
+    .bind(orderId)
+    .first<{ id: number; status: string }>();
+
+  if (!order?.id) {
+    return { received: true, ignored: true };
+  }
+
+  try {
+    await releaseStockReservationForOrder(env.DB, orderId);
+  } catch (err) {
+    console.error('Failed to release stock reservation for order:', orderId, err);
+  }
+
+  const currentStatus = order.status;
+  const nextStatus = 'payment_failed';
+  if (currentStatus === 'pending') {
+    await env.DB.prepare(
+      `UPDATE orders
+       SET status=?,
+           updated_at=datetime('now')
+       WHERE id=? AND status='pending'`
+    )
+      .bind(nextStatus, orderId)
+      .run();
+
+    await env.DB.prepare(
+      `INSERT INTO order_status_history (order_id, old_status, new_status, reason, stripe_event_id, created_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now'))`
+    )
+      .bind(orderId, currentStatus, nextStatus, 'payment_failed', event.id)
+      .run();
+  }
+
+  const failurePayload = {
+    orderId,
+    paymentIntentId: dataObject.id ?? null,
+    eventType: event.type,
+    declineCode: dataObject.last_payment_error?.decline_code ?? null,
+    code: dataObject.last_payment_error?.code ?? null,
+    message:
+      dataObject.last_payment_error?.message ??
+      dataObject.cancellation_reason ??
+      'Payment intent failed',
+    stripeEventId: event.id
+  };
+
+  await env.DB.prepare(
+    `INSERT INTO events (type, payload, stripe_event_id, created_at)
+     VALUES (?, ?, ?, datetime('now'))`
+  )
+    .bind('payment_failed', JSON.stringify(failurePayload), event.id)
+    .run();
+
+  await env.DB.prepare(
+    `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)
+     VALUES (?, ?, 'high', 'open', 'payment_failed', datetime('now'), datetime('now'))`
+  )
+    .bind(`Payment Failed: Order #${orderId}`, JSON.stringify(failurePayload))
+    .run();
+
+  return { received: true };
+};
+
+/**
  * Event types that trigger refund handling
  */
 const REFUND_EVENT_TYPES = ['charge.refunded', 'refund.updated', 'refund.succeeded'];
@@ -575,6 +663,10 @@ export const handleStripeEvent = async (
       // Bank transfer details are in dataObject.next_action.display_bank_transfer_instructions
     }
     return { received: true };
+  }
+
+  if (eventType === 'payment_intent.payment_failed' || eventType === 'payment_intent.canceled') {
+    return handlePaymentIntentFailedOrCanceled(env, event, dataObject);
   }
 
   if (

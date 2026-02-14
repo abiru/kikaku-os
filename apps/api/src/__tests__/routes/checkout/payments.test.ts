@@ -5,7 +5,7 @@ import payments from '../../../routes/checkout/payments';
 type MockDbResult = {
   results?: any[];
   success: boolean;
-  meta: { last_row_id?: number };
+  meta: { last_row_id?: number; changes?: number };
 };
 
 type MockDbStatement = {
@@ -21,9 +21,15 @@ const createMockDb = (overrides: {
   orderInsertId?: number;
   customers?: Map<number, any>;
   stockByVariant?: Record<number, number>;
+  variantPrices?: Record<number, { unitPrice: number; taxRate?: number }>;
 } = {}) => {
   const customers = overrides.customers || new Map();
   const stockByVariant = overrides.stockByVariant || {};
+  const variantPrices = overrides.variantPrices || {};
+  const stock = new Map<number, number>(
+    Object.entries(stockByVariant).map(([id, qty]) => [Number(id), qty])
+  );
+  const reservations: Array<{ orderId: number; reservationId: string; variantId: number; quantity: number; state: 'reservation' | 'sale' | 'released' }> = [];
 
   // If customerRow is provided, add it to customers map
   if (overrides.customerRow) {
@@ -60,7 +66,16 @@ const createMockDb = (overrides: {
             const variantIds = boundArgs.map((id) => Number(id));
             const results = variantIds.map((variantId) => ({
               variantId,
-              onHand: stockByVariant[variantId] ?? 0
+              onHand: stock.get(variantId) ?? 0
+            }));
+            return { results, success: true, meta: {} } as MockDbResult;
+          }
+          if (sql.includes('FROM variants v') && sql.includes('unitPrice')) {
+            const variantIds = boundArgs.map((id) => Number(id));
+            const results = variantIds.map((variantId) => ({
+              variantId,
+              unitPrice: variantPrices[variantId]?.unitPrice ?? 3000,
+              taxRate: variantPrices[variantId]?.taxRate ?? 0.10
             }));
             return { results, success: true, meta: {} } as MockDbResult;
           }
@@ -71,7 +86,7 @@ const createMockDb = (overrides: {
           if (sql.includes('INSERT INTO orders')) {
             return {
               success: true,
-              meta: { last_row_id: overrides.orderInsertId || 123 }
+              meta: { last_row_id: overrides.orderInsertId || 123, changes: 1 }
             };
           }
           // Customer insert
@@ -84,8 +99,88 @@ const createMockDb = (overrides: {
             });
             return {
               success: true,
-              meta: { last_row_id: customerId }
+              meta: { last_row_id: customerId, changes: 1 }
             };
+          }
+          // Reservation insert (conditional)
+          if (
+            sql.includes('INSERT INTO inventory_movements') &&
+            sql.includes("SELECT ?, ?, 'reservation'")
+          ) {
+            const variantId = Number(boundArgs[0]);
+            const requested = Math.abs(Number(boundArgs[1]));
+            const metadata = JSON.parse(String(boundArgs[2])) as {
+              order_id: number;
+              reservation_id: string;
+            };
+            const onHand = stock.get(variantId) ?? 0;
+
+            if (onHand < requested) {
+              return { success: true, meta: { changes: 0 } };
+            }
+
+            stock.set(variantId, onHand - requested);
+            reservations.push({
+              orderId: metadata.order_id,
+              reservationId: metadata.reservation_id,
+              variantId,
+              quantity: requested,
+              state: 'reservation'
+            });
+            return { success: true, meta: { changes: 1 } };
+          }
+          // Reservation rollback by reservation_id
+          if (
+            sql.includes("SET delta = 0") &&
+            sql.includes("json_extract(metadata, '$.reservation_id')")
+          ) {
+            const reservationId = String(boundArgs[0]);
+            let changes = 0;
+            for (const reservation of reservations) {
+              if (reservation.reservationId === reservationId && reservation.state === 'reservation') {
+                stock.set(
+                  reservation.variantId,
+                  (stock.get(reservation.variantId) ?? 0) + reservation.quantity
+                );
+                reservation.state = 'released';
+                changes += 1;
+              }
+            }
+            return { success: true, meta: { changes } };
+          }
+          // Consume reservation on payment success
+          if (
+            sql.includes("SET reason = 'sale'") &&
+            sql.includes("json_extract(metadata, '$.order_id')")
+          ) {
+            const orderId = Number(boundArgs[0]);
+            let changes = 0;
+            for (const reservation of reservations) {
+              if (reservation.orderId === orderId && reservation.state === 'reservation') {
+                reservation.state = 'sale';
+                changes += 1;
+              }
+            }
+            return { success: true, meta: { changes } };
+          }
+          // Release reservation by order_id
+          if (
+            sql.includes("SET delta = 0") &&
+            sql.includes("json_extract(metadata, '$.order_id')")
+          ) {
+            const orderId = Number(boundArgs[0]);
+            let changes = 0;
+            for (const reservation of reservations) {
+              if (reservation.orderId === orderId && reservation.state === 'reservation') {
+                stock.set(
+                  reservation.variantId,
+                  (stock.get(reservation.variantId) ?? 0) + reservation.quantity
+                );
+                reservation.state = 'released';
+                changes += 1;
+              }
+            }
+            return { success: true, meta: { changes } };
           }
           // Customer update (stripe_customer_id)
           if (sql.includes('UPDATE customers SET stripe_customer_id')) {
@@ -94,17 +189,17 @@ const createMockDb = (overrides: {
             if (customer) {
               customer.stripe_customer_id = stripeCustomerId;
             }
-            return { success: true, meta: {} };
+            return { success: true, meta: { changes: 1 } };
           }
           // Other update operations
           if (sql.includes('UPDATE')) {
-            return { success: true, meta: {} };
+            return { success: true, meta: { changes: 1 } };
           }
           // Delete operations
           if (sql.includes('DELETE')) {
-            return { success: true, meta: {} };
+            return { success: true, meta: { changes: 1 } };
           }
-          return { success: true, meta: {} };
+          return { success: true, meta: { changes: 1 } };
         }
       };
 
