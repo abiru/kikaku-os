@@ -421,6 +421,10 @@
     "failedToLoadProducts": "製品の読み込みに失敗しました。管理者キーを確認してください。",
     "adminKeyMissing": "サーバー環境にADMIN_API_KEYがありません。",
     "checkoutFailed": "チェックアウトに失敗しました",
-    "unknownError": "不明なエラー"
+    "unknownError": "不明なエラー",
+    "notFound": "ページが見つかりません",
+    "notFoundCode": "404",
+    "notFoundMessage": "お探しのページは移動、削除、またはURLが変更された可能性があります。",
+    "backToHome": "ホームに戻る"
   }
 }
