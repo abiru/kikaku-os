@@ -34,10 +34,25 @@ export const journalizeDailyClose = async (
   const refundTotal = report.refunds.totalAmount;
   const net = paymentsTotal - feeTotal;
 
+  // Query tax total from paid orders for the date (消費税仮受)
+  const taxRow = await env.DB.prepare(
+    `SELECT COALESCE(SUM(tax_amount), 0) as taxTotal
+     FROM orders WHERE status IN ('paid','fulfilled','partially_refunded') AND substr(paid_at,1,10)=?`
+  ).bind(date).first<{ taxTotal: number }>();
+  const taxTotal = taxRow?.taxTotal || 0;
+
+  // Sales amount is net minus tax (税抜売上)
+  const salesExTax = net - taxTotal;
+
   const entries = [
     { account: 'acct_bank', debit: net, credit: 0, memo: 'Daily close net' },
-    { account: 'acct_sales', debit: 0, credit: net, memo: 'Daily close net' }
+    { account: 'acct_sales', debit: 0, credit: salesExTax, memo: 'Daily close sales (税抜)' }
   ];
+
+  // Separate tax payable entry (仮受消費税)
+  if (taxTotal > 0) {
+    entries.push({ account: 'acct_tax_payable', debit: 0, credit: taxTotal, memo: '消費税仮受' });
+  }
 
   if (feeTotal > 0) {
     entries.push({ account: 'acct_fee', debit: feeTotal, credit: 0, memo: 'Payment fees' });
