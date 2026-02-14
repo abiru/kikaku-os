@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Elements, PaymentElement, AddressElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe, type Stripe } from '@stripe/stripe-js';
+import { loadStripe, type Stripe, type StripeExpressCheckoutElementConfirmEvent } from '@stripe/stripe-js';
 import { useTranslation } from '../i18n';
 
 // Singleton cache: loadStripe should only be called once per publishable key
@@ -81,21 +81,20 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 		}
 	};
 
-	const onExpressCheckoutConfirm = async (event: { shippingAddress?: { recipient?: string; addressLine?: string[]; city?: string; region?: string; postalCode?: string; country?: string; phone?: string } }) => {
+	const onExpressCheckoutConfirm = async (event: StripeExpressCheckoutElementConfirmEvent) => {
 		// Extract shipping address if available
 		let shippingData = null;
 		if (event.shippingAddress) {
 			shippingData = {
-				name: event.shippingAddress.recipient,
+				name: event.shippingAddress.name,
 				address: {
-					line1: event.shippingAddress.addressLine?.[0] || '',
-					line2: event.shippingAddress.addressLine?.[1] || undefined,
-					city: event.shippingAddress.city,
-					state: event.shippingAddress.region,
-					postal_code: event.shippingAddress.postalCode,
-					country: event.shippingAddress.country
-				},
-				phone: event.shippingAddress.phone || undefined
+					line1: event.shippingAddress.address.line1,
+					line2: event.shippingAddress.address.line2 || undefined,
+					city: event.shippingAddress.address.city,
+					state: event.shippingAddress.address.state,
+					postal_code: event.shippingAddress.address.postal_code,
+					country: event.shippingAddress.address.country
+				}
 			};
 		}
 
