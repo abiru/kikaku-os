@@ -5,6 +5,7 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { validationErrorHandler } from '../../lib/validation';
 import { putImage, deleteKey } from '../../lib/r2';
+import { getExtensionFromContentType } from '../../lib/image';
 import {
   productIdParamSchema,
   productImageParamSchema,
@@ -27,16 +28,6 @@ type ProductImageRow = {
   position: number;
   created_at: string;
   updated_at: string;
-};
-
-const getExtensionFromContentType = (contentType: string): string => {
-  const map: Record<string, string> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/gif': 'gif',
-    'image/webp': 'webp',
-  };
-  return map[contentType] || 'bin';
 };
 
 // GET /products/:id/images - List images for a product

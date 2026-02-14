@@ -13,3 +13,4 @@ export * from './settings';
 export * from './rbac';
 export * from './contact';
 export * from './newsletter';
+export * from './checkout';

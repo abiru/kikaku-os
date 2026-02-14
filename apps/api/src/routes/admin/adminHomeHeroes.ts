@@ -6,6 +6,7 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { validationErrorHandler } from '../../lib/validation';
 import { putImage, deleteKey } from '../../lib/r2';
+import { getExtensionFromContentType } from '../../lib/image';
 
 const app = new Hono<Env>();
 
@@ -53,16 +54,6 @@ const heroListQuerySchema = z.object({
 // Image upload constants
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-
-const getExtensionFromContentType = (contentType: string): string => {
-  const map: Record<string, string> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/gif': 'gif',
-    'image/webp': 'webp',
-  };
-  return map[contentType] || 'bin';
-};
 
 // GET /home/heroes - List hero sections
 app.get(

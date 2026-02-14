@@ -8,35 +8,9 @@ import { putText } from '../../lib/r2';
 import { upsertDocument } from '../../services/documents';
 import { ensureStripePriceForVariant } from '../../services/stripe';
 import { generatePublicToken } from '../../lib/token';
+import { validateItem, type CheckoutItem, type VariantPriceRow } from '../../lib/schemas/checkout';
 
 const quotations = new Hono<Env>();
-
-type CheckoutItem = {
-  variantId: number;
-  quantity: number;
-};
-
-type VariantPriceRow = {
-  variant_id: number;
-  variant_title: string;
-  product_id: number;
-  product_title: string;
-  price_id: number;
-  amount: number;
-  currency: string;
-  provider_price_id: string | null;
-  provider_product_id: string | null;
-};
-
-const validateItem = (item: unknown): CheckoutItem | null => {
-  if (!item || typeof item !== 'object') return null;
-  const obj = item as Record<string, unknown>;
-  const variantId = Number(obj.variantId);
-  const quantity = Number(obj.quantity ?? 1);
-  if (!Number.isInteger(variantId) || variantId <= 0) return null;
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) return null;
-  return { variantId, quantity };
-};
 
 const normalizeString = (value: unknown) => {
   if (!value) return null;

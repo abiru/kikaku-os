@@ -1,4 +1,5 @@
 import type { AdGenerateRequest, AdCandidate } from '../types/ads';
+import { extractJSON } from '../lib/json';
 
 const CLAUDE_MODEL = 'claude-sonnet-4-5-20250929';
 const MAX_RETRIES = 3;
@@ -47,21 +48,6 @@ Output Format (strict JSON only, no markdown):
 }
 
 Generate exactly ${CANDIDATE_COUNT} variations. Output ONLY valid JSON.`;
-}
-
-/**
- * Extract JSON from text, handling markdown code blocks
- */
-function extractJSON(text: string): string {
-  // Try to extract from markdown code blocks
-  const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/```\n?([\s\S]*?)\n?```/);
-
-  if (jsonMatch) {
-    return jsonMatch[1].trim();
-  }
-
-  // Return as-is if no code block found
-  return text.trim();
 }
 
 /**

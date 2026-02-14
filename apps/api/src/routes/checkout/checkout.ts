@@ -5,6 +5,7 @@ import { jsonError, jsonOk } from '../../lib/http';
 import { calculateOrderTax, type TaxCalculationInput } from '../../services/tax';
 import { getShippingSettings } from '../../services/settings';
 import { checkStockAvailability } from '../../services/inventoryCheck';
+import { validateItem, type CheckoutItem, type VariantPriceRow } from '../../lib/schemas/checkout';
 
 const validateCouponSchema = z.object({
   code: z.string().min(1, 'Coupon code is required').max(50),
@@ -102,33 +103,9 @@ checkout.post('/checkout/validate-coupon', async (c) => {
   }
 });
 
-type VariantPriceRow = {
-  variant_id: number;
-  variant_title: string;
-  product_id: number;
-  product_title: string;
-  price_id: number;
-  amount: number;
-  currency: string;
-  provider_price_id: string | null;
-  provider_product_id: string | null;
+type CheckoutVariantPriceRow = VariantPriceRow & {
   image_r2_key: string | null;
   tax_rate: number | null;
-};
-
-type CheckoutItem = {
-  variantId: number;
-  quantity: number;
-};
-
-const validateItem = (item: unknown): CheckoutItem | null => {
-  if (!item || typeof item !== 'object') return null;
-  const obj = item as Record<string, unknown>;
-  const variantId = Number(obj.variantId);
-  const quantity = Number(obj.quantity ?? 1);
-  if (!Number.isInteger(variantId) || variantId <= 0) return null;
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) return null;
-  return { variantId, quantity };
 };
 
 checkout.post('/checkout/quote', async (c) => {
@@ -181,10 +158,10 @@ checkout.post('/checkout/quote', async (c) => {
        AND pi.position = (SELECT MIN(position) FROM product_images WHERE product_id = p.id)
      WHERE v.id IN (${placeholders}) AND p.status = 'active'
      ORDER BY pr.id DESC`
-  ).bind(...variantIds).all<VariantPriceRow>();
+  ).bind(...variantIds).all<CheckoutVariantPriceRow>();
 
   // Build map of variant_id -> price row
-  const variantMap = new Map<number, VariantPriceRow>();
+  const variantMap = new Map<number, CheckoutVariantPriceRow>();
   for (const row of variantRows.results || []) {
     if (!variantMap.has(row.variant_id)) {
       variantMap.set(row.variant_id, row);
