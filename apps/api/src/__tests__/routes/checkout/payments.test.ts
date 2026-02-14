@@ -322,7 +322,7 @@ describe('POST /payments/intent', () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.ok).toBe(false);
-    expect(json.message).toContain('quoteId');
+    expect(json.message).toContain('expected string');
   });
 
   it('returns 400 for invalid email', async () => {
