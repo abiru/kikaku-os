@@ -117,9 +117,34 @@ const policies = [
 	shippingPolicy,
 	{ name: 'Secure Payment', icon: 'currency', description: 'Safe checkout via Stripe' },
 ];
+// JSON-LD structured data for SEO
+const jsonLd = product && variant?.price ? {
+	'@context': 'https://schema.org',
+	'@type': 'Product',
+	name: product.title,
+	description: product.description || '',
+	image: product.image || undefined,
+	sku: variant?.sku || undefined,
+	category: product.category || undefined,
+	offers: {
+		'@type': 'Offer',
+		price: variant.price.amount,
+		priceCurrency: variant.price.currency || 'JPY',
+		availability: stockValue !== null && stockValue > 0
+			? 'https://schema.org/InStock'
+			: 'https://schema.org/OutOfStock',
+		seller: {
+			'@type': 'Organization',
+			name: 'Led Kikaku',
+		},
+	},
+} : null;
 ---
 
 <Layout title={product ? `${product.title} - Led Kikaku` : 'Product Detail'}>
+	{jsonLd && (
+		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+	)}
 	{loadState === 'ready' && product ? (
 		<>
 		<div
