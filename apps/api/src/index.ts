@@ -33,7 +33,7 @@ app.onError((err, c) => {
   });
 
   return c.json(
-    { ok: false, message: err.message || 'Internal Server Error' },
+    { ok: false, message: 'Internal Server Error' },
     500
   );
 });
