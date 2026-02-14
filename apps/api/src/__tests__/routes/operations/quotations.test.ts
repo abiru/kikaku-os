@@ -15,6 +15,7 @@ const createMockDb = (options: {
   variantRows?: VariantPriceRow[];
   quotationRow?: any;
   quotationItems?: any[];
+  orderRow?: any;
   lastRowId?: number;
 }) => {
   return {
@@ -36,6 +37,9 @@ const createMockDb = (options: {
           if (sql.includes('FROM quotations')) {
             return options.quotationRow ?? null;
           }
+          if (sql.includes('FROM orders')) {
+            return options.orderRow ?? null;
+          }
           return null;
         }),
         run: vi.fn(async () => ({
@@ -55,6 +59,9 @@ const createMockDb = (options: {
       first: vi.fn(async () => {
         if (sql.includes('FROM quotations')) {
           return options.quotationRow ?? null;
+        }
+        if (sql.includes('FROM orders')) {
+          return options.orderRow ?? null;
         }
         return null;
       }),
@@ -291,6 +298,66 @@ describe('Quotations API', () => {
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.ok).toBe(true);
+    });
+  });
+
+  describe('DELETE /quotations/:id', () => {
+    const adminEnv = { ADMIN_API_KEY: 'test-admin-key' };
+    const adminHeaders = { 'x-admin-key': 'test-admin-key' };
+
+    it('requires admin key', async () => {
+      const db = createMockDb({});
+      const { fetch } = createApp(db, adminEnv);
+
+      const response = await fetch('/quotations/1', { method: 'DELETE' });
+      expect(response.status).toBe(401);
+    });
+
+    it('returns 409 when quotation is accepted', async () => {
+      const db = createMockDb({
+        quotationRow: { id: 1, status: 'accepted', converted_order_id: null }
+      });
+      const { fetch } = createApp(db, adminEnv);
+
+      const response = await fetch('/quotations/1', {
+        method: 'DELETE',
+        headers: adminHeaders
+      });
+
+      expect(response.status).toBe(409);
+    });
+
+    it('returns 409 when linked order is active', async () => {
+      const db = createMockDb({
+        quotationRow: { id: 1, status: 'draft', converted_order_id: 10 },
+        orderRow: { id: 10, status: 'paid' }
+      });
+      const { fetch } = createApp(db, adminEnv);
+
+      const response = await fetch('/quotations/1', {
+        method: 'DELETE',
+        headers: adminHeaders
+      });
+
+      expect(response.status).toBe(409);
+    });
+
+    it('deletes quotation when linked order is cancelled', async () => {
+      const db = createMockDb({
+        quotationRow: { id: 1, status: 'draft', converted_order_id: 10 },
+        orderRow: { id: 10, status: 'cancelled' }
+      });
+      const { fetch } = createApp(db, adminEnv);
+
+      const response = await fetch('/quotations/1', {
+        method: 'DELETE',
+        headers: adminHeaders
+      });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.ok).toBe(true);
+      expect(data.deleted).toBe(true);
     });
   });
 });

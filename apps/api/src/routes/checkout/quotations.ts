@@ -489,6 +489,11 @@ quotations.post('/quotations/:token/accept', async (c) => {
 
 // DELETE /quotations/:id - Delete quotation (admin only, guarded)
 quotations.delete('/quotations/:id', async (c) => {
+  const adminKey = c.req.header('x-admin-key');
+  if (!adminKey || !c.env.ADMIN_API_KEY || adminKey !== c.env.ADMIN_API_KEY) {
+    return jsonError(c, 'Unauthorized', 401);
+  }
+
   const id = Number(c.req.param('id'));
   if (!Number.isInteger(id) || id <= 0) {
     return jsonError(c, 'Invalid quotation ID', 400);
