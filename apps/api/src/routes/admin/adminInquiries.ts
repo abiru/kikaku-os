@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import type { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
+import { escapeHtml } from '../../lib/html';
 import { validationErrorHandler } from '../../lib/validation';
 import { getActor } from '../../middleware/clerkAuth';
 import { sendEmail } from '../../services/email';
@@ -207,17 +208,6 @@ const buildReplyText = (name: string, subject: string, reply: string): string =>
     '---',
     'Led Kikaku カスタマーサポート',
   ].join('\n');
-};
-
-const escapeHtml = (text: string): string => {
-  const entities: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  };
-  return text.replace(/[&<>"']/g, (ch) => entities[ch] || ch);
 };
 
 export default app;

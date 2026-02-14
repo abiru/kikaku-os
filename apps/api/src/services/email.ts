@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { Env } from '../env';
+import { escapeHtml } from '../lib/html';
 
 export type EmailPayload = {
   to: string;
@@ -193,13 +194,3 @@ export const renderTemplate = (
   };
 };
 
-const escapeHtml = (text: string): string => {
-  const htmlEntities: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  };
-  return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
-};
