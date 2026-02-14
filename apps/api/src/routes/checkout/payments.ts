@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
@@ -9,6 +10,11 @@ import {
   reserveStockForOrder
 } from '../../services/inventoryCheck';
 
+const paymentIntentSchema = z.object({
+  quoteId: z.string().min(1, 'quoteId is required'),
+  email: z.string().email('Valid email is required'),
+});
+
 const payments = new Hono<Env>();
 
 payments.post('/payments/intent', async (c) => {
@@ -18,22 +24,19 @@ payments.post('/payments/intent', async (c) => {
     return jsonError(c, 'Stripe secret key invalid', 500);
   }
 
-  let body: any;
+  let body: unknown;
   try {
     body = await c.req.json();
   } catch {
     return jsonError(c, 'Invalid JSON', 400);
   }
 
-  const { quoteId, email } = body;
-
-  if (!quoteId) {
-    return jsonError(c, 'quoteId is required', 400);
+  const parsed = paymentIntentSchema.safeParse(body);
+  if (!parsed.success) {
+    return jsonError(c, parsed.error.issues[0]?.message || 'Invalid request', 400);
   }
 
-  if (!email || typeof email !== 'string' || !email.includes('@')) {
-    return jsonError(c, 'Valid email is required', 400);
-  }
+  const { quoteId, email } = parsed.data;
 
   // Fetch and validate quote
   type QuoteRow = {
@@ -215,20 +218,6 @@ payments.post('/payments/intent', async (c) => {
   params.set('metadata[order_id]', String(orderId));
   params.set('metadata[quoteId]', quoteId);
 
-  // Configure payment method types
-  // Bank transfer is always enabled - controlled by Stripe Dashboard settings
-  console.log('[PaymentIntent] Configuration:', {
-    amount: quote.grand_total,
-    currency: quote.currency,
-    customer: stripeCustomerId,
-    minAmount: 50
-  });
-
-  // Check minimum amount for bank transfers (¥50)
-  if (quote.grand_total < 50) {
-    console.warn('[PaymentIntent] Amount below minimum for bank transfer (¥50), only card will be available');
-  }
-
   // Use automatic payment methods to let Stripe show all available options
   params.set('automatic_payment_methods[enabled]', 'true');
   params.set('automatic_payment_methods[allow_redirects]', 'never');
@@ -237,8 +226,6 @@ payments.post('/payments/intent', async (c) => {
   // Actual availability is controlled by Stripe Dashboard settings
   params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
   params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
-
-  console.log('[PaymentIntent] Enabled payment methods: card, customer_balance (jp_bank_transfer), wallets (Google Pay, Apple Pay)');
 
   // Store coupon metadata for webhook handler
   if (quote.coupon_id) {
@@ -265,14 +252,6 @@ payments.post('/payments/intent', async (c) => {
   }
 
   const paymentIntent = await stripeRes.json<any>();
-  console.log('[PaymentIntent] Created successfully:', {
-    id: paymentIntent.id,
-    payment_method_types: paymentIntent.payment_method_types,
-    amount: paymentIntent.amount,
-    currency: paymentIntent.currency,
-    customer: paymentIntent.customer,
-    payment_method_options: paymentIntent.payment_method_options
-  });
 
   if (!paymentIntent?.client_secret || !paymentIntent?.id) {
     await releaseStockReservationForOrder(c.env.DB, orderId);
