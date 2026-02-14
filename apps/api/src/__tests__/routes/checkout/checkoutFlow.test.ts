@@ -16,16 +16,21 @@ type MockDbData = {
   customers: Map<number, any>;
   orders: Map<number, any>;
   variantRows: Array<any>;
+  stockByVariant: Record<number, number>;
   nextCustomerId: number;
   nextOrderId: number;
 };
 
-const createIntegrationMockDb = (variantRows: any[] = []) => {
+const createIntegrationMockDb = (
+  variantRows: any[] = [],
+  stockByVariant: Record<number, number> = {}
+) => {
   const data: MockDbData = {
     quotes: new Map(),
     customers: new Map(),
     orders: new Map(),
     variantRows,
+    stockByVariant,
     nextCustomerId: 1,
     nextOrderId: 1
   };
@@ -63,6 +68,15 @@ const createIntegrationMockDb = (variantRows: any[] = []) => {
           return null;
         },
         all: async <T>() => {
+          if (sql.includes('FROM inventory_movements')) {
+            const variantIds = boundArgs.map((id) => Number(id));
+            const results = variantIds.map((variantId) => ({
+              variantId,
+              onHand: data.stockByVariant[variantId] ?? 0
+            }));
+            return { results, success: true, meta: {} };
+          }
+
           // Variant rows for quote/checkout
           if (sql.includes('FROM variants v') && sql.includes('JOIN products p')) {
             return {
@@ -205,21 +219,24 @@ describe('Checkout Integration Flow', () => {
     globalThis.fetch = fetchMock as any;
 
     // Setup mock DB with variant data
-    const mockDb = createIntegrationMockDb([
-      {
-        variant_id: 10,
-        variant_title: 'Medium',
-        product_id: 5,
-        product_title: 'Test Product',
-        provider_product_id: 'prod_test',
-        price_id: 1,
-        amount: 3000,
-        currency: 'JPY',
-        provider_price_id: 'price_test',
-        image_r2_key: null,
-        tax_rate: 0.10
-      }
-    ]);
+    const mockDb = createIntegrationMockDb(
+      [
+        {
+          variant_id: 10,
+          variant_title: 'Medium',
+          product_id: 5,
+          product_title: 'Test Product',
+          provider_product_id: 'prod_test',
+          price_id: 1,
+          amount: 3000,
+          currency: 'JPY',
+          provider_price_id: 'price_test',
+          image_r2_key: null,
+          tax_rate: 0.10
+        }
+      ],
+      { 10: 10 }
+    );
 
     const env = {
       DB: mockDb,
