@@ -32,8 +32,7 @@ export type Env = {
     AI?: Ai;
     ADMIN_API_KEY?: string;
     DEV_MODE: string;
-    STRIPE_API_KEY: string;
-    STRIPE_SECRET_KEY?: string;
+    STRIPE_SECRET_KEY: string;
     STRIPE_PUBLISHABLE_KEY?: string;
     STRIPE_WEBHOOK_SECRET: string;
     STOREFRONT_BASE_URL: string;

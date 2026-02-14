@@ -1,6 +1,9 @@
 {
 	"name": "kikaku-os",
 	"private": true,
+	"engines": {
+		"node": ">=20"
+	},
 	"scripts": {
 		"dev": "concurrently -n api,store -c blue,green \"pnpm -C apps/api dev\" \"pnpm -C apps/storefront dev\"",
 		"dev:api": "pnpm -C apps/api dev --port 8787",
