@@ -228,6 +228,20 @@ const runDailyCloseArtifacts = async (env: Env['Bindings'], date: string) => {
   }
 };
 
+const runCleanupTasks = async (env: Env['Bindings']) => {
+  // Delete expired checkout quotes
+  await env.DB.prepare(
+    `DELETE FROM checkout_quotes WHERE expires_at < datetime('now')`
+  ).run();
+
+  // Cancel stale pending orders (older than 24 hours with no payment)
+  await env.DB.prepare(
+    `UPDATE orders SET status = 'cancelled', updated_at = datetime('now')
+     WHERE status = 'pending'
+       AND created_at < datetime('now', '-24 hours')`
+  ).run();
+};
+
 const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
   try {
     const result = await runAllAnomalyChecks(env, date);
@@ -274,6 +288,9 @@ const createWorkerExport = () => {
         ctx.waitUntil(runDailyCloseArtifacts(env, date));
         ctx.waitUntil(runAnomalyChecks(env, date));
       }
+
+      // Cleanup tasks (always run, independent of Sentry)
+      ctx.waitUntil(runCleanupTasks(env));
     }
   };
 
