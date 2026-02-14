@@ -1076,9 +1076,9 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 				previewGeneratedTitle.textContent = data.generated_title || '-';
 			}
 
-			// Show generated description (as HTML)
+			// Show generated description (as text to prevent XSS from AI output)
 			if (previewGeneratedDescription) {
-				previewGeneratedDescription.innerHTML = data.generated_description || '-';
+				previewGeneratedDescription.textContent = data.generated_description || '-';
 			}
 
 			fetchPreview.classList.remove('hidden');

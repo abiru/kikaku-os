@@ -91,7 +91,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --prefix apps/storefront
+        run: pnpm install
 
       - name: Build storefront
         run: pnpm -C apps/storefront build
@@ -122,27 +122,31 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Apply D1 migrations
+        run: pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --remote --config ../../wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy API to Cloudflare Workers
-        run: pnpm exec wrangler deploy --config wrangler.toml
-        working-directory: apps/api
+        run: pnpm -C apps/api exec wrangler deploy --config ../../wrangler.toml
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Configure secrets
         run: |
-          echo "$ADMIN_API_KEY" | pnpm exec wrangler secret put ADMIN_API_KEY
-          echo "$STRIPE_PUBLISHABLE_KEY" | pnpm exec wrangler secret put STRIPE_PUBLISHABLE_KEY
-          echo "$STRIPE_SECRET_KEY" | pnpm exec wrangler secret put STRIPE_SECRET_KEY
-          echo "$STRIPE_WEBHOOK_SECRET" | pnpm exec wrangler secret put STRIPE_WEBHOOK_SECRET
-          echo "$CLERK_SECRET_KEY" | pnpm exec wrangler secret put CLERK_SECRET_KEY
+          echo "$ADMIN_API_KEY" | pnpm -C apps/api exec wrangler secret put ADMIN_API_KEY --config ../../wrangler.toml
+          echo "$STRIPE_PUBLISHABLE_KEY" | pnpm -C apps/api exec wrangler secret put STRIPE_PUBLISHABLE_KEY --config ../../wrangler.toml
+          echo "$STRIPE_SECRET_KEY" | pnpm -C apps/api exec wrangler secret put STRIPE_SECRET_KEY --config ../../wrangler.toml
+          echo "$STRIPE_WEBHOOK_SECRET" | pnpm -C apps/api exec wrangler secret put STRIPE_WEBHOOK_SECRET --config ../../wrangler.toml
+          echo "$CLERK_SECRET_KEY" | pnpm -C apps/api exec wrangler secret put CLERK_SECRET_KEY --config ../../wrangler.toml
           if [ -n "$SLACK_WEBHOOK_URL" ]; then
-            echo "$SLACK_WEBHOOK_URL" | pnpm exec wrangler secret put SLACK_WEBHOOK_URL
+            echo "$SLACK_WEBHOOK_URL" | pnpm -C apps/api exec wrangler secret put SLACK_WEBHOOK_URL --config ../../wrangler.toml
           fi
           if [ -n "$RESEND_API_KEY" ]; then
-            echo "$RESEND_API_KEY" | pnpm exec wrangler secret put RESEND_API_KEY
+            echo "$RESEND_API_KEY" | pnpm -C apps/api exec wrangler secret put RESEND_API_KEY --config ../../wrangler.toml
           fi
-        working-directory: apps/api
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -183,7 +187,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --prefix apps/storefront
+        run: pnpm install
 
       - name: Build storefront
         run: pnpm -C apps/storefront build
@@ -194,8 +198,7 @@ jobs:
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
 
       - name: Deploy to Cloudflare Pages
-        run: pnpm exec wrangler pages deploy dist --project-name=kikaku-storefront
-        working-directory: apps/storefront
+        run: pnpm -C apps/storefront exec wrangler pages deploy dist --project-name=kikaku-storefront
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
