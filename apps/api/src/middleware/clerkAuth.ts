@@ -39,11 +39,7 @@ export const clerkAuth = createMiddleware<Env>(async (c, next) => {
     }
   }
 
-  // Accept x-admin-key from query parameter for file download endpoints
-  const allowQueryAuth = c.req.path === '/r2' || c.req.path.includes('/documents/') && c.req.path.endsWith('/download');
-  const apiKey =
-    c.req.header('x-admin-key') ||
-    (allowQueryAuth ? c.req.query('x-admin-key') : undefined);
+  const apiKey = c.req.header('x-admin-key');
 
   if (apiKey && c.env.ADMIN_API_KEY && apiKey === c.env.ADMIN_API_KEY) {
     c.set('authUser', {
@@ -76,11 +72,7 @@ export const optionalClerkAuth = createMiddleware<Env>(async (c, next) => {
       c.set('authUser', null);
     }
   } else {
-    // Accept x-admin-key from query parameter for file download endpoints
-    const allowQueryAuth = c.req.path === '/r2' || c.req.path.includes('/documents/') && c.req.path.endsWith('/download');
-    const apiKey =
-      c.req.header('x-admin-key') ||
-      (allowQueryAuth ? c.req.query('x-admin-key') : undefined);
+    const apiKey = c.req.header('x-admin-key');
 
     if (apiKey && c.env.ADMIN_API_KEY && apiKey === c.env.ADMIN_API_KEY) {
       c.set('authUser', {
