@@ -293,18 +293,18 @@ adminOrders.post(
       ).run();
 
       // Update order refund tracking (atomic to prevent race conditions with webhooks)
-      const newRefundedTotal = alreadyRefunded + refundAmount;
-      const newStatus = newRefundedTotal >= payment.amount ? 'refunded' : 'partially_refunded';
-
       const updateResult = await c.env.DB.prepare(
         `UPDATE orders
          SET refunded_amount = refunded_amount + ?,
              refund_count = refund_count + 1,
-             status = ?,
+             status = CASE
+               WHEN (refunded_amount + ?) >= total_net THEN 'refunded'
+               ELSE 'partially_refunded'
+             END,
              updated_at = datetime('now')
          WHERE id = ?
            AND (refunded_amount + ?) <= total_net`
-      ).bind(refundAmount, newStatus, orderId, refundAmount).run();
+      ).bind(refundAmount, refundAmount, orderId, refundAmount).run();
 
       if (!updateResult.meta.changes || updateResult.meta.changes === 0) {
         return jsonError(c, 'Refund rejected: concurrent update detected or amount exceeds order total', 409);
