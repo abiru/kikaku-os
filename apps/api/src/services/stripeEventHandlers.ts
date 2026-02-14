@@ -25,6 +25,7 @@ import {
   getStatusChangeReason
 } from './orderStatus';
 import { sendOrderConfirmationEmail } from './orderEmail';
+import { deductStockForOrder } from './inventoryCheck';
 
 /**
  * Handler result type for consistency across all handlers
@@ -296,8 +297,21 @@ const handlePaymentIntentSucceeded = async (
     eventId: event.id
   });
 
-  // Send order confirmation email (non-blocking)
+  // Deduct inventory on successful payment (non-duplicate only)
   if (!paymentResult.duplicate) {
+    try {
+      const orderItems = await env.DB.prepare(
+        `SELECT variant_id as variantId, quantity FROM order_items WHERE order_id = ?`
+      ).bind(orderId).all<{ variantId: number; quantity: number }>();
+
+      if (orderItems.results && orderItems.results.length > 0) {
+        await deductStockForOrder(env.DB, orderId, orderItems.results);
+      }
+    } catch (err) {
+      console.error('Failed to deduct inventory for order:', orderId, err);
+    }
+
+    // Send order confirmation email (non-blocking)
     sendOrderConfirmationEmail(env, orderId).catch((err) => {
       console.error('Failed to send order confirmation email:', err);
     });

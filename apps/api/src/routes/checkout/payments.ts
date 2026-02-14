@@ -3,6 +3,7 @@ import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
 import { generatePublicToken } from '../../lib/token';
+import { checkStockAvailability } from '../../services/inventoryCheck';
 
 const payments = new Hono<Env>();
 
@@ -57,6 +58,20 @@ payments.post('/payments/intent', async (c) => {
 
   if (!quote) {
     return jsonError(c, 'Quote not found', 400);
+  }
+
+  // Verify stock availability before proceeding
+  const quoteItemsForStock: Array<{ variantId: number; quantity: number }> = JSON.parse(quote.items_json);
+  const stockCheck = await checkStockAvailability(
+    c.env.DB,
+    quoteItemsForStock.map((i) => ({ variantId: i.variantId, quantity: i.quantity }))
+  );
+  if (!stockCheck.available) {
+    return c.json({
+      ok: false,
+      message: 'Some items are out of stock',
+      outOfStock: stockCheck.insufficientItems
+    }, 400);
   }
 
   // Check if quote has expired
