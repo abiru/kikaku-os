@@ -1,10 +1,23 @@
 // Client-side Clerk helpers using the global Clerk instance
 // The Clerk Astro integration automatically loads Clerk on the client
 
-// Type for window.Clerk is already defined by @clerk/astro
-// We don't need to redeclare it to avoid type conflicts
+/** Minimal interface for the loaded Clerk instance used in this module. */
+interface LoadedClerkInstance {
+  readonly loaded: boolean;
+  readonly session: { getToken: () => Promise<string | null> } | null;
+  readonly user: { id: string; [key: string]: unknown } | null;
+  signOut: () => Promise<void>;
+}
 
-const waitForClerk = (): Promise<any> => {
+type ClerkUser = NonNullable<LoadedClerkInstance['user']>;
+
+declare global {
+  interface Window {
+    Clerk?: LoadedClerkInstance;
+  }
+}
+
+const waitForClerk = (): Promise<LoadedClerkInstance> => {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
       reject(new Error('Clerk is only available in the browser'));
@@ -58,7 +71,7 @@ export const signOut = async (): Promise<void> => {
   await clerk.signOut();
 };
 
-export const getCurrentUser = async () => {
+export const getCurrentUser = async (): Promise<ClerkUser | null> => {
   try {
     const clerk = await waitForClerk();
     return clerk.user || null;
@@ -67,7 +80,7 @@ export const getCurrentUser = async () => {
   }
 };
 
-export const getClerk = async () => {
+export const getClerk = async (): Promise<LoadedClerkInstance | null> => {
   try {
     return await waitForClerk();
   } catch {

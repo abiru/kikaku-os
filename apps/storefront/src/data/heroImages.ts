@@ -1,11 +1,10 @@
 // src/data/heroImages.ts
 
-// export type HeroKey = "iphone" | "airpods";
+export type HeroKey = "gift" | "iphone" | "airpods";
 
-export const HERO_IMAGES: Record<
-  any,
-  { large: ImageMetadata; small: ImageMetadata }
-> = {
+export type HeroImage = { large: ImageMetadata; small: ImageMetadata };
+
+export const HERO_IMAGES: Record<HeroKey, HeroImage> = {
   gift: {
     large: (await import("../assets/hero/okina.png")).default,
     small: (await import("../assets/hero/okina-sm.png")).default,
