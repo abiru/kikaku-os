@@ -285,7 +285,7 @@ quotations.get('/quotations/:token/html', async (c) => {
 
 // POST /quotations/:token/accept - Accept quotation and create order
 quotations.post('/quotations/:token/accept', async (c) => {
-  const stripeKey = c.env.STRIPE_SECRET_KEY ?? (c.env as any).STRIPE_API_KEY;
+  const stripeKey = c.env.STRIPE_SECRET_KEY;
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
 
   const token = c.req.param('token');
