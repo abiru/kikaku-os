@@ -252,6 +252,35 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
+    // SSRF protection: block private/internal URLs
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+      return new Response(JSON.stringify({ success: false, error: 'Only HTTP(S) URLs are allowed' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const isPrivate =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '::1' ||
+      hostname === '0.0.0.0' ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('192.168.') ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(hostname) ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.internal') ||
+      hostname === 'metadata.google.internal' ||
+      hostname === '169.254.169.254';
+
+    if (isPrivate) {
+      return new Response(JSON.stringify({ success: false, error: 'Private or internal URLs are not allowed' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Fetch the URL with browser-like headers
     const response = await fetch(url, {
       headers: {
