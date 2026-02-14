@@ -43,15 +43,19 @@ app.onError((err, c) => {
  * Includes localhost for development and configured storefront URL.
  */
 const getAllowedOrigins = (env: Env['Bindings']): string[] => {
-  const origins = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:4321',
-    'http://127.0.0.1:4321'
-  ];
+  const origins: string[] = [];
+
+  // Only allow localhost origins in development mode
+  if (env.DEV_MODE === 'true') {
+    origins.push(
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:4321',
+      'http://127.0.0.1:4321'
+    );
+  }
 
   // Add configured storefront URL (works for both dev and production)
-  // Localhost origins above handle local dev, this handles production/staging
   if (env.STOREFRONT_BASE_URL) {
     origins.push(env.STOREFRONT_BASE_URL);
   }
