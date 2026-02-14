@@ -78,6 +78,9 @@ temp/
 .cache/
 codex-runs/
 
+# --- GitHub Actions self-hosted runner ---
+actions-runner/
+
 # --- Migration data ---
 shopify/
 
