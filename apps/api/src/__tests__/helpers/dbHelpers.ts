@@ -11,11 +11,8 @@ export class NotFoundError extends Error {
  * Check if record exists in table by ID
  * Returns the record if found, null otherwise
  *
- * @example
- * const product = await findById(db, 'products', 123);
- * if (!product) {
- *   return jsonError(c, 'Product not found', 404);
- * }
+ * NOTE: Test-only helper. Table/column names are not parameterized
+ * and must never be used with untrusted input.
  */
 export const findById = async <T = Record<string, unknown>>(
   db: D1Database,
@@ -33,16 +30,7 @@ export const findById = async <T = Record<string, unknown>>(
 /**
  * Check if record exists and throw NotFoundError if not found
  *
- * @example
- * try {
- *   const product = await findByIdOrThrow(db, 'products', id);
- *   // product exists, continue...
- * } catch (err) {
- *   if (err instanceof NotFoundError) {
- *     return jsonError(c, err.message, 404);
- *   }
- *   throw err;
- * }
+ * NOTE: Test-only helper.
  */
 export const findByIdOrThrow = async <T = Record<string, unknown>>(
   db: D1Database,
@@ -62,8 +50,7 @@ export const findByIdOrThrow = async <T = Record<string, unknown>>(
 /**
  * Count records matching a condition
  *
- * @example
- * const orderCount = await countWhere(db, 'orders', 'customer_id = ?', [customerId]);
+ * NOTE: Test-only helper.
  */
 export const countWhere = async (
   db: D1Database,
