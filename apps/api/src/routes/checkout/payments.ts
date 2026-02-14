@@ -215,20 +215,6 @@ payments.post('/payments/intent', async (c) => {
   params.set('metadata[order_id]', String(orderId));
   params.set('metadata[quoteId]', quoteId);
 
-  // Configure payment method types
-  // Bank transfer is always enabled - controlled by Stripe Dashboard settings
-  console.log('[PaymentIntent] Configuration:', {
-    amount: quote.grand_total,
-    currency: quote.currency,
-    customer: stripeCustomerId,
-    minAmount: 50
-  });
-
-  // Check minimum amount for bank transfers (¥50)
-  if (quote.grand_total < 50) {
-    console.warn('[PaymentIntent] Amount below minimum for bank transfer (¥50), only card will be available');
-  }
-
   // Use automatic payment methods to let Stripe show all available options
   params.set('automatic_payment_methods[enabled]', 'true');
   params.set('automatic_payment_methods[allow_redirects]', 'never');
@@ -237,8 +223,6 @@ payments.post('/payments/intent', async (c) => {
   // Actual availability is controlled by Stripe Dashboard settings
   params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
   params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
-
-  console.log('[PaymentIntent] Enabled payment methods: card, customer_balance (jp_bank_transfer), wallets (Google Pay, Apple Pay)');
 
   // Store coupon metadata for webhook handler
   if (quote.coupon_id) {
@@ -265,14 +249,6 @@ payments.post('/payments/intent', async (c) => {
   }
 
   const paymentIntent = await stripeRes.json<any>();
-  console.log('[PaymentIntent] Created successfully:', {
-    id: paymentIntent.id,
-    payment_method_types: paymentIntent.payment_method_types,
-    amount: paymentIntent.amount,
-    currency: paymentIntent.currency,
-    customer: paymentIntent.customer,
-    payment_method_options: paymentIntent.payment_method_options
-  });
 
   if (!paymentIntent?.client_secret || !paymentIntent?.id) {
     await releaseStockReservationForOrder(c.env.DB, orderId);
