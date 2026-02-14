@@ -208,17 +208,10 @@ quotations.get('/quotations/:token', async (c) => {
     return jsonError(c, 'Invalid quotation identifier', 400);
   }
 
-  // Support both numeric ID (legacy/admin) and public_token
-  const isNumericId = /^\d+$/.test(token);
-
-  if (isNumericId) {
-    const id = parseInt(token);
-    if (id <= 0) return jsonError(c, 'Invalid quotation ID', 400);
-  }
-
-  const quotation = isNumericId
-    ? await c.env.DB.prepare(`SELECT * FROM quotations WHERE id = ?`).bind(parseInt(token)).first()
-    : await c.env.DB.prepare(`SELECT * FROM quotations WHERE public_token = ?`).bind(token).first();
+  // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
+  const quotation = await c.env.DB.prepare(
+    `SELECT * FROM quotations WHERE public_token = ?`
+  ).bind(token).first();
 
   if (!quotation) {
     return jsonError(c, 'Quotation not found', 404);
@@ -241,10 +234,10 @@ quotations.get('/quotations/:token/html', async (c) => {
     return jsonError(c, 'Invalid quotation identifier', 400);
   }
 
-  const isNumericId = /^\d+$/.test(token);
-  const quotation = isNumericId
-    ? await c.env.DB.prepare(`SELECT * FROM quotations WHERE id = ?`).bind(parseInt(token)).first()
-    : await c.env.DB.prepare(`SELECT * FROM quotations WHERE public_token = ?`).bind(token).first();
+  // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
+  const quotation = await c.env.DB.prepare(
+    `SELECT * FROM quotations WHERE public_token = ?`
+  ).bind(token).first();
 
   if (!quotation) {
     return jsonError(c, 'Quotation not found', 404);
@@ -293,14 +286,7 @@ quotations.post('/quotations/:token/accept', async (c) => {
     return jsonError(c, 'Invalid quotation identifier', 400);
   }
 
-  // Support both numeric ID (legacy/admin) and public_token
-  const isNumericId = /^\d+$/.test(token);
-
-  if (isNumericId) {
-    const id = parseInt(token);
-    if (id <= 0) return jsonError(c, 'Invalid quotation ID', 400);
-  }
-
+  // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
   let body: any;
   try {
     body = await c.req.json();
@@ -310,10 +296,9 @@ quotations.post('/quotations/:token/accept', async (c) => {
 
   const email = normalizeString(body?.email);
 
-  // Get quotation by token or ID
-  const quotation = isNumericId
-    ? await c.env.DB.prepare(`SELECT * FROM quotations WHERE id = ?`).bind(parseInt(token)).first<any>()
-    : await c.env.DB.prepare(`SELECT * FROM quotations WHERE public_token = ?`).bind(token).first<any>();
+  const quotation = await c.env.DB.prepare(
+    `SELECT * FROM quotations WHERE public_token = ?`
+  ).bind(token).first<any>();
 
   if (!quotation) {
     return jsonError(c, 'Quotation not found', 404);
