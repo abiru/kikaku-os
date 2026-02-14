@@ -74,6 +74,16 @@ app.use(
 
 app.options('*', (c) => c.body(null, 204));
 
+// Enable foreign key constraints (D1/SQLite disables by default)
+app.use('*', async (c, next) => {
+  try {
+    await c.env.DB.prepare('PRAGMA foreign_keys = ON').run();
+  } catch {
+    // Non-fatal: log and continue if DB not available (e.g., health check)
+  }
+  return next();
+});
+
 // Production request logging (after CORS, before auth)
 app.use('*', requestLogger);
 

@@ -363,27 +363,16 @@ storefront.get('/orders/:token', async (c) => {
 
   const poll = c.req.query('poll') === 'true';
 
-  // Support both public_token and numeric ID (for backward compatibility)
-  const isNumericId = /^\d+$/.test(token);
-  const order = isNumericId
-    ? await c.env.DB.prepare(`
-        SELECT o.id, o.status, o.subtotal, o.tax_amount, o.total_amount,
-               o.shipping_fee, o.total_discount, o.currency,
-               o.created_at, o.paid_at, o.metadata, o.public_token,
-               c.email as customer_email
-        FROM orders o
-        LEFT JOIN customers c ON c.id = o.customer_id
-        WHERE o.id = ?
-      `).bind(parseInt(token)).first<OrderRow & { public_token: string | null }>()
-    : await c.env.DB.prepare(`
-        SELECT o.id, o.status, o.subtotal, o.tax_amount, o.total_amount,
-               o.shipping_fee, o.total_discount, o.currency,
-               o.created_at, o.paid_at, o.metadata, o.public_token,
-               c.email as customer_email
-        FROM orders o
-        LEFT JOIN customers c ON c.id = o.customer_id
-        WHERE o.public_token = ?
-      `).bind(token).first<OrderRow & { public_token: string | null }>();
+  // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
+  const order = await c.env.DB.prepare(`
+    SELECT o.id, o.status, o.subtotal, o.tax_amount, o.total_amount,
+           o.shipping_fee, o.total_discount, o.currency,
+           o.created_at, o.paid_at, o.metadata, o.public_token,
+           c.email as customer_email
+    FROM orders o
+    LEFT JOIN customers c ON c.id = o.customer_id
+    WHERE o.public_token = ?
+  `).bind(token).first<OrderRow & { public_token: string | null }>();
 
   if (!order) {
     return c.json({ ok: false, message: 'Order not found' }, 404);

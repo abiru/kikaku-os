@@ -119,6 +119,31 @@ payments.post('/payments/intent', async (c) => {
 
   const orderId = Number(orderRes.meta.last_row_id);
 
+  // Insert order_items from quote items
+  const quoteItems: Array<{ variantId: number; quantity: number }> = JSON.parse(quote.items_json);
+  for (const item of quoteItems) {
+    // Look up variant price and product info
+    const variant = await c.env.DB.prepare(
+      `SELECT v.id, v.product_id, p.amount as unit_price
+       FROM variants v
+       LEFT JOIN prices p ON p.variant_id = v.id AND p.is_default = 1
+       WHERE v.id = ?`
+    ).bind(item.variantId).first<{ id: number; product_id: number; unit_price: number | null }>();
+
+    if (variant) {
+      const unitPrice = variant.unit_price ?? 0;
+      const lineTotal = unitPrice * item.quantity;
+      // Default 10% tax rate (standard Japanese consumption tax)
+      const taxRate = 10;
+      const taxAmount = Math.floor((lineTotal * taxRate) / (100 + taxRate));
+
+      await c.env.DB.prepare(
+        `INSERT INTO order_items (order_id, variant_id, quantity, unit_price, tax_rate, tax_amount, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      ).bind(orderId, item.variantId, item.quantity, unitPrice, taxRate, taxAmount).run();
+    }
+  }
+
   // Create Stripe PaymentIntent
   const params = new URLSearchParams();
   params.set('amount', String(quote.grand_total));
