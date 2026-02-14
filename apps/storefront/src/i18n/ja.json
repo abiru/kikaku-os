@@ -388,7 +388,10 @@
     "internationalShipping": "海外発送 10日程"
   },
   "product": {
-    "relatedProducts": "関連商品"
+    "relatedProducts": "関連商品",
+    "addToCart": "カートに追加",
+    "inStock": "在庫あり",
+    "checkAvailability": "在庫状況をご確認ください"
   },
   "recentlyViewed": {
     "title": "最近チェックした商品"
