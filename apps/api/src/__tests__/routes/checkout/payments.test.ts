@@ -20,8 +20,10 @@ const createMockDb = (overrides: {
   customerRow?: any;
   orderInsertId?: number;
   customers?: Map<number, any>;
+  stockByVariant?: Record<number, number>;
 } = {}) => {
   const customers = overrides.customers || new Map();
+  const stockByVariant = overrides.stockByVariant || {};
 
   // If customerRow is provided, add it to customers map
   if (overrides.customerRow) {
@@ -54,6 +56,14 @@ const createMockDb = (overrides: {
           return null;
         },
         all: async <T>() => {
+          if (sql.includes('FROM inventory_movements')) {
+            const variantIds = boundArgs.map((id) => Number(id));
+            const results = variantIds.map((variantId) => ({
+              variantId,
+              onHand: stockByVariant[variantId] ?? 0
+            }));
+            return { results, success: true, meta: {} } as MockDbResult;
+          }
           return { results: [], success: true, meta: {} } as MockDbResult;
         },
         run: async () => {
@@ -156,7 +166,8 @@ describe('POST /payments/intent', () => {
           id: 789,
           email: 'test@example.com',
           stripe_customer_id: 'cus_existing'
-        }
+        },
+        stockByVariant: { 10: 10 }
       }),
       STRIPE_SECRET_KEY: 'sk_test_123',
       STRIPE_PUBLISHABLE_KEY: 'pk_test_123'

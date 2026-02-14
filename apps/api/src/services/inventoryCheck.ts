@@ -19,12 +19,12 @@ export const getAvailableStock = async (
   variantId: number
 ): Promise<number> => {
   const result = await db.prepare(
-    `SELECT COALESCE(SUM(delta), 0) as on_hand
+    `SELECT COALESCE(SUM(delta), 0) as onHand
      FROM inventory_movements
      WHERE variant_id = ?`
-  ).bind(variantId).first<{ on_hand: number }>();
+  ).bind(variantId).first<{ onHand: number }>();
 
-  return result?.on_hand ?? 0;
+  return result?.onHand ?? 0;
 };
 
 /**
@@ -38,7 +38,7 @@ export const getAvailableStockBatch = async (
 
   const placeholders = variantIds.map(() => '?').join(',');
   const results = await db.prepare(
-    `SELECT variant_id, COALESCE(SUM(delta), 0) as on_hand
+    `SELECT variant_id as variantId, COALESCE(SUM(delta), 0) as onHand
      FROM inventory_movements
      WHERE variant_id IN (${placeholders})
      GROUP BY variant_id`
