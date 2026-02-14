@@ -208,7 +208,7 @@ const runDailyCloseArtifacts = async (env: Env['Bindings'], date: string) => {
       anomalyDetected: anomalyCreated
     });
 
-    console.log(`Daily close completed for ${date}: runId=${runId}, ledgerEntries=${journalResult.entriesCreated}`);
+    // Daily close completed - result recorded in daily_close_runs table
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     await completeDailyCloseRun(env, runId, {
@@ -244,14 +244,7 @@ const runCleanupTasks = async (env: Env['Bindings']) => {
 
 const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
   try {
-    const result = await runAllAnomalyChecks(env, date);
-    console.log(`Anomaly checks completed for ${date}:`, {
-      lowStock: result.lowStock.filter((r) => r.created).length,
-      negativeStock: result.negativeStock.filter((r) => r.created).length,
-      highRefundRate: result.highRefundRate?.created ?? false,
-      webhookFailures: result.webhookFailures?.created ?? false,
-      unfulfilledOrders: result.unfulfilledOrders?.created ?? false
-    });
+    await runAllAnomalyChecks(env, date);
   } catch (err) {
     console.error('Anomaly check failed:', err);
   }
