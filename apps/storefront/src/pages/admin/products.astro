@@ -8,6 +8,7 @@ import { Button } from '../../components/catalyst/button';
 import { Input } from '../../components/catalyst/input';
 import { Heading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
+import type { Product } from '../../lib/types';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -15,7 +16,7 @@ const status = Astro.url.searchParams.get('status') || 'all';
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
-let products: any[] = [];
+let products: Product[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
 let error = null;
 

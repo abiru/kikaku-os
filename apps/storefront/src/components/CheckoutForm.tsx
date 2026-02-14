@@ -81,7 +81,7 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 		}
 	};
 
-	const onExpressCheckoutConfirm = async (event: any) => {
+	const onExpressCheckoutConfirm = async (event: { shippingAddress?: { recipient?: string; addressLine?: string[]; city?: string; region?: string; postalCode?: string; country?: string; phone?: string } }) => {
 		// Extract shipping address if available
 		let shippingData = null;
 		if (event.shippingAddress) {
