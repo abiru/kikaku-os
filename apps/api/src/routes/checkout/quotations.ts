@@ -487,6 +487,58 @@ quotations.post('/quotations/:token/accept', async (c) => {
   });
 });
 
+// DELETE /quotations/:id - Delete quotation (admin only, guarded)
+quotations.delete('/quotations/:id', async (c) => {
+  const adminKey = c.req.header('x-admin-key');
+  if (!adminKey || !c.env.ADMIN_API_KEY || adminKey !== c.env.ADMIN_API_KEY) {
+    return jsonError(c, 'Unauthorized', 401);
+  }
+
+  const id = Number(c.req.param('id'));
+  if (!Number.isInteger(id) || id <= 0) {
+    return jsonError(c, 'Invalid quotation ID', 400);
+  }
+
+  const quotation = await c.env.DB.prepare(
+    `SELECT id, status, converted_order_id FROM quotations WHERE id = ?`
+  ).bind(id).first<{ id: number; status: string; converted_order_id: number | null }>();
+
+  if (!quotation) {
+    return jsonError(c, 'Quotation not found', 404);
+  }
+
+  // Check for associated orders that are not cancelled
+  if (quotation.converted_order_id) {
+    const order = await c.env.DB.prepare(
+      `SELECT id, status FROM orders WHERE id = ?`
+    ).bind(quotation.converted_order_id).first<{ id: number; status: string }>();
+
+    if (order && order.status !== 'cancelled') {
+      return jsonError(
+        c,
+        `Cannot delete quotation with active order #${order.id} (status: ${order.status})`,
+        409
+      );
+    }
+  }
+
+  // Prevent deletion of accepted quotations
+  if (quotation.status === 'accepted') {
+    return jsonError(c, 'Cannot delete an accepted quotation', 409);
+  }
+
+  // Delete quotation items first, then quotation
+  await c.env.DB.prepare(
+    `DELETE FROM quotation_items WHERE quotation_id = ?`
+  ).bind(id).run();
+
+  await c.env.DB.prepare(
+    `DELETE FROM quotations WHERE id = ?`
+  ).bind(id).run();
+
+  return jsonOk(c, { deleted: true, id });
+});
+
 // GET /quotations - List quotations (for admin)
 quotations.get('/quotations', async (c) => {
   const status = c.req.query('status');
