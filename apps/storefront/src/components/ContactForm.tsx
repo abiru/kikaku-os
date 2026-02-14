@@ -4,6 +4,7 @@ import { Input } from './catalyst/input';
 import { Textarea } from './catalyst/textarea';
 import { Field, Label } from './catalyst/fieldset';
 import { getApiBase, buildStoreUrl } from '../lib/api';
+import { ErrorBoundary } from './ErrorBoundary';
 
 type FormData = {
   name: string;
@@ -27,7 +28,7 @@ const validate = (data: FormData): FormErrors => {
   return errors;
 };
 
-export default function ContactForm() {
+function ContactFormContent() {
   const [form, setForm] = useState<FormData>({
     name: '',
     email: '',
@@ -186,5 +187,13 @@ export default function ContactForm() {
         {submitting ? '送信中...' : '送信する'}
       </Button>
     </form>
+  );
+}
+
+export default function ContactForm() {
+  return (
+    <ErrorBoundary>
+      <ContactFormContent />
+    </ErrorBoundary>
   );
 }
