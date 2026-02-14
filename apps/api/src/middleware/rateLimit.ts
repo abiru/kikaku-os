@@ -55,6 +55,11 @@ export const rateLimit = (options: RateLimitOptions) => {
   const windowMs = windowSeconds * 1000;
 
   return async (c: Context<Env>, next: Next) => {
+    // Do not throttle health checks or CORS preflight.
+    if (c.req.method === 'OPTIONS' || c.req.path === '/health') {
+      return next();
+    }
+
     cleanup();
 
     // Use CF-Connecting-IP (Cloudflare) or fallback headers
