@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --local --config ../../wrangler.toml --port ${PORT:-8787}",
-    "build": "wrangler build",
+    "build": "tsc --noEmit -p tsconfig.build.json",
     "test": "vitest run",
     "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
     "test:integration": "vitest run --include '**/*.integration.test.ts'",
