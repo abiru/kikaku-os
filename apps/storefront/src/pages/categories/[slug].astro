@@ -4,6 +4,7 @@ import EmptyState from '../../components/EmptyState.astro';
 import Layout from '../../layouts/Layout.astro';
 import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 import { t } from '../../i18n';
+import { formatPrice } from '../../lib/format';
 
 export const prerender = false;
 
@@ -69,14 +70,6 @@ try {
 } catch {
 	loadState = 'error';
 }
-
-const formatPrice = (amount: number, currency: string = 'JPY') => {
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency,
-		minimumFractionDigits: 0,
-	}).format(amount);
-};
 
 const buildPageUrl = (newPage: number): string => {
 	return `/categories/${encodeURIComponent(decodedSlug)}?page=${newPage}`;

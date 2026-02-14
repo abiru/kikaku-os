@@ -6,6 +6,7 @@ import { Badge } from '../../../components/catalyst/badge';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { formatDate } from '../../../lib/format';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import { Input } from '../../../components/catalyst/input';
@@ -62,10 +63,12 @@ const formatCurrency = (amount: number, currency: string) => {
 	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);
 };
 
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	const d = new Date(dateStr);
-	return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+const dateTimeOpts: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit'
 };
 
 const getStatusColor = (status: string) => {
@@ -138,11 +141,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(order.created_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(order.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Paid At</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(order.paid_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(order.paid_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
 
@@ -236,7 +239,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell>{f.id}</TableCell>
 												<TableCell><Badge color={getFulfillmentStatusColor(f.status)} client:load>{f.status}</Badge></TableCell>
 												<TableCell className="font-mono text-xs">{f.tracking_number || '-'}</TableCell>
-												<TableCell className="text-[#86868b] tabular-nums">{formatDate(f.created_at)}</TableCell>
+												<TableCell className="text-[#86868b] tabular-nums">{formatDate(f.created_at, dateTimeOpts)}</TableCell>
 												<TableCell>
 													<button
 														type="button"
@@ -281,7 +284,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell><Badge color={getStatusColor(p.status)} client:load>{p.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(p.amount, p.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{p.provider_payment_id || '-'}</TableCell>
-												<TableCell className="text-[#86868b] tabular-nums">{formatDate(p.created_at)}</TableCell>
+												<TableCell className="text-[#86868b] tabular-nums">{formatDate(p.created_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (
@@ -333,7 +336,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell className="tabular-nums">{formatCurrency(r.amount, r.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{r.provider_refund_id || '-'}</TableCell>
 												<TableCell className="text-[#86868b]">{r.reason || '-'}</TableCell>
-												<TableCell className="text-[#86868b] tabular-nums">{formatDate(r.created_at)}</TableCell>
+												<TableCell className="text-[#86868b] tabular-nums">{formatDate(r.created_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (
@@ -369,7 +372,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell className="font-mono text-xs">{e.event_type}</TableCell>
 												<TableCell><Badge color={getStatusColor(e.processing_status)} client:load>{e.processing_status}</Badge></TableCell>
 												<TableCell className="text-xs text-red-600">{e.error || '-'}</TableCell>
-												<TableCell className="text-[#86868b] tabular-nums">{formatDate(e.received_at)}</TableCell>
+												<TableCell className="text-[#86868b] tabular-nums">{formatDate(e.received_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (

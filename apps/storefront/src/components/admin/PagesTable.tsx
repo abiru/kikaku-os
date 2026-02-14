@@ -1,5 +1,6 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
+import { formatDate } from '../../lib/format'
 
 type Page = {
   id: number
@@ -16,14 +17,6 @@ type Page = {
 type Props = {
   pages: Page[]
   coreSlugs: string[]
-}
-
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
 }
 
 export default function PagesTable({ pages, coreSlugs }: Props) {

@@ -1,6 +1,7 @@
 import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
 import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
+import { formatDate } from '../../lib/format';
 
 type AdminUser = {
 	id: number;
@@ -25,15 +26,12 @@ type Props = {
 	activeFilter: string;
 };
 
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	return new Date(dateStr).toLocaleDateString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit'
-	});
+const dateTimeOpts: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit'
 };
 
 const getRoleBadgeColor = (roleId: string): 'amber' | 'blue' | 'green' | 'zinc' => {
@@ -107,10 +105,10 @@ export default function UsersTable({
 									)}
 								</TableCell>
 								<TableCell className="text-zinc-500 tabular-nums text-sm">
-									{formatDate(user.last_login_at)}
+									{formatDate(user.last_login_at, dateTimeOpts)}
 								</TableCell>
 								<TableCell className="text-zinc-500 tabular-nums text-sm">
-									{formatDate(user.created_at)}
+									{formatDate(user.created_at, dateTimeOpts)}
 								</TableCell>
 								<TableCell className="text-right">
 									<a

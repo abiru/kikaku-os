@@ -9,6 +9,7 @@ import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { formatDate } from '../../../lib/format';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -144,15 +145,12 @@ if (coupon && apiKey && successMessage) {
 	}
 }
 
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	return new Date(dateStr).toLocaleString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit'
-	});
+const dateTimeOpts: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit'
 };
 
 const formatDateForInput = (dateStr: string | null) => {
@@ -371,11 +369,11 @@ const canDelete = coupon && coupon.current_uses === 0;
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
 								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.created_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Updated</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.updated_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.updated_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
 					</div>

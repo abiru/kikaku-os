@@ -10,6 +10,7 @@ import { Input } from '../../../components/catalyst/input';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { formatDate } from '../../../lib/format';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -123,15 +124,12 @@ if (customer && successMessage && apiKey) {
 	}
 }
 
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	return new Date(dateStr).toLocaleString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit'
-	});
+const dateTimeOpts: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit'
 };
 
 const formatCurrency = (amount: number, currency: string = 'JPY') => {
@@ -238,11 +236,11 @@ const getStatusBadge = (status: string) => {
 							<dl class="grid grid-cols-2 gap-4 text-sm">
 								<div>
 									<dt class="text-[#86868b]">Created</dt>
-									<dd class="text-zinc-950 tabular-nums">{formatDate(customer.created_at)}</dd>
+									<dd class="text-zinc-950 tabular-nums">{formatDate(customer.created_at, dateTimeOpts)}</dd>
 								</div>
 								<div>
 									<dt class="text-[#86868b]">Updated</dt>
-									<dd class="text-zinc-950 tabular-nums">{formatDate(customer.updated_at)}</dd>
+									<dd class="text-zinc-950 tabular-nums">{formatDate(customer.updated_at, dateTimeOpts)}</dd>
 								</div>
 							</dl>
 						</div>
@@ -294,10 +292,10 @@ const getStatusBadge = (status: string) => {
 															{formatCurrency(order.total_net, order.currency)}
 														</TableCell>
 														<TableCell className="text-[#86868b] tabular-nums">
-															{formatDate(order.created_at)}
+															{formatDate(order.created_at, dateTimeOpts)}
 														</TableCell>
 														<TableCell className="text-[#86868b] tabular-nums">
-															{formatDate(order.paid_at)}
+															{formatDate(order.paid_at, dateTimeOpts)}
 														</TableCell>
 														<TableCell>
 															<a href={`/admin/orders/${order.id}`} class="text-[#0071e3] hover:underline font-medium">View</a>

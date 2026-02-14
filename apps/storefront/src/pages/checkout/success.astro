@@ -4,6 +4,7 @@ import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
 import { t } from '../../i18n';
 import { buildStoreOrderUrl, resolveCheckoutOrderToken } from '../../lib/checkoutSuccess';
+import { formatPrice } from '../../lib/format';
 
 const apiBase = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 const orderToken = resolveCheckoutOrderToken(Astro.url.searchParams.get('order_id'));
@@ -21,12 +22,6 @@ if (orderToken) {
 	}
 }
 
-const formatPrice = (amount: number, currency: string) => {
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency: currency || 'JPY'
-	}).format(amount);
-};
 ---
 
 <Layout title={t('checkout.successPageTitle')}>

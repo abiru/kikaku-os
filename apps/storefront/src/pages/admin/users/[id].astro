@@ -9,6 +9,7 @@ import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { formatDate } from '../../../lib/format';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -162,15 +163,12 @@ if (user && successMessage && apiKey) {
 	}
 }
 
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	return new Date(dateStr).toLocaleString('ja-JP', {
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		minute: '2-digit'
-	});
+const dateTimeOpts: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit'
 };
 
 const getRoleBadgeColor = (roleId: string): 'amber' | 'blue' | 'green' | 'zinc' => {
@@ -298,11 +296,11 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
 								<dt class="text-[#86868b]">Created</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(user.created_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(user.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
 								<dt class="text-[#86868b]">Last Login</dt>
-								<dd class="text-zinc-950 tabular-nums">{formatDate(user.last_login_at)}</dd>
+								<dd class="text-zinc-950 tabular-nums">{formatDate(user.last_login_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
 					</div>
