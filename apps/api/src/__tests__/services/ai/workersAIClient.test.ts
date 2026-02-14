@@ -4,9 +4,9 @@ import {
   callLlamaChat,
   callLlamaForJSON,
   generateEmbeddings,
-  extractJSON,
   estimateTokens,
 } from '../../../services/ai/workersAIClient';
+import { extractJSON } from '../../../lib/json';
 import type { Ai } from '../../../env';
 
 describe('Workers AI Client', () => {
