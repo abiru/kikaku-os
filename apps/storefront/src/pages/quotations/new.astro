@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 
-const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
+const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 ---
 
 <Layout title="見積書作成">
@@ -267,6 +267,7 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
 
 <script>
   import { getCartItems, clearCart } from '../../lib/cart';
+  import { createQuotation } from '../../lib/quotationApi';
 
   declare global {
     interface Window {
@@ -370,30 +371,22 @@ const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
     }));
 
     try {
-      const response = await fetch(`${apiUrl}/quotations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          customerCompany,
-          customerName,
-          customerEmail,
-          customerPhone,
-          items: quotationItems,
-          notes
-        })
+      const data = await createQuotation(apiUrl, {
+        customerCompany,
+        customerName,
+        customerEmail,
+        customerPhone,
+        items: quotationItems,
+        notes
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || '見積書の作成に失敗しました');
+      if (!data.publicToken || typeof data.publicToken !== 'string') {
+        throw new Error('公開用トークンの取得に失敗しました');
       }
 
       // Clear cart and redirect to quotation page
       clearCart();
-      window.location.href = `/quotations/${data.id}`;
+      window.location.href = `/quotations/${data.publicToken}`;
     } catch (error) {
       console.error('Error creating quotation:', error);
       const errorMessage = error instanceof Error ? error.message : '見積書の作成に失敗しました。もう一度お試しください。';

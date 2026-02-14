@@ -102,8 +102,12 @@ export default function CheckoutPage() {
 				throw new Error('Failed to create payment intent');
 			}
 
+			if (!intentData.orderPublicToken) {
+				throw new Error('Public order token is missing');
+			}
+
 			setClientSecret(intentData.clientSecret);
-			setOrderToken(intentData.orderPublicToken || String(intentData.orderId));
+			setOrderToken(intentData.orderPublicToken);
 
 			// Use publishable key from API or fall back to env variable
 			const pubKey = intentData.publishableKey || import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;

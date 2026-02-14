@@ -2,11 +2,14 @@
 export const prerender = false;
 
 import Layout from '../../layouts/Layout.astro';
+import { isPublicToken } from '../../lib/publicToken';
+import { fetchQuotation } from '../../lib/quotationApi';
 
-const { id } = Astro.params;
-const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
+const rawToken = Astro.params.id || null;
+const quotationToken = isPublicToken(rawToken) ? rawToken : null;
+const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
-if (!id) {
+if (!quotationToken) {
   return Astro.redirect('/products');
 }
 
@@ -14,17 +17,10 @@ let quotationData: any = null;
 let error: string | null = null;
 
 try {
-  const response = await fetch(`${apiUrl}/quotations/${id}`);
-  const data = await response.json();
-
-  if (!response.ok || !data.ok) {
-    error = data.message || '見積書が見つかりません';
-  } else {
-    quotationData = data;
-  }
+  quotationData = await fetchQuotation(apiUrl, quotationToken);
 } catch (err) {
   console.error('Error fetching quotation:', err);
-  error = '見積書の取得に失敗しました';
+  error = err instanceof Error ? err.message : '見積書の取得に失敗しました';
 }
 
 if (error || !quotationData) {
@@ -354,27 +350,44 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
   }
 </style>
 
-<script define:vars={{ apiUrl, quotation: quotationData.quotation }}>
-  const quotationToken = quotation.public_token || quotation.id;
+<script define:vars={{ apiUrl, quotationToken, quotationNumber: quotation.quotation_number }}>
+  window.__QUOTATION_PAGE__ = { apiUrl, quotationToken, quotationNumber };
+</script>
+
+<script>
+  import { acceptQuotation, fetchQuotationHtml } from '../../lib/quotationApi';
+
+  declare global {
+    interface Window {
+      __QUOTATION_PAGE__: {
+        apiUrl: string;
+        quotationToken: string;
+        quotationNumber: string;
+      };
+      html2pdf?: () => {
+        set: (options: unknown) => {
+          from: (element: Element) => {
+            save: () => Promise<void>;
+          };
+        };
+      };
+    }
+  }
+
+  const { apiUrl, quotationToken, quotationNumber } = window.__QUOTATION_PAGE__;
 
   const handleDownloadPDF = async () => {
-    const btn = document.getElementById('download-pdf-btn');
+    const btn = document.getElementById('download-pdf-btn') as HTMLButtonElement | null;
     const errorMessageEl = document.getElementById('error-message');
 
-    if (!btn) return;
+    if (!btn || !errorMessageEl) return;
 
     btn.disabled = true;
     btn.textContent = 'PDF生成中...';
     errorMessageEl.style.display = 'none';
 
     try {
-      // Fetch HTML
-      const response = await fetch(`${apiUrl}/quotations/${quotationToken}/html`);
-      if (!response.ok) {
-        throw new Error('HTMLの取得に失敗しました');
-      }
-
-      const html = await response.text();
+      const html = await fetchQuotationHtml(apiUrl, quotationToken);
 
       // Load html2pdf.js dynamically
       const script = document.createElement('script');
@@ -390,11 +403,15 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
         // Generate PDF
         const opt = {
           margin: 10,
-          filename: `見積書_${quotation.quotation_number}.pdf`,
+          filename: `見積書_${quotationNumber}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2 },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
+
+        if (!window.html2pdf) {
+          throw new Error('PDFライブラリの読み込みに失敗しました');
+        }
 
         window.html2pdf().set(opt).from(container).save().then(() => {
           document.body.removeChild(container);
@@ -408,7 +425,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
       document.head.appendChild(script);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      errorMessageEl.textContent = error.message || 'PDFのダウンロードに失敗しました';
+      errorMessageEl.textContent = error instanceof Error ? error.message : 'PDFのダウンロードに失敗しました';
       errorMessageEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'PDFダウンロード';
@@ -416,39 +433,27 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
   };
 
   const handleAccept = async () => {
-    const btn = document.getElementById('accept-btn');
+    const btn = document.getElementById('accept-btn') as HTMLButtonElement | null;
     const errorMessageEl = document.getElementById('error-message');
 
-    if (!btn || !confirm('この見積で注文を作成しますか？')) return;
+    if (!btn || !errorMessageEl || !confirm('この見積で注文を作成しますか？')) return;
 
     btn.disabled = true;
     btn.textContent = '処理中...';
     errorMessageEl.style.display = 'none';
 
     try {
-      const response = await fetch(`${apiUrl}/quotations/${quotationToken}/accept`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.ok) {
-        throw new Error(data.message || '見積の承認に失敗しました');
-      }
+      const data = await acceptQuotation(apiUrl, quotationToken);
 
       // Redirect to Stripe Checkout
       if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+        window.location.href = String(data.checkoutUrl);
       } else {
         throw new Error('チェックアウトURLが取得できませんでした');
       }
     } catch (error) {
       console.error('Error accepting quotation:', error);
-      errorMessageEl.textContent = error.message || '見積の承認に失敗しました';
+      errorMessageEl.textContent = error instanceof Error ? error.message : '見積の承認に失敗しました';
       errorMessageEl.style.display = 'block';
       btn.disabled = false;
       btn.textContent = 'この見積で注文する';
