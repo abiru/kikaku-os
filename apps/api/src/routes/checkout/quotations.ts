@@ -129,7 +129,7 @@ quotations.post('/quotations', async (c) => {
     return {
       unitPrice: row.amount,
       quantity: item.quantity,
-      taxRate: row.tax_rate || 0.10
+      taxRate: row.tax_rate ?? 0.10
     };
   });
 
