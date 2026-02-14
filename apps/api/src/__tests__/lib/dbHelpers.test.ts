@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { findById, findByIdOrThrow, countWhere, NotFoundError } from '../../lib/dbHelpers';
+import { findById, findByIdOrThrow, countWhere, NotFoundError } from '../helpers/dbHelpers';
 
 describe('DB Helpers', () => {
   let mockDb: D1Database;
