@@ -12,13 +12,11 @@ export function t(key: TranslationKey, params?: Record<string, string | number>)
     if (value && typeof value === 'object' && k in value) {
       value = (value as Record<string, unknown>)[k];
     } else {
-      console.warn(`Translation key not found: ${key}`);
       return key;
     }
   }
 
   if (typeof value !== 'string') {
-    console.warn(`Translation value is not a string: ${key}`);
     return key;
   }
 
