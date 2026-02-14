@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   categoryNameParamSchema,
@@ -10,11 +11,13 @@ import {
   renameCategorySchema,
   deleteCategorySchema,
   productListQuerySchema,
+  PERMISSIONS,
 } from '../../lib/schemas';
 
 const app = new Hono<Env>();
 
-// Custom error handler for zod validation (zod v4 compatible)
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 type CategoryRow = {
   category: string;
@@ -24,6 +27,7 @@ type CategoryRow = {
 // GET /categories - List all categories with product counts
 app.get(
   '/categories',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('query', categoryListQuerySchema, validationErrorHandler),
   async (c) => {
     const { q } = c.req.valid('query');
@@ -69,6 +73,7 @@ app.get(
 // GET /categories/:name/products - List products in a category
 app.get(
   '/categories/:name/products',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('param', categoryNameParamSchema, validationErrorHandler),
   zValidator('query', productListQuerySchema, validationErrorHandler),
   async (c) => {
@@ -132,6 +137,7 @@ app.get(
 // PUT /categories/:name - Rename category (updates all products)
 app.put(
   '/categories/:name',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', categoryNameParamSchema, validationErrorHandler),
   zValidator('json', renameCategorySchema, validationErrorHandler),
   async (c) => {
@@ -189,6 +195,7 @@ app.put(
 // DELETE /categories/:name - Delete category (sets products' category to null or moves to another)
 app.delete(
   '/categories/:name',
+  requirePermission(PERMISSIONS.PRODUCTS_DELETE),
   zValidator('param', categoryNameParamSchema, validationErrorHandler),
   zValidator('json', deleteCategorySchema, validationErrorHandler),
   async (c) => {

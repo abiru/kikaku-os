@@ -14,9 +14,14 @@ import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { escapeHtml } from '../../lib/html';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { PERMISSIONS } from '../../lib/schemas';
 
 const app = new Hono<Env>();
+
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 // Request schema
 const fetchProductSchema = z.object({
@@ -402,6 +407,7 @@ async function fetchProductData(
 // POST /product-fetch - Fetch product data from URL
 app.post(
   '/product-fetch',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('json', fetchProductSchema, validationErrorHandler),
   async (c) => {
     const { url, productName } = c.req.valid('json');

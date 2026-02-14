@@ -40,9 +40,38 @@ const createMockEnv = () => {
     },
     DB: {
       prepare: (sql: string) => ({
+        // Direct methods (no bind) for RBAC middleware
+        all: async <T>() => {
+          calls.push({ sql, bind: [] });
+          if (sql.includes('FROM permissions') && sql.includes('role_permissions')) {
+            return {
+              results: [
+                { id: 'dashboard:read' }, { id: 'users:read' }, { id: 'users:write' }, { id: 'users:delete' },
+                { id: 'orders:read' }, { id: 'orders:write' }, { id: 'products:read' }, { id: 'products:write' },
+                { id: 'products:delete' }, { id: 'inventory:read' }, { id: 'inventory:write' },
+                { id: 'inbox:read' }, { id: 'inbox:approve' }, { id: 'reports:read' }, { id: 'ledger:read' },
+                { id: 'settings:read' }, { id: 'settings:write' }, { id: 'customers:read' }, { id: 'customers:write' },
+                { id: 'tax-rates:read' }, { id: 'tax-rates:write' },
+              ]
+            } as T;
+          }
+          return { results: [] } as T;
+        },
+        first: async <T>() => {
+          calls.push({ sql, bind: [] });
+          return undefined as T;
+        },
+        run: async () => {
+          calls.push({ sql, bind: [] });
+          return { meta: {} };
+        },
         bind: (...args: unknown[]) => ({
           first: async <T>() => {
             calls.push({ sql, bind: args });
+            // RBAC: admin_users lookup (API key auth skips this, but handle gracefully)
+            if (sql.includes('FROM admin_users') && sql.includes('clerk_user_id')) {
+              return undefined as T;
+            }
             if (sql.includes('COUNT(*)') && sql.includes('customers')) {
               return { count: customerData.length } as T;
             }
@@ -60,6 +89,25 @@ const createMockEnv = () => {
           },
           all: async <T>() => {
             calls.push({ sql, bind: args });
+            if (sql.includes('FROM customers')) {
+              return { results: customerData } as T;
+            }
+            return { results: [] } as T;
+          },
+          all: async <T>() => {
+            calls.push({ sql, bind: args });
+            if (sql.includes('FROM permissions') && sql.includes('role_permissions')) {
+              return {
+                results: [
+                  { id: 'dashboard:read' }, { id: 'users:read' }, { id: 'users:write' }, { id: 'users:delete' },
+                  { id: 'orders:read' }, { id: 'orders:write' }, { id: 'products:read' }, { id: 'products:write' },
+                  { id: 'products:delete' }, { id: 'inventory:read' }, { id: 'inventory:write' },
+                  { id: 'inbox:read' }, { id: 'inbox:approve' }, { id: 'reports:read' }, { id: 'ledger:read' },
+                  { id: 'settings:read' }, { id: 'settings:write' }, { id: 'customers:read' }, { id: 'customers:write' },
+                  { id: 'tax-rates:read' }, { id: 'tax-rates:write' },
+                ]
+              } as T;
+            }
             if (sql.includes('FROM customers')) {
               return { results: customerData } as T;
             }

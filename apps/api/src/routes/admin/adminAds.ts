@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import {
   adGenerateRequestSchema,
   createAdDraftSchema,
@@ -10,11 +11,15 @@ import {
   adDraftIdParamSchema,
   adDraftListQuerySchema,
   selectHistorySchema,
+  PERMISSIONS,
 } from '../../lib/schemas';
 import { generateAdCopy } from '../../services/claudeAds';
 import { validateAdCopy } from '../../services/adValidation';
 
 const app = new Hono<Env>();
+
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 // Custom error handler for zod validation
 const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
@@ -28,6 +33,7 @@ const validationErrorHandler = (result: { success: boolean; error?: { issues: Ar
 // Following Inbox Pattern: AI output requires human approval
 app.post(
   '/generate',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('json', adGenerateRequestSchema, validationErrorHandler),
   async (c) => {
     const request = c.req.valid('json');
@@ -82,6 +88,7 @@ app.post(
 // GET /admin/ads/drafts - List ad drafts
 app.get(
   '/drafts',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('query', adDraftListQuerySchema, validationErrorHandler),
   async (c) => {
     const { q, status, page, perPage } = c.req.valid('query');
@@ -135,6 +142,7 @@ app.get(
 // POST /admin/ads/drafts - Create ad draft
 app.post(
   '/drafts',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('json', createAdDraftSchema, validationErrorHandler),
   async (c) => {
     const data = c.req.valid('json');
@@ -239,6 +247,7 @@ app.post(
 // GET /admin/ads/drafts/:id - Get single ad draft
 app.get(
   '/drafts/:id',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('param', adDraftIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -299,6 +308,7 @@ app.get(
 // PUT /admin/ads/drafts/:id - Update ad draft
 app.put(
   '/drafts/:id',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', adDraftIdParamSchema, validationErrorHandler),
   zValidator('json', updateAdDraftSchema, validationErrorHandler),
   async (c) => {
@@ -485,6 +495,7 @@ app.put(
 // DELETE /admin/ads/drafts/:id - Delete ad draft
 app.delete(
   '/drafts/:id',
+  requirePermission(PERMISSIONS.PRODUCTS_DELETE),
   zValidator('param', adDraftIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -527,6 +538,7 @@ app.delete(
 // GET /admin/ads/drafts/:id/history - Get generation history for a draft
 app.get(
   '/drafts/:id/history',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('param', adDraftIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -568,6 +580,7 @@ app.get(
 // POST /admin/ads/drafts/:id/select-history - Adopt a previous generation
 app.post(
   '/drafts/:id/select-history',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', adDraftIdParamSchema, validationErrorHandler),
   zValidator('json', selectHistorySchema, validationErrorHandler),
   async (c) => {

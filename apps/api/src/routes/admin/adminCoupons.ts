@@ -3,16 +3,20 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   couponIdParamSchema,
   couponListQuerySchema,
   createCouponSchema,
   updateCouponSchema,
+  PERMISSIONS,
 } from '../../lib/schemas';
 
 const app = new Hono<Env>();
 
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 type CouponRow = {
   id: number;
@@ -34,6 +38,7 @@ type CouponRow = {
 // GET /coupons - List coupons with pagination, search, and status filter
 app.get(
   '/coupons',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   zValidator('query', couponListQuerySchema, validationErrorHandler),
   async (c) => {
     const { q, status, page, perPage } = c.req.valid('query');
@@ -100,6 +105,7 @@ app.get(
 // GET /coupons/:id - Fetch single coupon with usage statistics
 app.get(
   '/coupons/:id',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   zValidator('param', couponIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -145,6 +151,7 @@ app.get(
 // POST /coupons - Create coupon
 app.post(
   '/coupons',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('json', createCouponSchema, validationErrorHandler),
   async (c) => {
     const data = c.req.valid('json');
@@ -201,6 +208,7 @@ app.post(
 // PUT /coupons/:id - Update coupon
 app.put(
   '/coupons/:id',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', couponIdParamSchema, validationErrorHandler),
   zValidator('json', updateCouponSchema, validationErrorHandler),
   async (c) => {
@@ -269,6 +277,7 @@ app.put(
 // DELETE /coupons/:id - Delete coupon (only if unused)
 app.delete(
   '/coupons/:id',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', couponIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -306,6 +315,7 @@ app.delete(
 // POST /coupons/:id/toggle - Toggle coupon status
 app.post(
   '/coupons/:id/toggle',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', couponIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');

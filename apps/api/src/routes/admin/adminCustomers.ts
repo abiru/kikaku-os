@@ -3,17 +3,20 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   customerListQuerySchema,
   customerIdParamSchema,
   createCustomerSchema,
   updateCustomerSchema,
+  PERMISSIONS,
 } from '../../lib/schemas';
 
 const app = new Hono<Env>();
 
-// Custom error handler for zod validation
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 type CustomerRow = {
   id: number;
@@ -45,6 +48,7 @@ type CustomerStats = {
 // GET /customers - List customers with pagination and search
 app.get(
   '/customers',
+  requirePermission(PERMISSIONS.CUSTOMERS_READ),
   zValidator('query', customerListQuerySchema, validationErrorHandler),
   async (c) => {
     const { q, page, perPage } = c.req.valid('query');
@@ -116,6 +120,7 @@ app.get(
 // GET /customers/:id - Fetch single customer with order history
 app.get(
   '/customers/:id',
+  requirePermission(PERMISSIONS.CUSTOMERS_READ),
   zValidator('param', customerIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -170,6 +175,7 @@ app.get(
 // POST /customers - Create customer
 app.post(
   '/customers',
+  requirePermission(PERMISSIONS.CUSTOMERS_WRITE),
   zValidator('json', createCustomerSchema, validationErrorHandler),
   async (c) => {
     const { name, email, metadata } = c.req.valid('json');
@@ -204,6 +210,7 @@ app.post(
 // PUT /customers/:id - Update customer
 app.put(
   '/customers/:id',
+  requirePermission(PERMISSIONS.CUSTOMERS_WRITE),
   zValidator('param', customerIdParamSchema, validationErrorHandler),
   zValidator('json', updateCustomerSchema, validationErrorHandler),
   async (c) => {
@@ -246,6 +253,7 @@ app.put(
 // DELETE /customers/:id - Delete customer
 app.delete(
   '/customers/:id',
+  requirePermission(PERMISSIONS.CUSTOMERS_WRITE),
   zValidator('param', customerIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');

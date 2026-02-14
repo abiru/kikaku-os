@@ -4,15 +4,18 @@ import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { validationErrorHandler } from '../../lib/validation';
 import { getActor } from '../../middleware/clerkAuth';
-import { orderIdParamSchema, orderListQuerySchema, createRefundSchema } from '../../lib/schemas';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { orderIdParamSchema, orderListQuerySchema, createRefundSchema, PERMISSIONS } from '../../lib/schemas';
 
 const adminOrders = new Hono<Env>();
 
-// Custom error handler for zod validation (zod v4 compatible)
+// Apply RBAC middleware to all routes in this file
+adminOrders.use('*', loadRbac);
 
 // List Orders
 adminOrders.get(
   '/admin/orders',
+  requirePermission(PERMISSIONS.ORDERS_READ),
   zValidator('query', orderListQuerySchema, validationErrorHandler),
   async (c) => {
     const { page, perPage, q } = c.req.valid('query');
@@ -67,7 +70,7 @@ adminOrders.get(
 );
 
 // Ready to Ship (specific route - must come before :id)
-adminOrders.get('/admin/orders/ready-to-ship', async (c) => {
+adminOrders.get('/admin/orders/ready-to-ship', requirePermission(PERMISSIONS.ORDERS_READ), async (c) => {
   try {
     const res = await c.env.DB.prepare(
       `SELECT o.id as order_id,
@@ -128,6 +131,7 @@ adminOrders.get('/admin/orders/ready-to-ship', async (c) => {
 // Order Detail
 adminOrders.get(
   '/admin/orders/:id',
+  requirePermission(PERMISSIONS.ORDERS_READ),
   zValidator('param', orderIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -199,6 +203,7 @@ adminOrders.get(
 // Create Refund for Order
 adminOrders.post(
   '/admin/orders/:id/refunds',
+  requirePermission(PERMISSIONS.ORDERS_WRITE),
   zValidator('param', orderIdParamSchema, validationErrorHandler),
   zValidator('json', createRefundSchema, validationErrorHandler),
   async (c) => {

@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import { putImage, deleteKey } from '../../lib/r2';
 import {
@@ -12,10 +13,13 @@ import {
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGE_SIZE,
   MAX_IMAGES_PER_PRODUCT,
+  PERMISSIONS,
 } from '../../lib/schemas';
 
 const app = new Hono<Env>();
 
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 type ProductImageRow = {
   id: number;
@@ -42,6 +46,7 @@ const getExtensionFromContentType = (contentType: string): string => {
 // GET /products/:id/images - List images for a product
 app.get(
   '/products/:id/images',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -88,6 +93,7 @@ app.get(
 // POST /products/:id/images - Upload image(s)
 app.post(
   '/products/:id/images',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -213,6 +219,7 @@ app.post(
 // PUT /products/:id/images/order - Update image order
 app.put(
   '/products/:id/images/order',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   zValidator('json', updateImageOrderSchema, validationErrorHandler),
   async (c) => {
@@ -284,6 +291,7 @@ app.put(
 // DELETE /products/:id/images/:imageId - Delete image
 app.delete(
   '/products/:id/images/:imageId',
+  requirePermission(PERMISSIONS.PRODUCTS_DELETE),
   zValidator('param', productImageParamSchema, validationErrorHandler),
   async (c) => {
     const { id, imageId } = c.req.valid('param');

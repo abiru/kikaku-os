@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import worker from '../../../index';
 
+const ALL_ADMIN_PERMISSIONS = [
+  { id: 'dashboard:read' }, { id: 'users:read' }, { id: 'users:write' }, { id: 'users:delete' },
+  { id: 'orders:read' }, { id: 'orders:write' }, { id: 'products:read' }, { id: 'products:write' },
+  { id: 'products:delete' }, { id: 'inventory:read' }, { id: 'inventory:write' },
+  { id: 'inbox:read' }, { id: 'inbox:approve' }, { id: 'reports:read' }, { id: 'ledger:read' },
+  { id: 'settings:read' }, { id: 'settings:write' }, { id: 'customers:read' }, { id: 'customers:write' },
+  { id: 'tax-rates:read' }, { id: 'tax-rates:write' },
+];
+
 const createMockDb = (results: Array<{
   order_id: number;
   customer_email: string | null;
@@ -15,6 +24,22 @@ const createMockDb = (results: Array<{
   return {
     calls,
     prepare: (sql: string) => ({
+      // Direct methods (no bind) for RBAC middleware
+      all: async () => {
+        calls.push({ sql, bind: [] });
+        if (sql.includes('FROM permissions') && sql.includes('role_permissions')) {
+          return { results: ALL_ADMIN_PERMISSIONS };
+        }
+        return { results: [] };
+      },
+      first: async () => {
+        calls.push({ sql, bind: [] });
+        return undefined;
+      },
+      run: async () => {
+        calls.push({ sql, bind: [] });
+        return { meta: {} };
+      },
       bind: (...args: unknown[]) => ({
         all: async () => {
           calls.push({ sql, bind: args });

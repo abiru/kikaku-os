@@ -2,11 +2,16 @@ import { Hono } from 'hono';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { buildJstToday, buildJstWeekStart } from '../../lib/date';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { PERMISSIONS } from '../../lib/schemas';
 
 const adminReports = new Hono<Env>();
 
+// Apply RBAC middleware to all routes in this file
+adminReports.use('*', loadRbac);
+
 // GET /admin/dashboard - Dashboard KPIs and recent activity
-adminReports.get('/dashboard', async (c) => {
+adminReports.get('/dashboard', requirePermission(PERMISSIONS.DASHBOARD_READ), async (c) => {
   try {
     const today = buildJstToday();
     const weekStart = buildJstWeekStart();
@@ -119,7 +124,7 @@ adminReports.get('/dashboard', async (c) => {
 });
 
 // GET /admin/documents/:id/download - Download document from R2
-adminReports.get('/documents/:id/download', async (c) => {
+adminReports.get('/documents/:id/download', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const id = parseInt(c.req.param('id'));
   if (isNaN(id) || id <= 0) {
     return jsonError(c, 'Invalid document ID', 400);
@@ -153,7 +158,7 @@ adminReports.get('/documents/:id/download', async (c) => {
 });
 
 // GET /admin/reports - List Daily Close documents
-adminReports.get('/reports', async (c) => {
+adminReports.get('/reports', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const page = parseInt(c.req.query('page') || '1');
   const perPage = parseInt(c.req.query('perPage') || '20');
   const offset = (page - 1) * perPage;
@@ -189,7 +194,7 @@ adminReports.get('/reports', async (c) => {
 });
 
 // GET /admin/ledger - List Ledger Entries
-adminReports.get('/ledger', async (c) => {
+adminReports.get('/ledger', requirePermission(PERMISSIONS.LEDGER_READ), async (c) => {
   const page = parseInt(c.req.query('page') || '1');
   const perPage = parseInt(c.req.query('perPage') || '50');
   const offset = (page - 1) * perPage;

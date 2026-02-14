@@ -3,10 +3,12 @@ import type { Env } from '../../env';
 import { validator } from 'hono/validator';
 import { jsonError, jsonOk } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import {
   createTaxRateSchema,
   updateTaxRateSchema,
   taxRateIdParamSchema,
+  PERMISSIONS,
   type CreateTaxRateInput,
   type UpdateTaxRateInput,
   type TaxRateIdParam
@@ -14,11 +16,14 @@ import {
 
 const adminTaxRates = new Hono<Env>();
 
+// Apply RBAC middleware to all routes in this file
+adminTaxRates.use('*', loadRbac);
+
 /**
  * GET /admin/tax-rates
  * List all tax rates (active and inactive)
  */
-adminTaxRates.get('/', async (c) => {
+adminTaxRates.get('/', requirePermission(PERMISSIONS.TAX_RATES_READ), async (c) => {
   try {
     const result = await c.env.DB.prepare(
       `SELECT id, name, rate, applicable_from, applicable_to, is_active, description, created_at, updated_at
@@ -39,6 +44,7 @@ adminTaxRates.get('/', async (c) => {
  */
 adminTaxRates.get(
   '/:id',
+  requirePermission(PERMISSIONS.TAX_RATES_READ),
   validator('param', (value, c) => {
     const parsed = taxRateIdParamSchema.safeParse(value);
     if (!parsed.success) {
@@ -76,6 +82,7 @@ adminTaxRates.get(
  */
 adminTaxRates.post(
   '/',
+  requirePermission(PERMISSIONS.TAX_RATES_WRITE),
   validator('json', (value, c) => {
     const parsed = createTaxRateSchema.safeParse(value);
     if (!parsed.success) {
@@ -137,6 +144,7 @@ adminTaxRates.post(
  */
 adminTaxRates.put(
   '/:id',
+  requirePermission(PERMISSIONS.TAX_RATES_WRITE),
   validator('param', (value, c) => {
     const parsed = taxRateIdParamSchema.safeParse(value);
     if (!parsed.success) {
@@ -240,6 +248,7 @@ adminTaxRates.put(
  */
 adminTaxRates.delete(
   '/:id',
+  requirePermission(PERMISSIONS.TAX_RATES_WRITE),
   validator('param', (value, c) => {
     const parsed = taxRateIdParamSchema.safeParse(value);
     if (!parsed.success) {

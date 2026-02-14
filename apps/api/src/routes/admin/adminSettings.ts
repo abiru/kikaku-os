@@ -3,10 +3,12 @@ import type { Env } from '../../env';
 import { validator } from 'hono/validator';
 import { jsonError, jsonOk } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import {
   settingKeyParamSchema,
   updateSettingSchema,
   updateBulkSettingsSchema,
+  PERMISSIONS,
   type SettingKeyParam,
   type UpdateSettingInput,
   type UpdateBulkSettingsInput
@@ -14,7 +16,10 @@ import {
 
 const adminSettings = new Hono<Env>();
 
-adminSettings.get('/', async (c) => {
+// Apply RBAC middleware to all routes in this file
+adminSettings.use('*', loadRbac);
+
+adminSettings.get('/', requirePermission(PERMISSIONS.SETTINGS_READ), async (c) => {
   try {
     const result = await c.env.DB.prepare(
       `SELECT id, key, value, category, data_type, description, display_order, is_active, created_at, updated_at
@@ -44,6 +49,7 @@ adminSettings.get('/', async (c) => {
 
 adminSettings.get(
   '/:key',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   validator('param', (value, c) => {
     const parsed = settingKeyParamSchema.safeParse(value);
     if (!parsed.success) {
@@ -77,6 +83,7 @@ adminSettings.get(
 
 adminSettings.put(
   '/:key',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   validator('param', (value, c) => {
     const parsed = settingKeyParamSchema.safeParse(value);
     if (!parsed.success) {
@@ -152,6 +159,7 @@ adminSettings.put(
 
 adminSettings.post(
   '/bulk',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   validator('json', (value, c) => {
     const parsed = updateBulkSettingsSchema.safeParse(value);
     if (!parsed.success) {

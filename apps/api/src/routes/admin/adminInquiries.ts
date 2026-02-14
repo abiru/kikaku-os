@@ -5,14 +5,19 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { escapeHtml } from '../../lib/html';
 import { validationErrorHandler } from '../../lib/validation';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { sendEmail } from '../../services/email';
 import {
   inquiryListQuerySchema,
   inquiryIdParamSchema,
   inquiryReplySchema,
 } from '../../lib/schemas/contact';
+import { PERMISSIONS } from '../../lib/schemas';
 
 const app = new Hono<Env>();
+
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 type InquiryRow = {
   id: number;
@@ -30,6 +35,7 @@ type InquiryRow = {
 // GET /inquiries - List inquiries with filtering and pagination
 app.get(
   '/inquiries',
+  requirePermission(PERMISSIONS.CUSTOMERS_READ),
   zValidator('query', inquiryListQuerySchema, validationErrorHandler),
   async (c) => {
     const { status, limit, offset } = c.req.valid('query');
@@ -63,6 +69,7 @@ app.get(
 // GET /inquiries/:id - Get inquiry detail
 app.get(
   '/inquiries/:id',
+  requirePermission(PERMISSIONS.CUSTOMERS_READ),
   zValidator('param', inquiryIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -89,6 +96,7 @@ app.get(
 // POST /inquiries/:id/reply - Reply to inquiry
 app.post(
   '/inquiries/:id/reply',
+  requirePermission(PERMISSIONS.CUSTOMERS_WRITE),
   zValidator('param', inquiryIdParamSchema, validationErrorHandler),
   zValidator('json', inquiryReplySchema, validationErrorHandler),
   async (c) => {
@@ -140,6 +148,7 @@ app.post(
 // POST /inquiries/:id/close - Close inquiry
 app.post(
   '/inquiries/:id/close',
+  requirePermission(PERMISSIONS.CUSTOMERS_WRITE),
   zValidator('param', inquiryIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');

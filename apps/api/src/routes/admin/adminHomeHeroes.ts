@@ -4,10 +4,15 @@ import { z } from 'zod';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import { putImage, deleteKey } from '../../lib/r2';
+import { PERMISSIONS } from '../../lib/schemas';
 
 const app = new Hono<Env>();
+
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 // Helper to transform empty strings to null
 const emptyStringToNull = <T extends z.ZodTypeAny>(schema: T) =>
@@ -67,6 +72,7 @@ const getExtensionFromContentType = (contentType: string): string => {
 // GET /home/heroes - List hero sections
 app.get(
   '/home/heroes',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   zValidator('query', heroListQuerySchema, validationErrorHandler),
   async (c) => {
     const { status, page, perPage } = c.req.valid('query');
@@ -129,6 +135,7 @@ app.get(
 // GET /home/heroes/:id - Fetch single hero section
 app.get(
   '/home/heroes/:id',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   zValidator('param', heroIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -167,6 +174,7 @@ app.get(
 // POST /home/heroes - Create new hero section
 app.post(
   '/home/heroes',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('json', createHeroSchema, validationErrorHandler),
   async (c) => {
     const data = c.req.valid('json');
@@ -214,6 +222,7 @@ app.post(
 // PUT /home/heroes/:id - Update hero section
 app.put(
   '/home/heroes/:id',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', heroIdParamSchema, validationErrorHandler),
   zValidator('json', updateHeroSchema, validationErrorHandler),
   async (c) => {
@@ -309,6 +318,7 @@ app.put(
 // DELETE /home/heroes/:id - Archive hero section (soft delete)
 app.delete(
   '/home/heroes/:id',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', heroIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -349,6 +359,7 @@ app.delete(
 // POST /home/heroes/:id/restore - Restore archived hero section
 app.post(
   '/home/heroes/:id/restore',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', heroIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -393,6 +404,7 @@ app.post(
 // POST /home/heroes/:id/image - Upload hero image
 app.post(
   '/home/heroes/:id/image',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', heroIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -467,6 +479,7 @@ app.post(
 // DELETE /home/heroes/:id/image/:type - Delete hero image
 app.delete(
   '/home/heroes/:id/image/:type',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', z.object({
     id: z.string().transform(Number).pipe(z.number().int().positive()),
     type: z.enum(['main', 'small'])

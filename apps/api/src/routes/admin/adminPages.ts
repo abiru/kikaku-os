@@ -3,16 +3,20 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   pageIdParamSchema,
   pageListQuerySchema,
   createPageSchema,
   updatePageSchema,
+  PERMISSIONS,
 } from '../../lib/schemas';
 
 const app = new Hono<Env>();
 
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 type PageRow = {
   id: number;
@@ -32,6 +36,7 @@ const CORE_PAGE_SLUGS = ['terms', 'privacy', 'refund'];
 // GET /pages - List pages with pagination, search, and status filter
 app.get(
   '/pages',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   zValidator('query', pageListQuerySchema, validationErrorHandler),
   async (c) => {
     const { q, status, page, perPage } = c.req.valid('query');
@@ -96,6 +101,7 @@ app.get(
 // GET /pages/:id - Fetch single page
 app.get(
   '/pages/:id',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   zValidator('param', pageIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -129,6 +135,7 @@ app.get(
 // POST /pages - Create page
 app.post(
   '/pages',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('json', createPageSchema, validationErrorHandler),
   async (c) => {
     const data = c.req.valid('json');
@@ -177,6 +184,7 @@ app.post(
 // PUT /pages/:id - Update page
 app.put(
   '/pages/:id',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', pageIdParamSchema, validationErrorHandler),
   zValidator('json', updatePageSchema, validationErrorHandler),
   async (c) => {
@@ -237,6 +245,7 @@ app.put(
 // POST /pages/:id/publish - Publish page
 app.post(
   '/pages/:id/publish',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', pageIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -274,6 +283,7 @@ app.post(
 // POST /pages/:id/unpublish - Unpublish page
 app.post(
   '/pages/:id/unpublish',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', pageIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -311,6 +321,7 @@ app.post(
 // DELETE /pages/:id - Delete page (core pages cannot be deleted)
 app.delete(
   '/pages/:id',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', pageIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
