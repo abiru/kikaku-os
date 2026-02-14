@@ -21,16 +21,45 @@ type ProductRow = {
   updated_at: string;
 };
 
+type ProductListResponse = {
+  products?: ProductRow[];
+  meta?: {
+    totalPages?: number;
+  };
+};
+
 export const GET: APIRoute = async () => {
   const today = new Date().toISOString().slice(0, 10);
 
   let products: ProductRow[] = [];
   try {
     const apiBase = getApiBase();
-    const res = await fetch(`${apiBase}/store/products?limit=1000`);
-    if (res.ok) {
-      const data = await res.json() as { products?: ProductRow[] };
-      products = data.products || [];
+    const perPage = 100;
+    const firstRes = await fetch(`${apiBase}/store/products?page=1&perPage=${perPage}`);
+
+    if (firstRes.ok) {
+      const firstData = await firstRes.json() as ProductListResponse;
+      const seen = new Set<number>();
+
+      for (const product of firstData.products || []) {
+        if (!seen.has(product.id)) {
+          seen.add(product.id);
+          products.push(product);
+        }
+      }
+
+      const totalPages = Math.max(1, Number(firstData.meta?.totalPages || 1));
+      for (let page = 2; page <= totalPages; page++) {
+        const pageRes = await fetch(`${apiBase}/store/products?page=${page}&perPage=${perPage}`);
+        if (!pageRes.ok) break;
+        const pageData = await pageRes.json() as ProductListResponse;
+        for (const product of pageData.products || []) {
+          if (!seen.has(product.id)) {
+            seen.add(product.id);
+            products.push(product);
+          }
+        }
+      }
     }
   } catch {
     // If API is unavailable, generate sitemap with static pages only
