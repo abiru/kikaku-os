@@ -5,6 +5,7 @@ import type { Env } from './env';
 import { jsonError, jsonOk } from './lib/http';
 import { clerkAuth } from './middleware/clerkAuth';
 import { requestLogger } from './middleware/logging';
+import { rateLimit } from './middleware/rateLimit';
 import { sendAlert } from './lib/alerts';
 import { captureException, getSentryConfig } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
@@ -100,6 +101,14 @@ app.use('*', async (c, next) => {
 
 // Production request logging (after CORS, before auth)
 app.use('*', requestLogger);
+
+// Rate limiting: general API (120 req/min), stricter for sensitive endpoints
+app.use('/payments/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'pay' }));
+app.use('/checkout/*', rateLimit({ max: 20, windowSeconds: 60, prefix: 'co' }));
+app.use('/store/contact', rateLimit({ max: 5, windowSeconds: 60, prefix: 'contact' }));
+app.use('/store/newsletter/*', rateLimit({ max: 5, windowSeconds: 60, prefix: 'nl' }));
+app.use('/ai/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'ai' }));
+app.use('*', rateLimit({ max: 120, windowSeconds: 60, prefix: 'global' }));
 
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
@@ -199,7 +208,7 @@ const runDailyCloseArtifacts = async (env: Env['Bindings'], date: string) => {
       anomalyDetected: anomalyCreated
     });
 
-    console.log(`Daily close completed for ${date}: runId=${runId}, ledgerEntries=${journalResult.entriesCreated}`);
+    // Daily close completed - result recorded in daily_close_runs table
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     await completeDailyCloseRun(env, runId, {
@@ -219,16 +228,23 @@ const runDailyCloseArtifacts = async (env: Env['Bindings'], date: string) => {
   }
 };
 
+const runCleanupTasks = async (env: Env['Bindings']) => {
+  // Delete expired checkout quotes
+  await env.DB.prepare(
+    `DELETE FROM checkout_quotes WHERE expires_at < datetime('now')`
+  ).run();
+
+  // Cancel stale pending orders (older than 24 hours with no payment)
+  await env.DB.prepare(
+    `UPDATE orders SET status = 'cancelled', updated_at = datetime('now')
+     WHERE status = 'pending'
+       AND created_at < datetime('now', '-24 hours')`
+  ).run();
+};
+
 const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
   try {
-    const result = await runAllAnomalyChecks(env, date);
-    console.log(`Anomaly checks completed for ${date}:`, {
-      lowStock: result.lowStock.filter((r) => r.created).length,
-      negativeStock: result.negativeStock.filter((r) => r.created).length,
-      highRefundRate: result.highRefundRate?.created ?? false,
-      webhookFailures: result.webhookFailures?.created ?? false,
-      unfulfilledOrders: result.unfulfilledOrders?.created ?? false
-    });
+    await runAllAnomalyChecks(env, date);
   } catch (err) {
     console.error('Anomaly check failed:', err);
   }
@@ -265,6 +281,9 @@ const createWorkerExport = () => {
         ctx.waitUntil(runDailyCloseArtifacts(env, date));
         ctx.waitUntil(runAnomalyChecks(env, date));
       }
+
+      // Cleanup tasks (always run, independent of Sentry)
+      ctx.waitUntil(runCleanupTasks(env));
     }
   };
 
