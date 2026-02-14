@@ -585,7 +585,7 @@ const handlePaymentIntentFailedOrCanceled = async (
 
 /**
  * Handles charge.dispute.created and charge.dispute.updated events
- * Creates critical Inbox item for admin attention and updates order status
+ * Creates critical Inbox items for admin attention and records event payloads.
  */
 const handleChargeDispute = async (
   env: Env['Bindings'],
@@ -629,23 +629,9 @@ const handleChargeDispute = async (
     event.id
   ).run();
 
-  // Update order status to 'disputed' if we found the order (only on creation)
-  if (orderId && isCreated) {
-    const order = await env.DB.prepare(
-      `SELECT status FROM orders WHERE id = ?`
-    ).bind(orderId).first<{ status: string }>();
-
-    if (order) {
-      await env.DB.prepare(
-        `UPDATE orders SET status = 'disputed', updated_at = datetime('now') WHERE id = ?`
-      ).bind(orderId).run();
-
-      await env.DB.prepare(
-        `INSERT INTO order_status_history (order_id, old_status, new_status, reason, stripe_event_id, created_at)
-         VALUES (?, ?, 'disputed', ?, ?, datetime('now'))`
-      ).bind(orderId, order.status, `Chargeback: ${reason}`, event.id).run();
-    }
-  }
+  // Do not mutate order.status here. Current order status constraints do not include
+  // a dedicated disputed state, so we keep the webhook path side-effect free and
+  // rely on inbox alerts/events for operator action.
 
   // Create critical Inbox item
   const title = isCreated
