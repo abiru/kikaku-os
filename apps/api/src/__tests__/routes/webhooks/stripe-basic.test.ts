@@ -103,10 +103,40 @@ describe('Stripe webhook handling - Basic payment workflow', () => {
     const orderInsert = mockDb.calls.find((call) => call.sql.includes('INSERT INTO orders'));
     expect(orderInsert).toBeUndefined();
   });
+
+  it('handles payment_intent.payment_failed and marks pending order as payment_failed', async () => {
+    const mockDb = createMockDb({
+      orders: [{ id: 123, status: 'pending', total_net: 2500, currency: 'JPY' }]
+    });
+    const event = {
+      id: 'evt_pi_failed',
+      type: 'payment_intent.payment_failed',
+      data: {
+        object: {
+          id: 'pi_test_failed',
+          metadata: { orderId: '123' },
+          last_payment_error: {
+            code: 'card_declined',
+            message: 'Your card was declined.'
+          }
+        }
+      }
+    };
+
+    const result = await handleStripeEvent({ DB: mockDb } as any, event as any);
+
+    expect(result.received).toBe(true);
+    expect(mockDb.state.orders.get(123)?.status).toBe('payment_failed');
+    expect(
+      mockDb.calls.some((call) => call.sql.includes("UPDATE orders") && call.bind[0] === 'payment_failed')
+    ).toBe(true);
+    expect(mockDb.calls.some((call) => call.sql.includes('INSERT INTO order_status_history'))).toBe(true);
+    expect(mockDb.calls.some((call) => call.sql.includes('INSERT INTO inbox_items'))).toBe(true);
+  });
 });
 
 describe('Stripe webhook route - Basic validation and operations', () => {
-  it('returns 400 for invalid payload when webhook secret missing', async () => {
+  it('returns 500 when webhook secret is missing in production mode', async () => {
     const app = new Hono();
     app.route('/', stripe);
 
@@ -117,8 +147,8 @@ describe('Stripe webhook route - Basic validation and operations', () => {
     );
 
     const json = await res.json();
-    expect(res.status).toBe(400);
-    expect(json.message).toBe('Invalid payload');
+    expect(res.status).toBe(500);
+    expect(json.message).toBe('Webhook signature verification is required in production');
   });
 
   it('returns 400 for invalid signature', async () => {

@@ -1,7 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Elements, PaymentElement, AddressElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { useTranslation } from '../i18n';
+
+// Singleton cache: loadStripe should only be called once per publishable key
+const stripePromiseCache = new Map<string, Promise<Stripe | null>>();
+function getStripePromise(publishableKey: string): Promise<Stripe | null> {
+	const cached = stripePromiseCache.get(publishableKey);
+	if (cached) return cached;
+	const promise = loadStripe(publishableKey);
+	stripePromiseCache.set(publishableKey, promise);
+	return promise;
+}
 
 type CheckoutFormProps = {
 	clientSecret: string | null;
@@ -202,15 +212,9 @@ export default function CheckoutForm({
 	publishableKey
 }: CheckoutFormProps) {
 	const { t } = useTranslation();
-	const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
 	const [email, setEmail] = useState('');
 
-	// Initialize Stripe
-	useEffect(() => {
-		if (publishableKey) {
-			setStripePromise(loadStripe(publishableKey));
-		}
-	}, [publishableKey]);
+	const stripePromise = publishableKey ? getStripePromise(publishableKey) : null;
 
 	if (!clientSecret || !stripePromise) {
 		return (
