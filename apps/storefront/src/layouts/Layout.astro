@@ -156,7 +156,7 @@ const ogImage = new URL(image, siteUrl).href;
 					</div>
 
 					<div class="pt-4 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-						<p>{t('footer.copyright')}</p>
+						<p>{t('footer.copyright').replace('{year}', String(new Date().getFullYear()))}</p>
 						<div class="flex gap-4">
 							<a href="/privacy" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">{t('footer.privacyPolicy')}</a>
 							<a href="/terms" class="hover:underline border-r border-gray-300 pr-4 last:border-0 last:pr-0">{t('footer.termsOfUse')}</a>

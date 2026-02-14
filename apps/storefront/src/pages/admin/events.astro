@@ -59,7 +59,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 		<div class="flex items-center gap-4">
 			<Heading>Stripe Events</Heading>
 			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} total</span>
-		</Alert>
+		</div>
 			{/* Filter Tabs */}
 			<div class="mb-6 flex gap-2 flex-wrap">
 				<a
@@ -101,12 +101,12 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 						<span class="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">{failedCount > 0 ? failedCount : ''}</span>
 					)}
 				</a>
-			</Alert>
+			</div>
 
 			{error && (
 				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
 					{error}
-				</Alert>
+				</div>
 			)}
 
 			<EventsTable
@@ -117,5 +117,5 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 				type={type}
 				client:load
 			/>
-	</Alert>
+	</div>
 </AdminLayout>

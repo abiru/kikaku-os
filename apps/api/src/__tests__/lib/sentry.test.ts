@@ -15,7 +15,7 @@ const createMockEnv = (overrides?: Partial<Env['Bindings']>): Env['Bindings'] =>
   DB: {} as D1Database,
   R2: {} as R2Bucket,
   DEV_MODE: 'false',
-  STRIPE_API_KEY: 'sk_test_xxx',
+  STRIPE_SECRET_KEY: 'sk_test_xxx',
   STRIPE_WEBHOOK_SECRET: 'whsec_xxx',
   STOREFRONT_BASE_URL: 'http://localhost:4321',
   CLERK_SECRET_KEY: 'sk_test_xxx',
