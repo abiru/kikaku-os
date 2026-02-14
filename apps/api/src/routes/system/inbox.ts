@@ -287,10 +287,6 @@ inbox.post('/inbox/:id/approve', async (c) => {
         const meta = JSON.parse(item.metadata);
         const { orderId, customerEmail, subject, body } = meta;
 
-        // In a real implementation, you would send the email here via Resend
-        // For now, just log the approval
-        console.log(`Email approved for order ${orderId}: ${subject}`);
-
         // Audit log
         await c.env.DB.prepare(
           `INSERT INTO audit_logs (actor, action, target, metadata)
@@ -310,7 +306,6 @@ inbox.post('/inbox/:id/approve', async (c) => {
     if (item.kind === 'ai_budget_alert' && item.metadata) {
       try {
         const meta = JSON.parse(item.metadata);
-        console.log(`AI budget alert acknowledged: ${meta.percentage}% used`);
 
         // Audit log
         await c.env.DB.prepare(

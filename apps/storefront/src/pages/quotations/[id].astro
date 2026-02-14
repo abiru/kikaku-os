@@ -5,6 +5,36 @@ import Layout from '../../layouts/Layout.astro';
 import { isPublicToken } from '../../lib/publicToken';
 import { fetchQuotation } from '../../lib/quotationApi';
 
+type QuotationRecord = {
+  quotation_number: string;
+  customer_company: string;
+  customer_name: string;
+  customer_email?: string | null;
+  customer_phone?: string | null;
+  created_at: string;
+  valid_until: string;
+  currency: string;
+  status: string;
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+  notes?: string | null;
+  converted_order_id?: number | null;
+};
+
+type QuotationItemRecord = {
+  product_title: string;
+  variant_title?: string | null;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+};
+
+type QuotationResponse = {
+  quotation: QuotationRecord;
+  items: QuotationItemRecord[];
+};
+
 const rawToken = Astro.params.id || null;
 const quotationToken = isPublicToken(rawToken) ? rawToken : null;
 const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
@@ -13,13 +43,11 @@ if (!quotationToken) {
   return Astro.redirect('/products');
 }
 
-import type { Quotation } from '../../lib/types';
-
-let quotationData: Quotation | null = null;
+let quotationData: QuotationResponse | null = null;
 let error: string | null = null;
 
 try {
-  quotationData = await fetchQuotation(apiUrl, quotationToken);
+  quotationData = await fetchQuotation(apiUrl, quotationToken) as QuotationResponse;
 } catch (err) {
   console.error('Error fetching quotation:', err);
   error = err instanceof Error ? err.message : '見積書の取得に失敗しました';
@@ -104,7 +132,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
           </tr>
         </thead>
         <tbody>
-          {items.map((item: { title: string; quantity: number; unit_price: number }, index: number) => (
+          {items.map((item: QuotationItemRecord, index: number) => (
             <tr>
               <td class="center">{index + 1}</td>
               <td>

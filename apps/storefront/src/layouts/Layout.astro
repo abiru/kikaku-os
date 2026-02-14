@@ -105,9 +105,31 @@ const ogImage = new URL(image, siteUrl).href;
 						<SignedIn>
 							<UserButton />
 						</SignedIn>
+						{/* Mobile hamburger button */}
+						<button id="mobile-menu-btn" type="button" class="lg:hidden text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors" aria-label="メニュー" aria-expanded="false">
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+						</button>
 					</div>
 				</Container>
 			</header>
+
+			{/* Mobile slide-out menu */}
+			<div id="mobile-menu-overlay" class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm hidden" aria-hidden="true"></div>
+			<nav id="mobile-menu" class="fixed top-0 right-0 z-[70] h-full w-[280px] bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out" aria-label="モバイルメニュー">
+				<div class="flex items-center justify-between h-[48px] px-6 border-b border-gray-100">
+					<span class="text-[15px] font-semibold">メニュー</span>
+					<button id="mobile-menu-close" type="button" class="text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors" aria-label="閉じる">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+					</button>
+				</div>
+				<div class="px-6 py-4 space-y-1">
+					<a href="/" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-[#0071e3] ${Astro.url.pathname === '/' ? 'text-[#0071e3] font-medium' : 'text-[#1d1d1f]'}`}>{t('nav.store')}</a>
+					<a href="/products" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-[#0071e3] ${Astro.url.pathname.startsWith('/products') ? 'text-[#0071e3] font-medium' : 'text-[#1d1d1f]'}`}>{t('nav.products')}</a>
+					<a href="/terms" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-[#0071e3] ${Astro.url.pathname === '/terms' ? 'text-[#0071e3] font-medium' : 'text-[#1d1d1f]'}`}>{t('nav.support')}</a>
+					<a href="/wishlist" class="block py-3 text-[15px] border-b border-gray-100 text-[#1d1d1f] transition-colors hover:text-[#0071e3]">{t('wishlist.openWishlist')}</a>
+					<a href="/cart" class="block py-3 text-[15px] border-b border-gray-100 text-[#1d1d1f] transition-colors hover:text-[#0071e3]">{t('nav.openCart')}</a>
+				</div>
+			</nav>
 
 			<main class="flex-1">
 				<slot />
@@ -223,6 +245,36 @@ const ogImage = new URL(image, siteUrl).href;
 				if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 					e.preventDefault();
 					window.dispatchEvent(new CustomEvent('open-search'));
+				}
+			});
+
+			// Mobile menu
+			const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+			const mobileMenu = document.getElementById('mobile-menu');
+			const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+			const mobileMenuClose = document.getElementById('mobile-menu-close');
+
+			const openMobileMenu = () => {
+				mobileMenu?.classList.remove('translate-x-full');
+				mobileMenuOverlay?.classList.remove('hidden');
+				mobileMenuBtn?.setAttribute('aria-expanded', 'true');
+				document.body.style.overflow = 'hidden';
+			};
+
+			const closeMobileMenu = () => {
+				mobileMenu?.classList.add('translate-x-full');
+				mobileMenuOverlay?.classList.add('hidden');
+				mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+				document.body.style.overflow = '';
+			};
+
+			mobileMenuBtn?.addEventListener('click', openMobileMenu);
+			mobileMenuClose?.addEventListener('click', closeMobileMenu);
+			mobileMenuOverlay?.addEventListener('click', closeMobileMenu);
+
+			document.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape' && !mobileMenu?.classList.contains('translate-x-full')) {
+					closeMobileMenu();
 				}
 			});
 		</script>
