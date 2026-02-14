@@ -76,7 +76,7 @@ const formatPrice = (amount: number, currency: string) => {
 						<div class="mt-6 border-t border-gray-100 pt-6">
 							<div class="flex justify-between text-lg font-semibold">
 								<span>{t('checkout.total')}</span>
-								<span>{formatPrice(order.total_net, order.currency)}</span>
+								<span>{formatPrice(order.total_amount, order.currency)}</span>
 							</div>
 						</div>
 
