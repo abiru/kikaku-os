@@ -1,21 +1,8 @@
 // Client-side Clerk helpers using the global Clerk instance
 // The Clerk Astro integration automatically loads Clerk on the client
 
-/** Minimal interface for the loaded Clerk instance used in this module. */
-interface LoadedClerkInstance {
-  readonly loaded: boolean;
-  readonly session: { getToken: () => Promise<string | null> } | null;
-  readonly user: { id: string; [key: string]: unknown } | null;
-  signOut: () => Promise<void>;
-}
-
+type LoadedClerkInstance = NonNullable<Window['Clerk']>;
 type ClerkUser = NonNullable<LoadedClerkInstance['user']>;
-
-declare global {
-  interface Window {
-    Clerk?: LoadedClerkInstance;
-  }
-}
 
 const waitForClerk = (): Promise<LoadedClerkInstance> => {
   return new Promise((resolve, reject) => {
@@ -48,10 +35,11 @@ const waitForClerk = (): Promise<LoadedClerkInstance> => {
 export const getToken = async (): Promise<string | null> => {
   try {
     const clerk = await waitForClerk();
-    if (!clerk.session) {
+    const session = clerk.session;
+    if (!session) {
       return null;
     }
-    return clerk.session.getToken();
+    return (await session.getToken()) ?? null;
   } catch {
     return null;
   }

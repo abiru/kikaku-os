@@ -13,8 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Install API dependencies
+        run: pnpm -C apps/api install --frozen-lockfile
+
+      - name: Install Storefront dependencies
+        run: pnpm -C apps/storefront install --frozen-lockfile
 
       - name: Type check API
         run: pnpm -C apps/api typecheck
