@@ -5,6 +5,7 @@ import type { Env } from './env';
 import { jsonError, jsonOk } from './lib/http';
 import { clerkAuth } from './middleware/clerkAuth';
 import { requestLogger } from './middleware/logging';
+import { rateLimit } from './middleware/rateLimit';
 import { sendAlert } from './lib/alerts';
 import { captureException, getSentryConfig } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
@@ -100,6 +101,14 @@ app.use('*', async (c, next) => {
 
 // Production request logging (after CORS, before auth)
 app.use('*', requestLogger);
+
+// Rate limiting: general API (120 req/min), stricter for sensitive endpoints
+app.use('/payments/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'pay' }));
+app.use('/checkout/*', rateLimit({ max: 20, windowSeconds: 60, prefix: 'co' }));
+app.use('/store/contact', rateLimit({ max: 5, windowSeconds: 60, prefix: 'contact' }));
+app.use('/store/newsletter/*', rateLimit({ max: 5, windowSeconds: 60, prefix: 'nl' }));
+app.use('/ai/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'ai' }));
+app.use('*', rateLimit({ max: 120, windowSeconds: 60, prefix: 'global' }));
 
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
