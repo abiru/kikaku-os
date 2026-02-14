@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
@@ -9,6 +10,11 @@ import {
   reserveStockForOrder
 } from '../../services/inventoryCheck';
 
+const paymentIntentSchema = z.object({
+  quoteId: z.string().min(1, 'quoteId is required'),
+  email: z.string().email('Valid email is required'),
+});
+
 const payments = new Hono<Env>();
 
 payments.post('/payments/intent', async (c) => {
@@ -18,22 +24,19 @@ payments.post('/payments/intent', async (c) => {
     return jsonError(c, 'Stripe secret key invalid', 500);
   }
 
-  let body: any;
+  let body: unknown;
   try {
     body = await c.req.json();
   } catch {
     return jsonError(c, 'Invalid JSON', 400);
   }
 
-  const { quoteId, email } = body;
-
-  if (!quoteId) {
-    return jsonError(c, 'quoteId is required', 400);
+  const parsed = paymentIntentSchema.safeParse(body);
+  if (!parsed.success) {
+    return jsonError(c, parsed.error.errors[0]?.message || 'Invalid request', 400);
   }
 
-  if (!email || typeof email !== 'string' || !email.includes('@')) {
-    return jsonError(c, 'Valid email is required', 400);
-  }
+  const { quoteId, email } = parsed.data;
 
   // Fetch and validate quote
   type QuoteRow = {

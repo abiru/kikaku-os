@@ -1,9 +1,15 @@
 import { Hono } from 'hono';
+import { z } from 'zod';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { calculateOrderTax, type TaxCalculationInput } from '../../services/tax';
 import { getShippingSettings } from '../../services/settings';
 import { checkStockAvailability } from '../../services/inventoryCheck';
+
+const validateCouponSchema = z.object({
+  code: z.string().min(1, 'Coupon code is required').max(50),
+  cartTotal: z.number().int().min(0),
+});
 
 const checkout = new Hono<Env>();
 
@@ -22,12 +28,14 @@ checkout.get('/checkout/config', async (c) => {
 
 checkout.post('/checkout/validate-coupon', async (c) => {
   try {
-    const body = await c.req.json<{ code: string; cartTotal: number }>();
-    const { code, cartTotal } = body;
+    const body = await c.req.json();
+    const parsed = validateCouponSchema.safeParse(body);
 
-    if (!code) {
-      return jsonError(c, 'Coupon code is required', 400);
+    if (!parsed.success) {
+      return jsonError(c, parsed.error.errors[0]?.message || 'Invalid request', 400);
     }
+
+    const { code, cartTotal } = parsed.data;
 
     const coupon = await c.env.DB.prepare(
       `SELECT id, code, discount_type, discount_value, min_purchase, max_uses, used_count, valid_from, valid_until, active
