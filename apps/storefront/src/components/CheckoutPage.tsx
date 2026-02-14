@@ -8,6 +8,7 @@ import { getApiBase, fetchJson } from '../lib/api';
 import { useTranslation } from '../i18n';
 import CheckoutForm from './CheckoutForm';
 import OrderSummary from './OrderSummary';
+import { ErrorBoundary } from './ErrorBoundary';
 
 type QuoteBreakdown = {
 	subtotal: number;
@@ -34,7 +35,7 @@ type PaymentIntentResponse = {
 	publishableKey: string;
 };
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
 	const { t } = useTranslation();
 	const cartItems = useStore($cartArray);
 	const appliedCoupon = useStore($appliedCoupon);
@@ -246,5 +247,13 @@ export default function CheckoutPage() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function CheckoutPage() {
+	return (
+		<ErrorBoundary>
+			<CheckoutPageContent />
+		</ErrorBoundary>
 	);
 }

@@ -21,6 +21,7 @@ import {
 import { getApiBase, fetchJson } from '../lib/api';
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n';
+import { ErrorBoundary } from './ErrorBoundary';
 
 const formatPrice = (amount: number, currency: string) => {
 	return new Intl.NumberFormat('ja-JP', {
@@ -316,7 +317,7 @@ function OrderSummary({
 	);
 }
 
-export default function Cart() {
+function CartContent() {
 	const { t } = useTranslation();
 	const items = useStore($cartArray);
 	const cartTotal = useStore($cartTotal);
@@ -382,5 +383,13 @@ export default function Cart() {
 				onCheckout={handleCheckout}
 			/>
 		</div>
+	);
+}
+
+export default function Cart() {
+	return (
+		<ErrorBoundary>
+			<CartContent />
+		</ErrorBoundary>
 	);
 }
