@@ -1,7 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/astro/server';
+import { LOGIN_ROUTE_PATTERNS, PROTECTED_ROUTE_PATTERNS } from './lib/routeAccess';
 
-const isProtectedRoute = createRouteMatcher(['/admin(.*)', '/account(.*)']);
-const isLoginRoute = createRouteMatcher(['/admin/login(.*)', '/sign-in(.*)', '/sign-up(.*)']);
+const isProtectedRoute = createRouteMatcher(PROTECTED_ROUTE_PATTERNS);
+const isLoginRoute = createRouteMatcher(LOGIN_ROUTE_PATTERNS);
 
 export const onRequest = clerkMiddleware((auth, context) => {
   const { isAuthenticated, redirectToSignIn } = auth();

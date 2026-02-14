@@ -3,6 +3,7 @@ import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { calculateOrderTax, type TaxCalculationInput } from '../../services/tax';
 import { getShippingSettings } from '../../services/settings';
+import { checkStockAvailability } from '../../services/inventoryCheck';
 
 const checkout = new Hono<Env>();
 
@@ -188,6 +189,29 @@ checkout.post('/checkout/quote', async (c) => {
     if (!row) {
       return jsonError(c, `Variant ${item.variantId} not found`, 404);
     }
+  }
+
+  // Check stock availability
+  const stockCheck = await checkStockAvailability(
+    c.env.DB,
+    items.map((i) => ({ variantId: i.variantId, quantity: i.quantity }))
+  );
+
+  if (!stockCheck.available) {
+    const outOfStock = stockCheck.insufficientItems.map((item) => {
+      const row = variantMap.get(item.variantId);
+      return {
+        variantId: item.variantId,
+        title: row?.variant_title ?? 'Unknown',
+        requested: item.requested,
+        available: item.available
+      };
+    });
+    return c.json({
+      ok: false,
+      message: 'Some items are out of stock',
+      outOfStock
+    }, 400);
   }
 
   // Calculate tax for all items

@@ -4,11 +4,13 @@ import EmptyState from '../../components/EmptyState.astro';
 import Layout from '../../layouts/Layout.astro';
 import OrderTracking from '../../components/OrderTracking';
 import { fetchJson, getApiBase } from '../../lib/api';
+import { isPublicToken } from '../../lib/publicToken';
 import { t } from '../../i18n';
 
 const apiBase = getApiBase();
-const { id: token } = Astro.params;
-const encodedToken = encodeURIComponent(token || '');
+const rawToken = Astro.params.id || '';
+const token = isPublicToken(rawToken) ? rawToken : null;
+const encodedToken = token ? encodeURIComponent(token) : '';
 export const prerender = false;
 
 type OrderData = {
@@ -53,10 +55,14 @@ let order: OrderData | null = null;
 let loadState: 'ready' | 'not-found' | 'unavailable' = 'ready';
 
 try {
-	const data = await fetchJson(`${apiBase}/store/orders/${encodedToken}`) as { order: OrderData | null };
-	order = data?.order ?? null;
-	if (!order) {
+	if (!encodedToken) {
 		loadState = 'not-found';
+	} else {
+		const data = await fetchJson(`${apiBase}/store/orders/${encodedToken}`) as { order: OrderData | null };
+		order = data?.order ?? null;
+		if (!order) {
+			loadState = 'not-found';
+		}
 	}
 } catch (error) {
 	const status = typeof error === 'object' && error ? (error as { status?: number }).status : undefined;

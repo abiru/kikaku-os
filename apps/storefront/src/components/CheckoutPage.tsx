@@ -40,17 +40,20 @@ export default function CheckoutPage() {
 	const appliedCoupon = useStore($appliedCoupon);
 
 	const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
+	const [quoteId, setQuoteId] = useState<string | null>(null);
 	const [clientSecret, setClientSecret] = useState<string | null>(null);
 	const [orderToken, setOrderToken] = useState<string | null>(null);
 	const [publishableKey, setPublishableKey] = useState<string>('');
+	const [customerEmail, setCustomerEmail] = useState<string>('');
+	const [emailSubmitted, setEmailSubmitted] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		initializeCheckout();
+		createQuoteOnly();
 	}, []);
 
-	const initializeCheckout = async (couponCode?: string) => {
+	const createQuoteOnly = async (couponCode?: string) => {
 		try {
 			setLoading(true);
 			setError(null);
@@ -61,7 +64,6 @@ export default function CheckoutPage() {
 				return;
 			}
 
-			// Create quote
 			const items = cartItems.map(item => ({
 				variantId: item.variantId,
 				quantity: item.quantity
@@ -84,34 +86,7 @@ export default function CheckoutPage() {
 			}
 
 			setBreakdown(quoteData.breakdown);
-
-			// Automatically create payment intent with placeholder email
-			const intentData = await fetchJson<PaymentIntentResponse>(
-				`${getApiBase()}/payments/intent`,
-				{
-					method: 'POST',
-					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({
-						quoteId: quoteData.quoteId,
-						email: 'customer@checkout.pending'
-					})
-				}
-			);
-
-			if (!intentData.ok) {
-				throw new Error('Failed to create payment intent');
-			}
-
-			setClientSecret(intentData.clientSecret);
-			setOrderToken(intentData.orderPublicToken || String(intentData.orderId));
-
-			// Use publishable key from API or fall back to env variable
-			const pubKey = intentData.publishableKey || import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
-			if (!pubKey) {
-				throw new Error('Stripe publishable key is not configured');
-			}
-			setPublishableKey(pubKey);
-
+			setQuoteId(quoteData.quoteId);
 			setLoading(false);
 		} catch (err) {
 			console.error('Checkout initialization error:', err);
@@ -120,8 +95,55 @@ export default function CheckoutPage() {
 		}
 	};
 
+	const handleEmailSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!customerEmail || !customerEmail.includes('@') || !quoteId) return;
+
+		try {
+			setLoading(true);
+			setError(null);
+
+			const intentData = await fetchJson<PaymentIntentResponse>(
+				`${getApiBase()}/payments/intent`,
+				{
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+						quoteId,
+						email: customerEmail
+					})
+				}
+			);
+
+			if (!intentData.ok) {
+				throw new Error('Failed to create payment intent');
+			}
+
+			if (!intentData.orderPublicToken) {
+				throw new Error('Public order token is missing');
+			}
+
+			setClientSecret(intentData.clientSecret);
+			setOrderToken(intentData.orderPublicToken);
+
+			const pubKey = intentData.publishableKey || import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
+			if (!pubKey) {
+				throw new Error('Stripe publishable key is not configured');
+			}
+			setPublishableKey(pubKey);
+			setEmailSubmitted(true);
+			setLoading(false);
+		} catch (err) {
+			console.error('Payment intent error:', err);
+			setError(err instanceof Error ? err.message : 'Failed to create payment');
+			setLoading(false);
+		}
+	};
+
 	const createQuote = async (couponCode?: string) => {
-		await initializeCheckout(couponCode);
+		setEmailSubmitted(false);
+		setClientSecret(null);
+		await createQuoteOnly(couponCode);
 	};
 
 	if (loading) {
@@ -179,13 +201,39 @@ export default function CheckoutPage() {
 			)}
 
 			<div className="lg:grid lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
-				{/* Left column - Checkout form */}
+				{/* Left column - Email + Checkout form */}
 				<div className="lg:col-span-7">
-					<CheckoutForm
-						clientSecret={clientSecret}
-						orderToken={orderToken}
-						publishableKey={publishableKey}
-					/>
+					{!emailSubmitted ? (
+						<form onSubmit={handleEmailSubmit} className="space-y-4">
+							<div>
+								<label htmlFor="email" className="block text-sm font-medium text-gray-700">
+									{t('checkout.email') || 'Email'}
+								</label>
+								<input
+									type="email"
+									id="email"
+									required
+									value={customerEmail}
+									onChange={(e) => setCustomerEmail(e.target.value)}
+									placeholder={t('checkout.emailPlaceholder') || 'your@email.com'}
+									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border"
+								/>
+							</div>
+							<button
+								type="submit"
+								disabled={loading || !customerEmail.includes('@')}
+								className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								{loading ? (t('checkout.loading') || 'Loading...') : (t('checkout.proceedToPayment') || 'Proceed to Payment')}
+							</button>
+						</form>
+					) : (
+						<CheckoutForm
+							clientSecret={clientSecret}
+							orderToken={orderToken}
+							publishableKey={publishableKey}
+						/>
+					)}
 				</div>
 
 				{/* Right column - Order summary */}
