@@ -4,14 +4,14 @@
 -- orders.status validation
 CREATE TRIGGER IF NOT EXISTS trg_orders_status_insert
 BEFORE INSERT ON orders
-WHEN NEW.status NOT IN ('pending', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded', 'fulfilled', 'partially_refunded')
+WHEN NEW.status NOT IN ('pending', 'paid', 'payment_failed', 'shipped', 'delivered', 'cancelled', 'refunded', 'fulfilled', 'partially_refunded')
 BEGIN
   SELECT RAISE(ABORT, 'Invalid order status');
 END;
 
 CREATE TRIGGER IF NOT EXISTS trg_orders_status_update
 BEFORE UPDATE OF status ON orders
-WHEN NEW.status NOT IN ('pending', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded', 'fulfilled', 'partially_refunded')
+WHEN NEW.status NOT IN ('pending', 'paid', 'payment_failed', 'shipped', 'delivered', 'cancelled', 'refunded', 'fulfilled', 'partially_refunded')
 BEGIN
   SELECT RAISE(ABORT, 'Invalid order status');
 END;
