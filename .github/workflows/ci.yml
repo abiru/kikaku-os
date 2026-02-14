@@ -7,142 +7,29 @@ on:
     branches: [main]
 
 jobs:
-  typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
+  ci:
+    name: Typecheck / Test / Build
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: |
-            apps/api/pnpm-lock.yaml
-            apps/storefront/pnpm-lock.yaml
-
-      - name: Install API dependencies
+      - name: Install dependencies
         run: pnpm install
-        working-directory: apps/api
 
       - name: Type check API
-        run: pnpm typecheck
-        working-directory: apps/api
-
-      - name: Install Storefront dependencies
-        run: pnpm install
-        working-directory: apps/storefront
+        run: pnpm -C apps/api typecheck
 
       - name: Type check Storefront
-        run: pnpm exec astro check
-        working-directory: apps/storefront
+        run: pnpm -C apps/storefront exec astro check
 
-  test-api:
-    name: Test API
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: Test API
+        run: pnpm -C apps/api test:coverage
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - name: Test Storefront
+        run: pnpm -C apps/storefront test
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: apps/api/pnpm-lock.yaml
+      - name: Build API
+        run: pnpm -C apps/api build
 
-      - name: Install dependencies
-        run: pnpm install
-        working-directory: apps/api
-
-      - name: Run tests with coverage
-        run: pnpm test:coverage
-        working-directory: apps/api
-
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v4
-        with:
-          files: apps/api/coverage/coverage-final.json
-          flags: api
-          fail_ci_if_error: false
-        if: always()
-
-  test-storefront:
-    name: Test Storefront
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: apps/storefront/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install
-        working-directory: apps/storefront
-
-      - name: Run tests
-        run: pnpm test
-        working-directory: apps/storefront
-
-  build-api:
-    name: Build API
-    needs: [typecheck, test-api]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: apps/api/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install
-        working-directory: apps/api
-
-      - name: Build
-        run: pnpm build
-        working-directory: apps/api
-
-  build-storefront:
-    name: Build Storefront
-    needs: [test-storefront]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: apps/storefront/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install
-        working-directory: apps/storefront
-
-      - name: Build
-        run: pnpm build
-        working-directory: apps/storefront
+      - name: Build Storefront
+        run: pnpm -C apps/storefront build
