@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { getApiBase, buildStoreUrl } from '../lib/api';
+import { useTranslation } from '../i18n';
 
 export default function NewsletterForm() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -11,7 +13,7 @@ export default function NewsletterForm() {
     setErrorMessage('');
 
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrorMessage('有効なメールアドレスを入力してください');
+      setErrorMessage(t('newsletter.invalidEmail'));
       return;
     }
 
@@ -34,7 +36,7 @@ export default function NewsletterForm() {
     } catch (err) {
       setStatus('error');
       setErrorMessage(
-        err instanceof Error ? err.message : '登録に失敗しました。しばらくしてからもう一度お試しください。'
+        err instanceof Error ? err.message : t('newsletter.error')
       );
     }
   };
@@ -42,7 +44,7 @@ export default function NewsletterForm() {
   if (status === 'success') {
     return (
       <p className="text-[11px] text-green-600 font-medium">
-        ニュースレターに登録しました。
+        {t('newsletter.success')}
       </p>
     );
   }
@@ -58,7 +60,7 @@ export default function NewsletterForm() {
             if (errorMessage) setErrorMessage('');
             if (status === 'error') setStatus('idle');
           }}
-          placeholder="メールアドレスを入力"
+          placeholder={t('newsletter.placeholder')}
           className="flex-1 min-w-0 px-3 py-1.5 text-[11px] bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3] text-[#1d1d1f] placeholder-[#86868b]"
           disabled={status === 'submitting'}
         />
@@ -67,7 +69,7 @@ export default function NewsletterForm() {
           disabled={status === 'submitting'}
           className="px-4 py-1.5 text-[11px] font-medium text-white bg-[#1d1d1f] rounded-md hover:bg-[#333] transition-colors disabled:opacity-50 whitespace-nowrap"
         >
-          {status === 'submitting' ? '登録中...' : '登録'}
+          {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </button>
       </div>
       {errorMessage && (

@@ -5,6 +5,7 @@ import { Textarea } from './catalyst/textarea';
 import { Field, Label } from './catalyst/fieldset';
 import { getApiBase, buildStoreUrl } from '../lib/api';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useTranslation } from '../i18n';
 
 type FormData = {
   name: string;
@@ -15,20 +16,22 @@ type FormData = {
 
 type FormErrors = Partial<Record<keyof FormData, string>>;
 
-const validate = (data: FormData): FormErrors => {
-  const errors: FormErrors = {};
-  if (!data.name.trim()) errors.name = 'お名前を入力してください';
-  if (!data.email.trim()) {
-    errors.email = 'メールアドレスを入力してください';
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    errors.email = '有効なメールアドレスを入力してください';
-  }
-  if (!data.subject.trim()) errors.subject = '件名を入力してください';
-  if (!data.body.trim()) errors.body = 'お問い合わせ内容を入力してください';
-  return errors;
-};
-
 function ContactFormContent() {
+  const { t } = useTranslation();
+
+  const validate = (data: FormData): FormErrors => {
+    const errors: FormErrors = {};
+    if (!data.name.trim()) errors.name = t('contact.validationName');
+    if (!data.email.trim()) {
+      errors.email = t('contact.validationEmail');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      errors.email = t('contact.validationEmailInvalid');
+    }
+    if (!data.subject.trim()) errors.subject = t('contact.validationSubject');
+    if (!data.body.trim()) errors.body = t('contact.validationBody');
+    return errors;
+  };
+
   const [form, setForm] = useState<FormData>({
     name: '',
     email: '',
@@ -84,7 +87,7 @@ function ContactFormContent() {
       setSubmitted(true);
     } catch (err) {
       setSubmitError(
-        err instanceof Error ? err.message : '送信に失敗しました。しばらくしてからもう一度お試しください。'
+        err instanceof Error ? err.message : t('contact.submitError')
       );
     } finally {
       setSubmitting(false);
@@ -99,13 +102,13 @@ function ContactFormContent() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         </div>
-        <h3 className="mt-4 text-lg font-semibold text-gray-900">お問い合わせを受け付けました</h3>
+        <h3 className="mt-4 text-lg font-semibold text-gray-900">{t('contact.success')}</h3>
         <p className="mt-2 text-sm text-gray-500">
-          確認メールをお送りしました。担当者より順次ご対応いたします。
+          {t('contact.successDescription')}
         </p>
         <div className="mt-6">
           <Button href="/" outline>
-            ホームに戻る
+            {t('contact.backToHome')}
           </Button>
         </div>
       </div>
@@ -134,49 +137,49 @@ function ContactFormContent() {
       </div>
 
       <Field>
-        <Label>お名前</Label>
+        <Label>{t('contact.name')}</Label>
         <Input
           name="name"
           value={form.name}
           onChange={(e) => handleChange('name', e.target.value)}
-          placeholder="山田 太郎"
+          placeholder={t('contact.namePlaceholder')}
           invalid={!!errors.name}
         />
         {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
       </Field>
 
       <Field>
-        <Label>メールアドレス</Label>
+        <Label>{t('contact.email')}</Label>
         <Input
           name="email"
           type="email"
           value={form.email}
           onChange={(e) => handleChange('email', e.target.value)}
-          placeholder="example@email.com"
+          placeholder={t('contact.emailPlaceholder')}
           invalid={!!errors.email}
         />
         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
       </Field>
 
       <Field>
-        <Label>件名</Label>
+        <Label>{t('contact.subject')}</Label>
         <Input
           name="subject"
           value={form.subject}
           onChange={(e) => handleChange('subject', e.target.value)}
-          placeholder="お問い合わせの件名"
+          placeholder={t('contact.subjectPlaceholder')}
           invalid={!!errors.subject}
         />
         {errors.subject && <p className="mt-1 text-sm text-red-600">{errors.subject}</p>}
       </Field>
 
       <Field>
-        <Label>お問い合わせ内容</Label>
+        <Label>{t('contact.body')}</Label>
         <Textarea
           name="body"
           value={form.body}
           onChange={(e) => handleChange('body', e.target.value)}
-          placeholder="お問い合わせ内容をご記入ください"
+          placeholder={t('contact.bodyPlaceholder')}
           rows={6}
           invalid={!!errors.body}
         />
@@ -184,7 +187,7 @@ function ContactFormContent() {
       </Field>
 
       <Button type="submit" color="dark/zinc" className="w-full" disabled={submitting}>
-        {submitting ? '送信中...' : '送信する'}
+        {submitting ? t('contact.submitting') : t('contact.submit')}
       </Button>
     </form>
   );

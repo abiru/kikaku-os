@@ -208,7 +208,7 @@ export default function SearchModal() {
 										{t('common.noResults')}
 									</p>
 									<p className="mt-1 text-xs text-gray-400">
-										Try a different search term
+										{t('search.tryDifferent')}
 									</p>
 								</div>
 							) : null}
@@ -220,15 +220,15 @@ export default function SearchModal() {
 						<div className="flex items-center gap-2">
 							<kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px]">↑</kbd>
 							<kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px]">↓</kbd>
-							<span>to navigate</span>
+							<span>{t('search.toNavigate')}</span>
 						</div>
 						<div className="flex items-center gap-2">
 							<kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>
-							<span>to select</span>
+							<span>{t('search.toSelect')}</span>
 						</div>
 						<div className="flex items-center gap-2">
 							<kbd className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
-							<span>to close</span>
+							<span>{t('search.toClose')}</span>
 						</div>
 					</div>
 				</div>
