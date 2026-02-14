@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { isPublicToken } from './publicToken';
 
 describe('isPublicToken', () => {
+  const validToken = 'PublicTokenExample1234';
+
   it('accepts public tokens with letters and numbers', () => {
-    expect(isPublicToken('AbC123def456GhI789jKl012')).toBe(true);
+    expect(isPublicToken(validToken)).toBe(true);
   });
 
   it('rejects numeric IDs and short values', () => {
@@ -13,7 +15,7 @@ describe('isPublicToken', () => {
   });
 
   it('rejects non-alphanumeric tokens', () => {
-    expect(isPublicToken('AbC123def456GhI_789jKl012')).toBe(false);
-    expect(isPublicToken('AbC123def456GhI-789jKl012')).toBe(false);
+    expect(isPublicToken('PublicToken_Example1234')).toBe(false);
+    expect(isPublicToken('PublicToken-Example1234')).toBe(false);
   });
 });
