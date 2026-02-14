@@ -29,6 +29,7 @@ enabled = true
 binding = "DB"
 database_name = "ledkikaku-os"
 database_id = "5f3d773f-5a31-43d5-8439-594fe5583397"
+migrations_dir = "apps/api/migrations"
 
 [[r2_buckets]]
 binding = "R2"
