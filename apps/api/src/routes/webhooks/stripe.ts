@@ -15,7 +15,7 @@ const handleWebhook = async (c: Context<Env>) => {
   const signature = c.req.header('stripe-signature') ?? null;
   const payload = await c.req.text();
 
-  // Enforce signature verification
+  // Enforce signature verification in production
   const isDevMode = c.env.DEV_MODE === 'true';
 
   if (!secret) {
