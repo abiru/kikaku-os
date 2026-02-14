@@ -14,19 +14,19 @@ import ryukoku from "../assets/logos/ryukoku.png";
 
         {
           [
-            naro,
-            tsum,
-            kirishima,
-            fukuyama,
-            hokkai,
-            ryukoku,
+            { src: naro, alt: "NARO" },
+            { src: tsum, alt: "Tsumura" },
+            { src: kirishima, alt: "Kirishima" },
+            { src: fukuyama, alt: "Fukuyama" },
+            { src: hokkai, alt: "Hokkaido" },
+            { src: ryukoku, alt: "Ryukoku" },
           ].map((v) => {
             return (
           <div class="bg-gray-200/5 p-8 sm:p-10">
               <Image
               class="max-h-12 w-full object-contain"
-                src={v}
-                alt="Transistor"
+                src={v.src}
+                alt={v.alt}
                 width="158"
                 height="48"
               />
