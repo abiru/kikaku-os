@@ -6,13 +6,14 @@ import { Alert } from'../../components/catalyst/alert-banner';
 import OrdersTable from'../../components/admin/OrdersTable';
 import { Heading } from'../../components/catalyst/heading';
 import { getApiBase } from'../../lib/api';
+import type { Order } from'../../lib/types';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') ||'';
 const page = Number(Astro.url.searchParams.get('page') ||'1');
 const perPage = 20;
 
-let orders: any[] = [];
+let orders: Order[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
 let error = null;
 

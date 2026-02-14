@@ -10,17 +10,18 @@ import Layout from '../../layouts/Layout.astro';
 import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 import { renderMarkdown } from '../../utils/markdown';
 import { t } from '../../i18n';
+import type { Product } from '../../lib/types';
 
 const apiBase = getApiBase();
 const { id } = Astro.params;
 const encodedId = encodeURIComponent(id || '');
 export const prerender = false;
 
-let product: any = null;
+let product: Product | null = null;
 let loadState: 'ready' | 'not-found' | 'unavailable' = 'ready';
 
 try {
-	const data = await fetchJson(buildStoreUrl(`/products/${encodedId}`, apiBase)) as any;
+	const data = await fetchJson<{ product: Product | null }>(buildStoreUrl(`/products/${encodedId}`, apiBase));
 	product = data?.product ?? null;
 	if (!product) {
 		loadState = 'not-found';
@@ -32,15 +33,15 @@ try {
 }
 
 // Fetch related products (same category, exclude current product)
-let relatedProducts: any[] = [];
+let relatedProducts: Product[] = [];
 if (product?.category) {
 	try {
 		const params = new URLSearchParams();
 		params.set('category', product.category);
 		params.set('perPage', '5');
-		const relatedData = await fetchJson(buildStoreUrl(`/products?${params.toString()}`, apiBase)) as any;
+		const relatedData = await fetchJson<{ products: Product[] }>(buildStoreUrl(`/products?${params.toString()}`, apiBase));
 		relatedProducts = (relatedData?.products ?? [])
-			.filter((p: any) => p.id !== product.id)
+			.filter((p) => p.id !== product!.id)
 			.slice(0, 4);
 	} catch {
 		// Silently ignore - related products are not critical
@@ -77,7 +78,7 @@ if (product?.image) {
 	productImages.push({ id: 1, src: product.image, alt: product?.title || 'Product image', primary: true });
 }
 if (product?.images && Array.isArray(product.images)) {
-	product.images.forEach((img: any, index: number) => {
+	product.images.forEach((img: { url: string; alt: string | null }, index: number) => {
 		if (img !== product.image) {
 			productImages.push({ id: index + 2, src: img, alt: `${product?.title} - Image ${index + 2}`, primary: false });
 		}
@@ -367,7 +368,7 @@ const policies = [
 						{t('product.relatedProducts')}
 					</h2>
 					<div class="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 xl:gap-8">
-						{relatedProducts.map((related: any) => (
+						{relatedProducts.map((related: Product) => (
 							<a
 								href={`/products/${related.id}`}
 								class="group flex flex-col overflow-hidden rounded-2xl bg-white p-4 sm:p-6 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-lg hover:scale-[1.01]"

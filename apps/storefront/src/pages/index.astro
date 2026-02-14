@@ -6,11 +6,12 @@ import LogoGrid from "../components/LogoGrid.astro";
 import Copy from "../components/Copy.astro";
 import Research from "../components/Research.astro";
 import { getApiBase } from '../lib/api';
+import type { HeroSection, Product } from '../lib/types';
 
 const apiBase = getApiBase();
 
 // SSR: Fetch hero sections from API
-let heroes: any[] = [];
+let heroes: HeroSection[] = [];
 try {
   const res = await fetch(`${apiBase}/store/home/heroes`);
   if (res.ok) {
@@ -22,7 +23,7 @@ try {
 }
 
 // SSR: Fetch featured products for category grid
-let featuredProducts: any[] = [];
+let featuredProducts: Product[] = [];
 try {
   const res = await fetch(`${apiBase}/store/home/featured-categories`);
   if (res.ok) {

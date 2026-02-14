@@ -139,7 +139,11 @@ const skeletonCards = Array.from({ length: 6 });
 		const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 		const isProduct = (value: unknown) => isRecord(value) && 'id' in value && 'title' in value;
 
-		const createWishlistHeart = (product: any, variant: any): HTMLButtonElement => {
+		type ProductListItem = { id: number; title: string; image?: string; tax_rate?: number; variants?: Array<{ id: number; title?: string; price?: { amount: number; currency: string } }> };
+		type VariantListItem = { id: number; title?: string; price?: { amount: number; currency: string } };
+		type PageMeta = { page: number; perPage: number; totalCount: number; totalPages: number };
+
+		const createWishlistHeart = (product: ProductListItem, variant: VariantListItem | undefined): HTMLButtonElement => {
 			const btn = document.createElement('button');
 			btn.type = 'button';
 			btn.className = 'absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200 hover:scale-110 active:scale-95';
@@ -176,7 +180,7 @@ const skeletonCards = Array.from({ length: 6 });
 			return btn;
 		};
 
-		const renderProducts = (products: any[]) => {
+		const renderProducts = (products: ProductListItem[]) => {
 			const grid = document.getElementById('product-grid');
 			if (!grid) return;
 			grid.innerHTML = '';
@@ -266,7 +270,7 @@ const skeletonCards = Array.from({ length: 6 });
 			return `?${params.toString()}`;
 		};
 
-		const renderPagination = (meta: any) => {
+		const renderPagination = (meta: PageMeta | null) => {
 			const pagination = document.getElementById('pagination');
 			const paginationInfo = document.getElementById('pagination-info');
 			const prevPage = document.getElementById('prev-page') as HTMLAnchorElement | null;

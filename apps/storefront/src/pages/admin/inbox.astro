@@ -7,6 +7,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Heading, Subheading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
 import { Button } from '../../components/catalyst/button';
+import type { InboxItem } from '../../lib/types';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -35,7 +36,7 @@ if (Astro.request.method === 'POST') {
 }
 
 // Data Fetching
-let items: any[] = [];
+let items: InboxItem[] = [];
 let error = null;
 
 if (apiKey) {
@@ -140,7 +141,7 @@ const getBadgeColor = (severity: string) => {
 										</div>
 
 										<div class="space-y-3 max-h-96 overflow-y-auto">
-											{metadata.upload_items.map((uploadItem: any) => (
+											{metadata.upload_items.map((uploadItem: { product_id: number; source_url: string }) => (
 												<div class="border border-zinc-200 rounded-lg p-3 space-y-2">
 													<div class="flex items-center justify-between flex-wrap gap-2">
 														<p class="font-medium text-zinc-900 text-sm">
