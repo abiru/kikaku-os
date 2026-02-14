@@ -1,7 +1,6 @@
 import type { AdGenerateRequest, AdCandidate } from '../types/ads';
+import { callClaudeAPIForJSON } from './ai/claudeClient';
 
-const CLAUDE_MODEL = 'claude-sonnet-4-5-20250929';
-const MAX_RETRIES = 3;
 const CANDIDATE_COUNT = 3;
 
 /**
@@ -49,113 +48,62 @@ Output Format (strict JSON only, no markdown):
 Generate exactly ${CANDIDATE_COUNT} variations. Output ONLY valid JSON.`;
 }
 
-/**
- * Extract JSON from text, handling markdown code blocks
- */
-function extractJSON(text: string): string {
-  // Try to extract from markdown code blocks
-  const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/```\n?([\s\S]*?)\n?```/);
-
-  if (jsonMatch) {
-    return jsonMatch[1].trim();
-  }
-
-  // Return as-is if no code block found
-  return text.trim();
+interface CandidatesResponse {
+  candidates: AdCandidate[];
 }
 
 /**
- * Generate ad copy using Claude API with retry logic
+ * Generate ad copy using Claude API via shared AI Gateway client
  */
 export async function generateAdCopy(
   request: AdGenerateRequest,
-  apiKey: string
+  apiKey: string,
+  env?: {
+    AI_GATEWAY_ACCOUNT_ID?: string;
+    AI_GATEWAY_ID?: string;
+  }
 ): Promise<{
   candidates: AdCandidate[];
   promptUsed: string;
   rawResponse: string;
 }> {
-  if (!apiKey) {
-    throw new Error('CLAUDE_API_KEY not configured');
+  const prompt = buildPrompt(request);
+
+  const { data: parsed, rawText } = await callClaudeAPIForJSON<CandidatesResponse>(
+    apiKey,
+    {
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 4096,
+    },
+    env
+  );
+
+  // Validate structure
+  if (!parsed.candidates || !Array.isArray(parsed.candidates)) {
+    throw new Error('Invalid JSON structure: missing candidates array');
   }
 
-  let prompt = buildPrompt(request);
-  let lastError: Error | null = null;
+  if (parsed.candidates.length === 0) {
+    throw new Error('No candidates generated');
+  }
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: CLAUDE_MODEL,
-          max_tokens: 4096,
-          messages: [
-            { role: 'user', content: prompt }
-          ],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Claude API error: ${response.status} ${response.statusText} - ${errorText}`);
-      }
-
-      const data = await response.json() as { content: Array<{ text: string }> };
-      const rawText = data.content[0]?.text || '';
-
-      // Extract JSON from potential markdown formatting
-      const jsonText = extractJSON(rawText);
-
-      // Parse JSON
-      const parsed = JSON.parse(jsonText) as { candidates?: AdCandidate[] };
-
-      // Validate structure
-      if (!parsed.candidates || !Array.isArray(parsed.candidates)) {
-        throw new Error('Invalid JSON structure: missing candidates array');
-      }
-
-      if (parsed.candidates.length === 0) {
-        throw new Error('No candidates generated');
-      }
-
-      // Validate each candidate structure
-      for (let i = 0; i < parsed.candidates.length; i++) {
-        const candidate = parsed.candidates[i];
-        if (!candidate.headlines || !Array.isArray(candidate.headlines)) {
-          throw new Error(`Candidate ${i + 1}: missing headlines array`);
-        }
-        if (!candidate.descriptions || !Array.isArray(candidate.descriptions)) {
-          throw new Error(`Candidate ${i + 1}: missing descriptions array`);
-        }
-        if (!candidate.suggestedKeywords || !Array.isArray(candidate.suggestedKeywords)) {
-          throw new Error(`Candidate ${i + 1}: missing suggestedKeywords array`);
-        }
-      }
-
-      return {
-        candidates: parsed.candidates,
-        promptUsed: buildPrompt(request), // Return original prompt
-        rawResponse: rawText,
-      };
-
-    } catch (error) {
-      console.error(`Claude API attempt ${attempt}/${MAX_RETRIES} failed:`, error);
-      lastError = error as Error;
-
-      if (attempt < MAX_RETRIES) {
-        // Update prompt to emphasize JSON-only output
-        prompt = `${buildPrompt(request)}\n\nIMPORTANT: Your previous response failed JSON parsing. Output ONLY valid JSON with no markdown formatting, no explanations, just the raw JSON object.`;
-
-        // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)));
-      }
+  // Validate each candidate structure
+  for (let i = 0; i < parsed.candidates.length; i++) {
+    const candidate = parsed.candidates[i];
+    if (!candidate.headlines || !Array.isArray(candidate.headlines)) {
+      throw new Error(`Candidate ${i + 1}: missing headlines array`);
+    }
+    if (!candidate.descriptions || !Array.isArray(candidate.descriptions)) {
+      throw new Error(`Candidate ${i + 1}: missing descriptions array`);
+    }
+    if (!candidate.suggestedKeywords || !Array.isArray(candidate.suggestedKeywords)) {
+      throw new Error(`Candidate ${i + 1}: missing suggestedKeywords array`);
     }
   }
 
-  throw new Error(`Failed to generate ad copy after ${MAX_RETRIES} attempts: ${lastError?.message}`);
+  return {
+    candidates: parsed.candidates,
+    promptUsed: prompt,
+    rawResponse: rawText,
+  };
 }
