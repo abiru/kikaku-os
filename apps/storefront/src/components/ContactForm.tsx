@@ -35,6 +35,7 @@ export default function ContactForm() {
     body: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [honeypot, setHoneypot] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -57,6 +58,11 @@ export default function ContactForm() {
     const validationErrors = validate(form);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      return;
+    }
+
+    if (honeypot) {
+      setSubmitted(true);
       return;
     }
 
@@ -112,6 +118,19 @@ export default function ContactForm() {
           {submitError}
         </div>
       )}
+
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <label htmlFor="website">Website</label>
+        <input
+          id="website"
+          name="website"
+          type="text"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
 
       <Field>
         <Label>お名前</Label>
