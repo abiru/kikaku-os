@@ -8,7 +8,7 @@ import {
 } from './quotationApi';
 
 const apiBase = 'https://api.example.com';
-const token = 'AbC123def456GhI789jKl012';
+const token = 'PublicTokenExample1234';
 
 const jsonResponse = (body: unknown, status = 200): Response =>
   new Response(JSON.stringify(body), {
