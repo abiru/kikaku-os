@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createInboxSchema } from '../../lib/schemas';
 import type { Env } from '../../env';
 import { getActor } from '../../middleware/clerkAuth';
 import { dispatchApproval } from '../../services/inboxHandlers';
@@ -45,29 +46,26 @@ inbox.get('/inbox', async (c) => {
 // Create new inbox item
 inbox.post('/inbox', async (c) => {
   try {
-    const body = await c.req.json<{
-      title: string;
-      body?: string;
-      severity?: string;
-      kind?: string;
-      date?: string;
-      metadata?: string;
-    }>();
+    const raw = await c.req.json();
+    const parsed = createInboxSchema.safeParse(raw);
 
-    if (!body.title) {
-      return jsonError(c, 'Title is required', 400);
+    if (!parsed.success) {
+      const messages = parsed.error.issues.map((e) => e.message).join(', ');
+      return jsonError(c, messages, 400);
     }
+
+    const { title, body: itemBody, severity, kind, date, metadata } = parsed.data;
 
     const result = await c.env.DB.prepare(`
       INSERT INTO inbox_items (title, body, severity, kind, date, metadata, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(
-      body.title,
-      body.body || null,
-      body.severity || 'info',
-      body.kind || null,
-      body.date || null,
-      body.metadata || null
+      title,
+      itemBody || null,
+      severity,
+      kind || null,
+      date || null,
+      metadata || null
     ).run();
 
     return jsonOk(c, { id: result.meta.last_row_id });
