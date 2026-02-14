@@ -1,6 +1,7 @@
 import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
 import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
+import { formatDate } from '../../lib/format';
 
 type Customer = {
 	id: number;
@@ -23,11 +24,6 @@ type Props = {
 
 const formatCurrency = (amount: number) => {
 	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount);
-};
-
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	return new Date(dateStr).toLocaleDateString('ja-JP');
 };
 
 export default function CustomersTable({ customers, currentPage, totalPages, searchQuery }: Props) {

@@ -5,6 +5,7 @@ import Container from '../components/Container.astro';
 import Layout from '../layouts/Layout.astro';
 import { getApiBase } from '../lib/api';
 import { parseMarkdown } from '../utils/markdown';
+import { formatDate } from '../lib/format';
 
 type StaticPage = {
 	id: number;
@@ -35,13 +36,6 @@ try {
 const metaTitle = page?.meta_title || 'プライバシーポリシー - Led Kikaku';
 const metaDescription = page?.meta_description || '';
 
-const formatDate = (dateStr: string) => {
-	return new Date(dateStr).toLocaleDateString('ja-JP', {
-		year: 'numeric',
-		month: 'long',
-		day: 'numeric'
-	});
-};
 ---
 
 <Layout title={metaTitle}>
@@ -57,7 +51,7 @@ const formatDate = (dateStr: string) => {
 				</h1>
 				{page && (
 					<p class="mt-6 text-center text-[#86868b] text-lg font-medium">
-						最終更新日：{formatDate(page.updated_at)}
+						最終更新日：{formatDate(page.updated_at, { year: 'numeric', month: 'long', day: 'numeric' })}
 					</p>
 				)}
 			</Container>

@@ -1,6 +1,7 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
+import { formatDate } from '../../lib/format'
 
 type ReadyToShipOrder = {
   order_id: number
@@ -20,12 +21,6 @@ type Props = {
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount)
-}
-
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '-'
-  const d = new Date(dateStr)
-  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 }
 
 const getStatusBadge = (status: string | null): { label: string; color: 'zinc' | 'yellow' | 'blue' | 'green' } => {
@@ -70,7 +65,7 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
                   <div className="text-zinc-950">{order.customer_email || 'ゲスト'}</div>
                 </TableCell>
                 <TableCell className="text-zinc-500 tabular-nums">
-                  {formatDate(order.paid_at)}
+                  {formatDate(order.paid_at, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </TableCell>
                 <TableCell>
                   <Badge color={badge.color}>

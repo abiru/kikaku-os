@@ -4,6 +4,7 @@ export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import { isPublicToken } from '../../lib/publicToken';
 import { fetchQuotation } from '../../lib/quotationApi';
+import { formatDate } from '../../lib/format';
 
 type QuotationRecord = {
   quotation_number: string;
@@ -66,15 +67,6 @@ const formatCurrency = (amount: number, currency: string = 'JPY') => {
   }).format(amount);
 };
 
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(date);
-};
-
 const getStatusBadge = (status: string) => {
   const badges: Record<string, { label: string; class: string }> = {
     draft: { label: '下書き', class: 'bg-gray-100 text-gray-800' },
@@ -113,8 +105,8 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 
       <div class="info-card">
         <h2>見積情報</h2>
-        <p><strong>発行日:</strong> {formatDate(quotation.created_at)}</p>
-        <p><strong>有効期限:</strong> {formatDate(quotation.valid_until)}</p>
+        <p><strong>発行日:</strong> {formatDate(quotation.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <p><strong>有効期限:</strong> {formatDate(quotation.valid_until, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
         <p><strong>通貨:</strong> {quotation.currency}</p>
       </div>
     </div>

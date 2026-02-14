@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getApiBase } from '../lib/api';
 import { useTranslation } from '../i18n';
+import { formatPrice } from '../lib/format';
 
 type SearchResult = {
 	id: number;
@@ -14,13 +15,6 @@ type SearchResult = {
 			currency: string;
 		};
 	}>;
-};
-
-const formatPrice = (amount: number, currency: string) => {
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency: currency || 'JPY'
-	}).format(amount);
 };
 
 export default function SearchModal() {

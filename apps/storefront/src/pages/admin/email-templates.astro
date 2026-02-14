@@ -6,6 +6,7 @@ import { Badge } from'../../components/catalyst/badge';
 import { Heading } from'../../components/catalyst/heading';
 import AdminLayout from'../../layouts/AdminLayout.astro';
 import { getApiBase } from'../../lib/api';
+import { formatDate } from '../../lib/format';
 
 const apiBase = getApiBase();
 
@@ -45,14 +46,6 @@ if (import.meta.env.ADMIN_API_KEY) {
 } else {
 	error ='ADMIN_API_KEY is missing in server environment.';
 }
-
-const formatDate = (dateStr: string) => {
-	return new Date(dateStr).toLocaleDateString('ja-JP', {
-		year:'numeric',
-		month:'2-digit',
-		day:'2-digit'
-	});
-};
 
 const templateLabels: Record<string, string> = {
 	'order-confirmation':'Order Confirmation',
@@ -102,7 +95,7 @@ const templateLabels: Record<string, string> = {
 						<p class="text-sm text-zinc-500 mb-4 truncate">{template.subject}</p>
 						<div class="flex items-center justify-between text-xs">
 							<Badge color="zinc" client:only="react">{templateLabels[template.slug] || template.slug}</Badge>
-							<span class="text-zinc-500 tabular-nums">{formatDate(template.updated_at)}</span>
+							<span class="text-zinc-500 tabular-nums">{formatDate(template.updated_at, { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
 						</div>
 					</a>
 				))

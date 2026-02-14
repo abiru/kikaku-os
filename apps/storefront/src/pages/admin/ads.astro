@@ -11,6 +11,7 @@ import { Input } from '../../components/catalyst/input';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
 import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '../../components/catalyst/table';
 import { getApiBase } from '../../lib/api';
+import { formatDate } from '../../lib/format';
 
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const apiBase = getApiBase();
@@ -51,15 +52,12 @@ if (apiKey) {
   }
 }
 
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+const dateTimeOpts: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
 };
 
 const getStatusColor = (status: string) => {
@@ -215,7 +213,7 @@ const hasNext = page < totalPages;
                       )}
                     </TableCell>
                     <TableCell className="text-zinc-500">
-                      {formatDate(draft.updated_at)}
+                      {formatDate(draft.updated_at, dateTimeOpts)}
                     </TableCell>
                     <TableCell>
                       <div class="flex items-center gap-2">

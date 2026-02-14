@@ -1,5 +1,6 @@
 import { Badge } from './catalyst/badge';
 import { useTranslation } from '../i18n';
+import { formatPrice, formatDate } from '../lib/format';
 
 type OrderItem = {
   title: string;
@@ -49,22 +50,12 @@ type Props = {
   order: Order;
 };
 
-const formatPrice = (amount: number, currency: string): string =>
-  new Intl.NumberFormat('ja-JP', {
-    style: 'currency',
-    currency: currency || 'JPY',
-    minimumFractionDigits: 0,
-  }).format(amount);
-
-const formatDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
+const dateTimeLongOpts: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
 };
 
 type StepStatus = 'completed' | 'current' | 'upcoming';
@@ -257,7 +248,7 @@ export default function OrderTracking({ order }: Props) {
         </div>
 
         <div className="mt-2 text-sm text-gray-500">
-          {t('orderTracking.orderDate')}: {formatDate(order.created_at)}
+          {t('orderTracking.orderDate')}: {formatDate(order.created_at, dateTimeLongOpts)}
         </div>
 
         {/* Status Steps */}

@@ -1,6 +1,16 @@
 import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
 import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
+import { formatDate } from '../../lib/format';
+
+const dateTimeSecsOpts: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit',
+	second: '2-digit',
+};
 
 type StripeEvent = {
 	event_id: string;
@@ -17,12 +27,6 @@ type Props = {
 	totalPages: number;
 	status: string;
 	type: string;
-};
-
-const formatDate = (dateStr: string | null) => {
-	if (!dateStr) return '-';
-	const d = new Date(dateStr);
-	return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}`;
 };
 
 const getStatusColor = (status: string): 'lime' | 'amber' | 'red' | 'zinc' => {
@@ -71,7 +75,7 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 									}
 								>
 									<TableCell className="text-zinc-500 tabular-nums whitespace-nowrap">
-										{formatDate(e.received_at)}
+										{formatDate(e.received_at, dateTimeSecsOpts)}
 									</TableCell>
 									<TableCell className="font-mono text-xs">
 										<span className="bg-zinc-100 px-1.5 py-0.5 rounded">{e.event_id}</span>
@@ -86,7 +90,7 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 										) : '-'}
 									</TableCell>
 									<TableCell className="text-zinc-500 tabular-nums whitespace-nowrap">
-										{formatDate(e.processed_at)}
+										{formatDate(e.processed_at, dateTimeSecsOpts)}
 									</TableCell>
 								</TableRow>
 							))

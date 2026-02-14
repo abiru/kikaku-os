@@ -22,13 +22,7 @@ import { getApiBase, fetchJson } from '../lib/api';
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n';
 import { ErrorBoundary } from './ErrorBoundary';
-
-const formatPrice = (amount: number, currency: string) => {
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency: currency || 'JPY'
-	}).format(amount);
-};
+import { formatPrice } from '../lib/format';
 
 function EmptyCart() {
 	const { t } = useTranslation();

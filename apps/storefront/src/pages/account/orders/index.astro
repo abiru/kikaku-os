@@ -4,6 +4,7 @@ export const prerender = false;
 import AccountLayout from '../../../layouts/AccountLayout.astro';
 import Container from '../../../components/Container.astro';
 import { t } from '../../../i18n';
+import { formatDate } from '../../../lib/format';
 
 const API_BASE = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
@@ -48,14 +49,6 @@ const formatCurrency = (amount: number, currency = 'JPY') => {
     style: 'currency',
     currency,
   }).format(amount);
-};
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 };
 
 const statusLabels: Record<string, string> = {
@@ -112,7 +105,7 @@ const statusLabels: Record<string, string> = {
                     </div>
                   </div>
                   <div class="flex justify-between text-sm text-[#86868b]">
-                    <div>{formatDate(order.created_at)}</div>
+                    <div>{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                     <div class="font-medium text-[#1d1d1f]">
                       {formatCurrency(order.total_amount, order.currency)}
                     </div>
@@ -122,7 +115,7 @@ const statusLabels: Record<string, string> = {
                 {/* Desktop Layout */}
                 <div class="hidden md:grid md:grid-cols-4 gap-4 items-center">
                   <div class="font-medium text-[#1d1d1f]">#{order.id}</div>
-                  <div class="text-[#86868b]">{formatDate(order.created_at)}</div>
+                  <div class="text-[#86868b]">{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                   <div>
                     <span class={`text-sm px-2 py-0.5 rounded-full ${
                       order.status === 'completed' || order.status === 'paid'

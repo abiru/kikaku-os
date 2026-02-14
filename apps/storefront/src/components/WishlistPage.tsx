@@ -3,13 +3,7 @@ import { $wishlistArray, removeFromWishlist } from '../lib/wishlist';
 import { addToCart } from '../lib/cart';
 import { useTranslation } from '../i18n';
 import { useState } from 'react';
-
-const formatPrice = (amount: number, currency: string) => {
-	return new Intl.NumberFormat('ja-JP', {
-		style: 'currency',
-		currency: currency || 'JPY',
-	}).format(amount);
-};
+import { formatPrice } from '../lib/format';
 
 function EmptyWishlist() {
 	const { t } = useTranslation();

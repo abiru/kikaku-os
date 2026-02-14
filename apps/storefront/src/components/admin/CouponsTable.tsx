@@ -1,5 +1,6 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
+import { formatDate } from '../../lib/format'
 
 type Coupon = {
   id: number
@@ -31,11 +32,6 @@ const formatValue = (coupon: Coupon) => {
     currency: coupon.currency,
     minimumFractionDigits: 0
   }).format(coupon.value)
-}
-
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('ja-JP')
 }
 
 const isExpired = (coupon: Coupon) => {
