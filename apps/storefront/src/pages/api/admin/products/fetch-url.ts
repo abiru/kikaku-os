@@ -206,6 +206,73 @@ const generateJapaneseDescriptionMarkdown = (
   return md;
 };
 
+const normalizeHostname = (hostname: string): string =>
+  hostname.trim().toLowerCase().replace(/\.$/, '');
+
+const parseIpv4Literal = (hostname: string): string | null => {
+  const host = normalizeHostname(hostname);
+
+  // Dotted decimal form (e.g. 127.0.0.1)
+  const dotted = host.split('.');
+  if (dotted.length === 4 && dotted.every((part) => /^\d+$/.test(part))) {
+    const octets = dotted.map((part) => Number(part));
+    if (octets.every((octet) => Number.isInteger(octet) && octet >= 0 && octet <= 255)) {
+      return octets.join('.');
+    }
+  }
+
+  // Single-integer decimal form (e.g. 2130706433 => 127.0.0.1)
+  if (/^\d+$/.test(host)) {
+    const value = Number(host);
+    if (Number.isInteger(value) && value >= 0 && value <= 0xffffffff) {
+      const asUint = value >>> 0;
+      return [
+        (asUint >>> 24) & 255,
+        (asUint >>> 16) & 255,
+        (asUint >>> 8) & 255,
+        asUint & 255,
+      ].join('.');
+    }
+  }
+
+  // Single-integer hex form (e.g. 0x7f000001 => 127.0.0.1)
+  if (/^0x[0-9a-f]+$/i.test(host)) {
+    const value = Number.parseInt(host, 16);
+    if (Number.isInteger(value) && value >= 0 && value <= 0xffffffff) {
+      const asUint = value >>> 0;
+      return [
+        (asUint >>> 24) & 255,
+        (asUint >>> 16) & 255,
+        (asUint >>> 8) & 255,
+        asUint & 255,
+      ].join('.');
+    }
+  }
+
+  return null;
+};
+
+const isBlockedInternalHost = (hostname: string): boolean => {
+  const host = normalizeHostname(hostname);
+
+  if (
+    host === 'localhost' ||
+    host.endsWith('.localhost') ||
+    host === 'metadata.google.internal' ||
+    host.endsWith('.local') ||
+    host.endsWith('.internal')
+  ) {
+    return true;
+  }
+
+  // Block IPv6 literal hosts directly (e.g. [::1], [fe80::1]).
+  if (host.includes(':')) {
+    return true;
+  }
+
+  return false;
+};
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
@@ -247,6 +314,32 @@ export const POST: APIRoute = async ({ request }) => {
       parsedUrl = new URL(url);
     } catch {
       return new Response(JSON.stringify({ success: false, error: 'Invalid URL format' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // SSRF protection: block private/internal URLs
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+      return new Response(JSON.stringify({ success: false, error: 'Only HTTP(S) URLs are allowed' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const hostname = normalizeHostname(parsedUrl.hostname);
+    const ipv4 = parseIpv4Literal(hostname);
+    const hasBlockedHost = isBlockedInternalHost(hostname);
+
+    if (ipv4) {
+      return new Response(JSON.stringify({ success: false, error: 'Direct IP URLs are not allowed' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (hasBlockedHost) {
+      return new Response(JSON.stringify({ success: false, error: 'Private or internal URLs are not allowed' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
