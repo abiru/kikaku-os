@@ -15,7 +15,7 @@
  * ```
  */
 export const escapeHtml = (text: string | null | undefined): string => {
-  if (!text) return '';
+  if (text == null) return '';
   return String(text)
     .replace(/&/g, '&amp;')    // Must be first to avoid double-escaping
     .replace(/</g, '&lt;')
