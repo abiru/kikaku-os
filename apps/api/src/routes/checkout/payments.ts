@@ -12,7 +12,7 @@ import {
 const payments = new Hono<Env>();
 
 payments.post('/payments/intent', async (c) => {
-  const stripeKey = c.env.STRIPE_SECRET_KEY ?? (c.env as any).STRIPE_API_KEY;
+  const stripeKey = c.env.STRIPE_SECRET_KEY;
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
   if (stripeKey.startsWith('pk_')) {
     return jsonError(c, 'Stripe secret key invalid', 500);
