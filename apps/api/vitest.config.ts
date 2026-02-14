@@ -15,10 +15,10 @@ export default defineConfig({
         'src/test-utils/**'
       ],
       thresholds: {
-        lines: 50,
-        functions: 50,
-        branches: 50,
-        statements: 50
+        lines: 55,
+        functions: 60,
+        branches: 70,
+        statements: 55
       }
     }
   }
