@@ -136,7 +136,7 @@ describe('Stripe webhook handling - Basic payment workflow', () => {
 });
 
 describe('Stripe webhook route - Basic validation and operations', () => {
-  it('returns 500 when webhook secret is missing in production mode', async () => {
+  it('returns 500 when webhook secret is not configured', async () => {
     const app = new Hono();
     app.route('/', stripe);
 
@@ -148,7 +148,7 @@ describe('Stripe webhook route - Basic validation and operations', () => {
 
     const json = await res.json();
     expect(res.status).toBe(500);
-    expect(json.message).toBe('Webhook signature verification is required in production');
+    expect(json.message).toBe('STRIPE_WEBHOOK_SECRET is not configured');
   });
 
   it('returns 400 for invalid signature', async () => {
