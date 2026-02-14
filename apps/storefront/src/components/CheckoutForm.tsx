@@ -82,8 +82,6 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 	};
 
 	const onExpressCheckoutConfirm = async (event: any) => {
-		console.log('[Express Checkout] Payment confirmed', event);
-
 		// Extract shipping address if available
 		let shippingData = null;
 		if (event.shippingAddress) {
