@@ -3,6 +3,21 @@ import { verifyToken } from '@clerk/backend';
 import type { Env } from '../env';
 import { jsonError } from '../lib/http';
 
+const timingSafeCompare = (a: string, b: string): boolean => {
+  const enc = new TextEncoder();
+  const aBuf = enc.encode(a);
+  const bBuf = enc.encode(b);
+  if (aBuf.length !== bBuf.length) {
+    // Compare against self to keep constant time
+    let result = 1;
+    for (let i = 0; i < aBuf.length; i++) result |= aBuf[i] ^ aBuf[i];
+    return false;
+  }
+  let result = 0;
+  for (let i = 0; i < aBuf.length; i++) result |= aBuf[i] ^ bBuf[i];
+  return result === 0;
+};
+
 export type AuthUser = {
   userId: string;
   email?: string;
@@ -41,7 +56,7 @@ export const clerkAuth = createMiddleware<Env>(async (c, next) => {
 
   const apiKey = c.req.header('x-admin-key');
 
-  if (apiKey && c.env.ADMIN_API_KEY && apiKey === c.env.ADMIN_API_KEY) {
+  if (apiKey && c.env.ADMIN_API_KEY && timingSafeCompare(apiKey, c.env.ADMIN_API_KEY)) {
     c.set('authUser', {
       userId: 'admin',
       method: 'api-key',
@@ -74,7 +89,7 @@ export const optionalClerkAuth = createMiddleware<Env>(async (c, next) => {
   } else {
     const apiKey = c.req.header('x-admin-key');
 
-    if (apiKey && c.env.ADMIN_API_KEY && apiKey === c.env.ADMIN_API_KEY) {
+    if (apiKey && c.env.ADMIN_API_KEY && timingSafeCompare(apiKey, c.env.ADMIN_API_KEY)) {
       c.set('authUser', {
         userId: 'admin',
         method: 'api-key',
