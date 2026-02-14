@@ -73,6 +73,22 @@ type StockCheckResult = {
   }>;
 };
 
+type ReservationResult = {
+  reserved: boolean;
+  insufficientItems: StockCheckResult['insufficientItems'];
+};
+
+const aggregateRequestedItems = (
+  items: StockCheckItem[]
+): Map<number, number> => {
+  const requestedByVariant = new Map<number, number>();
+  for (const item of items) {
+    const current = requestedByVariant.get(item.variantId) ?? 0;
+    requestedByVariant.set(item.variantId, current + item.quantity);
+  }
+  return requestedByVariant;
+};
+
 /**
  * Check if all items have sufficient stock
  * Returns detailed info about any insufficient items
@@ -81,17 +97,18 @@ export const checkStockAvailability = async (
   db: D1Database,
   items: StockCheckItem[]
 ): Promise<StockCheckResult> => {
-  const variantIds = items.map((i) => i.variantId);
+  const requestedByVariant = aggregateRequestedItems(items);
+  const variantIds = Array.from(requestedByVariant.keys());
   const stockMap = await getAvailableStockBatch(db, variantIds);
 
   const insufficientItems: StockCheckResult['insufficientItems'] = [];
 
-  for (const item of items) {
-    const onHand = stockMap.get(item.variantId) ?? 0;
-    if (onHand < item.quantity) {
+  for (const [variantId, requested] of requestedByVariant.entries()) {
+    const onHand = stockMap.get(variantId) ?? 0;
+    if (onHand < requested) {
       insufficientItems.push({
-        variantId: item.variantId,
-        requested: item.quantity,
+        variantId,
+        requested,
         available: onHand
       });
     }
@@ -112,14 +129,100 @@ export const deductStockForOrder = async (
   orderId: number,
   items: StockCheckItem[]
 ): Promise<void> => {
-  for (const item of items) {
+  const requestedByVariant = aggregateRequestedItems(items);
+  for (const [variantId, requested] of requestedByVariant.entries()) {
     await db.prepare(
       `INSERT INTO inventory_movements (variant_id, delta, reason, metadata, created_at, updated_at)
        VALUES (?, ?, 'sale', ?, datetime('now'), datetime('now'))`
     ).bind(
-      item.variantId,
-      -item.quantity,
+      variantId,
+      -requested,
       JSON.stringify({ order_id: orderId })
     ).run();
   }
+};
+
+/**
+ * Reserve stock for an order with atomic conditional inserts.
+ * If any variant cannot be reserved, all reservations from this attempt are released.
+ */
+export const reserveStockForOrder = async (
+  db: D1Database,
+  orderId: number,
+  items: StockCheckItem[]
+): Promise<ReservationResult> => {
+  const requestedByVariant = aggregateRequestedItems(items);
+  const reservationId = crypto.randomUUID();
+
+  for (const [variantId, requested] of requestedByVariant.entries()) {
+    const insertResult = await db.prepare(
+      `INSERT INTO inventory_movements (variant_id, delta, reason, metadata, created_at, updated_at)
+       SELECT ?, ?, 'reservation', ?, datetime('now'), datetime('now')
+       WHERE (SELECT COALESCE(SUM(delta), 0) FROM inventory_movements WHERE variant_id = ?) >= ?`
+    ).bind(
+      variantId,
+      -requested,
+      JSON.stringify({ order_id: orderId, reservation_id: reservationId }),
+      variantId,
+      requested
+    ).run();
+
+    if (!insertResult.meta.changes || insertResult.meta.changes === 0) {
+      await db.prepare(
+        `UPDATE inventory_movements
+         SET delta = 0,
+             reason = 'reservation_released',
+             updated_at = datetime('now')
+         WHERE reason = 'reservation'
+           AND json_extract(metadata, '$.reservation_id') = ?`
+      ).bind(reservationId).run();
+
+      const available = await getAvailableStock(db, variantId);
+      return {
+        reserved: false,
+        insufficientItems: [{ variantId, requested, available }]
+      };
+    }
+  }
+
+  return { reserved: true, insufficientItems: [] };
+};
+
+/**
+ * Convert active reservations to finalized sales after payment succeeds.
+ * Returns true when at least one reservation row was converted.
+ */
+export const consumeStockReservationForOrder = async (
+  db: D1Database,
+  orderId: number
+): Promise<boolean> => {
+  const result = await db.prepare(
+    `UPDATE inventory_movements
+     SET reason = 'sale',
+         updated_at = datetime('now')
+     WHERE reason = 'reservation'
+       AND json_extract(metadata, '$.order_id') = ?`
+  ).bind(orderId).run();
+
+  return !!result.meta.changes && result.meta.changes > 0;
+};
+
+/**
+ * Release active reservations for an order (e.g. payment failed/canceled).
+ * Returns number of released reservation rows.
+ */
+export const releaseStockReservationForOrder = async (
+  db: D1Database,
+  orderId: number
+): Promise<number> => {
+  const result = await db.prepare(
+    `UPDATE inventory_movements
+     SET delta = 0,
+         reason = 'reservation_released',
+         updated_at = datetime('now')
+     WHERE reason = 'reservation'
+       AND json_extract(metadata, '$.order_id') = ?`
+  ).bind(orderId).run();
+
+  return Number(result.meta.changes || 0);
 };

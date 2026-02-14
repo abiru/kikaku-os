@@ -3,7 +3,11 @@ import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
 import { generatePublicToken } from '../../lib/token';
-import { checkStockAvailability } from '../../services/inventoryCheck';
+import {
+  checkStockAvailability,
+  releaseStockReservationForOrder,
+  reserveStockForOrder
+} from '../../services/inventoryCheck';
 
 const payments = new Hono<Env>();
 
@@ -60,11 +64,12 @@ payments.post('/payments/intent', async (c) => {
     return jsonError(c, 'Quote not found', 400);
   }
 
+  const quoteItems: Array<{ variantId: number; quantity: number }> = JSON.parse(quote.items_json);
+
   // Verify stock availability before proceeding
-  const quoteItemsForStock: Array<{ variantId: number; quantity: number }> = JSON.parse(quote.items_json);
   const stockCheck = await checkStockAvailability(
     c.env.DB,
-    quoteItemsForStock.map((i) => ({ variantId: i.variantId, quantity: i.quantity }))
+    quoteItems.map((i) => ({ variantId: i.variantId, quantity: i.quantity }))
   );
   if (!stockCheck.available) {
     return c.json({
@@ -79,6 +84,47 @@ payments.post('/payments/intent', async (c) => {
   const expiresAt = new Date(quote.expires_at);
   if (expiresAt < now) {
     return jsonError(c, 'Quote has expired', 400);
+  }
+
+  // Resolve latest variant pricing for order_items snapshot
+  const variantIds = Array.from(new Set(quoteItems.map((item) => item.variantId)));
+  const variantPricing = new Map<number, { unitPrice: number; taxRate: number }>();
+  if (variantIds.length > 0) {
+    const placeholders = variantIds.map(() => '?').join(',');
+    const variantPricingRows = await c.env.DB.prepare(
+      `SELECT v.id as variantId,
+              (
+                SELECT pr.amount
+                FROM prices pr
+                WHERE pr.variant_id = v.id
+                ORDER BY pr.id DESC
+                LIMIT 1
+              ) as unitPrice,
+              tr.rate as taxRate
+       FROM variants v
+       LEFT JOIN products prod ON prod.id = v.product_id
+       LEFT JOIN tax_rates tr ON tr.id = prod.tax_rate_id
+       WHERE v.id IN (${placeholders})`
+    ).bind(...variantIds).all<{
+      variantId: number;
+      unitPrice: number | null;
+      taxRate: number | null;
+    }>();
+
+    for (const row of variantPricingRows.results || []) {
+      if (typeof row.unitPrice === 'number') {
+        variantPricing.set(row.variantId, {
+          unitPrice: row.unitPrice,
+          taxRate: typeof row.taxRate === 'number' ? row.taxRate : 0.10
+        });
+      }
+    }
+
+    for (const item of quoteItems) {
+      if (!variantPricing.has(item.variantId)) {
+        return jsonError(c, `Variant ${item.variantId} price not found`, 400);
+      }
+    }
   }
 
   // Get or create customer
@@ -135,28 +181,29 @@ payments.post('/payments/intent', async (c) => {
   const orderId = Number(orderRes.meta.last_row_id);
 
   // Insert order_items from quote items
-  const quoteItems: Array<{ variantId: number; quantity: number }> = JSON.parse(quote.items_json);
   for (const item of quoteItems) {
-    // Look up variant price and product info
-    const variant = await c.env.DB.prepare(
-      `SELECT v.id, v.product_id, p.amount as unit_price
-       FROM variants v
-       LEFT JOIN prices p ON p.variant_id = v.id AND p.is_default = 1
-       WHERE v.id = ?`
-    ).bind(item.variantId).first<{ id: number; product_id: number; unit_price: number | null }>();
+    const pricing = variantPricing.get(item.variantId)!;
+    const unitPrice = pricing.unitPrice;
+    const lineTotal = unitPrice * item.quantity;
+    const taxRatePercent = Math.round(pricing.taxRate * 100);
+    const taxAmount = Math.floor((lineTotal * taxRatePercent) / (100 + taxRatePercent));
 
-    if (variant) {
-      const unitPrice = variant.unit_price ?? 0;
-      const lineTotal = unitPrice * item.quantity;
-      // Default 10% tax rate (standard Japanese consumption tax)
-      const taxRate = 10;
-      const taxAmount = Math.floor((lineTotal * taxRate) / (100 + taxRate));
+    await c.env.DB.prepare(
+      `INSERT INTO order_items (order_id, variant_id, quantity, unit_price, tax_rate, tax_amount, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+    ).bind(orderId, item.variantId, item.quantity, unitPrice, taxRatePercent, taxAmount).run();
+  }
 
-      await c.env.DB.prepare(
-        `INSERT INTO order_items (order_id, variant_id, quantity, unit_price, tax_rate, tax_amount, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
-      ).bind(orderId, item.variantId, item.quantity, unitPrice, taxRate, taxAmount).run();
-    }
+  // Reserve stock atomically right before payment creation
+  const reservation = await reserveStockForOrder(c.env.DB, orderId, quoteItems);
+  if (!reservation.reserved) {
+    await c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId).run();
+    await c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
+    return c.json({
+      ok: false,
+      message: 'Some items are out of stock',
+      outOfStock: reservation.insufficientItems
+    }, 400);
   }
 
   // Create Stripe PaymentIntent
@@ -211,6 +258,9 @@ payments.post('/payments/intent', async (c) => {
   if (!stripeRes.ok) {
     const text = await stripeRes.text();
     console.error('Stripe PaymentIntent creation failed:', text);
+    await releaseStockReservationForOrder(c.env.DB, orderId);
+    await c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId).run();
+    await c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
     return jsonError(c, 'Failed to create payment intent', 500);
   }
 
@@ -225,6 +275,9 @@ payments.post('/payments/intent', async (c) => {
   });
 
   if (!paymentIntent?.client_secret || !paymentIntent?.id) {
+    await releaseStockReservationForOrder(c.env.DB, orderId);
+    await c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId).run();
+    await c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
     return jsonError(c, 'Invalid payment intent response', 500);
   }
 

@@ -17,6 +17,7 @@ type MockDbData = {
   orders: Map<number, any>;
   variantRows: Array<any>;
   stockByVariant: Record<number, number>;
+  reservations: Array<{ orderId: number; reservationId: string; variantId: number; quantity: number; state: 'reservation' | 'sale' | 'released' }>;
   nextCustomerId: number;
   nextOrderId: number;
 };
@@ -31,6 +32,7 @@ const createIntegrationMockDb = (
     orders: new Map(),
     variantRows,
     stockByVariant,
+    reservations: [],
     nextCustomerId: 1,
     nextOrderId: 1
   };
@@ -74,6 +76,20 @@ const createIntegrationMockDb = (
               variantId,
               onHand: data.stockByVariant[variantId] ?? 0
             }));
+            return { results, success: true, meta: {} };
+          }
+
+          // Variant pricing rows for payments route
+          if (sql.includes('FROM variants v') && sql.includes('unitPrice')) {
+            const variantIds = boundArgs.map((id) => Number(id));
+            const results = variantIds.map((variantId) => {
+              const variantRow = data.variantRows.find((v) => Number(v.variant_id) === variantId);
+              return {
+                variantId,
+                unitPrice: variantRow?.amount ?? null,
+                taxRate: variantRow?.tax_rate ?? 0.10
+              };
+            });
             return { results, success: true, meta: {} };
           }
 
@@ -130,6 +146,66 @@ const createIntegrationMockDb = (
               customer.stripe_customer_id = stripeCustomerId;
             }
             return { success: true, meta: {} };
+          }
+
+          // Reservation insert (conditional)
+          if (
+            sql.includes('INSERT INTO inventory_movements') &&
+            sql.includes("SELECT ?, ?, 'reservation'")
+          ) {
+            const variantId = Number(boundArgs[0]);
+            const requested = Math.abs(Number(boundArgs[1]));
+            const metadata = JSON.parse(String(boundArgs[2])) as {
+              order_id: number;
+              reservation_id: string;
+            };
+            const onHand = data.stockByVariant[variantId] ?? 0;
+            if (onHand < requested) {
+              return { success: true, meta: { changes: 0 } };
+            }
+            data.stockByVariant[variantId] = onHand - requested;
+            data.reservations.push({
+              orderId: metadata.order_id,
+              reservationId: metadata.reservation_id,
+              variantId,
+              quantity: requested,
+              state: 'reservation'
+            });
+            return { success: true, meta: { changes: 1 } };
+          }
+
+          // Release reservation by order_id
+          if (
+            sql.includes("SET delta = 0") &&
+            sql.includes("json_extract(metadata, '$.order_id')")
+          ) {
+            const orderId = Number(boundArgs[0]);
+            let changes = 0;
+            for (const reservation of data.reservations) {
+              if (reservation.orderId === orderId && reservation.state === 'reservation') {
+                data.stockByVariant[reservation.variantId] =
+                  (data.stockByVariant[reservation.variantId] ?? 0) + reservation.quantity;
+                reservation.state = 'released';
+                changes += 1;
+              }
+            }
+            return { success: true, meta: { changes } };
+          }
+
+          // Consume reservation on payment success
+          if (
+            sql.includes("SET reason = 'sale'") &&
+            sql.includes("json_extract(metadata, '$.order_id')")
+          ) {
+            const orderId = Number(boundArgs[0]);
+            let changes = 0;
+            for (const reservation of data.reservations) {
+              if (reservation.orderId === orderId && reservation.state === 'reservation') {
+                reservation.state = 'sale';
+                changes += 1;
+              }
+            }
+            return { success: true, meta: { changes } };
           }
 
           // Order insert
