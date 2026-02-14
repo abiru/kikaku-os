@@ -292,13 +292,23 @@ adminOrders.post(
         stripeRefund.id
       ).run();
 
-      // Update order refund tracking
-      const newRefundedTotal = alreadyRefunded + refundAmount;
-      const newStatus = newRefundedTotal >= payment.amount ? 'refunded' : 'partially_refunded';
+      // Update order refund tracking (atomic to prevent race conditions with webhooks)
+      const updateResult = await c.env.DB.prepare(
+        `UPDATE orders
+         SET refunded_amount = refunded_amount + ?,
+             refund_count = refund_count + 1,
+             status = CASE
+               WHEN (refunded_amount + ?) >= total_net THEN 'refunded'
+               ELSE 'partially_refunded'
+             END,
+             updated_at = datetime('now')
+         WHERE id = ?
+           AND (refunded_amount + ?) <= total_net`
+      ).bind(refundAmount, refundAmount, orderId, refundAmount).run();
 
-      await c.env.DB.prepare(
-        `UPDATE orders SET refunded_amount = ?, refund_count = refund_count + 1, status = ?, updated_at = datetime('now') WHERE id = ?`
-      ).bind(newRefundedTotal, newStatus, orderId).run();
+      if (!updateResult.meta.changes || updateResult.meta.changes === 0) {
+        return jsonError(c, 'Refund rejected: concurrent update detected or amount exceeds order total', 409);
+      }
 
       // Audit log
       await c.env.DB.prepare(
