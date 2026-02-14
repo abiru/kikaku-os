@@ -584,6 +584,96 @@ const handlePaymentIntentFailedOrCanceled = async (
 };
 
 /**
+ * Handles charge.dispute.created and charge.dispute.updated events
+ * Creates critical Inbox item for admin attention and updates order status
+ */
+const handleChargeDispute = async (
+  env: Env['Bindings'],
+  event: StripeEvent,
+  dataObject: Record<string, any>
+): Promise<HandlerResult> => {
+  const disputeId = dataObject.id;
+  const chargeId = dataObject.charge;
+  const amount = dataObject.amount;
+  const currency = dataObject.currency || 'jpy';
+  const reason = dataObject.reason || 'unknown';
+  const status = dataObject.status || 'needs_response';
+  const isCreated = event.type === 'charge.dispute.created';
+
+  // Try to find the order via payment_intent -> orders
+  const paymentIntentId = dataObject.payment_intent;
+  let orderId: number | null = null;
+
+  if (paymentIntentId) {
+    const payment = await env.DB.prepare(
+      `SELECT order_id FROM payments WHERE provider_payment_id = ? LIMIT 1`
+    ).bind(paymentIntentId).first<{ order_id: number }>();
+    orderId = payment?.order_id ?? null;
+  }
+
+  // Record the event
+  await env.DB.prepare(
+    `INSERT INTO events (type, payload, stripe_event_id, created_at)
+     VALUES (?, ?, ?, datetime('now'))`
+  ).bind(
+    event.type,
+    JSON.stringify({
+      dispute_id: disputeId,
+      charge_id: chargeId,
+      order_id: orderId,
+      amount,
+      currency,
+      reason,
+      status
+    }),
+    event.id
+  ).run();
+
+  // Update order status to 'disputed' if we found the order (only on creation)
+  if (orderId && isCreated) {
+    const order = await env.DB.prepare(
+      `SELECT status FROM orders WHERE id = ?`
+    ).bind(orderId).first<{ status: string }>();
+
+    if (order) {
+      await env.DB.prepare(
+        `UPDATE orders SET status = 'disputed', updated_at = datetime('now') WHERE id = ?`
+      ).bind(orderId).run();
+
+      await env.DB.prepare(
+        `INSERT INTO order_status_history (order_id, old_status, new_status, reason, stripe_event_id, created_at)
+         VALUES (?, ?, 'disputed', ?, ?, datetime('now'))`
+      ).bind(orderId, order.status, `Chargeback: ${reason}`, event.id).run();
+    }
+  }
+
+  // Create critical Inbox item
+  const title = isCreated
+    ? `Chargeback Received: ${orderId ? `Order #${orderId}` : `Charge ${chargeId}`}`
+    : `Chargeback Updated: ${orderId ? `Order #${orderId}` : `Charge ${chargeId}`} - ${status}`;
+
+  await env.DB.prepare(
+    `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)
+     VALUES (?, ?, 'critical', 'open', 'chargeback', datetime('now'), datetime('now'))`
+  ).bind(
+    title,
+    JSON.stringify({
+      disputeId,
+      chargeId,
+      orderId,
+      amount,
+      currency,
+      reason,
+      disputeStatus: status,
+      eventType: event.type,
+      stripeEventId: event.id
+    })
+  ).run();
+
+  return { received: true };
+};
+
+/**
  * Event types that trigger refund handling
  */
 const REFUND_EVENT_TYPES = ['charge.refunded', 'refund.updated', 'refund.succeeded'];
@@ -667,6 +757,14 @@ export const handleStripeEvent = async (
 
   if (eventType === 'payment_intent.payment_failed' || eventType === 'payment_intent.canceled') {
     return handlePaymentIntentFailedOrCanceled(env, event, dataObject);
+  }
+
+  // Chargeback / dispute events
+  if (
+    eventType === 'charge.dispute.created' ||
+    eventType === 'charge.dispute.updated'
+  ) {
+    return handleChargeDispute(env, event, dataObject);
   }
 
   if (
