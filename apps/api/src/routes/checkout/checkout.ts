@@ -32,7 +32,7 @@ checkout.post('/checkout/validate-coupon', async (c) => {
     const parsed = validateCouponSchema.safeParse(body);
 
     if (!parsed.success) {
-      return jsonError(c, parsed.error.errors[0]?.message || 'Invalid request', 400);
+      return jsonError(c, parsed.error.issues[0]?.message || 'Invalid request', 400);
     }
 
     const { code, cartTotal } = parsed.data;
