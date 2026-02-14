@@ -282,6 +282,7 @@ const policies = [
 								<button
 									type="button"
 									id="buy-button"
+									data-added-label={t('wishlist.addedToCart')}
 									disabled={!variantId}
 									class="mt-8 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
 								>
@@ -489,10 +490,11 @@ const policies = [
 			};
 
 			const addToCartText = buyLabel?.textContent || 'カートに追加';
+			const addedToCartText = buyButton?.dataset.addedLabel || addToCartText;
 
 			const showSuccess = () => {
 				if (!buyLabel) return;
-				buyLabel.textContent = 'カートに追加しました';
+				buyLabel.textContent = addedToCartText;
 				setTimeout(() => {
 					buyLabel.textContent = addToCartText;
 				}, 2000);
