@@ -9,6 +9,9 @@ import type { HandlerResult } from './shared';
 import { runStatements } from './shared';
 import { type StripeEvent, extractOrderId } from '../../lib/stripeData';
 import { releaseStockReservationForOrder } from '../inventoryCheck';
+import { createLogger } from '../../lib/logger';
+
+const logger = createLogger('stripe-failure-handler');
 
 export const handlePaymentIntentFailedOrCanceled = async (
   env: Env['Bindings'],
@@ -33,7 +36,7 @@ export const handlePaymentIntentFailedOrCanceled = async (
   try {
     await releaseStockReservationForOrder(env.DB, orderId);
   } catch (err) {
-    console.error('Failed to release stock reservation for order:', orderId, err);
+    logger.error('Failed to release stock reservation for order', { orderId, error: String(err) });
     try {
       await env.DB.prepare(
         `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)

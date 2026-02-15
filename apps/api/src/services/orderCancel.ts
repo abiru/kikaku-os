@@ -6,6 +6,9 @@
 
 import { logAuditEvent } from '../lib/audit';
 import { CANCELLABLE_STATUSES } from '../lib/schemas/order';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('order-cancel');
 
 type OrderRow = {
   id: number;
@@ -211,11 +214,11 @@ async function cancelStripePaymentIntent(
     }
 
     const refundError = await refundRes.text();
-    console.error('Stripe refund failed:', refundError);
+    logger.error('Stripe refund failed', { error: String(refundError) });
     return { ok: false, error: 'Failed to refund payment via Stripe' };
   }
 
   const errorText = JSON.stringify(cancelError);
-  console.error('Stripe cancel failed:', errorText);
+  logger.error('Stripe cancel failed', { error: errorText });
   return { ok: false, error: 'Failed to cancel payment via Stripe' };
 }

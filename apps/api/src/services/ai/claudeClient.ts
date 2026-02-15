@@ -1,4 +1,7 @@
 import { extractJSON } from '../../lib/json';
+import { createLogger } from '../../lib/logger';
+
+const logger = createLogger('claude-client');
 
 const CLAUDE_MODEL = 'claude-sonnet-4-5-20250929';
 const MAX_RETRIES = 3;
@@ -94,7 +97,7 @@ export async function callClaudeAPI(
         if (response.status === 429) {
           if (attempt < MAX_RETRIES) {
             const backoffMs = 1000 * Math.pow(2, attempt - 1);
-            console.warn(`Rate limited, retrying in ${backoffMs}ms...`);
+            logger.warn(`Rate limited, retrying in ${backoffMs}ms`);
             await sleep(backoffMs);
             continue;
           }
@@ -124,7 +127,7 @@ export async function callClaudeAPI(
       return data;
 
     } catch (error) {
-      console.error(`Claude API attempt ${attempt}/${MAX_RETRIES} failed:`, error);
+      logger.error(`Claude API attempt ${attempt}/${MAX_RETRIES} failed`, { error: String(error) });
       lastError = error as Error;
 
       if (attempt < MAX_RETRIES) {

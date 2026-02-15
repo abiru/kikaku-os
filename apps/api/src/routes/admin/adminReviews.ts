@@ -6,7 +6,9 @@ import { reviewListQuerySchema, reviewIdParamSchema } from '../../lib/schemas/re
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { PERMISSIONS } from '../../lib/schemas';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-reviews');
 const adminReviews = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -59,7 +61,7 @@ adminReviews.get(
         total: countResult?.total || 0,
       });
     } catch (err) {
-      console.error('Failed to fetch reviews:', err);
+      logger.error('Failed to fetch reviews', { error: String(err) });
       return jsonError(c, 'Failed to fetch reviews', 500);
     }
   }
@@ -91,7 +93,7 @@ adminReviews.post(
 
       return jsonOk(c, { message: 'Review approved' });
     } catch (err) {
-      console.error('Failed to approve review:', err);
+      logger.error('Failed to approve review', { error: String(err) });
       return jsonError(c, 'Failed to approve review', 500);
     }
   }
@@ -123,7 +125,7 @@ adminReviews.post(
 
       return jsonOk(c, { message: 'Review rejected' });
     } catch (err) {
-      console.error('Failed to reject review:', err);
+      logger.error('Failed to reject review', { error: String(err) });
       return jsonError(c, 'Failed to reject review', 500);
     }
   }

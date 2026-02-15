@@ -5,7 +5,9 @@ import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { PERMISSIONS } from '../../lib/schemas';
 import { parseCSV, parseJSON, ImageMapping } from '../../services/bulkImageUpload';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-bulk-image-upload');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -56,7 +58,7 @@ app.post('/parse', requirePermission(PERMISSIONS.PRODUCTS_WRITE), async (c) => {
 
     return jsonOk(c, parseResult);
   } catch (e) {
-    console.error('Parse error:', e);
+    logger.error('Failed to parse bulk image upload file', { error: String(e) });
     return jsonError(c, 'Failed to parse file');
   }
 });
@@ -122,7 +124,7 @@ app.post('/execute', requirePermission(PERMISSIONS.PRODUCTS_WRITE), async (c) =>
       message: `Created inbox item #${inboxId} for ${body.mappings.length} products (${totalImages} images)`
     });
   } catch (e) {
-    console.error('Execute error:', e);
+    logger.error('Failed to create bulk image upload inbox item', { error: String(e) });
     return jsonError(c, 'Failed to create inbox item');
   }
 });

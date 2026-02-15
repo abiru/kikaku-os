@@ -4,6 +4,7 @@ import { validator } from 'hono/validator';
 import { jsonError, jsonOk } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { createLogger } from '../../lib/logger';
 import {
   settingKeyParamSchema,
   updateSettingSchema,
@@ -14,6 +15,7 @@ import {
   type UpdateBulkSettingsInput
 } from '../../lib/schemas';
 
+const logger = createLogger('admin-settings');
 const adminSettings = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -44,7 +46,7 @@ adminSettings.get('/', requirePermission(PERMISSIONS.SETTINGS_READ), async (c) =
 
     return jsonOk(c, { settings, grouped });
   } catch (error) {
-    console.error('Failed to fetch settings:', error);
+    logger.error('Failed to fetch settings', { error: String(error) });
     return jsonError(c, 'Failed to fetch settings', 500);
   }
 });
@@ -77,7 +79,7 @@ adminSettings.get(
 
       return jsonOk(c, result);
     } catch (error) {
-      console.error('Failed to fetch setting:', error);
+      logger.error('Failed to fetch setting', { error: String(error) });
       return jsonError(c, 'Failed to fetch setting', 500);
     }
   }
@@ -153,7 +155,7 @@ adminSettings.put(
 
       return jsonOk(c, result);
     } catch (error) {
-      console.error('Failed to update setting:', error);
+      logger.error('Failed to update setting', { error: String(error) });
       return jsonError(c, 'Failed to update setting', 500);
     }
   }
@@ -223,7 +225,7 @@ adminSettings.post(
 
       return jsonOk(c, { results, errors });
     } catch (error) {
-      console.error('Failed to bulk update settings:', error);
+      logger.error('Failed to bulk update settings', { error: String(error) });
       return jsonError(c, 'Failed to bulk update settings', 500);
     }
   }
@@ -300,7 +302,7 @@ function validateSettingValue(
       if (rules.pattern) {
         // Security: Prevent ReDoS attacks by validating pattern safety
         if (typeof rules.pattern !== 'string' || rules.pattern.length > 100) {
-          console.warn('Skipping validation: Pattern too long or invalid');
+          logger.warn('Skipping validation: Pattern too long or invalid');
         } else if (isSafeRegexPattern(rules.pattern)) {
           try {
             const regex = new RegExp(rules.pattern);
@@ -308,10 +310,10 @@ function validateSettingValue(
               return { valid: false, error: rules.patternMessage || 'Invalid format' };
             }
           } catch (e) {
-            console.error('Invalid regex pattern:', e);
+            logger.error('Invalid regex pattern', { error: String(e) });
           }
         } else {
-          console.warn('Skipping validation: Potentially unsafe regex pattern');
+          logger.warn('Skipping validation: Potentially unsafe regex pattern');
         }
       }
     } catch (e) {

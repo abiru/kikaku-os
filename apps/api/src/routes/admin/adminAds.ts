@@ -4,11 +4,13 @@ import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 import { adGenerateRequestSchema, PERMISSIONS } from '../../lib/schemas';
 import { generateAdCopy } from '../../services/claudeAds';
 import adminAdsDrafts from './adminAdsDrafts';
 import adminAdsHistory from './adminAdsHistory';
 
+const logger = createLogger('admin-ads');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -64,7 +66,7 @@ app.post(
       });
 
     } catch (error) {
-      console.error('Ad generation failed:', error);
+      logger.error('Ad generation failed', { error: String(error) });
       return jsonError(c, `Ad generation failed: ${(error as Error).message}`, 500);
     }
   }

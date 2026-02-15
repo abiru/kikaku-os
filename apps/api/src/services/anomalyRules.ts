@@ -6,6 +6,9 @@
 
 import type { Env } from '../env';
 import { sendSlackNotification } from './notifications';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('anomaly-rules');
 
 type Bindings = {
   DB: D1Database;
@@ -48,7 +51,7 @@ const insertInboxItem = async (
         kind: params.kind,
         date: params.date
       }).catch((err) => {
-        console.error('Failed to send Slack notification:', err);
+        logger.error('Failed to send Slack notification', { error: String(err) });
       });
     }
 

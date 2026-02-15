@@ -1,5 +1,8 @@
 import { putImage, deleteKey } from '../lib/r2';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE, MAX_IMAGES_PER_PRODUCT } from '../lib/schemas/product';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('bulk-image-upload');
 
 export type ImageMapping = {
   product_id: number;
@@ -412,7 +415,7 @@ export const executeBulkImageUpload = async (
             ).bind(key).run();
             imagesAdded--; // Decrement counter for rolled back image
           } catch (rollbackError) {
-            console.error(`Failed to rollback ${key}:`, rollbackError);
+            logger.error(`Failed to rollback ${key}`, { error: String(rollbackError) });
           }
         }
         failedCount++;

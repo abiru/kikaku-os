@@ -1,4 +1,7 @@
 import { estimateCost } from './claudeClient';
+import { createLogger } from '../../lib/logger';
+
+const logger = createLogger('ai-rate-limiter');
 
 type Bindings = {
   DB: D1Database;
@@ -74,7 +77,7 @@ export async function trackAIUsage(
          estimated_cost_cents = estimated_cost_cents + ?`
     ).bind(hour, service, operation, tokens, cost, tokens, cost).run();
   } catch (err) {
-    console.error('Failed to track AI usage:', err);
+    logger.error('Failed to track AI usage', { error: String(err) });
     // Don't throw - tracking failures shouldn't break requests
   }
 }
@@ -167,7 +170,7 @@ export async function createBudgetAlert(
     if (errMsg.includes('UNIQUE constraint failed')) {
       return null;
     }
-    console.error('Failed to create budget alert:', err);
+    logger.error('Failed to create budget alert', { error: String(err) });
     return null;
   }
 }

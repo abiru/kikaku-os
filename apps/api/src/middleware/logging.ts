@@ -1,4 +1,7 @@
 import { Context, Next } from 'hono';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('request-logger');
 
 /**
  * Production logging middleware.
@@ -16,15 +19,13 @@ export const requestLogger = async (c: Context, next: Next) => {
 
   // Only log in production (avoid noise in dev)
   if (c.env.DEV_MODE !== 'true') {
-    // eslint-disable-next-line no-console -- structured request logging
-    console.log(JSON.stringify({
-      timestamp: new Date().toISOString(),
+    logger.info('request', {
       method,
       path,
       status,
       duration,
       userAgent: c.req.header('user-agent'),
       ip: c.req.header('cf-connecting-ip')
-    }));
+    });
   }
 };

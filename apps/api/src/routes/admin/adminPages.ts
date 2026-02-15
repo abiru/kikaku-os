@@ -5,6 +5,7 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 import {
   pageIdParamSchema,
   pageListQuerySchema,
@@ -13,6 +14,7 @@ import {
   PERMISSIONS,
 } from '../../lib/schemas';
 
+const logger = createLogger('admin-pages');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -92,7 +94,7 @@ app.get(
         }
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch pages', { error: String(e) });
       return jsonError(c, 'Failed to fetch pages');
     }
   }
@@ -126,7 +128,7 @@ app.get(
         isCorePage: CORE_PAGE_SLUGS.includes(page.slug)
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch page', { error: String(e) });
       return jsonError(c, 'Failed to fetch page');
     }
   }
@@ -175,7 +177,7 @@ app.post(
 
       return jsonOk(c, { page });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to create page', { error: String(e) });
       return jsonError(c, 'Failed to create page');
     }
   }
@@ -236,7 +238,7 @@ app.put(
 
       return jsonOk(c, { page });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update page', { error: String(e) });
       return jsonError(c, 'Failed to update page');
     }
   }
@@ -274,7 +276,7 @@ app.post(
 
       return jsonOk(c, { page: updatedPage });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to publish page', { error: String(e) });
       return jsonError(c, 'Failed to publish page');
     }
   }
@@ -312,7 +314,7 @@ app.post(
 
       return jsonOk(c, { page: updatedPage });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to unpublish page', { error: String(e) });
       return jsonError(c, 'Failed to unpublish page');
     }
   }
@@ -347,7 +349,7 @@ app.delete(
 
       return jsonOk(c, { deleted: true });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to delete page', { error: String(e) });
       return jsonError(c, 'Failed to delete page');
     }
   }

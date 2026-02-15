@@ -16,7 +16,9 @@ import {
   MAX_IMAGES_PER_PRODUCT,
   PERMISSIONS,
 } from '../../lib/schemas';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-product-images');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -75,7 +77,7 @@ app.get(
 
       return jsonOk(c, { images });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch product images', { error: String(e) });
       return jsonError(c, 'Failed to fetch images');
     }
   }
@@ -201,7 +203,7 @@ app.post(
 
       return jsonOk(c, { images: uploadedImages });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to upload product images', { error: String(e) });
       return jsonError(c, 'Failed to upload images');
     }
   }
@@ -273,7 +275,7 @@ app.put(
 
       return jsonOk(c, { images: imagesResult.results || [] });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update image order', { error: String(e) });
       return jsonError(c, 'Failed to update image order');
     }
   }
@@ -319,7 +321,7 @@ app.delete(
 
       return jsonOk(c, { deleted: true });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to delete product image', { error: String(e) });
       return jsonError(c, 'Failed to delete image');
     }
   }

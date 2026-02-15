@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { createMovementSchema, updateThresholdSchema, thresholdParamSchema, setThresholdSchema } from '../../lib/schemas';
 import type { Env } from '../../env';
 import { getActor } from '../../middleware/clerkAuth';
 import { validationErrorHandler } from '../../lib/validation';
 
+const logger = createLogger('inventory');
 const inventory = new Hono<Env>();
 
 inventory.get('/inventory/low', async (c) => {
@@ -29,7 +31,7 @@ inventory.get('/inventory/low', async (c) => {
     ).bind(limit).all<{ variant_id: number; on_hand: number; threshold: number; variant_title: string | null; product_title: string | null }>();
     return jsonOk(c, { items: res.results || [] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch low inventory', { error: String(err) });
     return jsonError(c, 'Failed to fetch low inventory');
   }
 });
@@ -53,7 +55,7 @@ inventory.post('/inventory/thresholds', async (c) => {
     ).bind(variant_id, threshold).run();
     return jsonOk(c, { variant_id, threshold });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to upsert threshold', { error: String(err) });
     return jsonError(c, 'Failed to upsert threshold');
   }
 });
@@ -111,7 +113,7 @@ inventory.get('/admin/inventory', async (c) => {
 
     return jsonOk(c, { inventory, meta: { totalCount: inventory.length } });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch inventory', { error: String(err) });
     return jsonError(c, 'Failed to fetch inventory');
   }
 });
@@ -168,7 +170,7 @@ inventory.post(
         on_hand: onHandResult?.on_hand || 0,
       });
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to record inventory movement', { error: String(err) });
       return jsonError(c, 'Failed to record inventory movement');
     }
   }
@@ -204,7 +206,7 @@ inventory.put(
 
       return jsonOk(c, { variant_id: variantId, threshold });
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to update threshold', { error: String(err) });
       return jsonError(c, 'Failed to update threshold');
     }
   }

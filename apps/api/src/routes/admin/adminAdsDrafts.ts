@@ -5,6 +5,7 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 import {
   createAdDraftSchema,
   updateAdDraftSchema,
@@ -14,6 +15,7 @@ import {
 } from '../../lib/schemas';
 import { validateAdCopy } from '../../services/adValidation';
 
+const logger = createLogger('admin-ads-drafts');
 const app = new Hono<Env>();
 
 // GET /admin/ads/drafts - List ad drafts
@@ -64,7 +66,7 @@ app.get(
       });
 
     } catch (error) {
-      console.error('Failed to list ad drafts:', error);
+      logger.error('Failed to list ad drafts', { error: String(error) });
       return jsonError(c, 'Failed to list ad drafts', 500);
     }
   }
@@ -169,7 +171,7 @@ app.post(
       return c.json(parsedDraft, 201);
 
     } catch (error) {
-      console.error('Failed to create ad draft:', error);
+      logger.error('Failed to create ad draft', { error: String(error) });
       return jsonError(c, 'Failed to create ad draft', 500);
     }
   }
@@ -230,7 +232,7 @@ app.get(
       return jsonOk(c, { draft: parsedDraft });
 
     } catch (error) {
-      console.error('Failed to fetch ad draft:', error);
+      logger.error('Failed to fetch ad draft', { error: String(error) });
       return jsonError(c, 'Failed to fetch ad draft', 500);
     }
   }
@@ -417,7 +419,7 @@ app.put(
       return jsonOk(c, { draft: parsedDraft });
 
     } catch (error) {
-      console.error('Failed to update ad draft:', error);
+      logger.error('Failed to update ad draft', { error: String(error) });
       return jsonError(c, 'Failed to update ad draft', 500);
     }
   }
@@ -460,7 +462,7 @@ app.delete(
       return jsonOk(c, { deleted: true });
 
     } catch (error) {
-      console.error('Failed to delete ad draft:', error);
+      logger.error('Failed to delete ad draft', { error: String(error) });
       return jsonError(c, 'Failed to delete ad draft', 500);
     }
   }

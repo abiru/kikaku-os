@@ -1,5 +1,8 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { AppError } from '../lib/errors';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('stripe-customer');
 
 export type CustomerInfo = {
   id: number;
@@ -55,9 +58,9 @@ export const ensureStripeCustomer = async (
       }
 
       // Customer doesn't exist (404 or other error), create a new one
-      console.warn(`[StripeCustomer] Customer ${customer.stripe_customer_id} not found in Stripe, creating new one`);
+      logger.warn(`Customer ${customer.stripe_customer_id} not found in Stripe, creating new one`);
     } catch (err) {
-      console.error(`[StripeCustomer] Error verifying customer:`, err);
+      logger.error('Error verifying customer', { error: String(err) });
       // Continue to create new customer
     }
   }

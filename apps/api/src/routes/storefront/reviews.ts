@@ -2,9 +2,11 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import type { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { reviewSubmitSchema, reviewProductIdParamSchema } from '../../lib/schemas/review';
 import { validationErrorHandler } from '../../lib/validation';
 
+const logger = createLogger('reviews');
 const reviews = new Hono<Env>();
 
 // GET /store/products/:id/reviews - Public: get approved reviews for a product
@@ -35,7 +37,7 @@ reviews.get(
         reviewCount: avgResult?.review_count || 0,
       });
     } catch (err) {
-      console.error('Failed to fetch reviews:', err);
+      logger.error('Failed to fetch reviews', { error: String(err) });
       return jsonError(c, 'Failed to fetch reviews', 500);
     }
   }
@@ -80,7 +82,7 @@ reviews.post(
 
       return jsonOk(c, { id: reviewId });
     } catch (err) {
-      console.error('Failed to submit review:', err);
+      logger.error('Failed to submit review', { error: String(err) });
       return jsonError(c, 'Failed to submit review', 500);
     }
   }

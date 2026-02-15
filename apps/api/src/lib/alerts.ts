@@ -1,4 +1,7 @@
 import type { Env } from '../env';
+import { createLogger } from './logger';
+
+const logger = createLogger('alerts');
 
 /**
  * Alert severity levels
@@ -17,7 +20,7 @@ export const sendAlert = async (
 ): Promise<void> => {
   // Don't send alerts in dev mode - just log
   if (env.DEV_MODE === 'true') {
-    console.warn('Alert (dev mode):', level, message, details);
+    logger.warn('Alert (dev mode)', { level, message, details });
     return;
   }
 
@@ -38,7 +41,7 @@ export const sendAlert = async (
         })
       });
     } catch (error) {
-      console.error('Failed to send alert to Slack:', error);
+      logger.error('Failed to send alert to Slack', { error: String(error) });
     }
   }
 

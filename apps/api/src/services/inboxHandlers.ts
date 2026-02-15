@@ -1,4 +1,7 @@
 import { executeBulkImageUpload, type ImageMapping } from './bulkImageUpload';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('inbox-handlers');
 
 type ApproveContext = {
   db: D1Database;
@@ -168,6 +171,6 @@ export const dispatchApproval = async (ctx: ApproveContext, kind: string | null)
   try {
     await handler(ctx);
   } catch (err) {
-    console.error(`Failed to process ${kind} inbox item:`, err);
+    logger.error(`Failed to process ${kind} inbox item`, { error: String(err) });
   }
 };

@@ -145,8 +145,7 @@ describe('Audit Logger', () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to log audit event:',
-        expect.any(Error)
+        expect.stringContaining('Failed to log audit event')
       );
 
       consoleErrorSpy.mockRestore();

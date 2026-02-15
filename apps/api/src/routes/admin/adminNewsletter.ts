@@ -6,7 +6,9 @@ import { newsletterListQuerySchema } from '../../lib/schemas/newsletter';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { PERMISSIONS } from '../../lib/schemas';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-newsletter');
 const adminNewsletter = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -47,7 +49,7 @@ adminNewsletter.get(
         offset,
       });
     } catch (err) {
-      console.error('Failed to list newsletter subscribers:', err);
+      logger.error('Failed to list newsletter subscribers', { error: String(err) });
       return jsonError(c, 'Failed to list subscribers', 500);
     }
   }

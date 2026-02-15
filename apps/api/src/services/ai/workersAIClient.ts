@@ -1,6 +1,9 @@
 import type { Ai, AiTextGenerationInput, AiEmbeddingsInput } from '../../env';
 import { MODELS } from './modelRouter';
 import { extractJSON } from '../../lib/json';
+import { createLogger } from '../../lib/logger';
+
+const logger = createLogger('workers-ai');
 
 /**
  * Workers AI text generation response
@@ -105,10 +108,7 @@ export async function callLlama(
         provider: 'workers_ai',
       };
     } catch (error) {
-      console.error(
-        `Workers AI Llama attempt ${attempt}/${MAX_RETRIES} failed:`,
-        error
-      );
+      logger.error(`Workers AI Llama attempt ${attempt}/${MAX_RETRIES} failed`, { error: String(error) });
       lastError = error as Error;
 
       if (attempt < MAX_RETRIES) {
@@ -157,10 +157,7 @@ export async function callLlamaChat(
         provider: 'workers_ai',
       };
     } catch (error) {
-      console.error(
-        `Workers AI Llama chat attempt ${attempt}/${MAX_RETRIES} failed:`,
-        error
-      );
+      logger.error(`Workers AI Llama chat attempt ${attempt}/${MAX_RETRIES} failed`, { error: String(error) });
       lastError = error as Error;
 
       if (attempt < MAX_RETRIES) {
@@ -230,10 +227,7 @@ export async function generateEmbeddings(
         provider: 'workers_ai',
       };
     } catch (error) {
-      console.error(
-        `Workers AI BGE attempt ${attempt}/${MAX_RETRIES} failed:`,
-        error
-      );
+      logger.error(`Workers AI BGE attempt ${attempt}/${MAX_RETRIES} failed`, { error: String(error) });
       lastError = error as Error;
 
       if (attempt < MAX_RETRIES) {

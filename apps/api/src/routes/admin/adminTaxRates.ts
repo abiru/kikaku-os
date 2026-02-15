@@ -4,6 +4,7 @@ import { validator } from 'hono/validator';
 import { jsonError, jsonOk } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { createLogger } from '../../lib/logger';
 import {
   createTaxRateSchema,
   updateTaxRateSchema,
@@ -14,6 +15,7 @@ import {
   type TaxRateIdParam
 } from '../../lib/schemas';
 
+const logger = createLogger('admin-tax-rates');
 const adminTaxRates = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -33,7 +35,7 @@ adminTaxRates.get('/', requirePermission(PERMISSIONS.TAX_RATES_READ), async (c) 
 
     return c.json(result.results || []);
   } catch (error) {
-    console.error('Failed to fetch tax rates:', error);
+    logger.error('Failed to fetch tax rates', { error: String(error) });
     return jsonError(c, 'Failed to fetch tax rates', 500);
   }
 });
@@ -70,7 +72,7 @@ adminTaxRates.get(
 
       return jsonOk(c, result);
     } catch (error) {
-      console.error('Failed to fetch tax rate:', error);
+      logger.error('Failed to fetch tax rate', { error: String(error) });
       return jsonError(c, 'Failed to fetch tax rate', 500);
     }
   }
@@ -132,7 +134,7 @@ adminTaxRates.post(
 
       return c.json(result, 201);
     } catch (error) {
-      console.error('Failed to create tax rate:', error);
+      logger.error('Failed to create tax rate', { error: String(error) });
       return jsonError(c, 'Failed to create tax rate', 500);
     }
   }
@@ -235,7 +237,7 @@ adminTaxRates.put(
 
       return jsonOk(c, result);
     } catch (error) {
-      console.error('Failed to update tax rate:', error);
+      logger.error('Failed to update tax rate', { error: String(error) });
       return jsonError(c, 'Failed to update tax rate', 500);
     }
   }
@@ -311,7 +313,7 @@ adminTaxRates.delete(
 
       return jsonOk(c, { message: 'Tax rate deactivated successfully', taxRate: result });
     } catch (error) {
-      console.error('Failed to delete tax rate:', error);
+      logger.error('Failed to delete tax rate', { error: String(error) });
       return jsonError(c, 'Failed to delete tax rate', 500);
     }
   }

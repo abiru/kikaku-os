@@ -5,6 +5,7 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 import {
   createProductSchema,
   updateProductSchema,
@@ -18,6 +19,7 @@ import {
   PERMISSIONS,
 } from '../../lib/schemas';
 
+const logger = createLogger('admin-products');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -83,7 +85,7 @@ app.get(
         }
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch products', { error: String(e) });
       return jsonError(c, 'Failed to fetch products');
     }
   }
@@ -115,7 +117,7 @@ app.get(
 
       return jsonOk(c, { product });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch product', { error: String(e) });
       return jsonError(c, 'Failed to fetch product');
     }
   }
@@ -150,7 +152,7 @@ app.post(
 
       return jsonOk(c, { product });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to create product', { error: String(e) });
       return jsonError(c, 'Failed to create product');
     }
   }
@@ -192,7 +194,7 @@ app.put(
 
       return jsonOk(c, { product });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update product', { error: String(e) });
       return jsonError(c, 'Failed to update product');
     }
   }
@@ -250,7 +252,7 @@ app.delete(
 
       return jsonOk(c, { archived: true });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to archive product', { error: String(e) });
       return jsonError(c, 'Failed to archive product');
     }
   }
@@ -296,7 +298,7 @@ app.post(
 
       return jsonOk(c, { restored: true });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to restore product', { error: String(e) });
       return jsonError(c, 'Failed to restore product');
     }
   }
@@ -376,7 +378,7 @@ app.get(
 
       return jsonOk(c, { variants });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch variants', { error: String(e) });
       return jsonError(c, 'Failed to fetch variants');
     }
   }
@@ -424,7 +426,7 @@ app.post(
 
       return jsonOk(c, { variant });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to create variant', { error: String(e) });
       return jsonError(c, 'Failed to create variant');
     }
   }
@@ -478,7 +480,7 @@ app.put(
 
       return jsonOk(c, { variant });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update variant', { error: String(e) });
       return jsonError(c, 'Failed to update variant');
     }
   }
@@ -515,7 +517,7 @@ app.delete(
 
       return jsonOk(c, { deleted: true });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to delete variant', { error: String(e) });
       return jsonError(c, 'Failed to delete variant');
     }
   }
@@ -572,7 +574,7 @@ app.put(
 
       return jsonOk(c, { prices: insertedPrices });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update prices', { error: String(e) });
       return jsonError(c, 'Failed to update prices');
     }
   }

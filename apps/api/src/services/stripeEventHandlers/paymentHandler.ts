@@ -19,6 +19,9 @@ import {
   consumeStockReservationForOrder,
   deductStockForOrder
 } from '../inventoryCheck';
+import { createLogger } from '../../lib/logger';
+
+const logger = createLogger('stripe-payment-handler');
 
 export const handlePaymentIntentSucceeded = async (
   env: Env['Bindings'],
@@ -123,12 +126,12 @@ export const handlePaymentIntentSucceeded = async (
         }
       }
     } catch (err) {
-      console.error('Failed to deduct inventory for order:', orderId, err);
+      logger.error('Failed to deduct inventory for order', { orderId, error: String(err) });
     }
 
     // Send order confirmation email (non-blocking)
     sendOrderConfirmationEmail(env, orderId).catch((err) => {
-      console.error('Failed to send order confirmation email:', err);
+      logger.error('Failed to send order confirmation email', { error: String(err) });
     });
   }
 

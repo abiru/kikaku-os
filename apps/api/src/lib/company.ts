@@ -1,5 +1,8 @@
 import type { Env } from '../env';
 import { getCompanyInfoFromSettings } from '../services/settings';
+import { createLogger } from './logger';
+
+const logger = createLogger('company');
 
 export type CompanyInfo = {
   name: string;
@@ -14,7 +17,7 @@ export const getCompanyInfo = async (env: Env['Bindings']): Promise<CompanyInfo>
   try {
     return await getCompanyInfoFromSettings(env);
   } catch (error) {
-    console.error('Failed to get company info from settings, using env fallback:', error);
+    logger.error('Failed to get company info from settings, using env fallback', { error: String(error) });
     // Fallback to environment variables (legacy support)
     return {
       name: env.COMPANY_NAME || '株式会社LED企画',

@@ -15,6 +15,9 @@ import type { Env } from '../../env';
 import type { StripeDataObject, StripeEvent } from '../../lib/stripeData';
 import { extractOrderId } from '../../lib/stripeData';
 import { sendBankTransferInstructionsEmail } from '../orderEmail';
+import { createLogger } from '../../lib/logger';
+
+const logger = createLogger('stripe-events');
 
 import type { HandlerResult } from './shared';
 import { handleCheckoutSessionCompleted } from './checkoutHandler';
@@ -122,7 +125,7 @@ export const handleStripeEvent = async (
             });
           }
         } catch (emailErr) {
-          console.error('Failed to send bank transfer instructions email:', emailErr);
+          logger.error('Failed to send bank transfer instructions email', { error: String(emailErr) });
           // Non-critical: email failure should not block webhook processing
         }
       }

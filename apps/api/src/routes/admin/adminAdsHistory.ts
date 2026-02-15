@@ -10,7 +10,9 @@ import {
   selectHistorySchema,
   PERMISSIONS,
 } from '../../lib/schemas';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-ads-history');
 const app = new Hono<Env>();
 
 // GET /admin/ads/drafts/:id/history - Get generation history for a draft
@@ -49,7 +51,7 @@ app.get(
       return jsonOk(c, { history: results });
 
     } catch (error) {
-      console.error('Failed to fetch generation history:', error);
+      logger.error('Failed to fetch generation history', { error: String(error) });
       return jsonError(c, 'Failed to fetch generation history', 500);
     }
   }
@@ -183,7 +185,7 @@ app.post(
       return jsonOk(c, { draft: parsedDraft });
 
     } catch (error) {
-      console.error('Failed to select history:', error);
+      logger.error('Failed to select history', { error: String(error) });
       return jsonError(c, 'Failed to select history', 500);
     }
   }

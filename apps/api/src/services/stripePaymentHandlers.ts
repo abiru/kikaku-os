@@ -13,6 +13,9 @@ import {
   deductStockForOrder,
   releaseStockReservationForOrder
 } from './inventoryCheck';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('stripe-payment');
 
 export const runStatements = async (
   db: Env['Bindings']['DB'],
@@ -194,7 +197,7 @@ export const handleCheckoutSessionCompleted = async (
   // Send order confirmation email (non-blocking)
   if (!paymentResult?.duplicate) {
     sendOrderConfirmationEmail(env, orderId).catch((err) => {
-      console.error('Failed to send order confirmation email:', err);
+      logger.error('Failed to send order confirmation email', { error: String(err) });
     });
   }
 
@@ -308,12 +311,12 @@ export const handlePaymentIntentSucceeded = async (
         }
       }
     } catch (err) {
-      console.error('Failed to deduct inventory for order:', orderId, err);
+      logger.error('Failed to deduct inventory for order', { orderId, error: String(err) });
     }
 
     // Send order confirmation email (non-blocking)
     sendOrderConfirmationEmail(env, orderId).catch((err) => {
-      console.error('Failed to send order confirmation email:', err);
+      logger.error('Failed to send order confirmation email', { error: String(err) });
     });
   }
 
@@ -347,7 +350,7 @@ export const handlePaymentIntentFailedOrCanceled = async (
   try {
     await releaseStockReservationForOrder(env.DB, orderId);
   } catch (err) {
-    console.error('Failed to release stock reservation for order:', orderId, err);
+    logger.error('Failed to release stock reservation for order', { orderId, error: String(err) });
     try {
       await env.DB.prepare(
         `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
