@@ -1,0 +1,49 @@
+---
+import Container from '../components/Container.astro';
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="よくある質問 - Led Kikaku">
+	<div class="bg-white min-h-screen">
+		<section class="pt-24 pb-20 md:pt-32 md:pb-28">
+			<Container class="max-w-3xl">
+				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[#1d1d1f] text-center">
+					よくある質問
+				</h1>
+				<p class="mt-6 text-center text-[#6e6e73] text-lg">
+					ご購入前によくいただくご質問をまとめています。
+				</p>
+
+				<div class="mt-10 space-y-4">
+					<details class="rounded-xl border border-gray-200 bg-white p-5">
+						<summary class="cursor-pointer font-semibold text-[#1d1d1f]">配送にはどれくらいかかりますか？</summary>
+						<p class="mt-3 text-[#6e6e73]">
+							通常はご注文確定後、営業日ベースで数日以内に発送します。混雑時や長期休暇中は遅れる場合があります。
+						</p>
+					</details>
+					<details class="rounded-xl border border-gray-200 bg-white p-5">
+						<summary class="cursor-pointer font-semibold text-[#1d1d1f]">返品・返金は可能ですか？</summary>
+						<p class="mt-3 text-[#6e6e73]">
+							返品・返金の条件は「販売と返金」ページをご確認ください。
+							<a href="/refund" class="ml-1 text-[#0071e3] hover:underline">詳細を見る</a>
+						</p>
+					</details>
+					<details class="rounded-xl border border-gray-200 bg-white p-5">
+						<summary class="cursor-pointer font-semibold text-[#1d1d1f]">注文状況はどこで確認できますか？</summary>
+						<p class="mt-3 text-[#6e6e73]">
+							マイアカウントの注文履歴から確認できます。
+							<a href="/order-status" class="ml-1 text-[#0071e3] hover:underline">確認方法を見る</a>
+						</p>
+					</details>
+					<details class="rounded-xl border border-gray-200 bg-white p-5">
+						<summary class="cursor-pointer font-semibold text-[#1d1d1f]">お問い合わせ方法を教えてください。</summary>
+						<p class="mt-3 text-[#6e6e73]">
+							お問い合わせフォームをご利用ください。
+							<a href="/contact" class="ml-1 text-[#0071e3] hover:underline">お問い合わせへ</a>
+						</p>
+					</details>
+				</div>
+			</Container>
+		</section>
+	</div>
+</Layout>
