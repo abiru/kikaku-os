@@ -1,12 +1,13 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { getCookie } from 'hono/cookie';
 import * as Sentry from '@sentry/cloudflare';
 import type { Env } from './env';
 import { jsonError, jsonOk } from './lib/http';
 import { clerkAuth } from './middleware/clerkAuth';
 import { requestLogger } from './middleware/logging';
 import { rateLimit } from './middleware/rateLimit';
-import { csrfProtection, generateCsrfToken } from './middleware/csrf';
+import { csrfProtection } from './middleware/csrf';
 import { sendAlert } from './lib/alerts';
 import { captureException, getSentryConfig } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
@@ -137,14 +138,13 @@ app.use('/quotations/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'quot' 
 app.use('/ai/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'ai' }));
 app.use('*', rateLimit({ max: 120, windowSeconds: 60, prefix: 'global' }));
 
-// CSRF token endpoint - clients call this before state-changing requests
+// CSRF token endpoint - returns the current session's CSRF token
+// The token is automatically set as an HttpOnly cookie by the middleware
 app.get('/csrf-token', (c) => {
-  const ip =
-    c.req.header('cf-connecting-ip') ||
-    c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown';
-  const sessionKey = `csrf:${ip}`;
-  const token = generateCsrfToken(sessionKey);
+  // The csrfProtection middleware has already set the cookie for GET requests
+  // We just need to return the token value from the cookie so clients can
+  // include it in the x-csrf-token header for state-changing requests
+  const token = getCookie(c, '__csrf') || '';
   return jsonOk(c, { token });
 });
 
