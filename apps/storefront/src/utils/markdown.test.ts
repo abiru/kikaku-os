@@ -63,15 +63,14 @@ describe('parseMarkdown', () => {
 
 	it('falls back to escaped content on parse error', async () => {
 		const { marked } = await import('marked');
-		const original = marked.parse;
-		marked.parse = () => { throw new Error('parse error'); };
+		const spy = vi.spyOn(marked, 'parse').mockImplementation(() => { throw new Error('parse error'); });
 		try {
 			const result = parseMarkdown('plain text with & and "quotes"');
 			expect(result).toContain('<p>');
 			expect(result).toContain('&amp;');
 			expect(result).toContain('&quot;quotes&quot;');
 		} finally {
-			marked.parse = original;
+			spy.mockRestore();
 		}
 	});
 });
