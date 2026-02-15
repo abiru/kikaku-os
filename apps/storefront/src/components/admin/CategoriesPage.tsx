@@ -5,6 +5,7 @@ import CategoriesTable from './CategoriesTable'
 import { Button } from '../catalyst/button'
 import { Input } from '../catalyst/input'
 import { Field, Label, Fieldset } from '../catalyst/fieldset'
+import { Dialog, DialogTitle, DialogBody, DialogActions } from '../catalyst/dialog'
 
 type Category = {
   category: string
@@ -33,6 +34,14 @@ export default function CategoriesPage({ categories }: Props) {
     setDeleteModal({ open: true, category, count })
     setMoveTo('')
     setDeleteError(null)
+  }
+
+  const closeRenameModal = () => {
+    setRenameModal({ open: false, category: '' })
+  }
+
+  const closeDeleteModal = () => {
+    setDeleteModal({ open: false, category: '', count: 0 })
   }
 
   const submitRename = async (e: React.FormEvent) => {
@@ -106,101 +115,85 @@ export default function CategoriesPage({ categories }: Props) {
       />
 
       {/* Rename Modal */}
-      {renameModal.open && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={(e) => e.target === e.currentTarget && setRenameModal({ open: false, category: '' })}
-        >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
-            <div className="p-6 border-b border-zinc-200">
-              <h3 className="text-lg font-semibold text-zinc-950">Rename Category</h3>
-            </div>
-            <form onSubmit={submitRename} className="p-6 space-y-4">
-              <Fieldset>
-                <Field>
-                  <Label>Current Name</Label>
-                  <Input type="text" value={renameModal.category} readOnly className="text-zinc-500 bg-zinc-50" />
-                </Field>
-                <Field>
-                  <Label>New Name *</Label>
-                  <Input
-                    type="text"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    required
-                    placeholder="Enter new category name"
-                    autoFocus
-                  />
-                </Field>
-              </Fieldset>
+      <Dialog open={renameModal.open} onClose={closeRenameModal} size="md">
+        <DialogTitle>Rename Category</DialogTitle>
+        <DialogBody>
+          <form id="rename-form" onSubmit={submitRename} className="space-y-4">
+            <Fieldset>
+              <Field>
+                <Label>Current Name</Label>
+                <Input type="text" value={renameModal.category} readOnly className="text-zinc-500 bg-zinc-50" />
+              </Field>
+              <Field>
+                <Label>New Name *</Label>
+                <Input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  required
+                  placeholder="Enter new category name"
+                  autoFocus
+                />
+              </Field>
+            </Fieldset>
 
-              {renameError && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                  {renameError}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
-                <Button type="button" plain onClick={() => setRenameModal({ open: false, category: '' })}>
-                  Cancel
-                </Button>
-                <Button type="submit" color="indigo">
-                  Rename
-                </Button>
+            {renameError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                {renameError}
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            )}
+          </form>
+        </DialogBody>
+        <DialogActions>
+          <Button type="button" plain onClick={closeRenameModal}>
+            Cancel
+          </Button>
+          <Button type="submit" form="rename-form" color="indigo">
+            Rename
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Modal */}
-      {deleteModal.open && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={(e) => e.target === e.currentTarget && setDeleteModal({ open: false, category: '', count: 0 })}
-        >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
-            <div className="p-6 border-b border-zinc-200">
-              <h3 className="text-lg font-semibold text-zinc-950">Delete Category</h3>
-            </div>
-            <form onSubmit={submitDelete} className="p-6 space-y-4">
-              <p className="text-sm text-zinc-950">
-                Are you sure you want to delete the category "<span className="font-medium">{deleteModal.category}</span>"?
-              </p>
-              <p className="text-sm text-zinc-500">
-                {deleteModal.count} product(s) will have their category removed.
-              </p>
+      <Dialog open={deleteModal.open} onClose={closeDeleteModal} size="md">
+        <DialogTitle>Delete Category</DialogTitle>
+        <DialogBody>
+          <form id="delete-form" onSubmit={submitDelete} className="space-y-4">
+            <p className="text-sm text-zinc-950">
+              Are you sure you want to delete the category "<span className="font-medium">{deleteModal.category}</span>"?
+            </p>
+            <p className="text-sm text-zinc-500">
+              {deleteModal.count} product(s) will have their category removed.
+            </p>
 
-              <Fieldset>
-                <Field>
-                  <Label>Move products to (optional)</Label>
-                  <Input
-                    type="text"
-                    value={moveTo}
-                    onChange={(e) => setMoveTo(e.target.value)}
-                    placeholder="Leave empty to remove category from products"
-                  />
-                </Field>
-              </Fieldset>
+            <Fieldset>
+              <Field>
+                <Label>Move products to (optional)</Label>
+                <Input
+                  type="text"
+                  value={moveTo}
+                  onChange={(e) => setMoveTo(e.target.value)}
+                  placeholder="Leave empty to remove category from products"
+                />
+              </Field>
+            </Fieldset>
 
-              {deleteError && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                  {deleteError}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
-                <Button type="button" plain onClick={() => setDeleteModal({ open: false, category: '', count: 0 })}>
-                  Cancel
-                </Button>
-                <Button type="submit" color="red">
-                  Delete
-                </Button>
+            {deleteError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                {deleteError}
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            )}
+          </form>
+        </DialogBody>
+        <DialogActions>
+          <Button type="button" plain onClick={closeDeleteModal}>
+            Cancel
+          </Button>
+          <Button type="submit" form="delete-form" color="red">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }
