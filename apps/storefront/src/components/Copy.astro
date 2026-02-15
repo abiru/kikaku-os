@@ -1,5 +1,7 @@
 
 ---
+import { t } from '../i18n';
+
 const h1 = ["Better Light.","Better Grow."];
 
 ---
@@ -13,12 +15,16 @@ const h1 = ["Better Light.","Better Grow."];
           <span>{h1[1]}</span>
 				</h1>
 				<p class="mx-auto mt-4 max-w-2xl text-base font-medium text-[#1d1d1f] md:text-lg embossed-text">
-        最新テクノロジーで、栽培パフォーマンスを最大化。<br class="hidden md:block" />大学・研究機関が採用する、プロ仕様の植物育成ライト。
+        {t('home.heroTagline')}<br class="hidden md:block" />{t('home.heroSubtagline')}
 				</p>
-				<!-- <div class="mt-10 flex items-center justify-center gap-4"> -->
-				<!-- 	<Button href="/products" size="lg">Buy</Button> -->
-				<!-- 	<Button href="/products" variant="link" size="lg">Learn more ></Button> -->
-				<!-- </div> -->
+				<div class="mt-10 flex items-center justify-center gap-4">
+					<a href="/products" class="rounded-full bg-[#0071e3] px-5 py-2 text-sm font-semibold text-white hover:bg-[#005bb5] transition-colors">
+						{t('home.viewProducts')}
+					</a>
+					<a href="/products" class="text-sm font-semibold text-[#0071e3] hover:underline">
+						{t('home.learnMore')} &gt;
+					</a>
+				</div>
 			</div>
 
 		</section>
