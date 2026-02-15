@@ -2,13 +2,20 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
+import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   adGenerateRequestSchema,
+  createAdDraftSchema,
+  updateAdDraftSchema,
+  adDraftIdParamSchema,
+  adDraftListQuerySchema,
+  selectHistorySchema,
   PERMISSIONS,
 } from '../../lib/schemas';
 import { generateAdCopy } from '../../services/claudeAds';
+import { validateAdCopy } from '../../services/adValidation';
 import adminAdsDrafts from './adminAdsDrafts';
 import adminAdsHistory from './adminAdsHistory';
 
