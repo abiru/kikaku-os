@@ -34,7 +34,7 @@ function EmptyCart() {
 			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('cart.empty')}</h2>
 			<p className="mt-2 text-sm text-gray-500">{t('cart.emptyDescription')}</p>
 			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+				<a href="/products" className="inline-flex items-center rounded-md bg-[#0071e3] px-4 py-2 text-sm font-medium text-white hover:bg-[#005bb5]">
 					{t('cart.browseProducts')}
 				</a>
 			</div>
@@ -83,7 +83,7 @@ function CartItem({ item }: { item: CartItem }) {
 							<select
 								value={item.quantity}
 								onChange={(e) => updateQuantity(item.variantId, Number(e.target.value))}
-								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm"
+								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-[#0071e3] sm:text-sm"
 							>
 								{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
 									<option key={n} value={n}>{n}</option>
@@ -187,7 +187,7 @@ function CouponInput() {
 					value={code}
 					onChange={(e) => setCode(e.target.value.toUpperCase())}
 					placeholder={t('cart.couponPlaceholder')}
-					className="flex-1 rounded-md border-gray-300 px-4 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+					className="flex-1 rounded-md border-gray-300 px-4 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
 					disabled={isApplying}
 				/>
 				<button
@@ -286,13 +286,13 @@ function OrderSummary({
 				<button
 					type="button"
 					onClick={onCheckout}
-					className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors"
+					className="w-full rounded-md border border-transparent bg-[#0071e3] px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-[#005bb5] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors"
 				>
 					{t('cart.checkout')}
 				</button>
 				<a
 					href="/quotations/new"
-					className="w-full block rounded-md border border-gray-300 bg-white px-4 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors text-center"
+					className="w-full block rounded-md border border-gray-300 bg-white px-4 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors text-center"
 				>
 					{t('cart.createQuotation')}
 				</a>
@@ -301,7 +301,7 @@ function OrderSummary({
 			<div className="mt-6 text-center text-sm">
 				<p>
 					{t('common.or')}{' '}
-					<a href="/products" className="font-medium text-indigo-600 hover:text-indigo-500">
+					<a href="/products" className="font-medium text-[#0071e3] hover:text-[#005bb5]">
 						{t('cart.continueShopping')}
 						<span aria-hidden="true"> &rarr;</span>
 					</a>
