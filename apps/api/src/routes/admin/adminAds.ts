@@ -6,9 +6,16 @@ import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   adGenerateRequestSchema,
+  adDraftListQuerySchema,
+  createAdDraftSchema,
+  updateAdDraftSchema,
+  adDraftIdParamSchema,
+  selectHistorySchema,
   PERMISSIONS,
 } from '../../lib/schemas';
 import { generateAdCopy } from '../../services/claudeAds';
+import { validateAdCopy } from '../../services/adValidation';
+import { getActor } from '../../middleware/clerkAuth';
 import adminAdsDrafts from './adminAdsDrafts';
 import adminAdsHistory from './adminAdsHistory';
 
