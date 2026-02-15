@@ -39,8 +39,7 @@ checkout.post('/checkout/validate-coupon', async (c) => {
 
     const { code, cartTotal } = parsed.data;
     const result = await validateCoupon(c.env.DB, code, cartTotal);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return jsonOk(c, result as any);
+    return jsonOk(c, { ...result });
   } catch (err) {
     console.error('Coupon validation error:', err);
     return jsonError(c, 'Failed to validate coupon', 500);
@@ -53,17 +52,19 @@ type CheckoutVariantPriceRow = VariantPriceRow & {
 };
 
 checkout.post('/checkout/quote', async (c) => {
-  let body: any;
+  let body: unknown;
   try {
     body = await c.req.json();
   } catch {
     return jsonError(c, 'Invalid JSON', 400);
   }
 
+  const bodyObj = body as Record<string, unknown> | null;
+
   // Validate items
   let items: CheckoutItem[] = [];
-  if (Array.isArray(body?.items)) {
-    for (const rawItem of body.items) {
+  if (Array.isArray(bodyObj?.items)) {
+    for (const rawItem of bodyObj.items as unknown[]) {
       const item = validateItem(rawItem);
       if (!item) {
         return jsonError(c, 'Invalid item in items array', 400);
@@ -165,7 +166,8 @@ checkout.post('/checkout/quote', async (c) => {
   }
 
   // Coupon validation and discount calculation
-  const couponCode = body?.couponCode?.trim() || '';
+  const rawCouponCode = bodyObj?.couponCode;
+  const couponCode = typeof rawCouponCode === 'string' ? rawCouponCode.trim() : '';
   let discountAmount = 0;
   let couponId: number | null = null;
 

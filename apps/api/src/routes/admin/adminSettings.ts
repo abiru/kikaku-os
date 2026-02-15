@@ -28,10 +28,11 @@ adminSettings.get('/', requirePermission(PERMISSIONS.SETTINGS_READ), async (c) =
        ORDER BY category ASC, display_order ASC, key ASC`
     ).all();
 
+    type AppSettingRow = Record<string, unknown> & { category?: string };
     const settings = result.results || [];
 
     // Group by category
-    const grouped = settings.reduce((acc: Record<string, any[]>, setting: any) => {
+    const grouped = settings.reduce((acc: Record<string, AppSettingRow[]>, setting: AppSettingRow) => {
       const category = setting.category || 'general';
       if (!acc[category]) {
         acc[category] = [];

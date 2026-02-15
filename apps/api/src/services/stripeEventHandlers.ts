@@ -13,6 +13,7 @@ import type { Env } from '../env';
 import type { D1PreparedStatement } from '@cloudflare/workers-types';
 import {
   type StripeEvent,
+  type StripeDataObject,
   type RefundData,
   extractOrderId,
   insertPayment,
@@ -159,7 +160,7 @@ const recordCouponUsage = async (
 const handleCheckoutSessionCompleted = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: any
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
   const orderId = extractOrderId(dataObject.metadata);
   if (!orderId) {
@@ -176,18 +177,20 @@ const handleCheckoutSessionCompleted = async (
     return { received: true, ignored: true };
   }
 
-  const sessionId = dataObject.id;
-  const paymentIntentId = dataObject.payment_intent;
+  const sessionId = dataObject.id as string;
+  const paymentIntentId = dataObject.payment_intent as string | null;
 
   await updateOrderToPaid(env, orderId, sessionId, paymentIntentId);
   await ensureFulfillmentExists(env, orderId, sessionId, paymentIntentId, event.id);
 
   // Save shipping information if provided
-  if (dataObject.shipping_details || dataObject.customer_details?.phone) {
+  const shippingDetails = dataObject.shipping_details as Record<string, unknown> | undefined;
+  const customerDetails = dataObject.customer_details as Record<string, unknown> | undefined;
+  if (shippingDetails || customerDetails?.phone) {
     const shippingInfo = {
-      address: dataObject.shipping_details?.address || null,
-      name: dataObject.shipping_details?.name || null,
-      phone: dataObject.customer_details?.phone || null
+      address: (shippingDetails?.address as Record<string, unknown>) || null,
+      name: (shippingDetails?.name as string) || null,
+      phone: (customerDetails?.phone as string) || null
     };
 
     await env.DB.prepare(
@@ -207,8 +210,8 @@ const handleCheckoutSessionCompleted = async (
   const paymentResult = paymentIntentId
     ? await insertPayment(env, {
         orderId,
-        amount: dataObject.amount_total || dataObject.amount_subtotal || 0,
-        currency: (dataObject.currency || 'jpy').toUpperCase(),
+        amount: (dataObject.amount_total as number) || (dataObject.amount_subtotal as number) || 0,
+        currency: ((dataObject.currency as string) || 'jpy').toUpperCase(),
         method: extractPaymentMethod(dataObject),
         providerPaymentId: paymentIntentId,
         eventId: event.id
@@ -235,7 +238,7 @@ const handleCheckoutSessionCompleted = async (
 const handlePaymentIntentSucceeded = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: any
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
   const orderId = extractOrderId(dataObject.metadata);
   if (!orderId) {
@@ -252,7 +255,7 @@ const handlePaymentIntentSucceeded = async (
     return { received: true, ignored: true };
   }
 
-  const providerPaymentId = dataObject.id;
+  const providerPaymentId = dataObject.id as string;
 
   await env.DB.prepare(
     `UPDATE orders
@@ -269,22 +272,25 @@ const handlePaymentIntentSucceeded = async (
   let addressInfo = null;
 
   // Try to get shipping address first (if provided)
-  if (dataObject.shipping) {
+  const shipping = dataObject.shipping as Record<string, unknown> | undefined;
+  const chargesField = dataObject.charges as { data?: Array<Record<string, unknown>> } | undefined;
+  if (shipping) {
     addressInfo = {
-      name: dataObject.shipping.name,
-      address: dataObject.shipping.address,
-      phone: dataObject.shipping.phone || dataObject.receipt_email
+      name: shipping.name as string,
+      address: shipping.address as Record<string, unknown>,
+      phone: (shipping.phone as string) || (dataObject.receipt_email as string)
     };
   }
   // Otherwise, get billing details from latest charge
-  else if (dataObject.charges?.data && dataObject.charges.data.length > 0) {
-    const charge = dataObject.charges.data[0];
-    if (charge.billing_details) {
+  else if (chargesField?.data && chargesField.data.length > 0) {
+    const charge = chargesField.data[0];
+    const billingDetails = charge.billing_details as Record<string, unknown> | undefined;
+    if (billingDetails) {
       addressInfo = {
-        name: charge.billing_details.name,
-        email: charge.billing_details.email,
-        phone: charge.billing_details.phone,
-        address: charge.billing_details.address
+        name: billingDetails.name as string,
+        email: billingDetails.email as string,
+        phone: billingDetails.phone as string,
+        address: billingDetails.address as Record<string, unknown>
       };
     }
   }
@@ -309,8 +315,8 @@ const handlePaymentIntentSucceeded = async (
 
   const paymentResult = await insertPayment(env, {
     orderId,
-    amount: dataObject.amount_received || dataObject.amount || 0,
-    currency: (dataObject.currency || 'jpy').toUpperCase(),
+    amount: (dataObject.amount_received as number) || (dataObject.amount as number) || 0,
+    currency: ((dataObject.currency as string) || 'jpy').toUpperCase(),
     method: extractPaymentMethod(dataObject),
     providerPaymentId,
     eventId: event.id
@@ -473,7 +479,7 @@ const updateOrderAfterRefund = async (
 const handleRefundEvents = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: any
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
   const refunds = extractRefundsFromEvent(event.type, dataObject);
   let sawDuplicate = false;
@@ -529,7 +535,7 @@ const handleRefundEvents = async (
 const handlePaymentIntentFailedOrCanceled = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: any
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
   const orderId = extractOrderId(dataObject.metadata);
   if (!orderId) {
@@ -580,15 +586,16 @@ const handlePaymentIntentFailedOrCanceled = async (
     ]);
   }
 
+  const lastPaymentError = dataObject.last_payment_error as Record<string, unknown> | undefined;
   const failurePayload = {
     orderId,
-    paymentIntentId: dataObject.id ?? null,
+    paymentIntentId: (dataObject.id as string) ?? null,
     eventType: event.type,
-    declineCode: dataObject.last_payment_error?.decline_code ?? null,
-    code: dataObject.last_payment_error?.code ?? null,
+    declineCode: (lastPaymentError?.decline_code as string) ?? null,
+    code: (lastPaymentError?.code as string) ?? null,
     message:
-      dataObject.last_payment_error?.message ??
-      dataObject.cancellation_reason ??
+      (lastPaymentError?.message as string) ??
+      (dataObject.cancellation_reason as string) ??
       'Payment intent failed',
     stripeEventId: event.id
   };
@@ -614,18 +621,18 @@ const handlePaymentIntentFailedOrCanceled = async (
 const handleChargeDispute = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: Record<string, any>
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
-  const disputeId = dataObject.id;
-  const chargeId = dataObject.charge;
-  const amount = dataObject.amount;
-  const currency = dataObject.currency || 'jpy';
-  const reason = dataObject.reason || 'unknown';
-  const status = dataObject.status || 'needs_response';
+  const disputeId = dataObject.id as string;
+  const chargeId = dataObject.charge as string;
+  const amount = dataObject.amount as number;
+  const currency = (dataObject.currency as string) || 'jpy';
+  const reason = (dataObject.reason as string) || 'unknown';
+  const status = (dataObject.status as string) || 'needs_response';
   const isCreated = event.type === 'charge.dispute.created';
 
   // Try to find the order via payment_intent -> orders
-  const paymentIntentId = dataObject.payment_intent;
+  const paymentIntentId = dataObject.payment_intent as string | undefined;
   let orderId: number | null = null;
 
   if (paymentIntentId) {
@@ -705,7 +712,7 @@ export const handleStripeEvent = async (
   event: StripeEvent
 ): Promise<HandlerResult> => {
   const eventType = event.type;
-  const dataObject = event.data?.object || {};
+  const dataObject: StripeDataObject = event.data?.object || {};
 
   if (eventType === 'checkout.session.completed') {
     return handleCheckoutSessionCompleted(env, event, dataObject);
@@ -760,7 +767,8 @@ export const handleStripeEvent = async (
         .run();
 
       // Send bank transfer instructions email to customer
-      if (dataObject.next_action?.display_bank_transfer_instructions) {
+      const nextAction = dataObject.next_action as Record<string, unknown> | undefined;
+      if (nextAction?.display_bank_transfer_instructions) {
         try {
           // Get customer email from order
           const order = await env.DB.prepare(
@@ -773,9 +781,9 @@ export const handleStripeEvent = async (
             await sendBankTransferInstructionsEmail(env, {
               customerEmail: order.email,
               orderId,
-              amount: dataObject.amount || 0,
-              currency: (dataObject.currency || 'JPY').toUpperCase(),
-              bankTransferInstructions: dataObject.next_action.display_bank_transfer_instructions,
+              amount: (dataObject.amount as number) || 0,
+              currency: ((dataObject.currency as string) || 'JPY').toUpperCase(),
+              bankTransferInstructions: nextAction.display_bank_transfer_instructions,
             });
           }
         } catch (emailErr) {
