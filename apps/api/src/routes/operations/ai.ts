@@ -4,21 +4,140 @@ import type { Env } from '../../env';
 
 const ai = new Hono<Env>();
 
-const normalizeSql = (input: string) => {
-  const sql = input.trim().replace(/\s+/g, ' ');
-  if (!/^select\s/i.test(sql)) return { ok: false, message: 'Only SELECT is allowed' } as const;
-  if (sql.includes(';')) return { ok: false, message: 'Semicolons are not allowed' } as const;
-  const hasLimit = /\blimit\b/i.test(sql);
-  const finalSql = hasLimit ? sql : `${sql} LIMIT 200`;
-  return { ok: true, sql: finalSql } as const;
+// Whitelist of tables allowed in AI-generated queries
+const ALLOWED_TABLES = new Set([
+  'products', 'variants', 'prices', 'orders', 'order_items',
+  'customers', 'payments', 'refunds', 'inventory_movements',
+  'events', 'coupons', 'coupon_usages', 'categories',
+  'product_categories', 'product_images', 'product_reviews',
+  'ledger_entries', 'ledger_accounts', 'fulfillments',
+  'tax_rates', 'documents'
+]);
+
+// Dangerous SQL keywords that should never appear in AI queries
+const DANGEROUS_PATTERNS = [
+  /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|REPLACE)\b/i,
+  /\b(ATTACH|DETACH|PRAGMA|VACUUM|REINDEX)\b/i,
+  /\b(INTO)\s/i,
+  /\b(GRANT|REVOKE)\b/i,
+  /--/,             // SQL comments
+  /\/\*/,           // Block comments
+];
+
+const MAX_LIMIT = 200;
+
+/**
+ * Extract table names from a SQL query (simplified parser)
+ * Looks for identifiers after FROM, JOIN keywords
+ */
+export const extractTableNames = (sql: string): string[] => {
+  const tables: string[] = [];
+  // Match table names after FROM and JOIN variants
+  const tablePattern = /\b(?:FROM|JOIN|INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|CROSS\s+JOIN|LEFT\s+OUTER\s+JOIN)\s+(\w+)/gi;
+  let match;
+  while ((match = tablePattern.exec(sql)) !== null) {
+    tables.push(match[1].toLowerCase());
+  }
+  return tables;
 };
 
-const extractLimit = (sql: string) => {
-  const matches = [...sql.matchAll(/\blimit\s+(\d+)/gi)];
-  if (matches.length === 0) return 200;
+/**
+ * Check if SQL contains subqueries
+ */
+export const hasSubquery = (sql: string): boolean => {
+  // Remove the outermost SELECT and check for nested SELECT
+  const withoutStrings = sql.replace(/'[^']*'/g, '');
+  const selectCount = (withoutStrings.match(/\bSELECT\b/gi) || []).length;
+  return selectCount > 1;
+};
+
+/**
+ * Validate and normalize AI-generated SQL
+ */
+export const validateSql = (input: string): { ok: true; sql: string } | { ok: false; message: string } => {
+  const sql = input.trim().replace(/\s+/g, ' ');
+
+  // Must be a SELECT statement
+  if (!/^SELECT\s/i.test(sql)) {
+    return { ok: false, message: 'Only SELECT statements are allowed' };
+  }
+
+  // No semicolons
+  if (sql.includes(';')) {
+    return { ok: false, message: 'Semicolons are not allowed' };
+  }
+
+  // Check for dangerous patterns
+  for (const pattern of DANGEROUS_PATTERNS) {
+    if (pattern.test(sql)) {
+      return { ok: false, message: 'Query contains prohibited SQL keywords' };
+    }
+  }
+
+  // Check for UNION (data exfiltration risk)
+  if (/\bUNION\b/i.test(sql)) {
+    return { ok: false, message: 'UNION queries are not allowed' };
+  }
+
+  // Check for subqueries
+  if (hasSubquery(sql)) {
+    return { ok: false, message: 'Subqueries are not allowed' };
+  }
+
+  // Validate table names against whitelist
+  const tables = extractTableNames(sql);
+  if (tables.length === 0) {
+    return { ok: false, message: 'No valid table reference found' };
+  }
+
+  for (const table of tables) {
+    if (!ALLOWED_TABLES.has(table)) {
+      return { ok: false, message: `Access to table '${table}' is not allowed` };
+    }
+  }
+
+  // Enforce LIMIT
+  const hasLimit = /\bLIMIT\b/i.test(sql);
+  let finalSql = sql;
+  if (hasLimit) {
+    // Validate existing LIMIT isn't too high
+    const limitMatch = sql.match(/\bLIMIT\s+(\d+)/i);
+    if (limitMatch) {
+      const limitVal = parseInt(limitMatch[1], 10);
+      if (limitVal > MAX_LIMIT) {
+        finalSql = sql.replace(/\bLIMIT\s+\d+/i, `LIMIT ${MAX_LIMIT}`);
+      }
+    }
+  } else {
+    finalSql = `${sql} LIMIT ${MAX_LIMIT}`;
+  }
+
+  return { ok: true, sql: finalSql };
+};
+
+const extractLimit = (sql: string): number => {
+  const matches = [...sql.matchAll(/\bLIMIT\s+(\d+)/gi)];
+  if (matches.length === 0) return MAX_LIMIT;
   const last = matches[matches.length - 1];
   const value = Number(last[1]);
-  return Number.isFinite(value) ? value : 200;
+  return Number.isFinite(value) ? Math.min(value, MAX_LIMIT) : MAX_LIMIT;
+};
+
+/**
+ * Log AI query execution to audit_logs
+ */
+const logAiQuery = async (
+  db: D1Database,
+  params: { prompt?: string; sql: string; rowCount: number; blocked?: boolean; reason?: string }
+) => {
+  try {
+    await db.prepare(
+      `INSERT INTO audit_logs (actor, action, target, metadata, created_at)
+       VALUES ('ai', 'ai_query', 'database', ?, datetime('now'))`
+    ).bind(JSON.stringify(params)).run();
+  } catch {
+    // Non-critical: silently fail audit logging
+  }
 };
 
 ai.post('/sql', async (c) => {
@@ -28,9 +147,9 @@ ai.post('/sql', async (c) => {
     const draft = prompt
       ? `SELECT * FROM orders WHERE status='paid'`
       : 'SELECT * FROM orders';
-    const normalized = normalizeSql(draft);
-    if (!normalized.ok) return jsonError(c, normalized.message, 400);
-    return jsonOk(c, { sql: normalized.sql, notes: 'Dummy SQL generated. Please review before executing.' });
+    const validated = validateSql(draft);
+    if (!validated.ok) return jsonError(c, validated.message, 400);
+    return jsonOk(c, { sql: validated.sql, notes: 'Dummy SQL generated. Please review before executing.' });
   } catch (err) {
     console.error(err);
     return jsonError(c, 'Failed to generate SQL');
@@ -41,16 +160,39 @@ ai.post('/query', async (c) => {
   try {
     const body = await c.req.json<{ sql?: string; prompt?: string }>();
     const rawSql = (body.sql || '').trim();
-    const normalized = normalizeSql(rawSql);
-    if (!normalized.ok) return jsonError(c, normalized.message, 400);
 
+    if (!rawSql) {
+      return jsonError(c, 'SQL query is required', 400);
+    }
+
+    const validated = validateSql(rawSql);
+    if (!validated.ok) {
+      await logAiQuery(c.env.DB, {
+        prompt: body.prompt || undefined,
+        sql: rawSql,
+        rowCount: 0,
+        blocked: true,
+        reason: validated.message
+      });
+      return jsonError(c, validated.message, 400);
+    }
+
+    // Log to events table (existing behavior)
     await c.env.DB.prepare(
       `INSERT INTO events (type, payload, created_at) VALUES ('ai_query', ?, datetime('now'))`
-    ).bind(JSON.stringify({ prompt: body.prompt || null, sql: normalized.sql })).run();
+    ).bind(JSON.stringify({ prompt: body.prompt || null, sql: validated.sql })).run();
 
-    const limit = extractLimit(normalized.sql);
-    const res = await c.env.DB.prepare(normalized.sql).all<Record<string, unknown>>();
+    const limit = extractLimit(validated.sql);
+    const res = await c.env.DB.prepare(validated.sql).all<Record<string, unknown>>();
     const rows = res.results || [];
+
+    // Audit log
+    await logAiQuery(c.env.DB, {
+      prompt: body.prompt || undefined,
+      sql: validated.sql,
+      rowCount: rows.length
+    });
+
     return jsonOk(c, { rows, truncated: rows.length >= limit });
   } catch (err) {
     console.error(err);
