@@ -4,6 +4,7 @@ import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 import {
   emailTemplateSlugParamSchema,
   updateEmailTemplateSchema,
@@ -19,6 +20,7 @@ import {
   EmailTemplate,
 } from '../../services/email';
 
+const logger = createLogger('admin-email-templates');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -35,7 +37,7 @@ app.get('/email-templates', requirePermission(PERMISSIONS.SETTINGS_READ), async 
 
     return jsonOk(c, { templates });
   } catch (e) {
-    console.error(e);
+    logger.error('Failed to fetch email templates', { error: String(e) });
     return jsonError(c, 'Failed to fetch email templates');
   }
 });
@@ -73,7 +75,7 @@ app.get(
         },
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch email template', { error: String(e) });
       return jsonError(c, 'Failed to fetch email template');
     }
   }
@@ -117,7 +119,7 @@ app.put(
         template: updated ? { ...updated, variables } : null,
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update email template', { error: String(e) });
       return jsonError(c, 'Failed to update email template');
     }
   }
@@ -183,7 +185,7 @@ app.post(
         messageId: result.messageId,
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to send preview email', { error: String(e) });
       return jsonError(c, 'Failed to send preview email');
     }
   }
@@ -226,7 +228,7 @@ app.post(
         text: rendered.text,
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to render email template', { error: String(e) });
       return jsonError(c, 'Failed to render email template');
     }
   }

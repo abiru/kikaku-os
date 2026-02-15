@@ -7,9 +7,11 @@ import {
   newsletterUnsubscribeQuerySchema,
   newsletterUnsubscribeBodySchema,
 } from '../../lib/schemas/newsletter';
+import { createLogger } from '../../lib/logger';
 import { validationErrorHandler } from '../../lib/validation';
 import { verifyEmailToken } from '../../lib/token';
 
+const logger = createLogger('newsletter');
 const newsletter = new Hono<Env>();
 
 /**
@@ -74,6 +76,7 @@ newsletter.post(
 
       return jsonOk(c, { message: 'Subscribed successfully' });
     } catch (err) {
+      logger.error('Failed to subscribe to newsletter', { error: String(err) });
       return jsonError(c, 'Failed to subscribe', 500);
     }
   }

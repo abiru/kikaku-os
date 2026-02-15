@@ -2,11 +2,14 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { calculateOrderTax, type TaxCalculationInput } from '../../services/tax';
 import { getShippingSettings } from '../../services/settings';
 import { checkStockAvailability } from '../../services/inventoryCheck';
 import { validateItem, type CheckoutItem, type VariantPriceRow } from '../../lib/schemas/checkout';
 import { validateCoupon } from '../../services/coupon';
+
+const logger = createLogger('checkout');
 
 const validateCouponSchema = z.object({
   code: z.string().min(1, 'Coupon code is required').max(50),
@@ -41,7 +44,7 @@ checkout.post('/checkout/validate-coupon', async (c) => {
     const result = await validateCoupon(c.env.DB, code, cartTotal);
     return jsonOk(c, { ...result });
   } catch (err) {
-    console.error('Coupon validation error:', err);
+    logger.error('Coupon validation error', { error: String(err) });
     return jsonError(c, 'Failed to validate coupon', 500);
   }
 });

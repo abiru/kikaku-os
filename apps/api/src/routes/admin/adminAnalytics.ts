@@ -4,7 +4,9 @@ import { jsonError, jsonOk } from '../../lib/http';
 import { ensureDate } from '../../lib/date';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { PERMISSIONS } from '../../lib/schemas';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-analytics');
 const adminAnalytics = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -124,7 +126,7 @@ adminAnalytics.get('/analytics', requirePermission(PERMISSIONS.REPORTS_READ), as
 
     return jsonOk(c, response);
   } catch (err) {
-    console.error('Analytics query error:', err);
+    logger.error('Analytics query error', { error: String(err) });
     return jsonError(c, 'Failed to fetch analytics data');
   }
 });

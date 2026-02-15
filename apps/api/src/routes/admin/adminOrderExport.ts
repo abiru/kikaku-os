@@ -6,7 +6,9 @@ import { jsonError } from '../../lib/http';
 import { validationErrorHandler } from '../../lib/validation';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { PERMISSIONS } from '../../lib/schemas';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-order-export');
 const adminOrderExport = new Hono<Env>();
 
 adminOrderExport.use('*', loadRbac);
@@ -97,7 +99,7 @@ adminOrderExport.get(
         },
       });
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to export orders', { error: String(err) });
       return jsonError(c, 'Failed to export orders');
     }
   }

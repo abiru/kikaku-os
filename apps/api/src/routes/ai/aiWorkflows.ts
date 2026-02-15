@@ -2,10 +2,12 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import type { Env } from '../../env';
 import { triageInboxItem, draftCustomerResponse } from '../../services/ai/workflowAutomation';
 import { validationErrorHandler } from '../../lib/validation';
 
+const logger = createLogger('ai-workflows');
 const aiWorkflows = new Hono<Env>();
 
 /**
@@ -30,7 +32,7 @@ aiWorkflows.post(
         message: 'Inbox item triaged successfully',
       });
     } catch (err) {
-      console.error('Inbox triage failed:', err);
+      logger.error('Inbox triage failed', { error: String(err) });
       return jsonError(c, (err as Error).message, 500);
     }
   }
@@ -58,7 +60,7 @@ aiWorkflows.post(
         message: 'Email draft created. Check Inbox for approval.',
       });
     } catch (err) {
-      console.error('Draft response failed:', err);
+      logger.error('Draft response failed', { error: String(err) });
       return jsonError(c, (err as Error).message, 500);
     }
   }
@@ -103,7 +105,7 @@ aiWorkflows.get('/workflows/logs', async (c) => {
       },
     });
   } catch (err) {
-    console.error('Failed to fetch workflow logs:', err);
+    logger.error('Failed to fetch workflow logs', { error: String(err) });
     return jsonError(c, 'Failed to fetch workflow logs');
   }
 });
@@ -144,7 +146,7 @@ aiWorkflows.get('/workflows/usage', async (c) => {
       breakdown: stats,
     });
   } catch (err) {
-    console.error('Failed to fetch usage stats:', err);
+    logger.error('Failed to fetch usage stats', { error: String(err) });
     return jsonError(c, 'Failed to fetch usage stats');
   }
 });

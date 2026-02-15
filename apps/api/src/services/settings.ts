@@ -1,4 +1,7 @@
 import type { Env } from '../env';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('settings');
 
 type SettingValue = {
   value: string;
@@ -30,7 +33,7 @@ export async function getSetting(
 
     return fallback || null;
   } catch (error) {
-    console.error(`Failed to get setting ${key}:`, error);
+    logger.error(`Failed to get setting ${key}`, { error: String(error) });
     return fallback || null;
   }
 }
@@ -86,7 +89,7 @@ export async function getAllSettings(env: Env['Bindings']): Promise<Record<strin
       return acc;
     }, {});
   } catch (error) {
-    console.error('Failed to get all settings:', error);
+    logger.error('Failed to get all settings', { error: String(error) });
     return {};
   }
 }

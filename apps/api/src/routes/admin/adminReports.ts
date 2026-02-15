@@ -4,7 +4,9 @@ import { jsonError, jsonOk } from '../../lib/http';
 import { buildJstToday, buildJstWeekStart } from '../../lib/date';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { PERMISSIONS } from '../../lib/schemas';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-reports');
 const adminReports = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -118,7 +120,7 @@ adminReports.get('/dashboard', requirePermission(PERMISSIONS.DASHBOARD_READ), as
       recentInbox: recentInbox.results || []
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch dashboard data', { error: String(err) });
     return jsonError(c, 'Failed to fetch dashboard data');
   }
 });
@@ -152,7 +154,7 @@ adminReports.get('/documents/:id/download', requirePermission(PERMISSIONS.REPORT
       }
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to download document', { error: String(err) });
     return jsonError(c, 'Failed to download document');
   }
 });
@@ -188,7 +190,7 @@ adminReports.get('/reports', requirePermission(PERMISSIONS.REPORTS_READ), async 
       }
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch reports', { error: String(err) });
     return jsonError(c, 'Failed to fetch reports');
   }
 });
@@ -225,7 +227,7 @@ adminReports.get('/ledger', requirePermission(PERMISSIONS.LEDGER_READ), async (c
       }
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch ledger entries', { error: String(err) });
     return jsonError(c, 'Failed to fetch ledger entries');
   }
 });

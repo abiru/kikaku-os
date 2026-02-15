@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { D1Database, D1PreparedStatement } from '@cloudflare/workers-types';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
 import { generatePublicToken } from '../../lib/token';
 import {
@@ -10,6 +11,8 @@ import {
   releaseStockReservationForOrder,
   reserveStockForOrder
 } from '../../services/inventoryCheck';
+
+const logger = createLogger('payments');
 
 const paymentIntentSchema = z.object({
   quoteId: z.string().min(1, 'quoteId is required'),
@@ -41,7 +44,7 @@ const cleanupFailedOrder = async (
   try {
     await releaseStockReservationForOrder(db, orderId);
   } catch (releaseErr) {
-    console.error('Failed to release stock reservation during cleanup:', releaseErr);
+    logger.error('Failed to release stock reservation during cleanup', { orderId, error: String(releaseErr) });
     try {
       await db.prepare(
         `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
@@ -61,7 +64,7 @@ const cleanupFailedOrder = async (
       db.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId),
     ]);
   } catch (deleteErr) {
-    console.error('Failed to delete order during cleanup:', deleteErr);
+    logger.error('Failed to delete order during cleanup', { orderId, error: String(deleteErr) });
     try {
       await db.prepare(
         `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
@@ -311,7 +314,7 @@ payments.post('/payments/intent', async (c) => {
 
   if (!stripeRes.ok) {
     const text = await stripeRes.text();
-    console.error('Stripe PaymentIntent creation failed:', text);
+    logger.error('Stripe PaymentIntent creation failed', { error: text });
     await cleanupFailedOrder(c.env.DB, orderId);
     return jsonError(c, 'Failed to create payment intent', 500);
   }

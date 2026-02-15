@@ -5,6 +5,7 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 import {
   customerListQuerySchema,
   customerIdParamSchema,
@@ -13,6 +14,7 @@ import {
   PERMISSIONS,
 } from '../../lib/schemas';
 
+const logger = createLogger('admin-customers');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -111,7 +113,7 @@ app.get(
         }
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch customers', { error: String(e) });
       return jsonError(c, 'Failed to fetch customers');
     }
   }
@@ -166,7 +168,7 @@ app.get(
 
       return jsonOk(c, { customer, orders, stats });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch customer', { error: String(e) });
       return jsonError(c, 'Failed to fetch customer');
     }
   }
@@ -201,7 +203,7 @@ app.post(
 
       return jsonOk(c, { customer });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to create customer', { error: String(e) });
       return jsonError(c, 'Failed to create customer');
     }
   }
@@ -244,7 +246,7 @@ app.put(
 
       return jsonOk(c, { customer });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update customer', { error: String(e) });
       return jsonError(c, 'Failed to update customer');
     }
   }
@@ -287,7 +289,7 @@ app.delete(
 
       return jsonOk(c, { deleted: true });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to delete customer', { error: String(e) });
       return jsonError(c, 'Failed to delete customer');
     }
   }

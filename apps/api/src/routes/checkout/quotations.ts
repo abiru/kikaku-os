@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { getCompanyInfo } from '../../lib/company';
 import { renderQuotationHtml, QuotationData } from '../../services/renderQuotationHtml';
 import { putText } from '../../lib/r2';
@@ -14,6 +15,7 @@ import {
   type CreateQuotationInput,
 } from '../../services/quotation';
 
+const logger = createLogger('quotations');
 const quotations = new Hono<Env>();
 
 const normalizeString = (value: unknown) => {
@@ -140,7 +142,7 @@ quotations.get('/quotations/:token/html', async (c) => {
     await putText(c.env.R2, path, html, 'text/html');
     await upsertDocument(c.env, 'quotation', quotation.quotation_number as string, path, 'text/html');
   } catch (error) {
-    console.error('Failed to save HTML to R2:', error);
+    logger.error('Failed to save HTML to R2', { error: String(error) });
   }
 
   return c.html(html);
@@ -171,6 +173,7 @@ quotations.post('/quotations/:token/accept', async (c) => {
     if (err instanceof QuotationError) {
       return jsonError(c, err.message, err.status);
     }
+    logger.error('Failed to accept quotation', { error: String(err) });
     throw err;
   }
 });

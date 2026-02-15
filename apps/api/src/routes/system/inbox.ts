@@ -1,10 +1,12 @@
 import { Hono } from 'hono';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { createInboxSchema } from '../../lib/schemas';
 import type { Env } from '../../env';
 import { getActor } from '../../middleware/clerkAuth';
 import { dispatchApproval } from '../../services/inboxHandlers';
 
+const logger = createLogger('inbox');
 const inbox = new Hono<Env>();
 
 inbox.get('/inbox', async (c) => {
@@ -38,7 +40,7 @@ inbox.get('/inbox', async (c) => {
     const res = await stmt.bind(...params, limit).all();
     return jsonOk(c, { items: res.results || [] });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch inbox', { error: String(err) });
     return jsonError(c, 'Failed to fetch inbox');
   }
 });
@@ -70,7 +72,7 @@ inbox.post('/inbox', async (c) => {
 
     return jsonOk(c, { id: result.meta.last_row_id });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to create inbox item', { error: String(err) });
     return jsonError(c, 'Failed to create inbox item');
   }
 });
@@ -107,7 +109,7 @@ inbox.post('/inbox/:id/approve', async (c) => {
 
     return jsonOk(c, { applied: item.kind === 'product_update' });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to approve inbox item', { itemId: id, error: String(err) });
     return jsonError(c, 'Failed to approve');
   }
 });
@@ -120,7 +122,7 @@ inbox.post('/inbox/:id/reject', async (c) => {
     ).bind(getActor(c), id).run();
     return jsonOk(c, {});
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to reject inbox item', { itemId: id, error: String(err) });
     return jsonError(c, 'Failed to reject');
   }
 });

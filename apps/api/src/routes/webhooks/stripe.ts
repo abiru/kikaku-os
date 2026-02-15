@@ -1,6 +1,7 @@
 import { Hono, type Context } from 'hono';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { verifyStripeSignature } from '../../lib/stripe';
 import { handleStripeEvent } from '../../services/stripeEventHandlers';
 import {
@@ -9,6 +10,7 @@ import {
   updateStripeEventStatus
 } from '../../lib/stripeData';
 
+const logger = createLogger('stripe-webhook');
 const stripe = new Hono<Env>();
 
 const handleWebhook = async (c: Context<Env>) => {
@@ -56,7 +58,7 @@ const handleWebhook = async (c: Context<Env>) => {
       throw processingError;
     }
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to process webhook', { error: String(err) });
     return jsonError(c, 'Failed to process webhook');
   }
 };

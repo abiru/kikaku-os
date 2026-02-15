@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { ensureDate } from '../../lib/date';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { backfillSchema } from '../../lib/schemas';
 import { generateDailyReport } from '../../services/dailyReport';
 import { generateStripeEvidence } from '../../services/stripeEvidence';
@@ -18,6 +19,7 @@ import {
 } from '../../services/dailyCloseRuns';
 import type { Env } from '../../env';
 
+const logger = createLogger('daily-close-artifacts');
 const dailyCloseArtifacts = new Hono<Env>();
 
 const baseKey = (date: string) => `daily-close/${date}`;
@@ -112,7 +114,7 @@ dailyCloseArtifacts.post('/daily-close/:date/artifacts', async (c) => {
       forced: result.forced
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to create artifacts', { error: String(err) });
     return jsonError(c, 'Failed to create artifacts');
   }
 });
@@ -124,7 +126,7 @@ dailyCloseArtifacts.get('/daily-close/:date/documents', async (c) => {
     const documents = await listDocuments(c.env, 'daily_close', date);
     return jsonOk(c, { documents });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch documents', { error: String(err) });
     return jsonError(c, 'Failed to fetch documents');
   }
 });
@@ -138,7 +140,7 @@ dailyCloseArtifacts.get('/daily-close/:date/status', async (c) => {
     const run = await getLatestRunForDate(c.env, date);
     return jsonOk(c, { date, run });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch run status', { error: String(err) });
     return jsonError(c, 'Failed to fetch run status');
   }
 });
@@ -152,7 +154,7 @@ dailyCloseArtifacts.get('/daily-close/runs', async (c) => {
     const runs = await listDailyCloseRuns(c.env, { limit, offset });
     return jsonOk(c, { runs });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch runs', { error: String(err) });
     return jsonError(c, 'Failed to fetch runs');
   }
 });

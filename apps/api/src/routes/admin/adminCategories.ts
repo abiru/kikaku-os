@@ -13,7 +13,9 @@ import {
   productListQuerySchema,
   PERMISSIONS,
 } from '../../lib/schemas';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-categories');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -64,7 +66,7 @@ app.get(
 
       return jsonOk(c, { categories });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch categories', { error: String(e) });
       return jsonError(c, 'Failed to fetch categories');
     }
   }
@@ -128,7 +130,7 @@ app.get(
         }
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch category products', { error: String(e) });
       return jsonError(c, 'Failed to fetch category products');
     }
   }
@@ -186,7 +188,7 @@ app.put(
         productsUpdated: result.meta.changes
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to rename category', { error: String(e) });
       return jsonError(c, 'Failed to rename category');
     }
   }
@@ -234,7 +236,7 @@ app.delete(
         productsUpdated: result.meta.changes
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to delete category', { error: String(e) });
       return jsonError(c, 'Failed to delete category');
     }
   }

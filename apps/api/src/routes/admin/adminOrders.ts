@@ -7,7 +7,9 @@ import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { orderIdParamSchema, orderListQuerySchema, createRefundSchema, cancelOrderSchema, PERMISSIONS } from '../../lib/schemas';
 import { cancelOrder } from '../../services/orderCancel';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-orders');
 const adminOrders = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -64,7 +66,7 @@ adminOrders.get(
         }
       });
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to fetch orders', { error: String(err) });
       return jsonError(c, 'Failed to fetch orders');
     }
   }
@@ -124,7 +126,7 @@ adminOrders.get('/admin/orders/ready-to-ship', requirePermission(PERMISSIONS.ORD
 
     return jsonOk(c, { orders });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch ready-to-ship orders', { error: String(err) });
     return jsonError(c, 'Failed to fetch ready-to-ship orders');
   }
 });
@@ -195,7 +197,7 @@ adminOrders.get(
         fulfillments: fulfillmentsRes.results || []
       });
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to fetch order details', { error: String(err) });
       return jsonError(c, 'Failed to fetch order details');
     }
   }
@@ -279,7 +281,7 @@ adminOrders.post(
 
       if (!stripeRes.ok) {
         const errorBody = await stripeRes.text();
-        console.error('Stripe refund failed:', errorBody);
+        logger.error('Stripe refund failed', { error: String(errorBody) });
         return jsonError(c, 'Failed to create refund with Stripe', 500);
       }
 
@@ -335,7 +337,7 @@ adminOrders.post(
         },
       });
     } catch (err) {
-      console.error('Refund creation error:', err);
+      logger.error('Refund creation error', { error: String(err) });
       return jsonError(c, 'Failed to create refund');
     }
   }

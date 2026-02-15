@@ -5,6 +5,7 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 import {
   couponIdParamSchema,
   couponListQuerySchema,
@@ -13,6 +14,7 @@ import {
   PERMISSIONS,
 } from '../../lib/schemas';
 
+const logger = createLogger('admin-coupons');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -96,7 +98,7 @@ app.get(
         }
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch coupons', { error: String(e) });
       return jsonError(c, 'Failed to fetch coupons');
     }
   }
@@ -142,7 +144,7 @@ app.get(
         }
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch coupon', { error: String(e) });
       return jsonError(c, 'Failed to fetch coupon');
     }
   }
@@ -199,7 +201,7 @@ app.post(
 
       return jsonOk(c, { coupon });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to create coupon', { error: String(e) });
       return jsonError(c, 'Failed to create coupon');
     }
   }
@@ -268,7 +270,7 @@ app.put(
 
       return jsonOk(c, { coupon });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update coupon', { error: String(e) });
       return jsonError(c, 'Failed to update coupon');
     }
   }
@@ -306,7 +308,7 @@ app.delete(
 
       return jsonOk(c, { deleted: true });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to delete coupon', { error: String(e) });
       return jsonError(c, 'Failed to delete coupon');
     }
   }
@@ -348,7 +350,7 @@ app.post(
 
       return jsonOk(c, { coupon: updatedCoupon });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to toggle coupon status', { error: String(e) });
       return jsonError(c, 'Failed to toggle coupon status');
     }
   }

@@ -13,7 +13,9 @@ import {
   inquiryReplySchema,
 } from '../../lib/schemas/contact';
 import { PERMISSIONS } from '../../lib/schemas';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-inquiries');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -60,7 +62,7 @@ app.get(
         meta: { total, limit, offset },
       });
     } catch (err) {
-      console.error('Failed to fetch inquiries:', err);
+      logger.error('Failed to fetch inquiries', { error: String(err) });
       return jsonError(c, 'Failed to fetch inquiries');
     }
   }
@@ -87,7 +89,7 @@ app.get(
 
       return jsonOk(c, { inquiry });
     } catch (err) {
-      console.error('Failed to fetch inquiry:', err);
+      logger.error('Failed to fetch inquiry', { error: String(err) });
       return jsonError(c, 'Failed to fetch inquiry');
     }
   }
@@ -139,7 +141,7 @@ app.post(
 
       return jsonOk(c, { emailSent: emailResult.success });
     } catch (err) {
-      console.error('Failed to reply to inquiry:', err);
+      logger.error('Failed to reply to inquiry', { error: String(err) });
       return jsonError(c, 'Failed to reply to inquiry');
     }
   }
@@ -175,7 +177,7 @@ app.post(
 
       return jsonOk(c, {});
     } catch (err) {
-      console.error('Failed to close inquiry:', err);
+      logger.error('Failed to close inquiry', { error: String(err) });
       return jsonError(c, 'Failed to close inquiry');
     }
   }

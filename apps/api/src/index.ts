@@ -4,6 +4,7 @@ import { getCookie } from 'hono/cookie';
 import * as Sentry from '@sentry/cloudflare';
 import type { Env } from './env';
 import { jsonError, jsonOk } from './lib/http';
+import { createLogger } from './lib/logger';
 import { clerkAuth } from './middleware/clerkAuth';
 import { requestLogger } from './middleware/logging';
 import { rateLimit } from './middleware/rateLimit';
@@ -24,6 +25,8 @@ import { runAllAnomalyChecks } from './services/anomalyRules';
 import { startDailyCloseRun, completeDailyCloseRun } from './services/dailyCloseRuns';
 import { checkInventoryAlerts } from './services/inventoryAlerts';
 
+const logger = createLogger('app');
+
 const app = new Hono<Env>();
 
 // Global error handler - ensures all errors return JSON
@@ -35,7 +38,7 @@ app.onError((err, c) => {
     const isServerError = status >= 500;
 
     if (isServerError) {
-      console.error('Application error:', err);
+      logger.error('Application error', { error: String(err) });
       captureException(err, {
         path: c.req.path,
         method: c.req.method,
@@ -53,7 +56,7 @@ app.onError((err, c) => {
   }
 
   // Unknown errors - log and return generic message
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error', { error: String(err) });
   captureException(err, {
     path: c.req.path,
     method: c.req.method,
@@ -217,7 +220,7 @@ app.get('/r2', async (c) => {
     if (obj.httpMetadata?.contentType) headers.set('content-type', obj.httpMetadata.contentType);
     return new Response(obj.body, { headers });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch R2 object', { error: String(err) });
     return jsonError(c, 'Failed to fetch object');
   }
 });
@@ -265,7 +268,7 @@ const runDailyCloseArtifacts = async (env: Env['Bindings'], date: string) => {
       status: 'failed',
       errorMessage
     });
-    console.error(`Daily close failed for ${date}: runId=${runId}`, err);
+    logger.error(`Daily close failed for ${date}`, { runId, error: String(err) });
 
     // Send critical alert for daily close failure
     await sendAlert(env, 'critical', `Daily close failed for ${date}`, {
@@ -296,7 +299,7 @@ const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
   try {
     await runAllAnomalyChecks(env, date);
   } catch (err) {
-    console.error('Anomaly check failed:', err);
+    logger.error('Anomaly check failed', { error: String(err) });
   }
 };
 
@@ -304,7 +307,7 @@ const runInventoryAlerts = async (env: Env['Bindings'], date: string) => {
   try {
     await checkInventoryAlerts(env, date);
   } catch (err) {
-    console.error('Inventory alert check failed:', err);
+    logger.error('Inventory alert check failed', { error: String(err) });
   }
 };
 

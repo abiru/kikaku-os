@@ -1,5 +1,8 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { AppError } from '../lib/errors';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('stripe');
 
 type ProductInfo = {
   id: number;
@@ -102,7 +105,7 @@ export const ensureStripeProduct = async (
           updateParams
         );
       } catch (err) {
-        console.error(`Failed to update Stripe product ${product.provider_product_id}:`, err);
+        logger.error(`Failed to update Stripe product ${product.provider_product_id}`, { error: String(err) });
         // Continue without failing - update is not critical
       }
     }

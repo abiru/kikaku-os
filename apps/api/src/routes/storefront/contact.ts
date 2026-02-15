@@ -2,11 +2,13 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import type { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { escapeHtml } from '../../lib/html';
 import { contactInquirySchema } from '../../lib/schemas/contact';
 import { validationErrorHandler } from '../../lib/validation';
 import { sendEmail } from '../../services/email';
 
+const logger = createLogger('contact');
 const contact = new Hono<Env>();
 
 // POST /store/contact - Public contact form submission
@@ -49,7 +51,7 @@ contact.post(
 
       return jsonOk(c, { id: inquiryId });
     } catch (err) {
-      console.error('Failed to save contact inquiry:', err);
+      logger.error('Failed to save contact inquiry', { error: String(err) });
       return jsonError(c, 'Failed to submit inquiry', 500);
     }
   }

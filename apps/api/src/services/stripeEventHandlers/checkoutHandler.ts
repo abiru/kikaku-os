@@ -15,6 +15,9 @@ import {
   extractPaymentMethod
 } from '../../lib/stripeData';
 import { sendOrderConfirmationEmail } from '../orderEmail';
+import { createLogger } from '../../lib/logger';
+
+const logger = createLogger('stripe-checkout-handler');
 
 /**
  * Updates order status to 'paid' with Stripe session and payment intent IDs
@@ -138,7 +141,7 @@ export const handleCheckoutSessionCompleted = async (
   // Send order confirmation email (non-blocking)
   if (!paymentResult?.duplicate) {
     sendOrderConfirmationEmail(env, orderId).catch((err) => {
-      console.error('Failed to send order confirmation email:', err);
+      logger.error('Failed to send order confirmation email', { error: String(err) });
     });
   }
 

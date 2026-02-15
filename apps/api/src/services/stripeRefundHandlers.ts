@@ -10,6 +10,9 @@ import {
   calculateOrderStatus,
   getStatusChangeReason
 } from './orderStatus';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('stripe-refund');
 
 /**
  * Updates order status after refund is processed
@@ -48,7 +51,7 @@ const updateOrderAfterRefund = async (
   // Validation: Prevent over-refunding (CRITICAL)
   if (projectedRefundedAmount > orderRow.total_net) {
     const errorMsg = `Refund would exceed order total: ${projectedRefundedAmount} > ${orderRow.total_net}`;
-    console.error(`[Order ${orderId}] ${errorMsg}`);
+    logger.error(`Refund would exceed order total`, { orderId, projected: projectedRefundedAmount, totalNet: orderRow.total_net });
 
     await env.DB.prepare(
       `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)
@@ -96,7 +99,7 @@ const updateOrderAfterRefund = async (
   if (!updateResult.meta.changes || updateResult.meta.changes === 0) {
     // Concurrent refund exceeded limit - create inbox alert
     const concurrentErrorMsg = `Concurrent refund rejected: Order #${orderId} validation failed`;
-    console.error(`[Order ${orderId}] ${concurrentErrorMsg}`);
+    logger.error('Concurrent refund rejected', { orderId, error: concurrentErrorMsg });
 
     await env.DB.prepare(
       `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)

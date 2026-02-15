@@ -1,5 +1,8 @@
 import * as Sentry from '@sentry/cloudflare';
 import type { Env } from '../env';
+import { createLogger } from './logger';
+
+const logger = createLogger('sentry');
 
 /**
  * Initialize Sentry for error tracking.
@@ -98,7 +101,7 @@ export const captureException = (
     });
   } else {
     // Fallback to structured logging
-    console.error('Exception captured:', errorData);
+    logger.error('Exception captured', errorData);
   }
 };
 

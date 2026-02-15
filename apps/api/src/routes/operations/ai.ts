@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import type { Env } from '../../env';
 
+const logger = createLogger('operations-ai');
 const ai = new Hono<Env>();
 
 // Whitelist of tables allowed in AI-generated queries
@@ -166,7 +168,7 @@ ai.post('/sql', async (c) => {
     if (!validated.ok) return jsonError(c, validated.message, 400);
     return jsonOk(c, { sql: validated.sql, notes: 'Dummy SQL generated. Please review before executing.' });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to generate SQL', { error: String(err) });
     return jsonError(c, 'Failed to generate SQL');
   }
 });
@@ -210,7 +212,7 @@ ai.post('/query', async (c) => {
 
     return jsonOk(c, { rows, truncated: rows.length >= limit });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to execute SQL', { error: String(err) });
     return jsonError(c, 'Failed to execute SQL');
   }
 });

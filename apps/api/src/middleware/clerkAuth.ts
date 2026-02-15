@@ -2,6 +2,9 @@ import { createMiddleware } from 'hono/factory';
 import { verifyToken } from '@clerk/backend';
 import type { Env } from '../env';
 import { jsonError } from '../lib/http';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('clerk-auth');
 
 export const timingSafeCompare = (a: string, b: string): boolean => {
   const enc = new TextEncoder();
@@ -50,7 +53,7 @@ export const clerkAuth = createMiddleware<Env>(async (c, next) => {
       });
       return next();
     } catch (err) {
-      console.error('Clerk token verification failed:', err);
+      logger.error('Clerk token verification failed', { error: String(err) });
     }
   }
 

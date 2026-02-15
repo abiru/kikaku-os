@@ -256,8 +256,7 @@ describe('stripe service', () => {
       expect(result).toBe('prod_fail');
       expect(global.fetch).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to update Stripe product'),
-        expect.anything()
+        expect.stringContaining('Failed to update Stripe product')
       );
 
       consoleErrorSpy.mockRestore();

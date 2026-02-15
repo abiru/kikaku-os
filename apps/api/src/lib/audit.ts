@@ -1,4 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { createLogger } from './logger';
+
+const logger = createLogger('audit');
 
 export type AuditLogParams = {
   actor: string;
@@ -43,7 +46,7 @@ export const logAuditEvent = async (
       )
       .run();
   } catch (err) {
-    console.error('Failed to log audit event:', err);
+    logger.error('Failed to log audit event', { error: String(err) });
     // Non-blocking - don't throw
   }
 };

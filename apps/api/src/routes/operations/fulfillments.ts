@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import {
   updateFulfillmentSchema,
   fulfillmentIdParamSchema,
@@ -12,6 +13,7 @@ import { getActor } from '../../middleware/clerkAuth';
 import { validationErrorHandler } from '../../lib/validation';
 import { sendShippingNotificationEmail } from '../../services/orderEmail';
 
+const logger = createLogger('fulfillments');
 const fulfillments = new Hono<Env>();
 
 // Custom error handler for zod validation (zod v4 compatible)
@@ -75,13 +77,13 @@ fulfillments.put(
       if (wasNotShipped && isNowShipped && hasTrackingNumber) {
         const carrierName = carrier || updatedMetadata.carrier || '配送業者';
         sendShippingNotificationEmail(c.env, existing.order_id, carrierName, tracking_number).catch((err) => {
-          console.error('Failed to send shipping notification email:', err);
+          logger.error('Failed to send shipping notification email', { orderId: existing.order_id, error: String(err) });
         });
       }
 
       return jsonOk(c, { fulfillment: updated });
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to update fulfillment', { error: String(err) });
       return jsonError(c, 'Failed to update fulfillment');
     }
   }
@@ -132,13 +134,13 @@ fulfillments.post(
       if (isShipped && hasTrackingNumber) {
         const carrierName = carrier || '配送業者';
         sendShippingNotificationEmail(c.env, orderId, carrierName, tracking_number).catch((err) => {
-          console.error('Failed to send shipping notification email:', err);
+          logger.error('Failed to send shipping notification email', { orderId, error: String(err) });
         });
       }
 
       return jsonOk(c, { fulfillment });
     } catch (err) {
-      console.error(err);
+      logger.error('Failed to create fulfillment', { error: String(err) });
       return jsonError(c, 'Failed to create fulfillment');
     }
   }

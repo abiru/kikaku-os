@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env } from '../../env';
 import { ensureDate } from '../../lib/date';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import { generatePublicToken } from '../../lib/token';
 import {
   type ProductSeedDef,
@@ -25,6 +26,7 @@ type SeedRequest = {
   withImages?: boolean;
 };
 
+const logger = createLogger('dev');
 const dev = new Hono<Env>();
 
 // Block all dev routes in production
@@ -412,7 +414,7 @@ dev.post('/seed', async (c) => {
       }
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Seed failed', { error: String(err) });
     return jsonError(c, 'Failed to seed');
   }
 });

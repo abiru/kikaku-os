@@ -2,10 +2,12 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { jsonError, jsonOk } from '../../lib/http';
+import { createLogger } from '../../lib/logger';
 import type { Env } from '../../env';
 import { generateContent } from '../../services/ai/contentGeneration';
 import { validationErrorHandler } from '../../lib/validation';
 
+const logger = createLogger('ai-content');
 const aiContent = new Hono<Env>();
 
 // Validation schema for content generation
@@ -51,7 +53,7 @@ aiContent.post(
         message: 'Content generated successfully. Check Inbox for approval.',
       });
     } catch (err) {
-      console.error('Content generation failed:', err);
+      logger.error('Content generation failed', { error: String(err) });
       return jsonError(c, (err as Error).message, 500);
     }
   }
@@ -96,7 +98,7 @@ aiContent.get('/content/drafts', async (c) => {
       },
     });
   } catch (err) {
-    console.error('Failed to fetch drafts:', err);
+    logger.error('Failed to fetch drafts', { error: String(err) });
     return jsonError(c, 'Failed to fetch drafts');
   }
 });
@@ -119,7 +121,7 @@ aiContent.get('/content/drafts/:id', async (c) => {
 
     return jsonOk(c, { draft });
   } catch (err) {
-    console.error('Failed to fetch draft:', err);
+    logger.error('Failed to fetch draft', { error: String(err) });
     return jsonError(c, 'Failed to fetch draft');
   }
 });
@@ -175,7 +177,7 @@ aiContent.post(
       message: 'Content regenerated successfully. Check Inbox for approval.',
     });
     } catch (err) {
-      console.error('Content regeneration failed:', err);
+      logger.error('Content regeneration failed', { error: String(err) });
       return jsonError(c, (err as Error).message, 500);
     }
   }

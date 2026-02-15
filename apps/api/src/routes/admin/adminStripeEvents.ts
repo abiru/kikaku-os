@@ -5,7 +5,9 @@ import { handleStripeEvent } from '../../services/stripeEventHandlers';
 import type { StripeEvent } from '../../lib/stripeData';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { PERMISSIONS } from '../../lib/schemas';
+import { createLogger } from '../../lib/logger';
 
+const logger = createLogger('admin-stripe-events');
 const adminStripeEvents = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -56,7 +58,7 @@ adminStripeEvents.get("/stripe-events", requirePermission(PERMISSIONS.ORDERS_REA
       }
     });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch stripe events', { error: String(err) });
     return jsonError(c, "Failed to fetch stripe events");
   }
 });
@@ -80,7 +82,7 @@ adminStripeEvents.get("/stripe-events/:id", requirePermission(PERMISSIONS.ORDERS
 
     return jsonOk(c, { event });
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to fetch stripe event details', { error: String(err) });
     return jsonError(c, "Failed to fetch event details");
   }
 });
@@ -137,7 +139,7 @@ adminStripeEvents.post("/stripe-events/:id/retry", requirePermission(PERMISSIONS
       return jsonError(c, `Retry failed: ${errMessage}`, 500);
     }
   } catch (err) {
-    console.error(err);
+    logger.error('Failed to retry stripe event', { error: String(err) });
     return jsonError(c, "Failed to retry event");
   }
 });

@@ -6,10 +6,12 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
+import { createLogger } from '../../lib/logger';
 import { putImage, deleteKey } from '../../lib/r2';
 import { PERMISSIONS } from '../../lib/schemas';
 import { getExtensionFromContentType } from '../../lib/image';
 
+const logger = createLogger('admin-heroes');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -117,7 +119,7 @@ app.get(
         }
       });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch hero sections', { error: String(e) });
       return jsonError(c, 'Failed to fetch hero sections');
     }
   }
@@ -156,7 +158,7 @@ app.get(
 
       return jsonOk(c, { hero });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to fetch hero section', { error: String(e) });
       return jsonError(c, 'Failed to fetch hero section');
     }
   }
@@ -204,7 +206,7 @@ app.post(
 
       return jsonOk(c, { id: heroId, message: 'Hero section created' });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to create hero section', { error: String(e) });
       return jsonError(c, 'Failed to create hero section');
     }
   }
@@ -300,7 +302,7 @@ app.put(
 
       return jsonOk(c, { message: 'Hero section updated' });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to update hero section', { error: String(e) });
       return jsonError(c, 'Failed to update hero section');
     }
   }
@@ -341,7 +343,7 @@ app.delete(
 
       return jsonOk(c, { message: 'Hero section archived' });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to archive hero section', { error: String(e) });
       return jsonError(c, 'Failed to archive hero section');
     }
   }
@@ -386,7 +388,7 @@ app.post(
 
       return jsonOk(c, { message: 'Hero section restored to draft' });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to restore hero section', { error: String(e) });
       return jsonError(c, 'Failed to restore hero section');
     }
   }
@@ -461,7 +463,7 @@ app.post(
 
       return jsonOk(c, { r2Key, message: 'Image uploaded successfully' });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to upload hero image', { error: String(e) });
       return jsonError(c, 'Failed to upload image');
     }
   }
@@ -514,7 +516,7 @@ app.delete(
 
       return jsonOk(c, { message: 'Image deleted successfully' });
     } catch (e) {
-      console.error(e);
+      logger.error('Failed to delete hero image', { error: String(e) });
       return jsonError(c, 'Failed to delete image');
     }
   }

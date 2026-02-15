@@ -8,6 +8,9 @@ import {
 } from './modelRouter';
 import { callLlamaForJSON, estimateTokens } from './workersAIClient';
 import type { Ai } from '../../env';
+import { createLogger } from '../../lib/logger';
+
+const logger = createLogger('workflow-automation');
 
 type Bindings = {
   DB: D1Database;
@@ -147,7 +150,7 @@ async function triageWithClaude(
       rawText,
     };
   } catch (parseErr) {
-    console.error('Failed to parse triage result:', parseErr);
+    logger.error('Failed to parse triage result', { error: String(parseErr) });
     throw new Error(`Failed to parse AI response: ${(parseErr as Error).message}`);
   }
 }
@@ -224,7 +227,7 @@ export async function triageInboxItem(
         processingTimeMs: Date.now() - startTime,
       };
     } catch (error) {
-      console.error('Workers AI triage failed, attempting fallback:', error);
+      logger.error('Workers AI triage failed, attempting fallback', { error: String(error) });
 
       // Fallback to Claude if available
       if (modelSelection.canFallback && env.CLAUDE_API_KEY) {
@@ -416,7 +419,7 @@ JSON形式で出力してください:
     const jsonText = jsonMatch ? (jsonMatch[1] ?? '').trim() : rawText.trim();
     emailDraft = JSON.parse(jsonText) as { subject: string; body: string };
   } catch (parseErr) {
-    console.error('Failed to parse email draft:', parseErr);
+    logger.error('Failed to parse email draft', { error: String(parseErr) });
     throw new Error(`Failed to parse AI response: ${(parseErr as Error).message}`);
   }
 
