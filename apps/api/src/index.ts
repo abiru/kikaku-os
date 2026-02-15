@@ -9,6 +9,7 @@ import { rateLimit } from './middleware/rateLimit';
 import { sendAlert } from './lib/alerts';
 import { captureException, getSentryConfig } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
+import { AppError } from './lib/errors';
 import { registerRoutes } from './routes';
 import { generateDailyReport } from './services/dailyReport';
 import { generateStripeEvidence } from './services/stripeEvidence';
@@ -24,15 +25,37 @@ const app = new Hono<Env>();
 
 // Global error handler - ensures all errors return JSON
 app.onError((err, c) => {
-  console.error('Unhandled error:', err);
+  // Handle known application errors with appropriate status codes
+  if (err instanceof AppError) {
+    const allowedStatuses = new Set([400, 401, 403, 404, 409, 500, 501, 502, 503]);
+    const status = allowedStatuses.has(err.statusCode) ? err.statusCode : 500;
+    const isServerError = status >= 500;
 
-  // Capture exception for error tracking (production only)
+    if (isServerError) {
+      console.error('Application error:', err);
+      captureException(err, {
+        path: c.req.path,
+        method: c.req.method,
+        env: c.env
+      });
+    }
+
+    const message = isServerError ? 'Internal Server Error' : err.message;
+    const code = isServerError ? 'INTERNAL_ERROR' : err.code;
+
+    return c.json(
+      { ok: false, message, code },
+      status as 400 | 401 | 403 | 404 | 409 | 500 | 501 | 502 | 503
+    );
+  }
+
+  // Unknown errors - log and return generic message
+  console.error('Unhandled error:', err);
   captureException(err, {
     path: c.req.path,
     method: c.req.method,
     env: c.env
   });
-
   return c.json(
     { ok: false, message: 'Internal Server Error' },
     500
