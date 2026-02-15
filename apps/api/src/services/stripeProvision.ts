@@ -4,6 +4,10 @@
  * Creates Stripe products and prices for local variants that lack a provider_price_id.
  */
 
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('stripeProvision');
+
 type StripeProvisionRow = {
   variant_id: number;
   variant_title: string;
@@ -173,7 +177,11 @@ export async function provisionStripePrices(
 
       updatedCount += 1;
     } catch (err) {
-      console.error(err);
+      logger.error('Unexpected error provisioning Stripe price', {
+        price_id: row.price_id,
+        variant_id: row.variant_id,
+        error: err instanceof Error ? err.message : String(err),
+      });
       errors.push({
         price_id: row.price_id,
         variant_id: row.variant_id,

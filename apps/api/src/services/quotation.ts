@@ -7,8 +7,11 @@
 import { calculateOrderTax, type TaxCalculationInput } from './tax';
 import { ensureStripePriceForVariant } from './stripe';
 import { generatePublicToken } from '../lib/token';
+import { createLogger } from '../lib/logger';
 import type { ErrorStatusCode } from '../lib/http';
 import type { CheckoutItem, VariantPriceRow } from '../lib/schemas/checkout';
+
+const logger = createLogger('quotation');
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -330,7 +333,7 @@ export async function acceptQuotation(
 
   if (!stripeRes.ok) {
     const text = await stripeRes.text();
-    console.error(text);
+    logger.error('Failed to create checkout session', { status: stripeRes.status, body: text });
     throw new QuotationError('Failed to create checkout session', 500);
   }
 
