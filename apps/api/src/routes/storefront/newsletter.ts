@@ -10,6 +10,7 @@ import {
 import { createLogger } from '../../lib/logger';
 import { validationErrorHandler } from '../../lib/validation';
 import { verifyEmailToken } from '../../lib/token';
+import { escapeHtml } from '../../lib/html';
 
 const logger = createLogger('newsletter');
 const newsletter = new Hono<Env>();
@@ -18,7 +19,9 @@ const newsletter = new Hono<Env>();
  * Build a simple HTML confirmation page for unsubscribe.
  * The page contains a form that POSTs the token to perform the actual unsubscribe.
  */
-const buildUnsubscribeConfirmationHtml = (token: string): string => `<!DOCTYPE html>
+const buildUnsubscribeConfirmationHtml = (rawToken: string): string => {
+  const token = escapeHtml(rawToken);
+  return `<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -44,6 +47,7 @@ const buildUnsubscribeConfirmationHtml = (token: string): string => `<!DOCTYPE h
   </div>
 </body>
 </html>`;
+};
 
 // POST /store/newsletter/subscribe - Public newsletter subscription
 newsletter.post(
