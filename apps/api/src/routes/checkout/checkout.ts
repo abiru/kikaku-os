@@ -6,6 +6,7 @@ import { calculateOrderTax, type TaxCalculationInput } from '../../services/tax'
 import { getShippingSettings } from '../../services/settings';
 import { checkStockAvailability } from '../../services/inventoryCheck';
 import { validateItem, type CheckoutItem, type VariantPriceRow } from '../../lib/schemas/checkout';
+import { validateCoupon } from '../../services/coupon';
 
 const validateCouponSchema = z.object({
   code: z.string().min(1, 'Coupon code is required').max(50),
@@ -37,66 +38,9 @@ checkout.post('/checkout/validate-coupon', async (c) => {
     }
 
     const { code, cartTotal } = parsed.data;
-
-    const coupon = await c.env.DB.prepare(
-      `SELECT id, code, discount_type, discount_value, min_purchase, max_uses, used_count, valid_from, valid_until, active
-       FROM coupons
-       WHERE code = ? AND active = 1`
-    )
-      .bind(code.toUpperCase())
-      .first<{
-        id: number;
-        code: string;
-        discount_type: string;
-        discount_value: number;
-        min_purchase: number | null;
-        max_uses: number | null;
-        used_count: number;
-        valid_from: string | null;
-        valid_until: string | null;
-        active: number;
-      }>();
-
-    if (!coupon) {
-      return jsonOk(c, { valid: false, message: 'Invalid coupon code' });
-    }
-
-    const now = new Date();
-    if (coupon.valid_from && new Date(coupon.valid_from) > now) {
-      return jsonOk(c, { valid: false, message: 'Coupon not yet valid' });
-    }
-    if (coupon.valid_until && new Date(coupon.valid_until) < now) {
-      return jsonOk(c, { valid: false, message: 'Coupon has expired' });
-    }
-
-    if (coupon.max_uses !== null && coupon.used_count >= coupon.max_uses) {
-      return jsonOk(c, { valid: false, message: 'Coupon usage limit reached' });
-    }
-
-    if (coupon.min_purchase !== null && cartTotal < coupon.min_purchase) {
-      return jsonOk(c, {
-        valid: false,
-        message: `Minimum purchase of ¥${coupon.min_purchase.toLocaleString()} required`
-      });
-    }
-
-    let discountAmount = 0;
-    if (coupon.discount_type === 'percentage') {
-      discountAmount = Math.floor((cartTotal * coupon.discount_value) / 100);
-    } else if (coupon.discount_type === 'fixed') {
-      discountAmount = coupon.discount_value;
-    }
-
-    return jsonOk(c, {
-      valid: true,
-      coupon: {
-        id: coupon.id,
-        code: coupon.code,
-        discountType: coupon.discount_type,
-        discountValue: coupon.discount_value,
-        discountAmount
-      }
-    });
+    const result = await validateCoupon(c.env.DB, code, cartTotal);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return jsonOk(c, result as any);
   } catch (err) {
     console.error('Coupon validation error:', err);
     return jsonError(c, 'Failed to validate coupon', 500);
@@ -226,55 +170,12 @@ checkout.post('/checkout/quote', async (c) => {
   let couponId: number | null = null;
 
   if (couponCode) {
-    type CouponRow = {
-      id: number;
-      code: string;
-      type: 'percentage' | 'fixed';
-      value: number;
-      currency: string;
-      min_order_amount: number | null;
-      max_uses: number | null;
-      current_uses: number;
-      status: string;
-      starts_at: string | null;
-      expires_at: string | null;
-    };
-
-    const coupon = await c.env.DB.prepare(
-      `SELECT id, code, type, value, currency, min_order_amount,
-              max_uses, current_uses, status, starts_at, expires_at
-       FROM coupons
-       WHERE code = ?`
-    ).bind(couponCode).first<CouponRow>();
-
-    if (!coupon || coupon.status !== 'active') {
-      return jsonError(c, 'Invalid or inactive coupon', 400);
+    const couponResult = await validateCoupon(c.env.DB, couponCode, cartTotal);
+    if (!couponResult.valid) {
+      return jsonError(c, couponResult.message, 400);
     }
-
-    const now = new Date();
-    if (coupon.starts_at && new Date(coupon.starts_at) > now) {
-      return jsonError(c, 'Coupon not yet valid', 400);
-    }
-    if (coupon.expires_at && new Date(coupon.expires_at) < now) {
-      return jsonError(c, 'Coupon has expired', 400);
-    }
-
-    if (coupon.min_order_amount && cartTotal < coupon.min_order_amount) {
-      return jsonError(c, `Minimum order amount of ${coupon.min_order_amount} required`, 400);
-    }
-
-    if (coupon.max_uses !== null && coupon.current_uses >= coupon.max_uses) {
-      return jsonError(c, 'Coupon usage limit reached', 400);
-    }
-
-    // Calculate discount
-    if (coupon.type === 'percentage') {
-      discountAmount = Math.floor(cartTotal * coupon.value / 100);
-    } else {
-      discountAmount = Math.min(coupon.value, cartTotal);
-    }
-
-    couponId = coupon.id;
+    discountAmount = couponResult.coupon.discountAmount;
+    couponId = couponResult.coupon.id;
   }
 
   // Shipping fee calculation
