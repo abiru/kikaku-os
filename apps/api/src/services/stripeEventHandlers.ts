@@ -306,6 +306,10 @@ const handlePaymentIntentSucceeded = async (
     try {
       const consumedReservation = await consumeStockReservationForOrder(env.DB, orderId);
       if (!consumedReservation) {
+        // Legacy fallback: Direct stock deduction for orders created before
+        // reservation system was introduced (PR #61). This fallback can be
+        // removed after all pre-reservation orders have been processed
+        // (estimated safe removal date: 2026-06-01).
         // Fallback for legacy orders created before reservation flow
         const orderItems = await env.DB.prepare(
           `SELECT variant_id as variantId, quantity FROM order_items WHERE order_id = ?`
@@ -531,6 +535,17 @@ const handlePaymentIntentFailedOrCanceled = async (
     await releaseStockReservationForOrder(env.DB, orderId);
   } catch (err) {
     console.error('Failed to release stock reservation for order:', orderId, err);
+    try {
+      await env.DB.prepare(
+        `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
+         VALUES (?, ?, 'critical', 'open', datetime('now'), datetime('now'))`
+      ).bind(
+        `Stock reservation cleanup failed for order #${orderId}`,
+        `releaseStockReservationForOrder failed during webhook processing. Manual cleanup required. Error: ${err instanceof Error ? err.message : String(err)}`
+      ).run();
+    } catch {
+      // Last resort: already logged above
+    }
   }
 
   const currentStatus = order.status;
