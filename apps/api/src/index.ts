@@ -108,6 +108,18 @@ app.use(
 
 app.options('*', (c) => c.body(null, 204));
 
+// Startup validation: warn once if ADMIN_API_KEY is missing
+let adminKeyChecked = false;
+app.use('*', async (c, next) => {
+  if (!adminKeyChecked) {
+    adminKeyChecked = true;
+    if (!c.env.ADMIN_API_KEY) {
+      logger.error('ADMIN_API_KEY is not set - admin endpoints will be inaccessible');
+    }
+  }
+  return next();
+});
+
 // Enable foreign key constraints (D1/SQLite disables by default)
 app.use('*', async (c, next) => {
   try {
@@ -215,7 +227,7 @@ app.get('/r2', async (c) => {
     const headers = new Headers();
     obj.writeHttpMetadata(headers);
     headers.set('cache-control', 'public, max-age=31536000, immutable');
-    headers.set('access-control-allow-origin', '*');
+    headers.set('access-control-allow-origin', c.env.STOREFRONT_BASE_URL || '');
     headers.set('access-control-allow-methods', 'GET');
     if (obj.httpMetadata?.contentType) headers.set('content-type', obj.httpMetadata.contentType);
     return new Response(obj.body, { headers });
