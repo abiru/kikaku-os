@@ -127,10 +127,17 @@ aiWorkflows.get('/workflows/usage', async (c) => {
        ORDER BY cost DESC`
     ).bind(`${date}%`).all();
 
-    const stats = result.results || [];
-    const totalCost = stats.reduce((sum, item: any) => sum + (item.cost || 0), 0);
-    const totalTokens = stats.reduce((sum, item: any) => sum + (item.tokens || 0), 0);
-    const totalRequests = stats.reduce((sum, item: any) => sum + (item.requests || 0), 0);
+    type UsageRow = {
+      service: string;
+      operation: string;
+      requests: number;
+      tokens: number;
+      cost: number;
+    };
+    const stats = (result.results || []) as UsageRow[];
+    const totalCost = stats.reduce((sum, item: UsageRow) => sum + (item.cost || 0), 0);
+    const totalTokens = stats.reduce((sum, item: UsageRow) => sum + (item.tokens || 0), 0);
+    const totalRequests = stats.reduce((sum, item: UsageRow) => sum + (item.requests || 0), 0);
 
     return jsonOk(c, {
       date,
