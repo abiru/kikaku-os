@@ -245,7 +245,22 @@ payments.post('/payments/intent', async (c) => {
   if (!stripeRes.ok) {
     const text = await stripeRes.text();
     console.error('Stripe PaymentIntent creation failed:', text);
-    await releaseStockReservationForOrder(c.env.DB, orderId);
+    try {
+      await releaseStockReservationForOrder(c.env.DB, orderId);
+    } catch (releaseErr) {
+      console.error('Failed to release stock reservation:', releaseErr);
+      try {
+        await c.env.DB.prepare(
+          `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
+           VALUES (?, ?, 'critical', 'open', datetime('now'), datetime('now'))`
+        ).bind(
+          `Stock reservation cleanup failed for order #${orderId}`,
+          `releaseStockReservationForOrder failed. Manual cleanup required. Error: ${releaseErr instanceof Error ? releaseErr.message : String(releaseErr)}`
+        ).run();
+      } catch {
+        // Last resort: already logged above
+      }
+    }
     await c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId).run();
     await c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
     return jsonError(c, 'Failed to create payment intent', 500);
@@ -254,7 +269,22 @@ payments.post('/payments/intent', async (c) => {
   const paymentIntent = await stripeRes.json<any>();
 
   if (!paymentIntent?.client_secret || !paymentIntent?.id) {
-    await releaseStockReservationForOrder(c.env.DB, orderId);
+    try {
+      await releaseStockReservationForOrder(c.env.DB, orderId);
+    } catch (releaseErr) {
+      console.error('Failed to release stock reservation:', releaseErr);
+      try {
+        await c.env.DB.prepare(
+          `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
+           VALUES (?, ?, 'critical', 'open', datetime('now'), datetime('now'))`
+        ).bind(
+          `Stock reservation cleanup failed for order #${orderId}`,
+          `releaseStockReservationForOrder failed. Manual cleanup required. Error: ${releaseErr instanceof Error ? releaseErr.message : String(releaseErr)}`
+        ).run();
+      } catch {
+        // Last resort: already logged above
+      }
+    }
     await c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId).run();
     await c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
     return jsonError(c, 'Invalid payment intent response', 500);
