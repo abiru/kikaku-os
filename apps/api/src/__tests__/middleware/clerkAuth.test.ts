@@ -214,8 +214,7 @@ describe('clerkAuth middleware', () => {
     });
 
     it('rejects request when API key is missing from env', async () => {
-      const env = createMockEnv();
-      env.ADMIN_API_KEY = undefined as any; // Remove API key from env
+      const env = { ...createMockEnv(), ADMIN_API_KEY: undefined as any };
 
       const app = new Hono<Env>();
       app.use('*', clerkAuth);
@@ -230,22 +229,6 @@ describe('clerkAuth middleware', () => {
       expect(res.status).toBe(401);
     });
 
-    it('uses timing-safe comparison for API key', async () => {
-      // Verify timingSafeCompare is used (no early exit on wrong key)
-      const spy = vi.spyOn({ timingSafeCompare }, 'timingSafeCompare');
-
-      const env = createMockEnv();
-      const app = createApp();
-      await app.request('/protected', {
-        headers: {
-          'x-admin-key': 'wrong-key',
-        },
-      }, env as any);
-
-      // Can't directly spy on the middleware's internal call,
-      // but we verify the implementation uses it by checking behavior
-      expect(spy).not.toHaveBeenCalled(); // It's called inside middleware, not our spy
-    });
   });
 
   describe('authentication priority', () => {

@@ -32,18 +32,11 @@ const createMockEnv = () => {
     },
   ];
 
-  const permissions = [
-    { id: 'orders.view' },
-    { id: 'orders.manage' },
-    { id: 'products.manage' },
-    { id: 'reports.view' },
-  ];
-
   const rolePermissions: Record<string, string[]> = {
-    admin: ['orders.view', 'orders.manage', 'products.manage', 'reports.view'],
-    manager: ['orders.view', 'reports.view'],
-    accountant: ['reports.view'],
-    viewer: ['orders.view'],
+    admin: ['orders:read', 'orders:write', 'products:write', 'reports:read'],
+    manager: ['orders:read', 'reports:read'],
+    accountant: ['reports:read'],
+    viewer: ['orders:read'],
   };
 
   const env: Env['Bindings'] = {
@@ -148,16 +141,15 @@ describe('loadRbac middleware', () => {
         userId: 'admin',
         method: 'api-key',
         role: 'admin',
-        permissions: expect.arrayContaining(['orders.view', 'orders.manage', 'products.manage']),
+        permissions: expect.arrayContaining(['orders:read', 'orders:write', 'products:write']),
       });
     });
 
     it('handles empty permissions for API key user', async () => {
       // Create environment with no permissions for admin role
-      const { env } = createMockEnv();
       const calls: { sql: string; bind: unknown[] }[] = [];
 
-      env.DB = {
+      const emptyDB = {
         prepare: (sql: string) => {
           const createHandlers = (args: unknown[] = []) => ({
             first: async <T>() => {
@@ -182,6 +174,8 @@ describe('loadRbac middleware', () => {
           return createHandlers([]);
         },
       } as unknown as D1Database;
+
+      const env = { ...createMockEnv().env, DB: emptyDB };
 
       const app = createApp(env as any);
       const authUser: AuthUser = {
@@ -226,7 +220,7 @@ describe('loadRbac middleware', () => {
         email: 'manager@example.com',
         method: 'clerk',
         role: 'manager',
-        permissions: ['orders.view', 'reports.view'],
+        permissions: ['orders:read', 'reports:read'],
       });
 
       expect(body.rbacUser.adminUser).toMatchObject({
@@ -317,12 +311,12 @@ describe('requirePermission middleware', () => {
   };
 
   it('allows access with required permission', async () => {
-    const app = createApp(['orders.view']);
+    const app = createApp(['orders:read']);
     const rbacUser: AuthUserWithRbac = {
       userId: 'user_1',
       method: 'clerk',
       role: 'manager',
-      permissions: ['orders.view', 'reports.view'],
+      permissions: ['orders:read', 'reports:read'],
     };
 
     const res = await app.request('/protected', {
@@ -335,12 +329,12 @@ describe('requirePermission middleware', () => {
   });
 
   it('allows access when user has any of multiple required permissions', async () => {
-    const app = createApp(['orders.manage', 'orders.view']);
+    const app = createApp(['orders:write', 'orders:read']);
     const rbacUser: AuthUserWithRbac = {
       userId: 'user_2',
       method: 'clerk',
       role: 'viewer',
-      permissions: ['orders.view'], // Has one of the required permissions
+      permissions: ['orders:read'], // Has one of the required permissions
     };
 
     const res = await app.request('/protected', {
@@ -353,12 +347,12 @@ describe('requirePermission middleware', () => {
   });
 
   it('denies access without required permission', async () => {
-    const app = createApp(['orders.manage']);
+    const app = createApp(['orders:write']);
     const rbacUser: AuthUserWithRbac = {
       userId: 'user_3',
       method: 'clerk',
       role: 'viewer',
-      permissions: ['orders.view'], // Missing orders.manage
+      permissions: ['orders:read'], // Missing orders:write
     };
 
     const res = await app.request('/protected', {
@@ -370,11 +364,11 @@ describe('requirePermission middleware', () => {
     expect(res.status).toBe(403);
     const body = await res.json() as any;
     expect(body.message).toContain('Forbidden');
-    expect(body.message).toContain('orders.manage');
+    expect(body.message).toContain('orders:write');
   });
 
   it('denies access when rbacUser is null', async () => {
-    const app = createApp(['orders.view']);
+    const app = createApp(['orders:read']);
 
     const res = await app.request('/protected', {
       headers: {
@@ -388,12 +382,12 @@ describe('requirePermission middleware', () => {
   });
 
   it('handles multiple permission requirements correctly', async () => {
-    const app = createApp(['products.manage', 'inventory.manage', 'orders.manage']);
+    const app = createApp(['products:write', 'inventory:write', 'orders:write']);
     const rbacUser: AuthUserWithRbac = {
       userId: 'user_4',
       method: 'clerk',
       role: 'manager',
-      permissions: ['inventory.manage', 'reports.view'], // Has one required permission
+      permissions: ['inventory:write', 'reports:read'], // Has one required permission
     };
 
     const res = await app.request('/protected', {
@@ -428,7 +422,7 @@ describe('requireRole middleware', () => {
       userId: 'user_5',
       method: 'clerk',
       role: 'manager',
-      permissions: ['orders.view'],
+      permissions: ['orders:read'],
     };
 
     const res = await app.request('/protected', {
@@ -464,7 +458,7 @@ describe('requireRole middleware', () => {
       userId: 'user_7',
       method: 'clerk',
       role: 'viewer',
-      permissions: ['orders.view'],
+      permissions: ['orders:read'],
     };
 
     const res = await app.request('/protected', {
@@ -641,10 +635,10 @@ describe('permission helper functions', () => {
         userId: 'user_14',
         method: 'clerk',
         role: 'manager',
-        permissions: ['orders.view', 'reports.view'],
+        permissions: ['orders:read', 'reports:read'],
       };
 
-      expect(hasPermission(rbacUser, 'orders.view')).toBe(true);
+      expect(hasPermission(rbacUser, 'orders:read')).toBe(true);
     });
 
     it('returns false when user lacks permission', () => {
@@ -652,14 +646,14 @@ describe('permission helper functions', () => {
         userId: 'user_15',
         method: 'clerk',
         role: 'viewer',
-        permissions: ['orders.view'],
+        permissions: ['orders:read'],
       };
 
-      expect(hasPermission(rbacUser, 'orders.manage')).toBe(false);
+      expect(hasPermission(rbacUser, 'orders:write')).toBe(false);
     });
 
     it('returns false when rbacUser is null', () => {
-      expect(hasPermission(null, 'orders.view')).toBe(false);
+      expect(hasPermission(null, 'orders:read')).toBe(false);
     });
   });
 
@@ -669,10 +663,10 @@ describe('permission helper functions', () => {
         userId: 'user_16',
         method: 'clerk',
         role: 'manager',
-        permissions: ['orders.view', 'reports.view'],
+        permissions: ['orders:read', 'reports:read'],
       };
 
-      expect(hasAnyPermission(rbacUser, ['orders.manage', 'orders.view'])).toBe(true);
+      expect(hasAnyPermission(rbacUser, ['orders:write', 'orders:read'])).toBe(true);
     });
 
     it('returns false when user has none of the permissions', () => {
@@ -680,14 +674,14 @@ describe('permission helper functions', () => {
         userId: 'user_17',
         method: 'clerk',
         role: 'viewer',
-        permissions: ['orders.view'],
+        permissions: ['orders:read'],
       };
 
-      expect(hasAnyPermission(rbacUser, ['products.manage', 'inventory.manage'])).toBe(false);
+      expect(hasAnyPermission(rbacUser, ['products:write', 'inventory:write'])).toBe(false);
     });
 
     it('returns false when rbacUser is null', () => {
-      expect(hasAnyPermission(null, ['orders.view'])).toBe(false);
+      expect(hasAnyPermission(null, ['orders:read'])).toBe(false);
     });
 
     it('returns false for empty permissions array', () => {
@@ -695,7 +689,7 @@ describe('permission helper functions', () => {
         userId: 'user_18',
         method: 'clerk',
         role: 'viewer',
-        permissions: ['orders.view'],
+        permissions: ['orders:read'],
       };
 
       expect(hasAnyPermission(rbacUser, [])).toBe(false);
@@ -708,10 +702,10 @@ describe('permission helper functions', () => {
         userId: 'user_19',
         method: 'clerk',
         role: 'admin',
-        permissions: ['orders.view', 'orders.manage', 'reports.view'],
+        permissions: ['orders:read', 'orders:write', 'reports:read'],
       };
 
-      expect(hasAllPermissions(rbacUser, ['orders.view', 'orders.manage'])).toBe(true);
+      expect(hasAllPermissions(rbacUser, ['orders:read', 'orders:write'])).toBe(true);
     });
 
     it('returns false when user lacks some permissions', () => {
@@ -719,14 +713,14 @@ describe('permission helper functions', () => {
         userId: 'user_20',
         method: 'clerk',
         role: 'manager',
-        permissions: ['orders.view', 'reports.view'],
+        permissions: ['orders:read', 'reports:read'],
       };
 
-      expect(hasAllPermissions(rbacUser, ['orders.view', 'orders.manage'])).toBe(false);
+      expect(hasAllPermissions(rbacUser, ['orders:read', 'orders:write'])).toBe(false);
     });
 
     it('returns false when rbacUser is null', () => {
-      expect(hasAllPermissions(null, ['orders.view'])).toBe(false);
+      expect(hasAllPermissions(null, ['orders:read'])).toBe(false);
     });
 
     it('returns true for empty permissions array', () => {
@@ -734,7 +728,7 @@ describe('permission helper functions', () => {
         userId: 'user_21',
         method: 'clerk',
         role: 'viewer',
-        permissions: ['orders.view'],
+        permissions: ['orders:read'],
       };
 
       expect(hasAllPermissions(rbacUser, [])).toBe(true);
