@@ -34,6 +34,19 @@ jobs:
           path: apps/api/coverage/
           retention-days: 7
 
+  api-integration:
+    name: API - Integration Tests
+    runs-on: self-hosted
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pnpm -C apps/api install --frozen-lockfile
+
+      - name: Run integration tests
+        run: pnpm -C apps/api test:integration
+
   storefront:
     name: Storefront - Typecheck / Test / Build
     runs-on: self-hosted
