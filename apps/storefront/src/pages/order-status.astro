@@ -1,42 +1,45 @@
 ---
+export const prerender = false;
+
 import Container from '../components/Container.astro';
 import Layout from '../layouts/Layout.astro';
+import { t } from '../i18n';
 ---
 
-<Layout title="注文状況の確認 - Led Kikaku">
+<Layout title={t('pages.orderStatus.pageTitle')}>
 	<div class="bg-white min-h-screen">
 		<section class="pt-24 pb-20 md:pt-32 md:pb-28">
 			<Container class="max-w-3xl">
 				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[#1d1d1f] text-center">
-					注文状況の確認
+					{t('pages.orderStatus.title')}
 				</h1>
 				<p class="mt-6 text-center text-[#6e6e73] text-lg">
-					ご注文の進捗はマイアカウントから確認できます。
+					{t('pages.orderStatus.description')}
 				</p>
 
 				<div class="mt-10 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm space-y-6">
 					<div class="space-y-3">
-						<h2 class="text-xl font-semibold text-[#1d1d1f]">アカウントで確認する</h2>
+						<h2 class="text-xl font-semibold text-[#1d1d1f]">{t('pages.orderStatus.checkViaAccount')}</h2>
 						<p class="text-[#6e6e73]">
-							ログイン後、「注文履歴」から発送状況や注文詳細を確認できます。
+							{t('pages.orderStatus.checkViaAccountDescription')}
 						</p>
 						<div class="flex flex-wrap gap-3">
 							<a href="/account/orders" class="inline-flex items-center rounded-full bg-[#0071e3] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#0077ed]">
-								注文履歴を見る
+								{t('pages.orderStatus.viewOrderHistory')}
 							</a>
 							<a href="/sign-in" class="inline-flex items-center rounded-full border border-gray-300 px-5 py-2.5 text-sm font-medium text-[#1d1d1f] hover:bg-gray-50">
-								ログイン
+								{t('pages.orderStatus.login')}
 							</a>
 						</div>
 					</div>
 
 					<div class="space-y-2 pt-2 border-t border-gray-100">
-						<h3 class="text-lg font-semibold text-[#1d1d1f]">サポートが必要な場合</h3>
+						<h3 class="text-lg font-semibold text-[#1d1d1f]">{t('pages.orderStatus.needHelp')}</h3>
 						<p class="text-[#6e6e73]">
-							注文番号が不明な場合や確認できない場合は、お問い合わせフォームからご連絡ください。
+							{t('pages.orderStatus.needHelpDescription')}
 						</p>
 						<a href="/contact" class="inline-flex items-center text-sm font-medium text-[#0071e3] hover:underline">
-							お問い合わせへ
+							{t('pages.orderStatus.contactLink')}
 						</a>
 					</div>
 				</div>
