@@ -139,7 +139,21 @@
     "confirmationEmailSent": "確認メールが送信されました。配送の詳細と追跡情報が記載されています。",
     "returnToHome": "ホームに戻る",
     "shippingAddress": "配送先住所",
-    "phone": "電話番号"
+    "phone": "電話番号",
+    "steps": {
+      "cart": "カート確認",
+      "email": "メールアドレス",
+      "payment": "お支払い"
+    },
+    "stripeErrors": {
+      "card_declined": "カードが拒否されました。別のカードをお試しください。",
+      "insufficient_funds": "残高不足です。別のカードをお試しください。",
+      "expired_card": "カードの有効期限が切れています。",
+      "incorrect_cvc": "セキュリティコードが正しくありません。",
+      "processing_error": "決済処理中にエラーが発生しました。もう一度お試しください。",
+      "generic_decline": "カードが拒否されました。カード発行会社にお問い合わせください。",
+      "default": "決済に失敗しました。もう一度お試しください。"
+    }
   },
   "admin": {
     "dashboard": "ダッシュボード",
