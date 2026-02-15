@@ -139,7 +139,7 @@ app.post(
       let nextPosition = (maxPosResult?.max_pos ?? -1) + 1;
 
       for (const file of files) {
-        if (!ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
+        if (!(ALLOWED_IMAGE_TYPES as readonly string[]).includes(file.type)) {
           return jsonError(
             c,
             `Invalid file type: ${file.type}. Allowed: ${ALLOWED_IMAGE_TYPES.join(', ')}`,

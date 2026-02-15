@@ -17,13 +17,16 @@
     "none": "なし",
     "or": "または",
     "and": "および",
-    "free": "無料"
+    "free": "無料",
+    "menu": "メニュー",
+    "login": "ログイン"
   },
   "nav": {
     "store": "ストア",
     "products": "製品",
     "support": "サポート",
-    "openCart": "カートを開く"
+    "openCart": "カートを開く",
+    "mobileMenu": "モバイルメニュー"
   },
   "footer": {
     "shopAndLearn": "ショップとサービス",
@@ -104,6 +107,9 @@
     "title": "チェックアウト",
     "loading": "読み込み中...",
     "email": "メールアドレス",
+    "emailRequired": "メールアドレスを入力してください",
+    "emailInvalid": "有効なメールアドレスを入力してください",
+    "emailPlaceholder": "your@email.com",
     "paymentDetails": "お支払い情報",
     "processing": "処理中...",
     "payNow": "お支払い",
@@ -236,7 +242,12 @@
     "lowStockAlerts": "低在庫アラート",
     "lowStock": "低在庫",
     "outOfStock": "在庫切れ",
-    "stockLevel": "在庫数"
+    "stockLevel": "在庫数",
+    "homeHeroes": "ホームヒーロー",
+    "bulkImageUpload": "画像一括アップロード",
+    "reviews": "レビュー",
+    "googleAds": "Google広告",
+    "users": "ユーザー"
   },
   "wishlist": {
     "title": "お気に入り",
@@ -469,7 +480,14 @@
   "errors": {
     "storeUnavailable": "ストアが利用できません",
     "storeUnavailableDescription": "カタログを読み込めませんでした。しばらくしてからもう一度お試しください。",
+    "networkError": "ネットワークエラー",
+    "networkErrorDescription": "インターネット接続を確認して、もう一度お試しください。",
+    "serverError": "サーバーエラー",
+    "serverErrorDescription": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
+    "notFoundError": "ページが見つかりません",
+    "notFoundErrorDescription": "お探しのリソースは見つかりませんでした。",
     "refresh": "更新",
+    "retry": "再試行",
     "failedToLoadDashboard": "ダッシュボードデータの読み込みに失敗しました",
     "failedToLoadOrders": "注文の読み込みに失敗しました。",
     "failedToLoadProducts": "製品の読み込みに失敗しました。管理者キーを確認してください。",
@@ -483,6 +501,7 @@
     "serverError": "サーバーエラー",
     "serverErrorCode": "500",
     "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
-    "reload": "再読み込み"
+    "reload": "再読み込み",
+    "displayError": "表示中にエラーが発生しました。ページを再読み込みしてください。"
   }
 }

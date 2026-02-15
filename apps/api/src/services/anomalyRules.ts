@@ -4,6 +4,7 @@
  * - Sales: high refund rate, webhook failures, unfulfilled orders
  */
 
+import type { Env } from '../env';
 import { sendSlackNotification } from './notifications';
 
 type Bindings = {
@@ -39,7 +40,7 @@ const insertInboxItem = async (
 
     // Send notification for warning/critical severity (non-blocking)
     if (params.severity !== 'info' && result.meta.last_row_id) {
-      sendSlackNotification(env as any, {
+      sendSlackNotification(env as Env['Bindings'], {
         inboxItemId: result.meta.last_row_id,
         title: params.title,
         body: params.body,
@@ -52,8 +53,8 @@ const insertInboxItem = async (
     }
 
     return true;
-  } catch (err: any) {
-    if (String(err?.message || '').includes('UNIQUE constraint failed')) return false;
+  } catch (err: unknown) {
+    if (String(err instanceof Error ? err.message : '').includes('UNIQUE constraint failed')) return false;
     throw err;
   }
 };

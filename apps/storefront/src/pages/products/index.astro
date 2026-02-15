@@ -72,12 +72,25 @@ const skeletonCards = Array.from({ length: 6 });
 
 							{/* Error State */}
 							<div id="product-error" class="hidden py-20">
-								<EmptyState
-									title={t('errors.storeUnavailable')}
-									description={t('errors.storeUnavailableDescription')}
-									ctaLabel={t('errors.refresh')}
-									ctaHref="/products"
-								/>
+								<div id="error-content" class="rounded-3xl border border-dashed border-zinc-200 bg-white p-8">
+									<div class="mx-auto max-w-md text-center">
+										<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-500">
+											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-6 w-6" aria-hidden="true">
+												<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+											</svg>
+										</div>
+										<h2 id="error-title" class="mt-4 text-lg font-semibold text-zinc-900">{t('errors.storeUnavailable')}</h2>
+										<p id="error-description" class="mt-2 text-sm text-zinc-500">{t('errors.storeUnavailableDescription')}</p>
+										<div class="mt-6 flex justify-center">
+											<button id="error-retry-btn" type="button" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 transition-colors">
+												<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+													<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+												</svg>
+												{t('errors.retry')}
+											</button>
+										</div>
+									</div>
+								</div>
 							</div>
 
 							{/* Empty State */}
@@ -109,6 +122,14 @@ const skeletonCards = Array.from({ length: 6 });
 							data-price-up-to={t('products.priceUpTo')}
 							data-domestic-shipping={t('category.domesticShipping')}
 							data-international-shipping={t('category.internationalShipping')}
+							data-error-network={t('errors.networkError')}
+							data-error-network-desc={t('errors.networkErrorDescription')}
+							data-error-server={t('errors.serverError')}
+							data-error-server-desc={t('errors.serverErrorDescription')}
+							data-error-not-found={t('errors.notFoundError')}
+							data-error-not-found-desc={t('errors.notFoundErrorDescription')}
+							data-error-generic={t('errors.storeUnavailable')}
+							data-error-generic-desc={t('errors.storeUnavailableDescription')}
 						></div>
 
 						{/* Pagination */}
@@ -133,6 +154,7 @@ const skeletonCards = Array.from({ length: 6 });
 	</div>
 
 	<script>
+		import DOMPurify from 'isomorphic-dompurify';
 		import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 		import { $wishlistItems, toggleWishlist, type WishlistItem } from '../../lib/wishlist';
 
@@ -150,6 +172,21 @@ const skeletonCards = Array.from({ length: 6 });
 			priceUpTo: i18nEl?.dataset.priceUpTo || '{max}円以下',
 			domesticShipping: i18nEl?.dataset.domesticShipping || '国内発送 2〜3日',
 			internationalShipping: i18nEl?.dataset.internationalShipping || '海外発送 10日程',
+			errorNetwork: i18nEl?.dataset.errorNetwork || 'ネットワークエラー',
+			errorNetworkDesc: i18nEl?.dataset.errorNetworkDesc || 'インターネット接続を確認して、もう一度お試しください。',
+			errorServer: i18nEl?.dataset.errorServer || 'サーバーエラー',
+			errorServerDesc: i18nEl?.dataset.errorServerDesc || 'サーバーで問題が発生しました。しばらくしてからもう一度お試しください。',
+			errorNotFound: i18nEl?.dataset.errorNotFound || 'ページが見つかりません',
+			errorNotFoundDesc: i18nEl?.dataset.errorNotFoundDesc || 'お探しのリソースは見つかりませんでした。',
+			errorGeneric: i18nEl?.dataset.errorGeneric || 'ストアが利用できません',
+			errorGenericDesc: i18nEl?.dataset.errorGenericDesc || 'カタログを読み込めませんでした。しばらくしてからもう一度お試しください。',
+		};
+
+		const showError = (title: string, description: string) => {
+			const errorTitle = document.getElementById('error-title');
+			const errorDesc = document.getElementById('error-description');
+			if (errorTitle) errorTitle.textContent = title;
+			if (errorDesc) errorDesc.textContent = description;
 		};
 
 		const setState = (next: string) => {
@@ -207,9 +244,10 @@ const skeletonCards = Array.from({ length: 6 });
 
 			const updateIcon = () => {
 				const isWishlisted = !!$wishlistItems.get()[String(productId)];
-				btn.innerHTML = isWishlisted
+				btn.innerHTML = DOMPurify.sanitize(isWishlisted
 					? '<svg class="size-5 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>'
-					: '<svg class="size-5 text-gray-400 hover:text-red-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>';
+					: '<svg class="size-5 text-gray-400 hover:text-red-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>'
+				, { USE_PROFILES: { svg: true } });
 			};
 
 			updateIcon();
@@ -397,7 +435,7 @@ const skeletonCards = Array.from({ length: 6 });
 						: i18n.priceUpTo.replace('{max}', Number(maxPrice).toLocaleString());
 					badges.push(`<span class="px-2 py-1 text-xs bg-[#0071e3]/10 text-[#0071e3] rounded-full">${priceLabel}</span>`);
 				}
-				activeFilters.innerHTML = badges.join('');
+				activeFilters.innerHTML = DOMPurify.sanitize(badges.join(''));
 				filterInfo.classList.remove('hidden');
 				if (sectionTitle && !searchQuery) {
 					sectionTitle.textContent = i18n.filteredResults;
@@ -426,11 +464,26 @@ const skeletonCards = Array.from({ length: 6 });
 				renderProducts(products);
 				renderPagination(data?.meta);
 				setState('loaded');
-			} catch (error) {
+			} catch (err) {
+				const status = (err as { status?: number }).status;
+				if (status === 404) {
+					showError(i18n.errorNotFound, i18n.errorNotFoundDesc);
+				} else if (status && status >= 500) {
+					showError(i18n.errorServer, i18n.errorServerDesc);
+				} else if (!status) {
+					showError(i18n.errorNetwork, i18n.errorNetworkDesc);
+				} else {
+					showError(i18n.errorGeneric, i18n.errorGenericDesc);
+				}
 				setState('error');
 			}
 		};
 
 		loadProducts();
+
+		const retryBtn = document.getElementById('error-retry-btn');
+		retryBtn?.addEventListener('click', () => {
+			loadProducts();
+		});
 	</script>
 </Layout>

@@ -175,7 +175,7 @@ adminTaxRates.put(
 
       // Build update query dynamically based on provided fields
       const updates: string[] = [];
-      const values: any[] = [];
+      const values: (string | number | null)[] = [];
 
       if (data.name !== undefined) {
         updates.push('name = ?');

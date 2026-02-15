@@ -11,6 +11,7 @@
     "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
     "test:integration": "vitest run --include '**/*.integration.test.ts'",
     "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",
     "smoke": "./scripts/smoke.sh",
     "smoke:ok": "./scripts/smoke-ok.sh"
@@ -27,7 +28,9 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240614.0",
     "@vitest/coverage-v8": "^1.6.1",
+    "eslint": "^9.39.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0",
     "vitest": "^1.6.1",
     "wrangler": "^4.59.1"
   }

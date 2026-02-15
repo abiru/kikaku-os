@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
 	$cartArray,
 	$appliedCoupon
@@ -10,6 +10,8 @@ import CheckoutForm from './CheckoutForm';
 import CheckoutSteps from './CheckoutSteps';
 import OrderSummary from './OrderSummary';
 import { ErrorBoundary } from './ErrorBoundary';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type QuoteBreakdown = {
 	subtotal: number;
@@ -47,9 +49,12 @@ function CheckoutPageContent() {
 	const [orderToken, setOrderToken] = useState<string | null>(null);
 	const [publishableKey, setPublishableKey] = useState<string>('');
 	const [customerEmail, setCustomerEmail] = useState<string>('');
+	const [emailError, setEmailError] = useState<string | null>(null);
+	const [emailTouched, setEmailTouched] = useState(false);
 	const [emailSubmitted, setEmailSubmitted] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const emailInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		createQuoteOnly();
@@ -97,9 +102,34 @@ function CheckoutPageContent() {
 		}
 	};
 
+	const validateEmail = useCallback((email: string): string | null => {
+		if (!email) return t('checkout.emailRequired');
+		if (!EMAIL_REGEX.test(email)) return t('checkout.emailInvalid');
+		return null;
+	}, [t]);
+
+	const handleEmailBlur = useCallback(() => {
+		setEmailTouched(true);
+		setEmailError(validateEmail(customerEmail));
+	}, [customerEmail, validateEmail]);
+
+	const handleEmailChange = useCallback((value: string) => {
+		setCustomerEmail(value);
+		if (emailTouched) {
+			setEmailError(validateEmail(value));
+		}
+	}, [emailTouched, validateEmail]);
+
 	const handleEmailSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!customerEmail || !customerEmail.includes('@') || !quoteId) return;
+		const validationError = validateEmail(customerEmail);
+		if (validationError) {
+			setEmailTouched(true);
+			setEmailError(validationError);
+			emailInputRef.current?.focus();
+			return;
+		}
+		if (!quoteId) return;
 
 		try {
 			setLoading(true);
@@ -208,24 +238,35 @@ function CheckoutPageContent() {
 				{/* Left column - Email + Checkout form */}
 				<div className="lg:col-span-7">
 					{!emailSubmitted ? (
-						<form onSubmit={handleEmailSubmit} className="space-y-4">
+						<form onSubmit={handleEmailSubmit} className="space-y-4" noValidate>
 							<div>
 								<label htmlFor="email" className="block text-sm font-medium text-gray-700">
-									{t('checkout.email') || 'Email'}
+									{t('checkout.email') || 'Email'} <span className="text-red-500">*</span>
 								</label>
 								<input
+									ref={emailInputRef}
 									type="email"
 									id="email"
 									required
 									value={customerEmail}
-									onChange={(e) => setCustomerEmail(e.target.value)}
+									onChange={(e) => handleEmailChange(e.target.value)}
+									onBlur={handleEmailBlur}
 									placeholder={t('checkout.emailPlaceholder') || 'your@email.com'}
-									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border"
+									aria-invalid={emailTouched && !!emailError}
+									aria-describedby={emailError ? 'email-error' : undefined}
+									className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm p-3 border ${
+										emailTouched && emailError
+											? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+											: 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
+									}`}
 								/>
+								{emailTouched && emailError && (
+									<p id="email-error" className="text-red-500 text-sm mt-1">{emailError}</p>
+								)}
 							</div>
 							<button
 								type="submit"
-								disabled={loading || !customerEmail.includes('@')}
+								disabled={loading}
 								className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								{loading ? (t('checkout.loading') || 'Loading...') : (t('checkout.proceedToPayment') || 'Proceed to Payment')}

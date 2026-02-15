@@ -11,13 +11,32 @@
 import type { Env } from '../env';
 
 /**
+ * Stripe webhook data object type
+ * Uses Record<string, unknown> as base since we don't import @stripe/stripe-js server-side types.
+ * Common Stripe fields are declared explicitly for type-safe access.
+ */
+export type StripeDataObject = Record<string, unknown> & {
+  id?: string;
+  metadata?: Record<string, string> | null;
+  currency?: string;
+  amount?: number;
+  amount_total?: number;
+  amount_subtotal?: number;
+  amount_received?: number;
+  amount_refunded?: number;
+  payment_intent?: string;
+  payment_intent_id?: string;
+  status?: string;
+};
+
+/**
  * Stripe event type for parsing
  */
 export type StripeEvent = {
   id: string;
   type: string;
   created?: number;
-  data?: { object?: any };
+  data?: { object?: StripeDataObject };
 };
 
 /**
@@ -48,7 +67,7 @@ export const normalizeOrderId = (value: unknown): number | null => {
  * Extracts order ID from Stripe metadata
  * Supports both camelCase (orderId) and snake_case (order_id) formats
  */
-export const extractOrderId = (metadata: any): number | null =>
+export const extractOrderId = (metadata: Record<string, string> | null | undefined): number | null =>
   normalizeOrderId(metadata?.orderId ?? metadata?.order_id);
 
 /**
@@ -85,8 +104,9 @@ export const recordStripeEvent = async (
       .run();
 
     return { inserted: true, duplicate: false };
-  } catch (err: any) {
-    if (String(err?.message || '').includes('UNIQUE constraint failed')) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('UNIQUE constraint failed')) {
       return { inserted: false, duplicate: true };
     }
     throw err;
@@ -142,8 +162,9 @@ export const insertPayment = async (
       )
       .run();
     return { inserted: true, duplicate: false };
-  } catch (err: any) {
-    if (String(err?.message || '').includes('UNIQUE constraint failed')) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('UNIQUE constraint failed')) {
       return { inserted: false, duplicate: true };
     }
     throw err;
@@ -201,8 +222,9 @@ export const insertRefundRecord = async (
       )
       .run();
     return { inserted: true, duplicate: false };
-  } catch (err: any) {
-    if (String(err?.message || '').includes('UNIQUE constraint failed')) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('UNIQUE constraint failed')) {
       return { inserted: false, duplicate: true };
     }
     throw err;
@@ -215,41 +237,45 @@ export const insertRefundRecord = async (
  */
 export const extractRefundsFromEvent = (
   eventType: string,
-  dataObject: any
+  dataObject: StripeDataObject
 ): RefundData[] => {
-  const rawRefunds =
+  const refundsData = dataObject.refunds as { data?: unknown[] } | undefined;
+  const rawRefunds: StripeDataObject[] =
     eventType === 'charge.refunded'
-      ? Array.isArray(dataObject.refunds?.data)
-        ? dataObject.refunds.data
+      ? Array.isArray(refundsData?.data)
+        ? (refundsData.data as StripeDataObject[])
         : []
       : dataObject?.id
         ? [dataObject]
         : [];
 
   return rawRefunds
-    .filter((refund: any) => refund?.id)
-    .map((refund: any) => ({
-      refundId: refund.id,
+    .filter((refund: StripeDataObject) => refund?.id)
+    .map((refund: StripeDataObject) => ({
+      refundId: refund.id as string,
       amount:
-        refund.amount ||
-        dataObject.amount_refunded ||
-        dataObject.amount ||
+        (refund.amount as number) ||
+        (dataObject.amount_refunded as number) ||
+        (dataObject.amount as number) ||
         0,
       currency: (
-        (refund.currency ||
-          dataObject.currency ||
-          'jpy') as string
+        ((refund.currency as string) ||
+          (dataObject.currency as string) ||
+          'jpy')
       ).toUpperCase(),
       paymentIntentId:
-        refund.payment_intent ||
-        refund.payment_intent_id ||
-        dataObject.payment_intent ||
-        dataObject.payment_intent_id ||
+        (refund.payment_intent as string) ||
+        (refund.payment_intent_id as string) ||
+        (dataObject.payment_intent as string) ||
+        (dataObject.payment_intent_id as string) ||
         null,
-      metadataOrderId: extractOrderId(refund.metadata ?? dataObject.metadata),
-      stripeReason: refund.reason || null,
-      receiptNumber: refund.receipt_number || null,
-      status: refund.status || 'succeeded'
+      metadataOrderId: extractOrderId(
+        (refund.metadata as Record<string, string> | null | undefined) ??
+        dataObject.metadata
+      ),
+      stripeReason: (refund.reason as string) || null,
+      receiptNumber: (refund.receipt_number as string) || null,
+      status: (refund.status as string) || 'succeeded'
     }));
 };
 
@@ -294,11 +320,12 @@ export const findPaymentForRefund = async (
  * 2. Available payment method types (from payment_method_types array)
  * 3. Fallback to 'card' for backward compatibility
  */
-export const extractPaymentMethod = (dataObject: any): string => {
+export const extractPaymentMethod = (dataObject: StripeDataObject): string => {
   // CRITICAL: Check ACTUAL payment method used first (from charges)
   // This is what the customer actually selected, not what was available
-  if (dataObject.charges?.data?.[0]?.payment_method_details?.type) {
-    return dataObject.charges.data[0].payment_method_details.type;
+  const charges = dataObject.charges as { data?: Array<{ payment_method_details?: { type?: string } }> } | undefined;
+  if (charges?.data?.[0]?.payment_method_details?.type) {
+    return charges.data[0].payment_method_details.type;
   }
 
   // Fallback: Check payment_method_types array (what was available)
@@ -307,7 +334,7 @@ export const extractPaymentMethod = (dataObject: any): string => {
     const types = dataObject.payment_method_types;
     if (Array.isArray(types) && types.length > 0) {
       // Return first available type (will be 'card' when both are enabled)
-      return types[0];
+      return types[0] as string;
     }
   }
 
