@@ -1,4 +1,6 @@
 ---
+import { t } from '../i18n';
+
 interface Props {
   title: string;
   subtitle?: string | null;
@@ -15,7 +17,7 @@ const {
   subtitle,
   image,
   imageSmall,
-  ctaPrimaryText = '商品を見る',
+  ctaPrimaryText = t('home.viewProducts'),
   ctaPrimaryUrl = '/products',
   ctaSecondaryText,
   ctaSecondaryUrl

@@ -66,26 +66,22 @@ const {
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
 				<span id="cart-badge" class="hidden absolute -top-1 -right-1 h-4 w-4 rounded-full bg-[#0071e3] text-[10px] font-medium text-white flex items-center justify-center">0</span>
 			</a>
-			{/* Auth area: reserve space to prevent CLS during Clerk loading */}
-			<div id="clerk-auth" class="relative min-w-[56px] min-h-[28px] flex items-center justify-end">
-				<div id="clerk-skeleton" class="absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-gray-200/60 animate-pulse pointer-events-none" aria-hidden="true"></div>
-				{showAuthToggle ? (
-					<>
-						<SignedOut>
-							<a href="/sign-in" class="text-[12px] font-medium text-[#0071e3] hover:underline whitespace-nowrap">
-								ログイン
-							</a>
-						</SignedOut>
-						<SignedIn>
-							<UserButton />
-						</SignedIn>
-					</>
-				) : (
-					<UserButton />
-				)}
-			</div>
+			{showAuthToggle ? (
+				<>
+					<SignedOut>
+						<a href="/sign-in" class="text-[12px] font-medium text-[#0071e3] hover:underline">
+							{t('nav.signIn')}
+						</a>
+					</SignedOut>
+					<SignedIn>
+						<UserButton />
+					</SignedIn>
+				</>
+			) : (
+				<UserButton />
+			)}
 			{showMobileMenu && (
-				<button id="mobile-menu-btn" type="button" class="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors" aria-label="メニュー" aria-expanded="false">
+				<button id="mobile-menu-btn" type="button" class="lg:hidden text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors" aria-label={t('nav.menu')} aria-expanded="false">
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
 				</button>
 			)}
@@ -99,8 +95,8 @@ const {
 		<div id="mobile-menu-overlay" class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm hidden" aria-hidden="true"></div>
 		<nav id="mobile-menu" class="fixed top-0 right-0 z-[70] h-full w-[280px] bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out" aria-label={t('nav.mobileMenu')}>
 			<div class="flex items-center justify-between h-[48px] px-6 border-b border-gray-100">
-				<span class="text-[15px] font-semibold">メニュー</span>
-				<button id="mobile-menu-close" type="button" class="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors" aria-label="閉じる">
+				<span class="text-[15px] font-semibold">{t('nav.menu')}</span>
+				<button id="mobile-menu-close" type="button" class="text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors" aria-label={t('common.close')}>
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 				</button>
 			</div>

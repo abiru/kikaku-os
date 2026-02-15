@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return this.props.fallback ?? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
           <p className="text-sm text-red-700">
-            {t('errors.displayError')}
+            {t('errors.componentError')}
           </p>
           <button
             type="button"

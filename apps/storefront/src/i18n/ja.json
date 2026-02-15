@@ -26,6 +26,8 @@
     "products": "製品",
     "support": "サポート",
     "openCart": "カートを開く",
+    "signIn": "ログイン",
+    "menu": "メニュー",
     "mobileMenu": "モバイルメニュー"
   },
   "footer": {
@@ -248,9 +250,9 @@
     "outOfStock": "在庫切れ",
     "stockLevel": "在庫数",
     "homeHeroes": "ホームヒーロー",
-    "bulkImageUpload": "画像一括アップロード",
+    "bulkImageUpload": "一括画像アップロード",
     "reviews": "レビュー",
-    "googleAds": "Google広告",
+    "googleAds": "Google 広告",
     "users": "ユーザー"
   },
   "wishlist": {
@@ -464,7 +466,8 @@
     "toClose": "で閉じる"
   },
   "breadcrumb": {
-    "home": "ホーム"
+    "home": "ホーム",
+    "label": "パンくずリスト"
   },
   "cookie": {
     "title": "Cookieの使用について",
@@ -510,6 +513,11 @@
     "serverErrorCode": "500",
     "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
     "reload": "再読み込み",
-    "displayError": "表示中にエラーが発生しました。ページを再読み込みしてください。"
+    "componentError": "表示中にエラーが発生しました。ページを再読み込みしてください。"
+  },
+  "home": {
+    "viewProducts": "商品を見る",
+    "viewDetails": "詳細を見る",
+    "configureFeatured": "フィーチャー製品を設定してください"
   }
 }
