@@ -85,8 +85,10 @@ const hasPrev = page > 1;
 		{/* Search & Filter */}
 		<div class="mb-6 flex flex-col sm:flex-row gap-4">
 			<form method="get" class="relative flex-1 max-w-md">
+				<label for="coupon-search" class="sr-only">Search by code</label>
 				<input
 					type="search"
+					id="coupon-search"
 					name="q"
 					value={q}
 					placeholder="Search by code..."
