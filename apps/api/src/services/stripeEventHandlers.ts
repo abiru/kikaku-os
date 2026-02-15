@@ -536,21 +536,18 @@ const handlePaymentIntentFailedOrCanceled = async (
   const currentStatus = order.status;
   const nextStatus = 'payment_failed';
   if (currentStatus === 'pending') {
-    await env.DB.prepare(
-      `UPDATE orders
-       SET status=?,
-           updated_at=datetime('now')
-       WHERE id=? AND status='pending'`
-    )
-      .bind(nextStatus, orderId)
-      .run();
-
-    await env.DB.prepare(
-      `INSERT INTO order_status_history (order_id, old_status, new_status, reason, stripe_event_id, created_at)
-       VALUES (?, ?, ?, ?, ?, datetime('now'))`
-    )
-      .bind(orderId, currentStatus, nextStatus, 'payment_failed', event.id)
-      .run();
+    await env.DB.batch([
+      env.DB.prepare(
+        `UPDATE orders
+         SET status=?,
+             updated_at=datetime('now')
+         WHERE id=? AND status='pending'`
+      ).bind(nextStatus, orderId),
+      env.DB.prepare(
+        `INSERT INTO order_status_history (order_id, old_status, new_status, reason, stripe_event_id, created_at)
+         VALUES (?, ?, ?, ?, ?, datetime('now'))`
+      ).bind(orderId, currentStatus, nextStatus, 'payment_failed', event.id)
+    ]);
   }
 
   const failurePayload = {
@@ -566,19 +563,16 @@ const handlePaymentIntentFailedOrCanceled = async (
     stripeEventId: event.id
   };
 
-  await env.DB.prepare(
-    `INSERT INTO events (type, payload, stripe_event_id, created_at)
-     VALUES (?, ?, ?, datetime('now'))`
-  )
-    .bind('payment_failed', JSON.stringify(failurePayload), event.id)
-    .run();
-
-  await env.DB.prepare(
-    `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)
-     VALUES (?, ?, 'high', 'open', 'payment_failed', datetime('now'), datetime('now'))`
-  )
-    .bind(`Payment Failed: Order #${orderId}`, JSON.stringify(failurePayload))
-    .run();
+  await env.DB.batch([
+    env.DB.prepare(
+      `INSERT INTO events (type, payload, stripe_event_id, created_at)
+       VALUES (?, ?, ?, datetime('now'))`
+    ).bind('payment_failed', JSON.stringify(failurePayload), event.id),
+    env.DB.prepare(
+      `INSERT INTO inbox_items (title, body, severity, status, kind, created_at, updated_at)
+       VALUES (?, ?, 'high', 'open', 'payment_failed', datetime('now'), datetime('now'))`
+    ).bind(`Payment Failed: Order #${orderId}`, JSON.stringify(failurePayload))
+  ]);
 
   return { received: true };
 };
