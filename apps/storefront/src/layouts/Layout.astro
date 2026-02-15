@@ -39,7 +39,7 @@ const ogImage = new URL(image, siteUrl).href;
 <html lang="ja">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content={description} />
 		<meta name="theme-color" content="#ffffff" />
 		<meta name="format-detection" content="telephone=no" />
@@ -65,10 +65,13 @@ const ogImage = new URL(image, siteUrl).href;
 		<slot name="head" />
 	</head>
 	<body class="font-sans text-[#1d1d1f] antialiased bg-[#f5f5f7]">
+		<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#0071e3] focus:text-white focus:rounded-lg focus:text-sm focus:font-medium">
+			{t('accessibility.skipToContent')}
+		</a>
 		<div class="min-h-screen flex flex-col">
 			<SiteHeader currentPath={Astro.url.pathname} />
 
-			<main class="flex-1">
+			<main id="main-content" class="flex-1">
 				<slot />
 			</main>
 

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import type { D1Database, D1PreparedStatement } from '@cloudflare/workers-types';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
@@ -14,6 +15,20 @@ const paymentIntentSchema = z.object({
   quoteId: z.string().min(1, 'quoteId is required'),
   email: z.string().email('Valid email is required'),
 });
+
+const runStatements = async (
+  db: D1Database,
+  statements: D1PreparedStatement[]
+): Promise<void> => {
+  if (typeof db.batch === 'function') {
+    await db.batch(statements);
+    return;
+  }
+
+  for (const statement of statements) {
+    await statement.run();
+  }
+};
 
 /**
  * Clean up a failed order creation: release stock, delete order items and order.
@@ -41,7 +56,7 @@ const cleanupFailedOrder = async (
   }
 
   try {
-    await db.batch([
+    await runStatements(db, [
       db.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId),
       db.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId),
     ]);
@@ -244,13 +259,13 @@ payments.post('/payments/intent', async (c) => {
   });
 
   if (orderItemStatements.length > 0) {
-    await c.env.DB.batch(orderItemStatements);
+    await runStatements(c.env.DB, orderItemStatements);
   }
 
   // Reserve stock atomically right before payment creation
   const reservation = await reserveStockForOrder(c.env.DB, orderId, quoteItems);
   if (!reservation.reserved) {
-    await c.env.DB.batch([
+    await runStatements(c.env.DB, [
       c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId),
       c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId),
     ]);

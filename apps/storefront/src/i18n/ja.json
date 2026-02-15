@@ -439,6 +439,9 @@
     "accept": "同意する",
     "learnMore": "詳細を見る"
   },
+  "accessibility": {
+    "skipToContent": "メインコンテンツへ"
+  },
   "newsletter": {
     "title": "ニュースレター",
     "description": "最新情報やお得な情報をお届けします。",

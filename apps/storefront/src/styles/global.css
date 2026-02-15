@@ -15,6 +15,12 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
+
+  /* Keyboard focus indicator */
+  :focus-visible {
+    outline: 2px solid #0071e3;
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {
