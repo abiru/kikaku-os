@@ -6,6 +6,11 @@ vi.mock('../../../middleware/clerkAuth', () => ({
   getActor: () => 'test-admin',
 }));
 
+vi.mock('../../../middleware/rbac', () => ({
+  loadRbac: async (_c: any, next: any) => next(),
+  requirePermission: () => async (_c: any, next: any) => next(),
+}));
+
 const ADMIN_KEY = 'test-admin-key';
 
 const sampleCoupon = {
