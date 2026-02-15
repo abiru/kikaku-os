@@ -153,7 +153,7 @@ function OrderSteps({ steps }: { steps: Step[] }) {
                 </div>
               )}
               <span className={`text-xs font-medium text-center whitespace-nowrap ${
-                step.status === 'upcoming' ? 'text-gray-400' : 'text-gray-900'
+                step.status === 'upcoming' ? 'text-gray-500' : 'text-gray-900'
               }`}>
                 {step.label}
               </span>
