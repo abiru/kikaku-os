@@ -189,11 +189,41 @@ const {
 	const mobileMenuClose = document.getElementById('mobile-menu-close');
 
 	if (mobileMenuBtn && mobileMenu) {
+		const getFocusableElements = (): HTMLElement[] => {
+			const selector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+			return Array.from(mobileMenu.querySelectorAll<HTMLElement>(selector));
+		};
+
+		const handleTrapKeydown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				closeMobileMenu();
+				return;
+			}
+			if (e.key !== 'Tab') return;
+			const focusable = getFocusableElements();
+			if (focusable.length === 0) return;
+			const first = focusable[0];
+			const last = focusable[focusable.length - 1];
+			if (e.shiftKey) {
+				if (document.activeElement === first) {
+					e.preventDefault();
+					last.focus();
+				}
+			} else {
+				if (document.activeElement === last) {
+					e.preventDefault();
+					first.focus();
+				}
+			}
+		};
+
 		const openMobileMenu = () => {
 			mobileMenu.classList.remove('translate-x-full');
 			mobileMenuOverlay?.classList.remove('hidden');
 			mobileMenuBtn.setAttribute('aria-expanded', 'true');
 			document.body.style.overflow = 'hidden';
+			document.addEventListener('keydown', handleTrapKeydown);
+			mobileMenuClose?.focus();
 		};
 
 		const closeMobileMenu = () => {
@@ -201,17 +231,13 @@ const {
 			mobileMenuOverlay?.classList.add('hidden');
 			mobileMenuBtn.setAttribute('aria-expanded', 'false');
 			document.body.style.overflow = '';
+			document.removeEventListener('keydown', handleTrapKeydown);
+			mobileMenuBtn.focus();
 		};
 
 		mobileMenuBtn.addEventListener('click', openMobileMenu);
 		mobileMenuClose?.addEventListener('click', closeMobileMenu);
 		mobileMenuOverlay?.addEventListener('click', closeMobileMenu);
-
-		document.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape' && !mobileMenu.classList.contains('translate-x-full')) {
-				closeMobileMenu();
-			}
-		});
 	}
 
 	// Remove clerk skeleton placeholder when Clerk initializes
