@@ -14,6 +14,9 @@ type RateLimitEntry = {
   resetAt: number;
 };
 
+// NOTE: Rate limiting uses in-memory Map, which is per-isolate on
+// Cloudflare Workers. For true distributed rate limiting, consider
+// Cloudflare Rate Limiting Rules or Durable Objects.
 const store = new Map<string, RateLimitEntry>();
 
 // Periodically clean expired entries to prevent memory leaks
