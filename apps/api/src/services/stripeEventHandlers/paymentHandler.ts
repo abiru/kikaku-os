@@ -10,6 +10,7 @@ import type { HandlerResult } from './shared';
 import { recordCouponUsage } from './shared';
 import {
   type StripeEvent,
+  type StripeDataObject,
   extractOrderId,
   insertPayment,
   extractPaymentMethod
@@ -26,7 +27,7 @@ const logger = createLogger('stripe-payment-handler');
 export const handlePaymentIntentSucceeded = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: any
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
   const orderId = extractOrderId(dataObject.metadata);
   if (!orderId) {
@@ -43,7 +44,7 @@ export const handlePaymentIntentSucceeded = async (
     return { received: true, ignored: true };
   }
 
-  const providerPaymentId = dataObject.id;
+  const providerPaymentId = dataObject.id ?? '';
 
   await env.DB.prepare(
     `UPDATE orders
@@ -60,17 +61,19 @@ export const handlePaymentIntentSucceeded = async (
   let addressInfo = null;
 
   // Try to get shipping address first (if provided)
-  if (dataObject.shipping) {
+  const shipping = dataObject.shipping as Record<string, unknown> | undefined;
+  if (shipping) {
     addressInfo = {
-      name: dataObject.shipping.name,
-      address: dataObject.shipping.address,
-      phone: dataObject.shipping.phone || dataObject.receipt_email
+      name: shipping.name,
+      address: shipping.address,
+      phone: shipping.phone || dataObject.receipt_email
     };
   }
   // Otherwise, get billing details from latest charge
-  else if (dataObject.charges?.data && dataObject.charges.data.length > 0) {
-    const charge = dataObject.charges.data[0];
-    if (charge.billing_details) {
+  else {
+    const charges = dataObject.charges as { data?: Array<{ billing_details?: Record<string, unknown> }> } | undefined;
+    const charge = charges?.data?.[0];
+    if (charge?.billing_details) {
       addressInfo = {
         name: charge.billing_details.name,
         email: charge.billing_details.email,

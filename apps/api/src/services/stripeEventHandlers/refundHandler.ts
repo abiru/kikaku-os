@@ -8,6 +8,7 @@ import type { Env } from '../../env';
 import type { HandlerResult } from './shared';
 import {
   type StripeEvent,
+  type StripeDataObject,
   extractRefundsFromEvent,
   insertRefundRecord,
   findPaymentForRefund
@@ -146,7 +147,7 @@ const updateOrderAfterRefund = async (
 export const handleRefundEvents = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: any
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
   const refunds = extractRefundsFromEvent(event.type, dataObject);
   let sawDuplicate = false;
