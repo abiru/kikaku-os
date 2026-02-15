@@ -209,45 +209,6 @@ jobs:
       - name: Run smoke tests
         run: |
           # NOTE: Update these URLs after custom domain setup
-          API_URL="https://kikaku-os-api.workers.dev"
-
-          echo "🔍 Running production smoke tests..."
-
-          # Health check (basic)
-          echo "✓ Testing health endpoint"
-          curl -sf "$API_URL/health" | jq -e '.database == "ok" and .r2 == "ok"'
-
-          # Health check (secrets validation)
-          echo "✓ Testing health endpoint includes secrets check"
-          curl -sf "$API_URL/health" | jq -e '.secrets == "ok"'
-
-          # API root
-          echo "✓ Testing API root"
-          curl -sf "$API_URL/" | jq -e '.message == "led kikaku os api"'
-
-          # Store products
-          echo "✓ Testing store products endpoint"
-          curl -sf "$API_URL/store/products" | jq -e '.ok == true'
-
-          # Store product filters
-          echo "✓ Testing store product filters endpoint"
-          curl -sf "$API_URL/store/products/filters" | jq -e '.ok == true'
-
-          # Quotation with invalid token (should return error, not 500)
-          echo "✓ Testing quotation error handling"
-          QUOT_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/quotations/nonexistent-token")
-          if [ "$QUOT_STATUS" = "500" ]; then
-            echo "Error: Quotation endpoint returned 500 for invalid token"
-            exit 1
-          fi
-          echo "  Got expected status: $QUOT_STATUS"
-
-          # Auth protection (should return 401)
-          echo "✓ Testing auth protection"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/admin/products")
-          if [ "$STATUS" != "401" ]; then
-            echo "Error: Expected 401, got $STATUS"
-            exit 1
-          fi
-
-          echo "✅ All smoke tests passed!"
+          export API_URL="https://kikaku-os-api.workers.dev"
+          export STOREFRONT_URL="https://kikaku-storefront.pages.dev"
+          bash scripts/smoke-test-prod.sh
