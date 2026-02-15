@@ -7,7 +7,7 @@
 import type { Env } from '../../env';
 import type { HandlerResult } from './shared';
 import { runStatements } from './shared';
-import { type StripeEvent, extractOrderId } from '../../lib/stripeData';
+import { type StripeEvent, type StripeDataObject, extractOrderId } from '../../lib/stripeData';
 import { releaseStockReservationForOrder } from '../inventoryCheck';
 import { createLogger } from '../../lib/logger';
 
@@ -16,7 +16,7 @@ const logger = createLogger('stripe-failure-handler');
 export const handlePaymentIntentFailedOrCanceled = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: any
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
   const orderId = extractOrderId(dataObject.metadata);
   if (!orderId) {
@@ -67,15 +67,16 @@ export const handlePaymentIntentFailedOrCanceled = async (
     ]);
   }
 
+  const lastPaymentError = dataObject.last_payment_error as Record<string, unknown> | undefined;
   const failurePayload = {
     orderId,
     paymentIntentId: dataObject.id ?? null,
     eventType: event.type,
-    declineCode: dataObject.last_payment_error?.decline_code ?? null,
-    code: dataObject.last_payment_error?.code ?? null,
+    declineCode: lastPaymentError?.decline_code ?? null,
+    code: lastPaymentError?.code ?? null,
     message:
-      dataObject.last_payment_error?.message ??
-      dataObject.cancellation_reason ??
+      (lastPaymentError?.message as string) ??
+      (dataObject.cancellation_reason as string) ??
       'Payment intent failed',
     stripeEventId: event.id
   };

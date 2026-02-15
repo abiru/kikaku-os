@@ -60,9 +60,9 @@ if (Astro.request.method === 'POST') {
 		if (createdId) {
 			return Astro.redirect(`/admin/home-heroes/${createdId}`);
 		}
-	} catch (e: any) {
+	} catch (e: unknown) {
 		console.error(e);
-		error = e.message || 'Failed to create hero section';
+		error = e instanceof Error ? e.message : 'Failed to create hero section';
 	}
 }
 ---
