@@ -9,3 +9,11 @@ export const newsletterListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).optional().default(50),
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
+
+export const newsletterUnsubscribeQuerySchema = z.object({
+  token: z.string().min(1, 'Token is required').max(512),
+});
+
+export const newsletterUnsubscribeBodySchema = z.object({
+  token: z.string().min(1, 'Token is required').max(512),
+});
