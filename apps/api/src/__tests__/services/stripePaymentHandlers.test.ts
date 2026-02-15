@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  handleCheckoutSessionCompleted,
-  handlePaymentIntentSucceeded,
-  handlePaymentIntentFailedOrCanceled
-} from '../../services/stripePaymentHandlers';
+import { handleCheckoutSessionCompleted } from '../../services/stripeEventHandlers/checkoutHandler';
+import { handlePaymentIntentSucceeded } from '../../services/stripeEventHandlers/paymentHandler';
+import { handlePaymentIntentFailedOrCanceled } from '../../services/stripeEventHandlers/failureHandler';
 import type { Env } from '../../env';
 import type { StripeEvent } from '../../lib/stripeData';
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   ensureStripeProduct,
   ensureStripePrice,
@@ -31,6 +31,10 @@ const originalFetch = global.fetch;
 describe('stripe service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = originalFetch;
+  });
+
+  afterEach(() => {
     global.fetch = originalFetch;
   });
 

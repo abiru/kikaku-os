@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  handleRefundEvents,
-  handleChargeDispute
-} from '../../services/stripeRefundHandlers';
+import { handleRefundEvents } from '../../services/stripeEventHandlers/refundHandler';
+import { handleChargeDispute } from '../../services/stripeEventHandlers/disputeHandler';
 import type { Env } from '../../env';
 import type { StripeEvent } from '../../lib/stripeData';
 
