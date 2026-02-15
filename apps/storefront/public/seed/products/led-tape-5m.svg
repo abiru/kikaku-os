@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="LED tape 5m">
+  <rect width="1200" height="900" fill="#faf5ff" />
+  <circle cx="600" cy="460" r="240" fill="none" stroke="#a855f7" stroke-width="44" />
+  <circle cx="600" cy="460" r="120" fill="none" stroke="#c084fc" stroke-width="44" />
+  <circle cx="600" cy="460" r="26" fill="#7e22ce" />
+  <text x="320" y="160" fill="#6b21a8" font-size="64" font-family="'Noto Sans JP', sans-serif" font-weight="700">LED TAPE LIGHT 5M</text>
+</svg>

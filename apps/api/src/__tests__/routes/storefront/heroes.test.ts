@@ -86,6 +86,32 @@ describe('Storefront API', () => {
       expect(json.heroes[0].image).toMatch(/\/r2\?key=test%2Fimage\.png/);
     });
 
+    it('returns direct hero image URLs without R2 wrapping', async () => {
+      const heroSections: HeroSectionRow[] = [
+        {
+          id: 1,
+          title: 'Direct URL Hero',
+          subtitle: null,
+          image_r2_key: '/seed/heroes/hero-01-main.svg',
+          image_r2_key_small: 'https://cdn.example.com/hero-small.webp',
+          cta_primary_text: null,
+          cta_primary_url: null,
+          cta_secondary_text: null,
+          cta_secondary_url: null,
+          position: 1
+        }
+      ];
+
+      const db = createMockDb({ heroSections });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/heroes');
+      const json = await res.json();
+
+      expect(json.heroes[0].image).toBe('/seed/heroes/hero-01-main.svg');
+      expect(json.heroes[0].imageSmall).toBe('https://cdn.example.com/hero-small.webp');
+    });
+
     it('handles null R2 keys gracefully', async () => {
       const heroSections: HeroSectionRow[] = [
         {

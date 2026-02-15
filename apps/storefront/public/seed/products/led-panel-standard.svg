@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="LED panel standard">
+  <rect width="1200" height="900" fill="#eef2ff" />
+  <rect x="140" y="160" width="920" height="580" rx="44" fill="#ffffff" stroke="#c7d2fe" stroke-width="16" />
+  <rect x="220" y="240" width="760" height="420" rx="24" fill="#dbeafe" />
+  <circle cx="980" cy="260" r="46" fill="#60a5fa" />
+  <text x="140" y="120" fill="#1e3a8a" font-size="62" font-family="'Noto Sans JP', sans-serif" font-weight="700">LED PANEL STANDARD</text>
+</svg>

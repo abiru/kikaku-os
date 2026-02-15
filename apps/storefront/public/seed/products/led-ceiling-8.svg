@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="LED ceiling 8">
+  <rect width="1200" height="900" fill="#ecfeff" />
+  <circle cx="600" cy="410" r="240" fill="#cffafe" stroke="#06b6d4" stroke-width="20" />
+  <circle cx="600" cy="410" r="150" fill="#ffffff" opacity="0.85" />
+  <text x="190" y="770" fill="#0f766e" font-size="66" font-family="'Noto Sans JP', sans-serif" font-weight="700">LED CEILING 8JOU</text>
+</svg>

@@ -10,6 +10,7 @@ type SeedRequest = {
   payments?: number;
   refunds?: number;
   makeInbox?: boolean;
+  withImages?: boolean;
 };
 
 type StripeProvisionRow = {
@@ -31,6 +32,7 @@ type ProductSeedDef = {
   sku: string;
   price: number;
   stock: number;
+  imageUrl: string;
 };
 
 const dev = new Hono<Env>();
@@ -81,23 +83,82 @@ const getStaticPageBody = (slug: string): string | null => {
   return bodies[slug] ?? null;
 };
 
+const HERO_IMAGE_PAIRS: ReadonlyArray<{ main: string; small: string }> = [
+  { main: '/seed/heroes/hero-01-main.svg', small: '/seed/heroes/hero-01-small.svg' },
+  { main: '/seed/heroes/hero-02-main.svg', small: '/seed/heroes/hero-02-small.svg' },
+  { main: '/seed/heroes/hero-03-main.svg', small: '/seed/heroes/hero-03-small.svg' },
+];
+
+const ensureImageMetadata = (
+  rawMetadata: string | null,
+  imageUrl: string
+): { metadata: string; changed: boolean } => {
+  let base: Record<string, unknown> = {};
+
+  if (rawMetadata) {
+    try {
+      const parsed = JSON.parse(rawMetadata) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        base = parsed as Record<string, unknown>;
+      }
+    } catch {
+      // Ignore parse errors and replace invalid metadata with a clean JSON object.
+    }
+  }
+
+  if (base.image_url === imageUrl) {
+    return { metadata: JSON.stringify(base), changed: false };
+  }
+
+  return {
+    metadata: JSON.stringify({ ...base, image_url: imageUrl }),
+    changed: true
+  };
+};
+
 const seedProductWithVariant = async (
   db: D1Database,
   def: ProductSeedDef,
   timestamp: string
-): Promise<{ productCreated: number; variantCreated: number; priceCreated: number; inventoryCreated: number }> => {
+): Promise<{
+  productCreated: number;
+  variantCreated: number;
+  priceCreated: number;
+  inventoryCreated: number;
+  metadataUpdated: number;
+}> => {
   const existing = await db.prepare(
-    `SELECT id FROM products WHERE title=?`
-  ).bind(def.title).first<{ id: number }>();
+    `SELECT id, metadata FROM products WHERE title=?`
+  ).bind(def.title).first<{ id: number; metadata: string | null }>();
 
   let productId = existing?.id;
   let productCreated = 0;
+  let metadataUpdated = 0;
+  const metadataResult = def.imageUrl
+    ? ensureImageMetadata(existing?.metadata ?? null, def.imageUrl)
+    : null;
+
   if (!productId) {
     const res = await db.prepare(
-      `INSERT INTO products (title, description, status, category, featured, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(def.title, def.description, def.status, def.category, def.featured, timestamp, timestamp).run();
+      `INSERT INTO products (title, description, status, category, featured, metadata, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      def.title,
+      def.description,
+      def.status,
+      def.category,
+      def.featured,
+      metadataResult?.metadata ?? null,
+      timestamp,
+      timestamp
+    ).run();
     productId = Number(res.meta.last_row_id);
     productCreated = 1;
+    if (metadataResult?.changed) metadataUpdated = 1;
+  } else if (metadataResult?.changed) {
+    await db.prepare(
+      `UPDATE products SET metadata=?, updated_at=? WHERE id=?`
+    ).bind(metadataResult.metadata, timestamp, productId).run();
+    metadataUpdated = 1;
   }
 
   const existingVariant = await db.prepare(
@@ -138,7 +199,7 @@ const seedProductWithVariant = async (
     inventoryCreated = 1;
   }
 
-  return { productCreated, variantCreated, priceCreated, inventoryCreated };
+  return { productCreated, variantCreated, priceCreated, inventoryCreated, metadataUpdated };
 };
 
 dev.get('/ping', (c) => {
@@ -175,6 +236,7 @@ dev.post('/seed', async (c) => {
   const paymentsCount = Math.max(0, Math.floor(payload.payments ?? ordersCount));
   const refundsCount = Math.max(0, Math.floor(payload.refunds ?? 1));
   const makeInbox = payload.makeInbox ?? true;
+  const withImages = payload.withImages ?? true;
 
   const orderTime = `${date}T12:00:00Z`;
   const paymentTime = `${date}T12:10:00Z`;
@@ -197,17 +259,35 @@ dev.post('/seed', async (c) => {
 
     const productTitle = 'LEDパネルライト スタンダード';
     const variantSku = 'LED-PNL-STD';
+    const baseProductImageUrl = '/seed/products/led-panel-standard.svg';
     const existingProduct = await c.env.DB.prepare(
-      `SELECT id FROM products WHERE title=?`
-    ).bind(productTitle).first<{ id: number }>();
+      `SELECT id, metadata FROM products WHERE title=?`
+    ).bind(productTitle).first<{ id: number; metadata: string | null }>();
     let productId = existingProduct?.id;
     let productCreated = 0;
+    let productMetadataUpdated = 0;
+    const baseProductMetadata = ensureImageMetadata(
+      existingProduct?.metadata ?? null,
+      withImages ? baseProductImageUrl : ''
+    );
     if (!productId) {
       const res = await c.env.DB.prepare(
-        `INSERT INTO products (title, description, status, category, featured, created_at, updated_at) VALUES (?, ?, 'active', 'LED照明', 1, ?, ?)`
-      ).bind(productTitle, '高品質LEDパネルライト。自然光に近い演色性で目に優しい設計。', orderTime, orderTime).run();
+        `INSERT INTO products (title, description, status, category, featured, metadata, created_at, updated_at) VALUES (?, ?, 'active', 'LED照明', 1, ?, ?, ?)`
+      ).bind(
+        productTitle,
+        '高品質LEDパネルライト。自然光に近い演色性で目に優しい設計。',
+        withImages ? baseProductMetadata.metadata : null,
+        orderTime,
+        orderTime
+      ).run();
       productId = Number(res.meta.last_row_id);
       productCreated = 1;
+      if (withImages) productMetadataUpdated += 1;
+    } else if (withImages && baseProductMetadata.changed) {
+      await c.env.DB.prepare(
+        `UPDATE products SET metadata=?, updated_at=? WHERE id=?`
+      ).bind(baseProductMetadata.metadata, orderTime, productId).run();
+      productMetadataUpdated += 1;
     }
 
     const existingVariant = await c.env.DB.prepare(
@@ -271,38 +351,154 @@ dev.post('/seed', async (c) => {
 
     // --- 追加商品（5商品） ---
     const additionalProducts: ReadonlyArray<ProductSeedDef> = [
-      { title: 'LEDデスクライト Pro', description: 'プロフェッショナル向け高演色デスクライト。調光・調色機能付き。', category: 'LED照明', status: 'active', featured: 1, sku: 'LED-DESK-PRO', price: 12800, stock: 25 },
-      { title: 'LEDシーリングライト 8畳', description: '8畳用LEDシーリングライト。リモコン付き、省エネ設計。', category: 'LED照明', status: 'active', featured: 1, sku: 'LED-CEIL-8', price: 15800, stock: 15 },
-      { title: 'USB充電アダプター 65W', description: '65W GaN充電器。USB-C×2、USB-A×1。PD3.0対応。', category: 'アクセサリー', status: 'active', featured: 0, sku: 'USB-CHG-65W', price: 4980, stock: 50 },
-      { title: 'LEDテープライト 5m', description: 'RGB LEDテープライト5m。リモコン付き、切断可能。', category: 'アクセサリー', status: 'active', featured: 0, sku: 'LED-TAPE-5M', price: 3280, stock: 40 },
-      { title: 'スマート電源タップ', description: 'Wi-Fi対応スマート電源タップ。4口+USB。タイマー・音声操作対応。', category: '電源機器', status: 'active', featured: 0, sku: 'PWR-TAP-SMART', price: 6980, stock: 30 },
+      {
+        title: 'LEDデスクライト Pro',
+        description: 'プロフェッショナル向け高演色デスクライト。調光・調色機能付き。',
+        category: 'LED照明',
+        status: 'active',
+        featured: 1,
+        sku: 'LED-DESK-PRO',
+        price: 12800,
+        stock: 25,
+        imageUrl: withImages ? '/seed/products/led-desk-pro.svg' : ''
+      },
+      {
+        title: 'LEDシーリングライト 8畳',
+        description: '8畳用LEDシーリングライト。リモコン付き、省エネ設計。',
+        category: 'LED照明',
+        status: 'active',
+        featured: 1,
+        sku: 'LED-CEIL-8',
+        price: 15800,
+        stock: 15,
+        imageUrl: withImages ? '/seed/products/led-ceiling-8.svg' : ''
+      },
+      {
+        title: 'USB充電アダプター 65W',
+        description: '65W GaN充電器。USB-C×2、USB-A×1。PD3.0対応。',
+        category: 'アクセサリー',
+        status: 'active',
+        featured: 0,
+        sku: 'USB-CHG-65W',
+        price: 4980,
+        stock: 50,
+        imageUrl: withImages ? '/seed/products/usb-charger-65w.svg' : ''
+      },
+      {
+        title: 'LEDテープライト 5m',
+        description: 'RGB LEDテープライト5m。リモコン付き、切断可能。',
+        category: 'アクセサリー',
+        status: 'active',
+        featured: 0,
+        sku: 'LED-TAPE-5M',
+        price: 3280,
+        stock: 40,
+        imageUrl: withImages ? '/seed/products/led-tape-5m.svg' : ''
+      },
+      {
+        title: 'スマート電源タップ',
+        description: 'Wi-Fi対応スマート電源タップ。4口+USB。タイマー・音声操作対応。',
+        category: '電源機器',
+        status: 'active',
+        featured: 0,
+        sku: 'PWR-TAP-SMART',
+        price: 6980,
+        stock: 30,
+        imageUrl: withImages ? '/seed/products/smart-power-strip.svg' : ''
+      },
     ];
 
     let additionalProductsCreated = 0;
     let additionalVariantsCreated = 0;
     let additionalPricesCreated = 0;
     let additionalInventoryCreated = 0;
+    let additionalMetadataUpdated = 0;
     for (const def of additionalProducts) {
       const result = await seedProductWithVariant(c.env.DB, def, orderTime);
       additionalProductsCreated += result.productCreated;
       additionalVariantsCreated += result.variantCreated;
       additionalPricesCreated += result.priceCreated;
       additionalInventoryCreated += result.inventoryCreated;
+      additionalMetadataUpdated += result.metadataUpdated;
     }
 
     // --- ヒーローセクション ---
     let heroSectionsCreated = 0;
-    const heroCount = await c.env.DB.prepare(
-      `SELECT COUNT(*) as count FROM home_hero_sections`
-    ).first<{ count: number }>();
-    if ((heroCount?.count ?? 0) === 0) {
-      await c.env.DB.prepare(
-        `INSERT INTO home_hero_sections (title, subtitle, cta_primary_text, cta_primary_url, position, status, created_at, updated_at) VALUES (?, ?, ?, ?, 1, 'active', ?, ?)`
-      ).bind('高品質LED照明で暮らしを変える', 'プロ仕様の照明機器をお手頃価格で。送料無料キャンペーン実施中。', '商品を見る', '/products', orderTime, orderTime).run();
-      await c.env.DB.prepare(
-        `INSERT INTO home_hero_sections (title, subtitle, cta_primary_text, cta_primary_url, position, status, created_at, updated_at) VALUES (?, ?, ?, ?, 2, 'active', ?, ?)`
-      ).bind('新商品入荷', '最新のスマート照明・電源機器が続々登場。', '新商品をチェック', '/products', orderTime, orderTime).run();
-      heroSectionsCreated = 2;
+    let heroSectionImagesUpdated = 0;
+    const heroTemplates: ReadonlyArray<{
+      title: string;
+      subtitle: string;
+      ctaPrimaryText: string;
+      ctaPrimaryUrl: string;
+    }> = [
+      {
+        title: '高品質LED照明で暮らしを変える',
+        subtitle: 'プロ仕様の照明機器をお手頃価格で。送料無料キャンペーン実施中。',
+        ctaPrimaryText: '商品を見る',
+        ctaPrimaryUrl: '/products'
+      },
+      {
+        title: '新商品入荷',
+        subtitle: '最新のスマート照明・電源機器が続々登場。',
+        ctaPrimaryText: '新商品をチェック',
+        ctaPrimaryUrl: '/products'
+      },
+      {
+        title: 'レビュー高評価アイテム',
+        subtitle: '実際の導入ユーザーから支持される人気モデルを掲載中。',
+        ctaPrimaryText: '人気商品へ',
+        ctaPrimaryUrl: '/products'
+      }
+    ];
+
+    const existingHeroesRes = await c.env.DB.prepare(
+      `SELECT id, image_r2_key, image_r2_key_small
+       FROM home_hero_sections
+       ORDER BY position ASC, id ASC`
+    ).all<{ id: number; image_r2_key: string | null; image_r2_key_small: string | null }>();
+    const existingHeroes = existingHeroesRes.results ?? [];
+
+    for (let i = 0; i < HERO_IMAGE_PAIRS.length; i += 1) {
+      const template = heroTemplates[i];
+      const imagePair = HERO_IMAGE_PAIRS[i];
+      const existingHero = existingHeroes[i];
+
+      if (!existingHero) {
+        await c.env.DB.prepare(
+          `INSERT INTO home_hero_sections
+           (title, subtitle, image_r2_key, image_r2_key_small, cta_primary_text, cta_primary_url, position, status, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`
+        ).bind(
+          template.title,
+          template.subtitle,
+          withImages ? imagePair.main : null,
+          withImages ? imagePair.small : null,
+          template.ctaPrimaryText,
+          template.ctaPrimaryUrl,
+          i + 1,
+          orderTime,
+          orderTime
+        ).run();
+        heroSectionsCreated += 1;
+        if (withImages) heroSectionImagesUpdated += 1;
+        continue;
+      }
+
+      if (!withImages) continue;
+
+      const nextMain = existingHero.image_r2_key || imagePair.main;
+      const nextSmall = existingHero.image_r2_key_small || imagePair.small;
+      const shouldUpdate =
+        nextMain !== existingHero.image_r2_key || nextSmall !== existingHero.image_r2_key_small;
+
+      if (shouldUpdate) {
+        await c.env.DB.prepare(
+          `UPDATE home_hero_sections
+           SET image_r2_key=?, image_r2_key_small=?, updated_at=?
+           WHERE id=?`
+        ).bind(nextMain, nextSmall, orderTime, existingHero.id).run();
+        heroSectionImagesUpdated += 1;
+      }
     }
 
     // --- クーポン ---
@@ -442,6 +638,7 @@ dev.post('/seed', async (c) => {
 
     return jsonOk(c, {
       date,
+      withImages,
       created: {
         customers: customerCreated,
         products: productCreated + additionalProductsCreated,
@@ -458,6 +655,7 @@ dev.post('/seed', async (c) => {
         contactInquiries: contactInquiriesCreated,
         staticPages: staticPagesUpdated,
         inventoryMovements: baseInventoryCreated + additionalInventoryCreated,
+        images: productMetadataUpdated + additionalMetadataUpdated + heroSectionImagesUpdated
       }
     });
   } catch (err) {

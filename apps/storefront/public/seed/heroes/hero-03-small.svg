@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024" role="img" aria-label="Hero 03 small">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c2d12" />
+      <stop offset="100%" stop-color="#ea580c" />
+    </linearGradient>
+  </defs>
+  <rect width="768" height="1024" fill="url(#bg)" />
+  <rect x="56" y="160" width="656" height="700" rx="36" fill="#ffedd5" opacity="0.14" />
+  <text x="96" y="340" fill="#fff7ed" font-size="64" font-family="'Noto Sans JP', sans-serif" font-weight="700">TOP</text>
+  <text x="96" y="420" fill="#fff7ed" font-size="64" font-family="'Noto Sans JP', sans-serif" font-weight="700">RATED</text>
+  <text x="96" y="500" fill="#ffedd5" font-size="30" font-family="'Noto Sans JP', sans-serif">Curated Quality</text>
+</svg>

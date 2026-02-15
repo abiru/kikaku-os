@@ -60,8 +60,13 @@ const extractImageUrl = (metadata: string | null): string | null => {
   }
 };
 
-const buildR2Url = (r2Key: string, baseUrl: string): string => {
-  return `${baseUrl}/r2?key=${encodeURIComponent(r2Key)}`;
+const isDirectAssetUrl = (value: string): boolean => {
+  return value.startsWith('/') || value.startsWith('http://') || value.startsWith('https://');
+};
+
+const resolveAssetUrl = (assetKey: string, baseUrl: string): string => {
+  if (isDirectAssetUrl(assetKey)) return assetKey;
+  return `${baseUrl}/r2?key=${encodeURIComponent(assetKey)}`;
 };
 
 const rowsToProducts = (rows: StorefrontRow[], baseUrl: string): StorefrontProduct[] => {
@@ -96,7 +101,7 @@ const rowsToProducts = (rows: StorefrontRow[], baseUrl: string): StorefrontProdu
       const sortedImages = imageList.sort((a, b) => a.position - b.position);
 
       // Generate R2 URLs
-      const imageUrls = sortedImages.map(img => buildR2Url(img.r2Key, baseUrl));
+      const imageUrls = sortedImages.map(img => resolveAssetUrl(img.r2Key, baseUrl));
 
       // Main image: first R2 image or fallback
       const mainImage = imageUrls[0] || fallbackImage;
@@ -516,10 +521,10 @@ storefront.get('/home/heroes', async (c) => {
   const heroes = (res.results || []).map((hero) => ({
     ...hero,
     image: hero.image_r2_key
-      ? `${baseUrl}/r2?key=${encodeURIComponent(hero.image_r2_key)}`
+      ? resolveAssetUrl(hero.image_r2_key, baseUrl)
       : null,
     imageSmall: hero.image_r2_key_small
-      ? `${baseUrl}/r2?key=${encodeURIComponent(hero.image_r2_key_small)}`
+      ? resolveAssetUrl(hero.image_r2_key_small, baseUrl)
       : null
   }));
 
@@ -532,12 +537,13 @@ type FeaturedProductRow = {
   title: string;
   description: string | null;
   category: string | null;
+  product_metadata: string | null;
   r2_key: string | null;
 };
 
 storefront.get('/home/featured-categories', async (c) => {
   const res = await c.env.DB.prepare(`
-    SELECT p.id, p.title, p.description, p.category,
+    SELECT p.id, p.title, p.description, p.category, p.metadata as product_metadata,
            pi.r2_key
     FROM products p
     LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.position = 0
@@ -549,8 +555,8 @@ storefront.get('/home/featured-categories', async (c) => {
   const products = (res.results || []).map((product) => ({
     ...product,
     image: product.r2_key
-      ? `${baseUrl}/r2?key=${encodeURIComponent(product.r2_key)}`
-      : null
+      ? resolveAssetUrl(product.r2_key, baseUrl)
+      : extractImageUrl(product.product_metadata)
   }));
 
   return jsonOk(c, { products });

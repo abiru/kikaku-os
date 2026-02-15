@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-label="Hero 02 main">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#052e16" />
+      <stop offset="100%" stop-color="#0f766e" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)" />
+  <rect x="132" y="130" width="1656" height="820" rx="54" fill="#ecfeff" opacity="0.12" />
+  <path d="M188 778 C520 562, 870 1008, 1720 620" stroke="#99f6e4" stroke-width="36" fill="none" opacity="0.38" />
+  <text x="220" y="340" fill="#f0fdfa" font-size="92" font-family="'Noto Sans JP', sans-serif" font-weight="700">NEW ARRIVALS</text>
+  <text x="220" y="460" fill="#ccfbf1" font-size="44" font-family="'Noto Sans JP', sans-serif">Energy Efficient Lighting + Smart Power</text>
+</svg>

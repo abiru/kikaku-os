@@ -33,6 +33,7 @@ export type FeaturedProductRow = {
   title: string;
   description: string | null;
   category: string | null;
+  product_metadata?: string | null;
   r2_key: string | null;
 };
 

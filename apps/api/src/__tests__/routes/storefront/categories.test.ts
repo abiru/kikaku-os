@@ -91,6 +91,47 @@ describe('Storefront API', () => {
       expect(json.products[0].image).toMatch(/\/r2\?key=images%2Ftest%20product\.jpg/);
     });
 
+    it('returns direct image paths without R2 wrapping', async () => {
+      const featuredProducts: FeaturedProductRow[] = [
+        {
+          id: 1,
+          title: 'Direct Image Product',
+          description: 'Test',
+          category: 'test',
+          r2_key: '/seed/products/led-panel-standard.svg'
+        }
+      ];
+
+      const db = createMockDb({ featuredProducts });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/featured-categories');
+      const json = await res.json();
+
+      expect(json.products[0].image).toBe('/seed/products/led-panel-standard.svg');
+    });
+
+    it('falls back to metadata image_url when R2 key is missing', async () => {
+      const featuredProducts: FeaturedProductRow[] = [
+        {
+          id: 1,
+          title: 'Metadata Image Product',
+          description: 'Test',
+          category: 'test',
+          product_metadata: JSON.stringify({ image_url: '/seed/products/usb-charger-65w.svg' }),
+          r2_key: null
+        }
+      ];
+
+      const db = createMockDb({ featuredProducts });
+      const { fetch } = createApp(db);
+
+      const res = await fetch('/store/home/featured-categories');
+      const json = await res.json();
+
+      expect(json.products[0].image).toBe('/seed/products/usb-charger-65w.svg');
+    });
+
     it('preserves all product fields', async () => {
       const featuredProducts: FeaturedProductRow[] = [
         {
