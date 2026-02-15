@@ -1,8 +1,8 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
-import { Pagination, PaginationPrevious, PaginationNext, PaginationList, PaginationPage } from '../catalyst/pagination'
 import { Link } from '../catalyst/link'
+import AdminPagination from './AdminPagination'
 
 type Product = {
   id: number
@@ -146,48 +146,11 @@ export default function ProductsTable({
         </TableBody>
       </Table>
 
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-zinc-500">
-            Page {currentPage} of {totalPages}
-          </div>
-          <Pagination>
-            {currentPage > 1 && (
-              <PaginationPrevious
-                href={`?page=${currentPage - 1}&q=${searchQuery}&status=${statusFilter}`}
-              />
-            )}
-            <PaginationList>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum: number
-                if (totalPages <= 5) {
-                  pageNum = i + 1
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i
-                } else {
-                  pageNum = currentPage - 2 + i
-                }
-                return (
-                  <PaginationPage
-                    key={pageNum}
-                    href={`?page=${pageNum}&q=${searchQuery}&status=${statusFilter}`}
-                    current={pageNum === currentPage}
-                  >
-                    {pageNum}
-                  </PaginationPage>
-                )
-              })}
-            </PaginationList>
-            {currentPage < totalPages && (
-              <PaginationNext
-                href={`?page=${currentPage + 1}&q=${searchQuery}&status=${statusFilter}`}
-              />
-            )}
-          </Pagination>
-        </div>
-      )}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        buildHref={(page) => `?page=${page}&q=${searchQuery}&status=${statusFilter}`}
+      />
     </div>
   )
 }

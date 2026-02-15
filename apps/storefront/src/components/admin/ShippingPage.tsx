@@ -6,6 +6,7 @@ import { Button } from '../catalyst/button'
 import { Input } from '../catalyst/input'
 import { Select } from '../catalyst/select'
 import { Field, Label } from '../catalyst/fieldset'
+import { Dialog, DialogTitle, DialogDescription, DialogBody, DialogActions } from '../catalyst/dialog'
 
 const CARRIERS = [
   { value: '', label: '選択してください' },
@@ -114,71 +115,63 @@ export default function ShippingPage({ orders }: Props) {
         </div>
       </div>
 
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={(e) => e.target === e.currentTarget && handleClose()}
-        >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-zinc-200">
-            <div className="p-6 border-b border-zinc-200">
-              <h3 className="text-lg font-semibold text-zinc-950">出荷処理</h3>
-              <p className="text-sm text-zinc-500 mt-1">
-                注文 #{selectedOrder?.orderId}
-              </p>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <Field>
-                <Label>配送業者</Label>
-                <Select
-                  value={carrierSelect}
-                  onChange={(e) => setCarrierSelect(e.target.value)}
-                >
-                  {CARRIERS.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </Select>
-              </Field>
+      <Dialog open={isModalOpen} onClose={handleClose} size="md">
+        <DialogTitle>出荷処理</DialogTitle>
+        <DialogDescription>
+          注文 #{selectedOrder?.orderId}
+        </DialogDescription>
+        <DialogBody>
+          <form id="shipping-form" onSubmit={handleSubmit} className="space-y-4">
+            <Field>
+              <Label>配送業者</Label>
+              <Select
+                value={carrierSelect}
+                onChange={(e) => setCarrierSelect(e.target.value)}
+              >
+                {CARRIERS.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </Select>
+            </Field>
 
-              {carrierSelect === 'other' && (
-                <Field>
-                  <Label>配送業者名</Label>
-                  <Input
-                    type="text"
-                    value={customCarrier}
-                    onChange={(e) => setCustomCarrier(e.target.value)}
-                    placeholder="配送業者名を入力"
-                  />
-                </Field>
-              )}
-
+            {carrierSelect === 'other' && (
               <Field>
-                <Label>追跡番号</Label>
+                <Label>配送業者名</Label>
                 <Input
                   type="text"
-                  value={trackingNumber}
-                  onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="追跡番号を入力（任意）"
+                  value={customCarrier}
+                  onChange={(e) => setCustomCarrier(e.target.value)}
+                  placeholder="配送業者名を入力"
                 />
               </Field>
+            )}
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
+            <Field>
+              <Label>追跡番号</Label>
+              <Input
+                type="text"
+                value={trackingNumber}
+                onChange={(e) => setTrackingNumber(e.target.value)}
+                placeholder="追跡番号を入力（任意）"
+              />
+            </Field>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">
-                <Button type="button" plain onClick={handleClose}>
-                  キャンセル
-                </Button>
-                <Button type="submit" color="indigo" disabled={isSubmitting}>
-                  {isSubmitting ? '処理中...' : '発送済みにする'}
-                </Button>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                {error}
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            )}
+          </form>
+        </DialogBody>
+        <DialogActions>
+          <Button type="button" plain onClick={handleClose}>
+            キャンセル
+          </Button>
+          <Button type="submit" form="shipping-form" color="indigo" disabled={isSubmitting}>
+            {isSubmitting ? '処理中...' : '発送済みにする'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }
