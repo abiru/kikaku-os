@@ -6,6 +6,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import InventoryPage from '../../components/admin/InventoryPage';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY || '';
@@ -44,10 +45,10 @@ if (apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load inventory. Please check your connection.';
+		error = t('errors.failedToLoadProducts');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error = t('errors.adminKeyMissing');
 }
 
 // Apply filters
@@ -83,11 +84,11 @@ const buildFilterUrl = (newStatus: string) => {
 };
 ---
 
-<AdminLayout title="Inventory - Admin">
+<AdminLayout title={`${t('admin.inventory')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<Heading>Inventory</Heading>
-			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{inventory.length} variants</span>
+			<Heading>{t('admin.inventory')}</Heading>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{inventory.length} {t('admin.variants')}</span>
 		</div>
 
 		{error && (
@@ -107,7 +108,7 @@ const buildFilterUrl = (newStatus: string) => {
 						: 'bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50'
 				]}
 			>
-				All ({counts.all})
+				{t('admin.allWithCount', { count: counts.all })}
 			</a>
 			<a
 				href={buildFilterUrl('low')}
@@ -118,7 +119,7 @@ const buildFilterUrl = (newStatus: string) => {
 						: 'bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50'
 				]}
 			>
-				Low Stock ({counts.low})
+				{t('admin.lowStockWithCount', { count: counts.low })}
 			</a>
 			<a
 				href={buildFilterUrl('out')}
@@ -129,7 +130,7 @@ const buildFilterUrl = (newStatus: string) => {
 						: 'bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50'
 				]}
 			>
-				Out of Stock ({counts.out})
+				{t('admin.outOfStockWithCount', { count: counts.out })}
 			</a>
 		</div>
 
@@ -141,7 +142,7 @@ const buildFilterUrl = (newStatus: string) => {
 					type="search"
 					name="q"
 					value={searchQuery}
-					placeholder="Search by product, variant, or SKU..."
+					placeholder={t('admin.searchByProductVariantSku')}
 					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
 				/>
 				<svg class="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
