@@ -344,7 +344,7 @@ app.put(
 
       // Build dynamic update query
       const updates: string[] = [];
-      const values: any[] = [];
+      const values: (string | number | null)[] = [];
 
       if (data.campaign_name !== undefined) {
         updates.push('campaign_name = ?');

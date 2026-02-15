@@ -4,6 +4,7 @@ import { jsonError, jsonOk } from '../../lib/http';
 import { verifyStripeSignature } from '../../lib/stripe';
 import { handleStripeEvent } from '../../services/stripeEventHandlers';
 import {
+  type StripeEvent,
   recordStripeEvent,
   updateStripeEventStatus
 } from '../../lib/stripeData';
@@ -24,9 +25,9 @@ const handleWebhook = async (c: Context<Env>) => {
   });
   if (!valid) return jsonError(c, 'Invalid signature', 400);
 
-  let event: any;
+  let event: StripeEvent;
   try {
-    event = JSON.parse(payload);
+    event = JSON.parse(payload) as StripeEvent;
   } catch {
     return jsonError(c, 'Invalid payload', 400);
   }
@@ -46,9 +47,9 @@ const handleWebhook = async (c: Context<Env>) => {
       const result = await handleStripeEvent(c.env, event);
       await updateStripeEventStatus(c.env, event.id, 'completed');
       return jsonOk(c, result);
-    } catch (processingError: any) {
+    } catch (processingError: unknown) {
       // 処理失敗時はエラーを記録
-      const errorMessage = processingError?.message || String(processingError);
+      const errorMessage = processingError instanceof Error ? processingError.message : String(processingError);
       await updateStripeEventStatus(c.env, event.id, 'failed', errorMessage);
       throw processingError;
     }
