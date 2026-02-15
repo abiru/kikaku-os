@@ -10,11 +10,32 @@ export const generatePublicToken = (length = 24): string => {
   return Array.from(bytes, (b) => BASE62_CHARS[b % BASE62_CHARS.length]).join('');
 };
 
+/** Maximum token age in milliseconds (30 days) */
+const TOKEN_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Encode a string to base64url (URL-safe, no padding).
+ */
+const toBase64Url = (input: string): string =>
+  btoa(input).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+/**
+ * Decode a base64url string back to its original form.
+ */
+const fromBase64Url = (input: string): string => {
+  const padded = input.replace(/-/g, '+').replace(/_/g, '/');
+  return atob(padded + '='.repeat((4 - (padded.length % 4)) % 4));
+};
+
 /**
  * Sign an email with HMAC-SHA256 for secure unsubscribe links.
- * Returns a token in format: base64url(email):base64url(signature)
+ * Returns a token in format: base64url(email):base64url(timestamp):base64url(signature)
+ * The signature covers both email and timestamp to prevent tampering.
  */
 export async function signEmailToken(email: string, secret: string): Promise<string> {
+  const timestamp = String(Date.now());
+  const payload = `${email}:${timestamp}`;
+
   const encoder = new TextEncoder();
   const secretKey = await crypto.subtle.importKey(
     'raw',
@@ -27,35 +48,42 @@ export async function signEmailToken(email: string, secret: string): Promise<str
   const signature = await crypto.subtle.sign(
     'HMAC',
     secretKey,
-    encoder.encode(email)
+    encoder.encode(payload)
   );
 
-  // Use base64url encoding (URL-safe, no padding)
-  const emailB64 = btoa(email).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  const emailB64 = toBase64Url(email);
+  const timestampB64 = toBase64Url(timestamp);
+  const sigB64 = toBase64Url(String.fromCharCode(...new Uint8Array(signature)));
 
-  return `${emailB64}:${sigB64}`;
+  return `${emailB64}:${timestampB64}:${sigB64}`;
 }
 
 /**
  * Verify a signed email token and extract the email.
- * Returns the email if valid, null if invalid or tampered.
+ * Returns the email if valid and not expired, null otherwise.
+ * Tokens older than 30 days are rejected.
  */
 export async function verifyEmailToken(token: string, secret: string): Promise<string | null> {
   try {
-    const [emailB64, sigB64] = token.split(':');
-    if (!emailB64 || !sigB64) return null;
+    const parts = token.split(':');
+    if (parts.length !== 3) return null;
 
-    // Decode base64url (restore padding if needed)
-    const emailPadded = emailB64.replace(/-/g, '+').replace(/_/g, '/');
-    const sigPadded = sigB64.replace(/-/g, '+').replace(/_/g, '/');
-    const email = atob(emailPadded + '='.repeat((4 - (emailPadded.length % 4)) % 4));
-    const expectedSig = atob(sigPadded + '='.repeat((4 - (sigPadded.length % 4)) % 4));
+    const [emailB64, timestampB64, sigB64] = parts;
+    if (!emailB64 || !timestampB64 || !sigB64) return null;
 
-    // Verify signature
+    const email = fromBase64Url(emailB64);
+    const timestamp = fromBase64Url(timestampB64);
+    const expectedSig = fromBase64Url(sigB64);
+
+    // Check token expiry
+    const tokenTime = Number(timestamp);
+    if (Number.isNaN(tokenTime)) return null;
+
+    const age = Date.now() - tokenTime;
+    if (age > TOKEN_MAX_AGE_MS || age < 0) return null;
+
+    // Verify signature over email + timestamp
+    const payload = `${email}:${timestamp}`;
     const encoder = new TextEncoder();
     const secretKey = await crypto.subtle.importKey(
       'raw',
@@ -73,12 +101,11 @@ export async function verifyEmailToken(token: string, secret: string): Promise<s
       'HMAC',
       secretKey,
       expectedSigBytes,
-      encoder.encode(email)
+      encoder.encode(payload)
     );
 
     return isValid ? email : null;
-  } catch (err) {
-    console.error('Token verification failed:', err);
+  } catch {
     return null;
   }
 }

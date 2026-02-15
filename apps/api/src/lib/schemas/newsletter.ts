@@ -11,5 +11,9 @@ export const newsletterListQuerySchema = z.object({
 });
 
 export const newsletterUnsubscribeQuerySchema = z.object({
-  token: z.string().min(1, 'Token is required'),
+  token: z.string().min(1, 'Token is required').max(512),
+});
+
+export const newsletterUnsubscribeBodySchema = z.object({
+  token: z.string().min(1, 'Token is required').max(512),
 });
