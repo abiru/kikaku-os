@@ -31,7 +31,7 @@ export default function CheckoutSteps({ currentStep }: CheckoutStepsProps) {
                       ? 'bg-[#0071e3] text-white'
                       : isCurrent
                         ? 'border-2 border-[#0071e3] text-[#0071e3]'
-                        : 'border-2 border-[#d2d2d7] text-[#86868b]'
+                        : 'border-2 border-[#d2d2d7] text-[#6e6e73]'
                   }`}
                 >
                   {isCompleted ? (
@@ -44,7 +44,7 @@ export default function CheckoutSteps({ currentStep }: CheckoutStepsProps) {
                 </span>
                 <span
                   className={`text-xs sm:text-sm font-medium ${
-                    isCurrent ? 'text-[#1d1d1f]' : isCompleted ? 'text-[#0071e3]' : 'text-[#86868b]'
+                    isCurrent ? 'text-[#1d1d1f]' : isCompleted ? 'text-[#0071e3]' : 'text-[#6e6e73]'
                   }`}
                 >
                   {t(`checkout.steps.${step}`)}

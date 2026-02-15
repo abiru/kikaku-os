@@ -436,7 +436,11 @@
     "priceRange": "価格帯",
     "range": "範囲: {min} - {max} 円",
     "applyFilters": "フィルターを適用",
-    "clearAll": "すべてクリア"
+    "clearAll": "すべてクリア",
+    "minPrice": "最低価格",
+    "maxPrice": "最高価格",
+    "showFilters": "フィルター",
+    "closeFilters": "フィルターを閉じる"
   },
   "search": {
     "tryDifferent": "別の検索キーワードを試してください",
