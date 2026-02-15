@@ -147,8 +147,8 @@ describe('Health Check', () => {
       expect(res.status).toBe(200);
       expect(json.ok).toBe(true);
       expect(json.secretsDetail).toBeDefined();
-      expect(json.secretsDetail.ADMIN_API_KEY.configured).toBe(true);
-      expect(json.secretsDetail.STRIPE_SECRET_KEY.configured).toBe(true);
+      expect(json.secretsDetail.required.ADMIN_API_KEY.configured).toBe(true);
+      expect(json.secretsDetail.required.STRIPE_SECRET_KEY.configured).toBe(true);
     });
 
     it('returns 401 without admin key', async () => {
@@ -196,8 +196,8 @@ describe('Health Check', () => {
 
       // Some secrets are missing, so status is 503
       expect(res.status).toBe(503);
-      expect(json.secretsDetail.STRIPE_SECRET_KEY.configured).toBe(false);
-      expect(json.secretsDetail.CLERK_SECRET_KEY.configured).toBe(false);
+      expect(json.secretsDetail.required.STRIPE_SECRET_KEY.configured).toBe(false);
+      expect(json.secretsDetail.required.CLERK_SECRET_KEY.configured).toBe(false);
     });
   });
 });
