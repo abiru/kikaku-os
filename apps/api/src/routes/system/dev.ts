@@ -233,6 +233,7 @@ dev.post('/seed', async (c) => {
       const template = HERO_TEMPLATES[i];
       const imagePair = HERO_IMAGE_PAIRS[i];
       const existingHero = existingHeroes[i];
+      if (!template || !imagePair) continue;
 
       if (!existingHero) {
         await c.env.DB.prepare(
@@ -357,6 +358,7 @@ dev.post('/seed', async (c) => {
     const paymentsToCreate = orders.length === 0 ? 0 : paymentsCount;
     for (let i = 0; i < paymentsToCreate; i += 1) {
       const source = orders[i % orders.length];
+      if (!source) continue;
       const amount = source.totalNet;
       const fee = Math.round(amount * 0.03 + 30);
       const providerPaymentId = `pi_seed_${date}_${i + 1}_${crypto.randomUUID()}`;
@@ -372,6 +374,7 @@ dev.post('/seed', async (c) => {
     const refundsToCreate = payments.length === 0 ? 0 : refundsCount;
     for (let i = 0; i < refundsToCreate; i += 1) {
       const payment = payments[i % payments.length];
+      if (!payment) continue;
       const amount = Math.min(payment.amount - 1, randInt(1000, 3000));
       if (amount <= 0) continue;
       await c.env.DB.prepare(
@@ -469,7 +472,7 @@ dev.post('/provision-stripe-prices', async (c) => {
 
   const readStripeErrorMessage = async (res: Response, fallback: string) => {
     try {
-      const data = await res.json<any>();
+      const data = await res.json<{ error?: { message?: string } }>();
       const message = data?.error?.message;
       if (message && typeof message === 'string') return message.slice(0, 160);
     } catch {
@@ -500,7 +503,7 @@ dev.post('/provision-stripe-prices', async (c) => {
           continue;
         }
 
-        const searchResult = await searchRes.json<any>();
+        const searchResult = await searchRes.json<{ data?: Array<{ id: string }> }>();
         productId = searchResult?.data?.[0]?.id;
         if (!productId) {
           const productParams = new URLSearchParams();
@@ -523,7 +526,7 @@ dev.post('/provision-stripe-prices', async (c) => {
             continue;
           }
 
-          const product = await productRes.json<any>();
+          const product = await productRes.json<{ id?: string }>();
           productId = product?.id;
         }
 
@@ -561,7 +564,7 @@ dev.post('/provision-stripe-prices', async (c) => {
         continue;
       }
 
-      const price = await priceRes.json<any>();
+      const price = await priceRes.json<{ id?: string }>();
       if (!price?.id) {
         errors.push({
           price_id: row.price_id,

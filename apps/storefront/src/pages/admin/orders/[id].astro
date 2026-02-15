@@ -106,7 +106,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 ---
 
 <AdminLayout title={`Order #${id} - Admin`}>
-	<div class="space-y-6">
+	<div class="space-y-6" data-order-id={id} data-payments={JSON.stringify(payments)} data-refunds={JSON.stringify(refunds)}>
 		<div class="flex items-center gap-4">
 			<a href="/admin/orders" class="text-indigo-600 hover:underline text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,19 +130,19 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<Subheading>Order Summary</Subheading>
 						<dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 							<div>
-								<dt class="text-[#86868b]">Total</dt>
+								<dt class="text-[#6e6e73]">Total</dt>
 								<dd class="font-semibold text-zinc-950 text-lg">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#86868b]">Customer</dt>
+								<dt class="text-[#6e6e73]">Customer</dt>
 								<dd class="text-zinc-950">{order.customer_email || 'Guest'}</dd>
 							</div>
 							<div>
-								<dt class="text-[#86868b]">Created</dt>
+								<dt class="text-[#6e6e73]">Created</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(order.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#86868b]">Paid At</dt>
+								<dt class="text-[#6e6e73]">Paid At</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(order.paid_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
@@ -150,29 +150,29 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						{/* Tax Breakdown */}
 						{(order.subtotal !== undefined || order.tax_amount !== undefined) && (
 							<div class="mt-4 pt-4 border-t border-gray-100">
-								<h3 class="text-xs font-medium text-[#86868b] uppercase tracking-wider mb-3">Price Breakdown</h3>
+								<h3 class="text-xs font-medium text-[#6e6e73] uppercase tracking-wider mb-3">Price Breakdown</h3>
 								<dl class="space-y-2 text-sm">
 									{order.subtotal !== undefined && (
 										<div class="flex justify-between">
-											<dt class="text-[#86868b]">Subtotal (税抜)</dt>
+											<dt class="text-[#6e6e73]">Subtotal (税抜)</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.subtotal, order.currency)}</dd>
 										</div>
 									)}
 									{order.tax_amount !== undefined && (
 										<div class="flex justify-between">
-											<dt class="text-[#86868b]">Tax (消費税)</dt>
+											<dt class="text-[#6e6e73]">Tax (消費税)</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.tax_amount, order.currency)}</dd>
 										</div>
 									)}
 									{order.total_discount > 0 && (
 										<div class="flex justify-between">
-											<dt class="text-[#86868b]">Discount</dt>
+											<dt class="text-[#6e6e73]">Discount</dt>
 											<dd class="font-medium text-red-600 tabular-nums">-{formatCurrency(order.total_discount, order.currency)}</dd>
 										</div>
 									)}
 									{order.shipping_fee > 0 && (
 										<div class="flex justify-between">
-											<dt class="text-[#86868b]">Shipping</dt>
+											<dt class="text-[#6e6e73]">Shipping</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.shipping_fee, order.currency)}</dd>
 										</div>
 									)}
@@ -186,7 +186,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 
 						{(order.provider_checkout_session_id || order.provider_payment_intent_id) && (
 							<div class="mt-4 pt-4 border-t border-gray-100">
-								<h3 class="text-xs font-medium text-[#86868b] uppercase tracking-wider mb-2">Stripe IDs</h3>
+								<h3 class="text-xs font-medium text-[#6e6e73] uppercase tracking-wider mb-2">Stripe IDs</h3>
 								<div class="text-xs text-zinc-950 font-mono space-y-1">
 									{order.provider_checkout_session_id && (
 										<div>Checkout: <span class="bg-gray-100 px-1 py-0.5 rounded">{order.provider_checkout_session_id}</span></div>
@@ -204,7 +204,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<div class="flex items-center gap-2">
 								<Subheading>Fulfillments</Subheading>
-								<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{fulfillments.length}</span>
+								<span class="text-xs text-[#6e6e73] bg-gray-100 px-2 py-1 rounded-full">{fulfillments.length}</span>
 							</div>
 							{order.status === 'paid' && (
 								<button
@@ -237,7 +237,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell>{f.id}</TableCell>
 												<TableCell><Badge color={getFulfillmentStatusColor(f.status)} client:load>{f.status}</Badge></TableCell>
 												<TableCell className="font-mono text-xs">{f.tracking_number || '-'}</TableCell>
-												<TableCell className="text-[#86868b] tabular-nums">{formatDate(f.created_at, dateTimeOpts)}</TableCell>
+												<TableCell className="text-[#6e6e73] tabular-nums">{formatDate(f.created_at, dateTimeOpts)}</TableCell>
 												<TableCell>
 													<button
 														type="button"
@@ -250,7 +250,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-[#86868b]">No fulfillments</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73]">No fulfillments</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -261,7 +261,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<Subheading>Payments</Subheading>
-							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
+							<span class="text-xs text-[#6e6e73] bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
 						</div>
 						<div class="overflow-x-auto">
 							<Table client:only="react">
@@ -282,11 +282,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell><Badge color={getStatusColor(p.status)} client:load>{p.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(p.amount, p.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{p.provider_payment_id || '-'}</TableCell>
-												<TableCell className="text-[#86868b] tabular-nums">{formatDate(p.created_at, dateTimeOpts)}</TableCell>
+												<TableCell className="text-[#6e6e73] tabular-nums">{formatDate(p.created_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-[#86868b]">No payments</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73]">No payments</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -298,7 +298,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<div class="flex items-center gap-2">
 								<Subheading>Refunds</Subheading>
-								<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
+								<span class="text-xs text-[#6e6e73] bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
 							</div>
 							{(order.status === 'paid' || order.status === 'partially_refunded') && (
 								<button
@@ -333,12 +333,12 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell><Badge color={getStatusColor(r.status)} client:load>{r.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(r.amount, r.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{r.provider_refund_id || '-'}</TableCell>
-												<TableCell className="text-[#86868b]">{r.reason || '-'}</TableCell>
-												<TableCell className="text-[#86868b] tabular-nums">{formatDate(r.created_at, dateTimeOpts)}</TableCell>
+												<TableCell className="text-[#6e6e73]">{r.reason || '-'}</TableCell>
+												<TableCell className="text-[#6e6e73] tabular-nums">{formatDate(r.created_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={6} className="text-center text-[#86868b]">No refunds</TableCell></TableRow>
+										<TableRow><TableCell colSpan={6} className="text-center text-[#6e6e73]">No refunds</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -349,7 +349,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<Subheading>Stripe Events</Subheading>
-							<span class="text-xs text-[#86868b] bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
+							<span class="text-xs text-[#6e6e73] bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
 						</div>
 						<div class="overflow-x-auto">
 							<Table client:only="react">
@@ -370,11 +370,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell className="font-mono text-xs">{e.event_type}</TableCell>
 												<TableCell><Badge color={getStatusColor(e.processing_status)} client:load>{e.processing_status}</Badge></TableCell>
 												<TableCell className="text-xs text-red-600">{e.error || '-'}</TableCell>
-												<TableCell className="text-[#86868b] tabular-nums">{formatDate(e.received_at, dateTimeOpts)}</TableCell>
+												<TableCell className="text-[#6e6e73] tabular-nums">{formatDate(e.received_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-[#86868b]">No related events</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73]">No related events</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -388,336 +388,17 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 	</div>
 </AdminLayout>
 
-<script define:vars={{ orderId: id, payments: JSON.stringify(payments), refundsData: JSON.stringify(refunds) }}>
-	// Create Modal elements
-	const createModal = document.getElementById('create-fulfillment-modal');
-	const createForm = document.getElementById('create-fulfillment-form');
-	const createStatus = document.getElementById('create-status');
-	const createTracking = document.getElementById('create-tracking');
-	const createCarrier = document.getElementById('create-carrier');
-	const createCustomCarrier = document.getElementById('create-custom-carrier');
-	const createCustomCarrierField = document.getElementById('create-custom-carrier-field');
-	const createError = document.getElementById('create-error');
-	const createBtn = document.getElementById('create-fulfillment-btn');
-	const cancelCreateBtn = document.getElementById('cancel-create-btn');
+<script>
+	import { initOrderDetailPage } from '../../../lib/admin/order-detail';
 
-	// Edit Modal elements
-	const editModal = document.getElementById('edit-fulfillment-modal');
-	const editForm = document.getElementById('edit-fulfillment-form');
-	const editFulfillmentId = document.getElementById('edit-fulfillment-id');
-	const editSubtitle = document.getElementById('edit-subtitle');
-	const editStatus = document.getElementById('edit-status');
-	const editTracking = document.getElementById('edit-tracking');
-	const editCarrier = document.getElementById('edit-carrier');
-	const editCustomCarrier = document.getElementById('edit-custom-carrier');
-	const editCustomCarrierField = document.getElementById('edit-custom-carrier-field');
-	const editError = document.getElementById('edit-error');
-	const cancelEditBtn = document.getElementById('cancel-edit-btn');
+	const container = document.querySelector('[data-order-id]');
+	const orderId = container?.getAttribute('data-order-id') || '';
+	const payments = container?.getAttribute('data-payments') || '[]';
+	const refundsData = container?.getAttribute('data-refunds') || '[]';
 
-	// Known carriers list
-	const KNOWN_CARRIERS = ['ヤマト運輸', '佐川急便', '日本郵便'];
-
-	// Carrier toggle for create modal
-	createCarrier?.addEventListener('change', function() {
-		if (createCarrier.value === 'other') {
-			createCustomCarrierField.classList.remove('hidden');
-		} else {
-			createCustomCarrierField.classList.add('hidden');
-			if (createCustomCarrier) createCustomCarrier.value = '';
-		}
-	});
-
-	// Carrier toggle for edit modal
-	editCarrier?.addEventListener('change', function() {
-		if (editCarrier.value === 'other') {
-			editCustomCarrierField.classList.remove('hidden');
-		} else {
-			editCustomCarrierField.classList.add('hidden');
-			if (editCustomCarrier) editCustomCarrier.value = '';
-		}
-	});
-
-	function getCarrierValue(selectEl, customEl) {
-		if (selectEl.value === 'other') return customEl.value.trim() || null;
-		return selectEl.value || null;
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', () => initOrderDetailPage(orderId, payments, refundsData));
+	} else {
+		initOrderDetailPage(orderId, payments, refundsData);
 	}
-
-	function showCreateModal() {
-		createStatus.value = 'pending';
-		createTracking.value = '';
-		if (createCarrier) createCarrier.value = '';
-		if (createCustomCarrier) createCustomCarrier.value = '';
-		if (createCustomCarrierField) createCustomCarrierField.classList.add('hidden');
-		createError.classList.add('hidden');
-		createModal.classList.remove('hidden');
-	}
-
-	function hideCreateModal() {
-		createModal.classList.add('hidden');
-		createForm.reset();
-		if (createCustomCarrierField) createCustomCarrierField.classList.add('hidden');
-	}
-
-	function showEditModal(fulfillment) {
-		editFulfillmentId.value = fulfillment.id;
-		editSubtitle.textContent = `Fulfillment #${fulfillment.id}`;
-		editStatus.value = fulfillment.status;
-		editTracking.value = fulfillment.tracking_number || '';
-
-		// Set carrier value
-		var carrierValue = '';
-		if (fulfillment.metadata) {
-			try {
-				var meta = typeof fulfillment.metadata === 'string' ? JSON.parse(fulfillment.metadata) : fulfillment.metadata;
-				carrierValue = meta.carrier || '';
-			} catch (e) { /* ignore */ }
-		}
-
-		if (carrierValue && KNOWN_CARRIERS.indexOf(carrierValue) === -1) {
-			editCarrier.value = 'other';
-			editCustomCarrier.value = carrierValue;
-			editCustomCarrierField.classList.remove('hidden');
-		} else {
-			editCarrier.value = carrierValue;
-			editCustomCarrier.value = '';
-			editCustomCarrierField.classList.add('hidden');
-		}
-
-		editError.classList.add('hidden');
-		editModal.classList.remove('hidden');
-	}
-
-	function hideEditModal() {
-		editModal.classList.add('hidden');
-		editForm.reset();
-		if (editCustomCarrierField) editCustomCarrierField.classList.add('hidden');
-	}
-
-	function showError(errorEl, message) {
-		errorEl.textContent = message;
-		errorEl.classList.remove('hidden');
-	}
-
-	// Event listeners
-	createBtn?.addEventListener('click', showCreateModal);
-	cancelCreateBtn?.addEventListener('click', hideCreateModal);
-	cancelEditBtn?.addEventListener('click', hideEditModal);
-
-	createModal?.addEventListener('click', (e) => {
-		if (e.target === createModal) hideCreateModal();
-	});
-
-	editModal?.addEventListener('click', (e) => {
-		if (e.target === editModal) hideEditModal();
-	});
-
-	document.querySelectorAll('.edit-fulfillment-btn').forEach((btn) => {
-		btn.addEventListener('click', () => {
-			const fulfillment = JSON.parse(btn.dataset.fulfillment);
-			showEditModal(fulfillment);
-		});
-	});
-
-	// Create fulfillment form submission
-	createForm?.addEventListener('submit', async (e) => {
-		e.preventDefault();
-
-		const status = createStatus.value;
-		const tracking_number = createTracking.value.trim() || null;
-		const carrier = getCarrierValue(createCarrier, createCustomCarrier);
-
-		try {
-			const res = await fetch(`/api/admin/orders/${orderId}/fulfillments`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ status, tracking_number, carrier })
-			});
-
-			if (!res.ok) {
-				const data = await res.json();
-				showError(createError, data.message || 'Failed to create fulfillment');
-				return;
-			}
-
-			location.reload();
-		} catch (err) {
-			showError(createError, 'An error occurred. Please try again.');
-		}
-	});
-
-	// Edit fulfillment form submission
-	editForm?.addEventListener('submit', async (e) => {
-		e.preventDefault();
-
-		const fulfillmentId = editFulfillmentId.value;
-		const status = editStatus.value;
-		const tracking_number = editTracking.value.trim() || null;
-		const carrier = getCarrierValue(editCarrier, editCustomCarrier);
-
-		try {
-			const res = await fetch(`/api/admin/fulfillments/${fulfillmentId}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ status, tracking_number, carrier })
-			});
-
-			if (!res.ok) {
-				const data = await res.json();
-				showError(editError, data.message || 'Failed to update fulfillment');
-				return;
-			}
-
-			location.reload();
-		} catch (err) {
-			showError(editError, 'An error occurred. Please try again.');
-		}
-	});
-
-	// === Refund Modal ===
-	const refundModal = document.getElementById('create-refund-modal');
-	const refundForm = document.getElementById('create-refund-form');
-	const refundType = document.getElementById('refund-type');
-	const refundAmount = document.getElementById('refund-amount');
-	const refundReason = document.getElementById('refund-reason');
-	const refundError = document.getElementById('refund-error');
-	const refundMaxInfo = document.getElementById('refund-max-info');
-	const refundBtn = document.getElementById('create-refund-btn');
-	const cancelRefundBtn = document.getElementById('cancel-refund-btn');
-	const submitRefundBtn = document.getElementById('submit-refund-btn');
-
-	// Confirmation modal elements
-	const confirmModal = document.getElementById('refund-confirm-modal');
-	const confirmText = document.getElementById('refund-confirm-text');
-	const confirmCancel = document.getElementById('refund-confirm-cancel');
-	const confirmOk = document.getElementById('refund-confirm-ok');
-
-	// Calculate max refundable amount
-	const parsedPayments = JSON.parse(payments);
-	const parsedRefunds = JSON.parse(refundsData);
-	const succeededPayment = parsedPayments.find(function(p) { return p.status === 'succeeded'; });
-	const paymentAmount = succeededPayment ? succeededPayment.amount : 0;
-	const refundedTotal = parsedRefunds
-		.filter(function(r) { return r.status === 'succeeded' || r.status === 'pending'; })
-		.reduce(function(sum, r) { return sum + r.amount; }, 0);
-	const maxRefundable = paymentAmount - refundedTotal;
-
-	function showRefundModal() {
-		refundType.value = 'full';
-		refundAmount.value = maxRefundable;
-		refundAmount.disabled = true;
-		refundAmount.max = maxRefundable;
-		refundReason.value = '';
-		refundError.classList.add('hidden');
-		refundMaxInfo.textContent = 'Max refundable: ' + maxRefundable.toLocaleString() + ' JPY';
-		refundModal.classList.remove('hidden');
-	}
-
-	function hideRefundModal() {
-		refundModal.classList.add('hidden');
-		refundForm.reset();
-	}
-
-	refundType?.addEventListener('change', function() {
-		if (refundType.value === 'full') {
-			refundAmount.value = maxRefundable;
-			refundAmount.disabled = true;
-		} else {
-			refundAmount.value = '';
-			refundAmount.disabled = false;
-			refundAmount.focus();
-		}
-	});
-
-	refundBtn?.addEventListener('click', showRefundModal);
-	cancelRefundBtn?.addEventListener('click', hideRefundModal);
-
-	refundModal?.addEventListener('click', function(e) {
-		if (e.target === refundModal) hideRefundModal();
-	});
-
-	// Pending refund data for confirmation
-	let pendingRefundData = null;
-
-	refundForm?.addEventListener('submit', function(e) {
-		e.preventDefault();
-
-		const amount = refundType.value === 'full' ? undefined : parseInt(refundAmount.value, 10);
-		const reason = refundReason.value.trim();
-
-		if (!reason) {
-			showError(refundError, 'Please enter a reason for the refund.');
-			return;
-		}
-
-		if (refundType.value === 'partial') {
-			if (!amount || amount <= 0) {
-				showError(refundError, 'Please enter a valid refund amount.');
-				return;
-			}
-			if (amount > maxRefundable) {
-				showError(refundError, 'Amount exceeds maximum refundable (' + maxRefundable.toLocaleString() + ' JPY).');
-				return;
-			}
-		}
-
-		const displayAmount = amount || maxRefundable;
-		pendingRefundData = { amount: amount, reason: reason };
-		confirmText.textContent = 'Are you sure you want to refund ' + displayAmount.toLocaleString() + ' JPY? This action cannot be undone.';
-		confirmModal.classList.remove('hidden');
-	});
-
-	confirmCancel?.addEventListener('click', function() {
-		confirmModal.classList.add('hidden');
-		pendingRefundData = null;
-	});
-
-	confirmModal?.addEventListener('click', function(e) {
-		if (e.target === confirmModal) {
-			confirmModal.classList.add('hidden');
-			pendingRefundData = null;
-		}
-	});
-
-	confirmOk?.addEventListener('click', async function() {
-		if (!pendingRefundData) return;
-
-		confirmModal.classList.add('hidden');
-		submitRefundBtn.disabled = true;
-		submitRefundBtn.textContent = 'Processing...';
-
-		try {
-			const body = { reason: pendingRefundData.reason };
-			if (pendingRefundData.amount) {
-				body.amount = pendingRefundData.amount;
-			}
-
-			const res = await fetch('/api/admin/orders/' + orderId + '/refunds', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(body)
-			});
-
-			if (!res.ok) {
-				const data = await res.json();
-				showError(refundError, data.message || 'Failed to create refund');
-				submitRefundBtn.disabled = false;
-				submitRefundBtn.textContent = 'Create Refund';
-				return;
-			}
-
-			location.reload();
-		} catch (err) {
-			showError(refundError, 'An error occurred. Please try again.');
-			submitRefundBtn.disabled = false;
-			submitRefundBtn.textContent = 'Create Refund';
-		}
-
-		pendingRefundData = null;
-	});
 </script>

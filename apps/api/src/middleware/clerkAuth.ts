@@ -10,11 +10,11 @@ export const timingSafeCompare = (a: string, b: string): boolean => {
   if (aBuf.length !== bBuf.length) {
     // Compare against self to keep constant time
     let result = 1;
-    for (let i = 0; i < aBuf.length; i++) result |= aBuf[i] ^ aBuf[i];
+    for (let i = 0; i < aBuf.length; i++) result |= (aBuf[i] ?? 0) ^ (aBuf[i] ?? 0);
     return false;
   }
   let result = 0;
-  for (let i = 0; i < aBuf.length; i++) result |= aBuf[i] ^ bBuf[i];
+  for (let i = 0; i < aBuf.length; i++) result |= (aBuf[i] ?? 0) ^ (bBuf[i] ?? 0);
   return result === 0;
 };
 

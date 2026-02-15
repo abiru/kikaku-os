@@ -75,7 +75,7 @@ const getStatusBadge = (status: string) => {
     expired: { label: '期限切れ', class: 'bg-red-100 text-red-800' },
     cancelled: { label: 'キャンセル', class: 'bg-gray-100 text-gray-800' }
   };
-  return badges[status] || badges.draft;
+  return badges[status] ?? { label: '下書き', class: 'bg-gray-100 text-gray-800' };
 };
 
 const statusBadge = getStatusBadge(quotation.status);
@@ -377,6 +377,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 </script>
 
 <script>
+  import DOMPurify from 'isomorphic-dompurify';
   import { acceptQuotation, fetchQuotationHtml } from '../../lib/quotationApi';
 
   declare global {
@@ -417,7 +418,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
       script.onload = () => {
         // Create temporary container
         const container = document.createElement('div');
-        container.innerHTML = html;
+        container.innerHTML = DOMPurify.sanitize(html);
         container.style.position = 'absolute';
         container.style.left = '-9999px';
         document.body.appendChild(container);

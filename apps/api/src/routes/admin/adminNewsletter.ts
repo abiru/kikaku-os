@@ -37,7 +37,7 @@ adminNewsletter.get(
       ).bind(...bindValues).first<{ total: number }>();
 
       const result = await c.env.DB.prepare(
-        `SELECT * FROM newsletter_subscribers${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+        `SELECT id, email, status, created_at, updated_at FROM newsletter_subscribers${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`
       ).bind(...bindValues, limit, offset).all<SubscriberRow>();
 
       return jsonOk(c, {

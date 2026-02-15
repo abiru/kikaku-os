@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { handleStripeEvent } from '../../services/stripeEventHandlers';
+import type { StripeEvent } from '../../lib/stripeData';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { PERMISSIONS } from '../../lib/schemas';
 
@@ -19,7 +20,7 @@ adminStripeEvents.get("/stripe-events", requirePermission(PERMISSIONS.ORDERS_REA
 
   try {
     let where = "WHERE 1=1";
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (status) {
       where += " AND processing_status = ?";
@@ -111,9 +112,9 @@ adminStripeEvents.post("/stripe-events/:id/retry", requirePermission(PERMISSIONS
       return jsonError(c, `Cannot retry event with status '${event.processing_status}'`, 400);
     }
 
-    let parsedEvent: any;
+    let parsedEvent: StripeEvent;
     try {
-      parsedEvent = JSON.parse(event.payload_json);
+      parsedEvent = JSON.parse(event.payload_json) as StripeEvent;
     } catch {
       return jsonError(c, "Failed to parse event payload", 500);
     }
@@ -128,11 +129,12 @@ adminStripeEvents.post("/stripe-events/:id/retry", requirePermission(PERMISSIONS
         `UPDATE stripe_events SET processing_status='completed', processed_at=datetime('now') WHERE id=?`
       ).bind(id).run();
       return jsonOk(c, { retried: true, event_id: event.event_id, result });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errMessage = err instanceof Error ? err.message : String(err);
       await c.env.DB.prepare(
         `UPDATE stripe_events SET processing_status='failed', error=?, processed_at=datetime('now') WHERE id=?`
-      ).bind(err?.message || String(err), id).run();
-      return jsonError(c, `Retry failed: ${err?.message}`, 500);
+      ).bind(errMessage, id).run();
+      return jsonError(c, `Retry failed: ${errMessage}`, 500);
     }
   } catch (err) {
     console.error(err);

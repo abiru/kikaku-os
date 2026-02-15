@@ -12,6 +12,44 @@ import { generatePublicToken } from '../../lib/token';
 import { validateItem, type CheckoutItem, type VariantPriceRow } from '../../lib/schemas/checkout';
 import { timingSafeCompare } from '../../middleware/clerkAuth';
 
+type QuotationRow = {
+  id: number;
+  quotation_number: string;
+  customer_company: string;
+  customer_name: string;
+  customer_email: string | null;
+  customer_phone: string | null;
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+  currency: string;
+  valid_until: string;
+  status: string;
+  notes: string | null;
+  public_token: string | null;
+  converted_order_id: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type QuotationItemRow = {
+  id: number;
+  quotation_id: number;
+  variant_id: number;
+  product_title: string;
+  variant_title: string | null;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  created_at: string;
+  updated_at: string;
+};
+
+type StripeCheckoutSessionResponse = {
+  id?: string;
+  url?: string;
+};
+
 const quotations = new Hono<Env>();
 const normalizeString = (value: unknown) => {
   if (!value) return null;
@@ -21,18 +59,19 @@ const normalizeString = (value: unknown) => {
 
 // POST /quotations - Create new quotation
 quotations.post('/quotations', async (c) => {
-  let body: any;
+  let body: unknown;
   try {
     body = await c.req.json();
   } catch {
     return jsonError(c, 'Invalid JSON', 400);
   }
+  const bodyObj = body as Record<string, unknown> | null;
 
-  const customerCompany = normalizeString(body?.customerCompany);
-  const customerName = normalizeString(body?.customerName);
-  const customerEmail = normalizeString(body?.customerEmail);
-  const customerPhone = normalizeString(body?.customerPhone);
-  const notes = normalizeString(body?.notes);
+  const customerCompany = normalizeString(bodyObj?.customerCompany);
+  const customerName = normalizeString(bodyObj?.customerName);
+  const customerEmail = normalizeString(bodyObj?.customerEmail);
+  const customerPhone = normalizeString(bodyObj?.customerPhone);
+  const notes = normalizeString(bodyObj?.notes);
 
   if (!customerCompany) {
     return jsonError(c, 'customerCompany is required', 400);
@@ -43,8 +82,8 @@ quotations.post('/quotations', async (c) => {
 
   // Validate items
   let items: CheckoutItem[] = [];
-  if (Array.isArray(body?.items)) {
-    for (const rawItem of body.items) {
+  if (Array.isArray(bodyObj?.items)) {
+    for (const rawItem of (bodyObj.items as unknown[])) {
       const item = validateItem(rawItem);
       if (!item) {
         return jsonError(c, 'Invalid item in items array', 400);
@@ -112,9 +151,10 @@ quotations.post('/quotations', async (c) => {
   const totalAmount = taxCalculation.totalAmount;
 
   let currency = 'JPY';
-  if (items.length > 0) {
-    const row = variantMap.get(items[0].variantId)!;
-    currency = (row.currency || 'JPY').toUpperCase();
+  const firstItem = items[0];
+  if (firstItem) {
+    const row = variantMap.get(firstItem.variantId);
+    currency = (row?.currency || 'JPY').toUpperCase();
   }
 
   // Calculate valid_until (30 days from now)
@@ -196,7 +236,10 @@ quotations.get('/quotations/:token', async (c) => {
 
   // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
   const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE public_token = ?`
+    `SELECT id, quotation_number, customer_company, customer_name, customer_email, customer_phone,
+            subtotal, tax_amount, total_amount, currency, valid_until, status,
+            converted_order_id, notes, metadata, public_token, created_at, updated_at
+     FROM quotations WHERE public_token = ?`
   ).bind(token).first();
 
   if (!quotation) {
@@ -204,7 +247,8 @@ quotations.get('/quotations/:token', async (c) => {
   }
 
   const items = await c.env.DB.prepare(
-    `SELECT * FROM quotation_items WHERE quotation_id = ? ORDER BY id`
+    `SELECT id, quotation_id, variant_id, product_title, variant_title, quantity, unit_price, subtotal, metadata, created_at, updated_at
+     FROM quotation_items WHERE quotation_id = ? ORDER BY id`
   ).bind(quotation.id).all();
 
   return jsonOk(c, {
@@ -222,7 +266,9 @@ quotations.get('/quotations/:token/html', async (c) => {
 
   // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
   const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE public_token = ?`
+    `SELECT id, quotation_number, customer_company, customer_name, customer_email, customer_phone,
+            subtotal, tax_amount, total_amount, currency, valid_until, status, notes, created_at
+     FROM quotations WHERE public_token = ?`
   ).bind(token).first();
 
   if (!quotation) {
@@ -234,11 +280,37 @@ quotations.get('/quotations/:token/html', async (c) => {
   const items = await c.env.DB.prepare(
     `SELECT product_title, variant_title, quantity, unit_price, subtotal
      FROM quotation_items WHERE quotation_id = ? ORDER BY id`
-  ).bind(id).all();
+  ).bind(id).all<{
+    product_title: string;
+    variant_title: string | null;
+    quantity: number;
+    unit_price: number;
+    subtotal: number;
+  }>();
 
   const data: QuotationData = {
-    quotation: quotation as any,
-    items: items.results as any
+    quotation: {
+      id: quotation.id as number,
+      quotation_number: quotation.quotation_number as string,
+      customer_company: quotation.customer_company as string,
+      customer_name: quotation.customer_name as string,
+      customer_email: quotation.customer_email as string | null,
+      customer_phone: quotation.customer_phone as string | null,
+      subtotal: quotation.subtotal as number,
+      tax_amount: quotation.tax_amount as number,
+      total_amount: quotation.total_amount as number,
+      currency: quotation.currency as string,
+      valid_until: quotation.valid_until as string,
+      notes: quotation.notes as string | null,
+      created_at: quotation.created_at as string,
+    },
+    items: (items.results || []).map((item) => ({
+      product_title: item.product_title as string,
+      variant_title: (item.variant_title as string | null),
+      quantity: item.quantity as number,
+      unit_price: item.unit_price as number,
+      subtotal: item.subtotal as number,
+    })),
   };
 
   const company = await getCompanyInfo(c.env);
@@ -273,17 +345,19 @@ quotations.post('/quotations/:token/accept', async (c) => {
   }
 
   // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
-  let body: any;
+  let acceptBody: Record<string, unknown> = {};
   try {
-    body = await c.req.json();
+    acceptBody = (await c.req.json()) as Record<string, unknown>;
   } catch {
-    body = {};
+    acceptBody = {};
   }
 
-  const email = normalizeString(body?.email);
+  const email = normalizeString(acceptBody?.email);
 
   const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE public_token = ?`
+    `SELECT id, quotation_number, customer_company, customer_name, customer_email,
+            status, total_amount, currency, valid_until, public_token
+     FROM quotations WHERE public_token = ?`
   ).bind(token).first<any>();
 
   if (!quotation) {
@@ -305,8 +379,21 @@ quotations.post('/quotations/:token/accept', async (c) => {
   }
 
   // Get quotation items
+  type QuotationItemRow = {
+    id: number;
+    quotation_id: number;
+    variant_id: number;
+    product_title: string;
+    variant_title: string | null;
+    quantity: number;
+    unit_price: number;
+    subtotal: number;
+    created_at: string;
+    updated_at: string;
+  };
   const quotationItems = await c.env.DB.prepare(
-    `SELECT * FROM quotation_items WHERE quotation_id = ? ORDER BY id`
+    `SELECT id, quotation_id, variant_id, quantity, unit_price
+     FROM quotation_items WHERE quotation_id = ? ORDER BY id`
   ).bind(id).all<any>();
 
   if (!quotationItems.results || quotationItems.results.length === 0) {
@@ -314,7 +401,7 @@ quotations.post('/quotations/:token/accept', async (c) => {
   }
 
   // Fetch variant/price data to get provider_price_id
-  const variantIds = quotationItems.results.map((item: any) => item.variant_id);
+  const variantIds = quotationItems.results.map((item) => item.variant_id);
   const placeholders = variantIds.map(() => '?').join(',');
   const variantRows = await c.env.DB.prepare(
     `SELECT v.id as variant_id,
@@ -428,7 +515,7 @@ quotations.post('/quotations/:token/accept', async (c) => {
   params.set('cancel_url', cancelUrl);
 
   // Add line items
-  quotationItems.results.forEach((item: any, index: number) => {
+  quotationItems.results.forEach((item, index) => {
     const row = variantMap.get(item.variant_id)!;
     params.set(`line_items[${index}][price]`, row.provider_price_id!.trim());
     params.set(`line_items[${index}][quantity]`, String(item.quantity));
@@ -457,7 +544,7 @@ quotations.post('/quotations/:token/accept', async (c) => {
     return jsonError(c, 'Failed to create checkout session', 500);
   }
 
-  const session = await stripeRes.json<any>();
+  const session = await stripeRes.json<StripeCheckoutSessionResponse>();
   if (!session?.url || !session?.id) {
     return jsonError(c, 'Invalid checkout session', 500);
   }
@@ -537,7 +624,10 @@ quotations.get('/quotations', async (c) => {
 
   const offset = (page - 1) * perPage;
 
-  let query = `SELECT * FROM quotations`;
+  let query = `SELECT id, quotation_number, customer_company, customer_name, customer_email, customer_phone,
+          subtotal, tax_amount, total_amount, currency, valid_until, status,
+          converted_order_id, notes, metadata, public_token, created_at, updated_at
+   FROM quotations`;
   const params: any[] = [];
 
   if (status) {

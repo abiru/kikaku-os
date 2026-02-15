@@ -110,7 +110,7 @@ aiContent.get('/content/drafts/:id', async (c) => {
     const id = Number(c.req.param('id'));
 
     const draft = await c.env.DB.prepare(
-      `SELECT * FROM ai_content_drafts WHERE id = ?`
+      `SELECT id, content_type, ref_type, ref_id, prompt, generated_content, status, model_used, tokens_used, generation_time_ms, approved_by, approved_at, applied_at, metadata, created_at, updated_at FROM ai_content_drafts WHERE id = ?`
     ).bind(id).first();
 
     if (!draft) {

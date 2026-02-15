@@ -2,20 +2,15 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
-import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   adGenerateRequestSchema,
-  createAdDraftSchema,
-  updateAdDraftSchema,
-  adDraftIdParamSchema,
-  adDraftListQuerySchema,
-  selectHistorySchema,
   PERMISSIONS,
 } from '../../lib/schemas';
 import { generateAdCopy } from '../../services/claudeAds';
-import { validateAdCopy } from '../../services/adValidation';
+import adminAdsDrafts from './adminAdsDrafts';
+import adminAdsHistory from './adminAdsHistory';
 
 const app = new Hono<Env>();
 
@@ -344,7 +339,7 @@ app.put(
 
       // Build dynamic update query
       const updates: string[] = [];
-      const values: any[] = [];
+      const values: (string | number | null)[] = [];
 
       if (data.campaign_name !== undefined) {
         updates.push('campaign_name = ?');
@@ -609,6 +604,9 @@ app.post(
 
       // Use first candidate
       const candidate = content.candidates[0];
+      if (!candidate) {
+        return jsonError(c, 'No candidate found in history', 400);
+      }
 
       // Update draft with candidate content
       await c.env.DB.prepare(

@@ -165,9 +165,9 @@ adminTaxRates.put(
       const data = c.req.valid('json') as UpdateTaxRateInput;
 
       // Check if tax rate exists
-      const existing = await c.env.DB.prepare('SELECT * FROM tax_rates WHERE id = ?')
+      const existing = await c.env.DB.prepare('SELECT id FROM tax_rates WHERE id = ?')
         .bind(id)
-        .first();
+        .first<{ id: number }>();
 
       if (!existing) {
         return jsonError(c, 'Tax rate not found', 404);
@@ -175,7 +175,7 @@ adminTaxRates.put(
 
       // Build update query dynamically based on provided fields
       const updates: string[] = [];
-      const values: any[] = [];
+      const values: (string | number | null)[] = [];
 
       if (data.name !== undefined) {
         updates.push('name = ?');
@@ -261,9 +261,9 @@ adminTaxRates.delete(
       const { id } = c.req.valid('param') as TaxRateIdParam;
 
       // Check if tax rate exists
-      const existing = await c.env.DB.prepare('SELECT * FROM tax_rates WHERE id = ?')
+      const existing = await c.env.DB.prepare('SELECT id, name FROM tax_rates WHERE id = ?')
         .bind(id)
-        .first();
+        .first<{ id: number; name: string }>();
 
       if (!existing) {
         return jsonError(c, 'Tax rate not found', 404);
