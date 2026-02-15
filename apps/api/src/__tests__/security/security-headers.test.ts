@@ -11,6 +11,8 @@ import type { Env } from '../../env';
  * - X-XSS-Protection: 0 (modern approach - rely on CSP instead)
  * - Referrer-Policy: strict-origin-when-cross-origin
  * - Permissions-Policy: camera=(), microphone=(), geolocation=()
+ * - Strict-Transport-Security: max-age=31536000; includeSubDomains
+ * - Content-Security-Policy: varies by response type (JSON vs HTML)
  */
 describe('Security headers middleware', () => {
   const createApp = () => {
@@ -24,6 +26,14 @@ describe('Security headers middleware', () => {
       c.res.headers.set('X-XSS-Protection', '0');
       c.res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
       c.res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+      c.res.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+
+      const contentType = c.res.headers.get('Content-Type') || '';
+      const isHtml = contentType.includes('text/html');
+      const csp = isHtml
+        ? "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"
+        : "default-src 'none'; frame-ancestors 'none'";
+      c.res.headers.set('Content-Security-Policy', csp);
     });
 
     app.get('/test', (c) => c.json({ ok: true }));
@@ -66,12 +76,33 @@ describe('Security headers middleware', () => {
     expect(policy).toContain('geolocation=()');
   });
 
+  it('sets Strict-Transport-Security with max-age and includeSubDomains', async () => {
+    const app = createApp();
+    const res = await app.request('/test');
+    expect(res.headers.get('Strict-Transport-Security')).toBe('max-age=31536000; includeSubDomains');
+  });
+
+  it('sets strict Content-Security-Policy for JSON responses', async () => {
+    const app = createApp();
+    const res = await app.request('/test');
+    const csp = res.headers.get('Content-Security-Policy');
+    expect(csp).toBe("default-src 'none'; frame-ancestors 'none'");
+  });
+
+  it('sets Content-Security-Policy with inline styles for HTML responses', async () => {
+    const app = createApp();
+    const res = await app.request('/html');
+    const csp = res.headers.get('Content-Security-Policy');
+    expect(csp).toBe("default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'");
+  });
+
   it('applies security headers to POST responses', async () => {
     const app = createApp();
     const res = await app.request('/test', { method: 'POST' });
     expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
     expect(res.headers.get('X-Frame-Options')).toBe('DENY');
     expect(res.headers.get('X-XSS-Protection')).toBe('0');
+    expect(res.headers.get('Strict-Transport-Security')).toBe('max-age=31536000; includeSubDomains');
   });
 
   it('applies security headers to HTML responses', async () => {
@@ -79,6 +110,7 @@ describe('Security headers middleware', () => {
     const res = await app.request('/html');
     expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
     expect(res.headers.get('X-Frame-Options')).toBe('DENY');
+    expect(res.headers.get('Strict-Transport-Security')).toBe('max-age=31536000; includeSubDomains');
   });
 
   it('sets correct Content-Type for JSON responses', async () => {
@@ -98,6 +130,8 @@ describe('Security headers middleware', () => {
       'X-XSS-Protection': '0',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+      'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
     };
 
     for (const [header, value] of Object.entries(expectedHeaders)) {

@@ -138,6 +138,15 @@ app.use('*', async (c, next) => {
   c.res.headers.set('X-XSS-Protection', '0');
   c.res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   c.res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  c.res.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+
+  // Content-Security-Policy: stricter for JSON, allow inline styles for HTML
+  const contentType = c.res.headers.get('Content-Type') || '';
+  const isHtml = contentType.includes('text/html');
+  const csp = isHtml
+    ? "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"
+    : "default-src 'none'; frame-ancestors 'none'";
+  c.res.headers.set('Content-Security-Policy', csp);
 });
 
 // Production request logging (after CORS, before auth)
