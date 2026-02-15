@@ -462,6 +462,10 @@
     "notFound": "ページが見つかりません",
     "notFoundCode": "404",
     "notFoundMessage": "お探しのページは移動、削除、またはURLが変更された可能性があります。",
-    "backToHome": "ホームに戻る"
+    "backToHome": "ホームに戻る",
+    "serverError": "サーバーエラー",
+    "serverErrorCode": "500",
+    "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
+    "reload": "再読み込み"
   }
 }
