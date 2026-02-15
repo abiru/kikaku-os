@@ -12,7 +12,7 @@
  */
 
 import type { Env } from '../../env';
-import type { StripeEvent } from '../../lib/stripeData';
+import type { StripeDataObject, StripeEvent } from '../../lib/stripeData';
 import { extractOrderId } from '../../lib/stripeData';
 import { sendBankTransferInstructionsEmail } from '../orderEmail';
 
@@ -47,7 +47,7 @@ export const handleStripeEvent = async (
   event: StripeEvent
 ): Promise<HandlerResult> => {
   const eventType = event.type;
-  const dataObject = event.data?.object || {};
+  const dataObject: StripeDataObject = event.data?.object || {};
 
   if (eventType === 'checkout.session.completed') {
     return handleCheckoutSessionCompleted(env, event, dataObject);
@@ -102,7 +102,8 @@ export const handleStripeEvent = async (
         .run();
 
       // Send bank transfer instructions email to customer
-      if (dataObject.next_action?.display_bank_transfer_instructions) {
+      const nextAction = dataObject.next_action as Record<string, unknown> | undefined;
+      if (nextAction?.display_bank_transfer_instructions) {
         try {
           // Get customer email from order
           const order = await env.DB.prepare(
@@ -117,7 +118,7 @@ export const handleStripeEvent = async (
               orderId,
               amount: dataObject.amount || 0,
               currency: (dataObject.currency || 'JPY').toUpperCase(),
-              bankTransferInstructions: dataObject.next_action.display_bank_transfer_instructions,
+              bankTransferInstructions: nextAction.display_bank_transfer_instructions,
             });
           }
         } catch (emailErr) {

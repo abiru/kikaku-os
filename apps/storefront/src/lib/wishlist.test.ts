@@ -26,8 +26,8 @@ describe('wishlist', () => {
 			addToWishlist(sampleItem);
 			const items = $wishlistArray.get();
 			expect(items).toHaveLength(1);
-			expect(items[0].title).toBe('Test Product');
-			expect(items[0].addedAt).toBeGreaterThan(0);
+			expect(items[0]!.title).toBe('Test Product');
+			expect(items[0]!.addedAt).toBeGreaterThan(0);
 		});
 
 		it('does not duplicate existing item', () => {
@@ -98,7 +98,7 @@ describe('wishlist', () => {
 			addToWishlist({ ...sampleItem, productId: 1 });
 			addToWishlist({ ...sampleItem, productId: 2 });
 			const items = $wishlistArray.get();
-			expect(items[0].addedAt).toBeGreaterThanOrEqual(items[1].addedAt);
+			expect(items[0]!.addedAt).toBeGreaterThanOrEqual(items[1]!.addedAt);
 		});
 	});
 });
