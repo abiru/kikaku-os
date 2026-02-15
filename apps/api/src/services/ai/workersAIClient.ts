@@ -1,5 +1,6 @@
 import type { Ai, AiTextGenerationInput, AiEmbeddingsInput } from '../../env';
 import { MODELS } from './modelRouter';
+import { extractJSON } from '../../lib/json';
 
 /**
  * Workers AI text generation response
@@ -59,29 +60,6 @@ const RETRY_DELAY_MS = 500;
  */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Extract JSON from text, handling markdown code blocks
- */
-export function extractJSON(text: string): string {
-  // Try to extract from markdown code blocks
-  const jsonMatch =
-    text.match(/```json\n?([\s\S]*?)\n?```/) ||
-    text.match(/```\n?([\s\S]*?)\n?```/);
-
-  if (jsonMatch) {
-    return jsonMatch[1].trim();
-  }
-
-  // Try to find JSON object in text
-  const objectMatch = text.match(/\{[\s\S]*\}/);
-  if (objectMatch) {
-    return objectMatch[0];
-  }
-
-  // Return as-is if no code block or object found
-  return text.trim();
 }
 
 /**

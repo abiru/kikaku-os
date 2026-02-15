@@ -4,16 +4,9 @@ import { z } from 'zod';
 import { jsonError, jsonOk } from '../../lib/http';
 import type { Env } from '../../env';
 import { generateContent } from '../../services/ai/contentGeneration';
+import { validationErrorHandler } from '../../lib/validation';
 
 const aiContent = new Hono<Env>();
-
-// Validation error handler
-const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
-  if (!result.success) {
-    const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
-    return c.json({ ok: false, message: messages }, 400);
-  }
-};
 
 // Validation schema for content generation
 const generateSchema = z.object({

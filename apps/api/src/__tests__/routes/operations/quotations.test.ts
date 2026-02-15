@@ -9,6 +9,7 @@ type VariantPriceRow = {
   product_title: string;
   amount: number;
   currency: string;
+  tax_rate: number | null;
 };
 
 const createMockDb = (options: {
@@ -92,8 +93,9 @@ describe('Quotations API', () => {
           variant_title: 'Default',
           product_id: 1,
           product_title: 'Test Product',
-          amount: 1000,
-          currency: 'JPY'
+          amount: 1100,
+          currency: 'JPY',
+          tax_rate: 0.10
         }
       ];
 
@@ -114,6 +116,9 @@ describe('Quotations API', () => {
       const data = await response.json();
       expect(data.ok).toBe(true);
       expect(data.quotationNumber).toBe('EST-0001');
+      // Prices are tax-inclusive (税込): ¥1,100 × 2 = ¥2,200
+      // subtotal = floor(2200 * 100 / 110) = 2000
+      // taxAmount = 2200 - 2000 = 200
       expect(data.subtotal).toBe(2000);
       expect(data.taxAmount).toBe(200);
       expect(data.totalAmount).toBe(2200);
@@ -158,15 +163,16 @@ describe('Quotations API', () => {
       expect(data.message).toContain('items');
     });
 
-    it('calculates tax correctly', async () => {
+    it('calculates tax correctly with standard rate (10%)', async () => {
       const variantRows: VariantPriceRow[] = [
         {
           variant_id: 1,
           variant_title: 'Default',
           product_id: 1,
           product_title: 'Test Product',
-          amount: 10000,
-          currency: 'JPY'
+          amount: 11000,
+          currency: 'JPY',
+          tax_rate: 0.10
         }
       ];
 
@@ -185,9 +191,44 @@ describe('Quotations API', () => {
 
       expect(response.status).toBe(200);
       const data = await response.json();
+      // Tax-inclusive ¥11,000: subtotal = floor(11000 * 100 / 110) = 10000
       expect(data.subtotal).toBe(10000);
-      expect(data.taxAmount).toBe(1000); // 10% of 10000
+      expect(data.taxAmount).toBe(1000);
       expect(data.totalAmount).toBe(11000);
+    });
+
+    it('calculates tax correctly with reduced rate (8%)', async () => {
+      const variantRows: VariantPriceRow[] = [
+        {
+          variant_id: 1,
+          variant_title: 'Default',
+          product_id: 1,
+          product_title: 'Food Product',
+          amount: 1080,
+          currency: 'JPY',
+          tax_rate: 0.08
+        }
+      ];
+
+      const db = createMockDb({ variantRows, lastRowId: 1 });
+      const { fetch } = createApp(db);
+
+      const response = await fetch('/quotations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerCompany: 'Test Company',
+          customerName: 'Test User',
+          items: [{ variantId: 1, quantity: 1 }]
+        })
+      });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      // Tax-inclusive ¥1,080 at 8%: subtotal = floor(1080 * 100 / 108) = 1000
+      expect(data.subtotal).toBe(1000);
+      expect(data.taxAmount).toBe(80);
+      expect(data.totalAmount).toBe(1080);
     });
   });
 

@@ -73,14 +73,19 @@ const stockValue =
 			: null;
 
 // Build images array from product data
-const productImages = [];
+const productImages: Array<{ id: number; src: string; alt: string; primary: boolean }> = [];
 if (product?.image) {
 	productImages.push({ id: 1, src: product.image, alt: product?.title || 'Product image', primary: true });
 }
 if (product?.images && Array.isArray(product.images)) {
 	product.images.forEach((img: { url: string; alt: string | null }, index: number) => {
-		if (img !== product.image) {
-			productImages.push({ id: index + 2, src: img, alt: `${product?.title} - Image ${index + 2}`, primary: false });
+		if (img.url && img.url !== product.image) {
+			productImages.push({
+				id: index + 2,
+				src: img.url,
+				alt: img.alt || `${product?.title} - Image ${index + 2}`,
+				primary: false
+			});
 		}
 	});
 }

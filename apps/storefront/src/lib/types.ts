@@ -3,17 +3,25 @@ export type HeroSection = {
   title: string;
   subtitle: string | null;
   image_url: string | null;
+  image?: string | null;
+  imageSmall?: string | null;
   link_url: string | null;
   link_text: string | null;
+  cta_primary_text?: string | null;
+  cta_primary_url?: string | null;
+  cta_secondary_text?: string | null;
+  cta_secondary_url?: string | null;
   sort_order: number;
   status: string;
 };
 
 export type ProductVariant = {
   id: number;
+  title?: string | null;
   sku: string | null;
   price: { amount: number; currency: string };
-  stock: number | null;
+  stock?: number | null;
+  inventory?: number | null;
   metadata: string | null;
 };
 
@@ -30,7 +38,12 @@ export type Product = {
   description: string | null;
   status: string;
   image: string | null;
+  mainImage?: string | null;
   category: string | null;
+  tax_rate?: number | null;
+  tax_rate_id?: number | null;
+  details?: string[] | null;
+  featured?: number | null;
   metadata: string | null;
   created_at: string;
   updated_at: string;
@@ -50,9 +63,13 @@ export type OrderItem = {
 
 export type Order = {
   id: number;
-  email: string;
+  email: string | null;
+  customer_email: string | null;
   status: string;
+  fulfillment_status: string | null;
   total: number;
+  total_net: number;
+  total_amount?: number | null;
   currency: string;
   tax_amount: number;
   discount_amount: number;

@@ -4,6 +4,7 @@ import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { validationErrorHandler } from '../../lib/validation';
 import {
   adGenerateRequestSchema,
   createAdDraftSchema,
@@ -20,15 +21,6 @@ const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
 app.use('*', loadRbac);
-
-// Custom error handler for zod validation
-const validationErrorHandler = (result: { success: boolean; error?: { issues: Array<{ message: string }> } }, c: any) => {
-  if (!result.success) {
-    const messages = result.error?.issues.map((e) => e.message).join(', ') || 'Validation failed';
-    return c.json({ ok: false, message: messages }, 400);
-  }
-};
-
 // POST /admin/ads/generate - Generate AI ad copy candidates
 // Following Inbox Pattern: AI output requires human approval
 app.post(
