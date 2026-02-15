@@ -144,7 +144,11 @@ app.get('/csrf-token', (c) => {
   // The csrfProtection middleware has already set the cookie for GET requests
   // We just need to return the token value from the cookie so clients can
   // include it in the x-csrf-token header for state-changing requests
-  const token = getCookie(c, '__csrf') || '';
+  const tokenFromContext = c.get('csrfToken');
+  const token =
+    typeof tokenFromContext === 'string' && tokenFromContext.length > 0
+      ? tokenFromContext
+      : (getCookie(c, '__csrf') || '');
   return jsonOk(c, { token });
 });
 

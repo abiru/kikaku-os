@@ -15,6 +15,12 @@ import type { Context, Next } from 'hono';
 import { setCookie, getCookie } from 'hono/cookie';
 import type { Env } from '../env';
 
+declare module 'hono' {
+  interface ContextVariableMap {
+    csrfToken: string;
+  }
+}
+
 const CSRF_COOKIE_NAME = '__csrf';
 const CSRF_HEADER_NAME = 'x-csrf-token';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -83,6 +89,11 @@ const ensureCsrfCookie = (c: Context<Env>): string => {
       maxAge: 3600, // 1 hour
     });
   }
+
+  // Expose the token to downstream handlers in the same request.
+  // This allows GET /csrf-token to return the token even on the first request
+  // before the browser has stored the cookie.
+  c.set('csrfToken', token);
 
   return token;
 };

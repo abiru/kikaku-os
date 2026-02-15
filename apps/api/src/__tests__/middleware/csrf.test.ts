@@ -56,6 +56,12 @@ describe('csrfProtection middleware', () => {
   const createApp = () => {
     const app = new Hono<Env>();
     app.use('*', csrfProtection());
+    app.get('/csrf-token', (c) => {
+      const tokenFromContext = c.get('csrfToken');
+      return c.json({
+        token: typeof tokenFromContext === 'string' ? tokenFromContext : '',
+      });
+    });
     app.get('/test', (c) => c.json({ ok: true }));
     app.post('/test', (c) => c.json({ ok: true }));
     app.put('/test', (c) => c.json({ ok: true }));
@@ -65,6 +71,19 @@ describe('csrfProtection middleware', () => {
     app.post('/admin-action', (c) => c.json({ ok: true }));
     return app;
   };
+
+  it('returns a non-empty token on first /csrf-token request', async () => {
+    const app = createApp();
+    const res = await app.request('/csrf-token', { method: 'GET' });
+    expect(res.status).toBe(200);
+
+    const body = await res.json() as { token: string };
+    expect(body.token).toMatch(/^[A-Za-z0-9_-]+$/);
+
+    const setCookieHeader = res.headers.get('set-cookie') || '';
+    const cookieMatch = setCookieHeader.match(/__csrf=([^;]+)/);
+    expect(cookieMatch?.[1]).toBe(body.token);
+  });
 
   it('allows GET requests and sets CSRF cookie', async () => {
     const app = createApp();
