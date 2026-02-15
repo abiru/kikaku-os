@@ -1,7 +1,7 @@
 'use client'
 import * as Headless from '@headlessui/react'
 import clsx from 'clsx'
-import { LayoutGroup, motion } from 'motion/react'
+import { LayoutGroup, motion, useReducedMotion } from 'motion/react'
 import React, { forwardRef, useId } from 'react'
 import { TouchTarget } from './button'
 import { Link } from './link'
@@ -72,6 +72,7 @@ export const SidebarItem = forwardRef(function SidebarItem(
  ),
  ref: React.ForwardedRef<HTMLAnchorElement | HTMLButtonElement>
 ) {
+ let shouldReduceMotion = useReducedMotion()
  let classes = clsx(
  // Base
  'flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base/6 font-medium text-zinc-950 sm:py-2 sm:text-sm/5',
@@ -92,10 +93,14 @@ export const SidebarItem = forwardRef(function SidebarItem(
  return (
  <span className={clsx(className, 'relative')}>
  {current && (
+ shouldReduceMotion ? (
+ <span className="absolute inset-y-2 -left-4 w-0.5 rounded-full bg-zinc-950" />
+ ) : (
  <motion.span
  layoutId="current-indicator"
  className="absolute inset-y-2 -left-4 w-0.5 rounded-full bg-zinc-950"
  />
+ )
  )}
  {typeof props.href === 'string' ? (
  <Headless.CloseButton
