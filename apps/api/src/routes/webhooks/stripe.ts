@@ -31,9 +31,6 @@ const handleWebhook = async (c: Context<Env>) => {
   } catch {
     return jsonError(c, 'Invalid payload', 400);
   }
-  if (!event?.id || typeof event.id !== 'string') {
-    return jsonError(c, 'Invalid payload', 400);
-  }
 
   try {
     // Phase 1: イベントを保存（冪等性チェック）

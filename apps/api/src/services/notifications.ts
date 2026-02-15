@@ -81,8 +81,8 @@ export const sendSlackNotification = async (
     ).bind(payload.inboxItemId, JSON.stringify(message)).run();
 
     return { success: true };
-  } catch (err: any) {
-    const errorMessage = String(err?.message || err);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
 
     await env.DB.prepare(
       `INSERT INTO notifications (channel, inbox_item_id, status, payload, response)

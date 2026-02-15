@@ -8,7 +8,9 @@ import {
   accountOrdersQuerySchema,
   accountOrderIdParamSchema,
   updateAccountProfileSchema,
+  cancelOrderSchema,
 } from '../../lib/schemas';
+import { cancelOrder } from '../../services/orderCancel';
 
 const storeAccount = new Hono<Env>();
 
@@ -381,6 +383,73 @@ storeAccount.put(
         email: customer.email,
         shipping_address: shipping_address ?? (metadata as { shipping_address?: unknown }).shipping_address ?? null,
       },
+    });
+  }
+);
+
+/**
+ * POST /store/account/orders/:id/cancel
+ * Cancel an order (customer can only cancel before fulfillment)
+ */
+storeAccount.post(
+  '/orders/:id/cancel',
+  zValidator('param', accountOrderIdParamSchema, validationErrorHandler),
+  zValidator('json', cancelOrderSchema, validationErrorHandler),
+  async (c) => {
+    const authUser = c.get('authUser');
+    if (!authUser || authUser.method !== 'clerk') {
+      return jsonError(c, 'Authentication required', 401);
+    }
+
+    const customer = await getOrCreateCustomerByClerkId(
+      c.env.DB,
+      authUser.userId,
+      authUser.email
+    );
+
+    if (!customer) {
+      return jsonError(c, 'Failed to get account', 500);
+    }
+
+    const { id: orderId } = c.req.valid('param');
+    const { reason } = c.req.valid('json');
+
+    // Verify ownership: order must belong to this customer
+    const order = await c.env.DB
+      .prepare('SELECT id, customer_id FROM orders WHERE id = ? AND customer_id = ?')
+      .bind(orderId, customer.id)
+      .first<{ id: number; customer_id: number }>();
+
+    if (!order) {
+      return jsonError(c, 'Order not found', 404);
+    }
+
+    // Check fulfillment status - cannot cancel if already shipped/delivered
+    const fulfillment = await c.env.DB
+      .prepare(
+        `SELECT id FROM fulfillments WHERE order_id = ? AND status IN ('shipped', 'delivered') LIMIT 1`
+      )
+      .bind(orderId)
+      .first<{ id: number }>();
+
+    if (fulfillment) {
+      return jsonError(c, 'Order cannot be cancelled after shipment', 400);
+    }
+
+    const result = await cancelOrder({
+      db: c.env.DB,
+      orderId,
+      reason,
+      actor: authUser.email || authUser.userId,
+      stripeSecretKey: c.env.STRIPE_SECRET_KEY,
+    });
+
+    if (!result.ok) {
+      return jsonError(c, result.error, result.status);
+    }
+
+    return jsonOk(c, {
+      order: result.order,
     });
   }
 );

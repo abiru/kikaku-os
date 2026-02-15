@@ -13,7 +13,7 @@ export const sendAlert = async (
   env: Env['Bindings'],
   level: AlertLevel,
   message: string,
-  details?: any
+  details?: Record<string, unknown>
 ): Promise<void> => {
   // Don't send alerts in dev mode - just log
   if (env.DEV_MODE === 'true') {

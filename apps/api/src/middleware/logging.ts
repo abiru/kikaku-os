@@ -16,6 +16,7 @@ export const requestLogger = async (c: Context, next: Next) => {
 
   // Only log in production (avoid noise in dev)
   if (c.env.DEV_MODE !== 'true') {
+    // eslint-disable-next-line no-console -- structured request logging
     console.log(JSON.stringify({
       timestamp: new Date().toISOString(),
       method,

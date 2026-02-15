@@ -273,7 +273,13 @@ quotations.get('/quotations/:token/html', async (c) => {
   const items = await c.env.DB.prepare(
     `SELECT product_title, variant_title, quantity, unit_price, subtotal
      FROM quotation_items WHERE quotation_id = ? ORDER BY id`
-  ).bind(id).all();
+  ).bind(id).all<{
+    product_title: string;
+    variant_title: string | null;
+    quantity: number;
+    unit_price: number;
+    subtotal: number;
+  }>();
 
   const data: QuotationData = {
     quotation: {
@@ -364,6 +370,18 @@ quotations.post('/quotations/:token/accept', async (c) => {
   }
 
   // Get quotation items
+  type QuotationItemRow = {
+    id: number;
+    quotation_id: number;
+    variant_id: number;
+    product_title: string;
+    variant_title: string | null;
+    quantity: number;
+    unit_price: number;
+    subtotal: number;
+    created_at: string;
+    updated_at: string;
+  };
   const quotationItems = await c.env.DB.prepare(
     `SELECT * FROM quotation_items WHERE quotation_id = ? ORDER BY id`
   ).bind(id).all<QuotationItemRow>();

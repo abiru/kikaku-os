@@ -54,8 +54,8 @@ export const enqueueDailyCloseAnomaly = async (
       date
     ).run();
     return true;
-  } catch (err: any) {
-    if (String(err?.message || '').includes('UNIQUE constraint failed')) return false;
+  } catch (err: unknown) {
+    if (String(err instanceof Error ? err.message : '').includes('UNIQUE constraint failed')) return false;
     throw err;
   }
 };
