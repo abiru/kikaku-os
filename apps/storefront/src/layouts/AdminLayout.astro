@@ -42,6 +42,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<meta name="robots" content="noindex, nofollow" />
 	</head>
 	<body class="h-full font-sans antialiased bg-white text-zinc-950">
 		<AdminLayoutComponent client:load currentPath={currentPath} lowStockCount={lowStockCount}>
