@@ -1,6 +1,7 @@
 {
 	"name": "kikaku-os",
 	"private": true,
+	"packageManager": "pnpm@10.29.3",
 	"engines": {
 		"node": ">=20"
 	},
