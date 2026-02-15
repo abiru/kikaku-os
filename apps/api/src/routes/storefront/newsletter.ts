@@ -2,8 +2,9 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import type { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
-import { newsletterSubscribeSchema } from '../../lib/schemas/newsletter';
+import { newsletterSubscribeSchema, newsletterUnsubscribeQuerySchema } from '../../lib/schemas/newsletter';
 import { validationErrorHandler } from '../../lib/validation';
+import { verifyEmailToken } from '../../lib/token';
 
 const newsletter = new Hono<Env>();
 
@@ -40,6 +41,47 @@ newsletter.post(
     } catch (err) {
       console.error('Failed to subscribe to newsletter:', err);
       return jsonError(c, 'Failed to subscribe', 500);
+    }
+  }
+);
+
+// GET /store/newsletter/unsubscribe?token=xxx - Unsubscribe with signed token
+newsletter.get(
+  '/newsletter/unsubscribe',
+  zValidator('query', newsletterUnsubscribeQuerySchema, validationErrorHandler),
+  async (c) => {
+    const { token } = c.req.valid('query');
+    const secret = c.env.NEWSLETTER_SECRET || c.env.ADMIN_API_KEY || 'fallback-secret';
+
+    try {
+      // Verify token and extract email
+      const email = await verifyEmailToken(token, secret);
+      if (!email) {
+        return jsonError(c, 'Invalid or expired unsubscribe link', 400);
+      }
+
+      // Check if subscriber exists
+      const existing = await c.env.DB.prepare(
+        'SELECT id, status FROM newsletter_subscribers WHERE email = ?'
+      ).bind(email).first<{ id: number; status: string }>();
+
+      if (!existing) {
+        return jsonError(c, 'Email not found in newsletter list', 404);
+      }
+
+      if (existing.status === 'unsubscribed') {
+        return jsonOk(c, { message: 'Already unsubscribed' });
+      }
+
+      // Update status to unsubscribed
+      await c.env.DB.prepare(
+        "UPDATE newsletter_subscribers SET status = 'unsubscribed', updated_at = datetime('now') WHERE id = ?"
+      ).bind(existing.id).run();
+
+      return jsonOk(c, { message: 'Successfully unsubscribed from newsletter' });
+    } catch (err) {
+      console.error('Failed to unsubscribe from newsletter:', err);
+      return jsonError(c, 'Failed to unsubscribe', 500);
     }
   }
 );
