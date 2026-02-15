@@ -232,7 +232,7 @@ app.put(
 
       // Build update query dynamically
       const updates: string[] = [];
-      const bindings: any[] = [];
+      const bindings: (string | number | null)[] = [];
 
       if (data.title !== undefined) {
         updates.push('title = ?');

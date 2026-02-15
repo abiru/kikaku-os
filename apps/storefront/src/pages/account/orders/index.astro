@@ -67,7 +67,7 @@ const statusLabels: Record<string, string> = {
 
       {orders.length === 0 ? (
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div class="text-[#86868b] mb-4">{t('account.noOrders')}</div>
+          <div class="text-[#6e6e73] mb-4">{t('account.noOrders')}</div>
           <a
             href="/products"
             class="inline-flex items-center justify-center px-6 py-2.5 bg-[#0071e3] text-white rounded-full text-sm font-medium hover:bg-[#0077ed] transition-colors"
@@ -78,7 +78,7 @@ const statusLabels: Record<string, string> = {
       ) : (
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Desktop Table Header */}
-          <div class="hidden md:grid md:grid-cols-4 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-[#86868b]">
+          <div class="hidden md:grid md:grid-cols-4 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-[#6e6e73]">
             <div>{t('account.orderNumber')}</div>
             <div>{t('account.orderDate')}</div>
             <div>{t('account.orderStatus')}</div>
@@ -104,7 +104,7 @@ const statusLabels: Record<string, string> = {
                       {statusLabels[order.status] || order.status}
                     </div>
                   </div>
-                  <div class="flex justify-between text-sm text-[#86868b]">
+                  <div class="flex justify-between text-sm text-[#6e6e73]">
                     <div>{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                     <div class="font-medium text-[#1d1d1f]">
                       {formatCurrency(order.total_amount, order.currency)}
@@ -115,7 +115,7 @@ const statusLabels: Record<string, string> = {
                 {/* Desktop Layout */}
                 <div class="hidden md:grid md:grid-cols-4 gap-4 items-center">
                   <div class="font-medium text-[#1d1d1f]">#{order.id}</div>
-                  <div class="text-[#86868b]">{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                  <div class="text-[#6e6e73]">{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                   <div>
                     <span class={`text-sm px-2 py-0.5 rounded-full ${
                       order.status === 'completed' || order.status === 'paid'
@@ -145,7 +145,7 @@ const statusLabels: Record<string, string> = {
                 </a>
               )}
 
-              <span class="px-4 py-2 text-sm text-[#86868b]">
+              <span class="px-4 py-2 text-sm text-[#6e6e73]">
                 {meta.page} / {meta.totalPages}
               </span>
 

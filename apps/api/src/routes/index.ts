@@ -23,6 +23,7 @@ import adminUsers from './admin/adminUsers';
 import adminInquiries from './admin/adminInquiries';
 import adminReviews from './admin/adminReviews';
 import adminNewsletter from './admin/adminNewsletter';
+import adminOrderExport from './admin/adminOrderExport';
 
 // Webhooks
 import stripe from './webhooks/stripe';
@@ -66,6 +67,8 @@ export function registerRoutes(app: Hono<Env>) {
   // Health check (public, unauthenticated)
   app.route('/', health);
   // Admin routes (requires Clerk auth via middleware)
+  // adminOrderExport must be registered before adminOrders to avoid :id param capturing "export"
+  app.route('/admin', adminOrderExport);
   app.route('/', adminOrders);
   app.route('/admin', adminProducts);
   app.route('/admin', adminReports);
@@ -147,6 +150,7 @@ export {
   adminInquiries,
   adminReviews,
   adminNewsletter,
+  adminOrderExport,
   // Webhooks
   stripe,
   // Storefront

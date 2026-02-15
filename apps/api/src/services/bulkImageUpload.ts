@@ -289,7 +289,7 @@ const downloadImageFromUrl = async (
         throw new Error(`Invalid content-type: ${contentType}`);
       }
 
-      if (!ALLOWED_IMAGE_TYPES.includes(contentType as any)) {
+      if (!(ALLOWED_IMAGE_TYPES as readonly string[]).includes(contentType)) {
         throw new Error(`Unsupported image type: ${contentType}`);
       }
 
