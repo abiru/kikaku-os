@@ -9,6 +9,23 @@ import { getApiBase } from '../../lib/api';
 import { Button } from '../../components/catalyst/button';
 import type { InboxItem } from '../../lib/types';
 
+type BulkImageUploadItem = {
+	product_id: number;
+	source_url: string;
+	product_title: string | null;
+	image_urls: string[];
+	existing_r2_images: number;
+};
+
+type BulkImageUploadMetadata = {
+	upload_items: BulkImageUploadItem[];
+	total_images: number;
+	results?: {
+		succeeded?: number;
+		failed?: number;
+	};
+};
+
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
 
@@ -54,7 +71,8 @@ if (apiKey) {
 	error = 'ADMIN_API_KEY is missing.';
 }
 
-const parseBody = (body: string) => {
+const parseBody = (body: string | null) => {
+	if (!body) return '';
 	try {
 		if (body.startsWith('{') || body.startsWith('[')) {
 			const json = JSON.parse(body);
@@ -66,10 +84,34 @@ const parseBody = (body: string) => {
 	}
 };
 
-const parseMetadata = (metadataStr: string | null) => {
+const parseMetadata = (metadataStr: string | null): BulkImageUploadMetadata | null => {
 	if (!metadataStr) return null;
 	try {
-		return JSON.parse(metadataStr);
+		const parsed = JSON.parse(metadataStr) as {
+			upload_items?: Array<{
+				product_id?: number;
+				source_url?: string;
+				product_title?: string | null;
+				image_urls?: unknown;
+				existing_r2_images?: number;
+			}>;
+			total_images?: number;
+			results?: { succeeded?: number; failed?: number };
+		};
+		if (!Array.isArray(parsed.upload_items)) return null;
+		return {
+			upload_items: parsed.upload_items.map((item) => ({
+				product_id: Number(item.product_id || 0),
+				source_url: item.source_url || '',
+				product_title: item.product_title ?? null,
+				image_urls: Array.isArray(item.image_urls)
+					? item.image_urls.filter((url): url is string => typeof url === 'string')
+					: [],
+				existing_r2_images: Number(item.existing_r2_images || 0),
+			})),
+			total_images: Number(parsed.total_images || 0),
+			results: parsed.results,
+		};
 	} catch {
 		return null;
 	}
@@ -141,7 +183,7 @@ const getBadgeColor = (severity: string) => {
 										</div>
 
 										<div class="space-y-3 max-h-96 overflow-y-auto">
-											{metadata.upload_items.map((uploadItem: { product_id: number; source_url: string }) => (
+											{metadata.upload_items.map((uploadItem) => (
 												<div class="border border-zinc-200 rounded-lg p-3 space-y-2">
 													<div class="flex items-center justify-between flex-wrap gap-2">
 														<p class="font-medium text-zinc-900 text-sm">

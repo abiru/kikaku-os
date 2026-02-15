@@ -2,43 +2,17 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
+import { calculateOrderTax, type TaxCalculationInput } from '../../services/tax';
 import { getCompanyInfo } from '../../lib/company';
 import { renderQuotationHtml, QuotationData } from '../../services/renderQuotationHtml';
 import { putText } from '../../lib/r2';
 import { upsertDocument } from '../../services/documents';
 import { ensureStripePriceForVariant } from '../../services/stripe';
 import { generatePublicToken } from '../../lib/token';
+import { validateItem, type CheckoutItem, type VariantPriceRow } from '../../lib/schemas/checkout';
 import { timingSafeCompare } from '../../middleware/clerkAuth';
 
 const quotations = new Hono<Env>();
-
-type CheckoutItem = {
-  variantId: number;
-  quantity: number;
-};
-
-type VariantPriceRow = {
-  variant_id: number;
-  variant_title: string;
-  product_id: number;
-  product_title: string;
-  price_id: number;
-  amount: number;
-  currency: string;
-  provider_price_id: string | null;
-  provider_product_id: string | null;
-};
-
-const validateItem = (item: unknown): CheckoutItem | null => {
-  if (!item || typeof item !== 'object') return null;
-  const obj = item as Record<string, unknown>;
-  const variantId = Number(obj.variantId);
-  const quantity = Number(obj.quantity ?? 1);
-  if (!Number.isInteger(variantId) || variantId <= 0) return null;
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) return null;
-  return { variantId, quantity };
-};
-
 const normalizeString = (value: unknown) => {
   if (!value) return null;
   const trimmed = String(value).trim();
@@ -96,10 +70,12 @@ quotations.post('/quotations', async (c) => {
             p.title as product_title,
             pr.id as price_id,
             pr.amount as amount,
-            pr.currency as currency
+            pr.currency as currency,
+            tr.rate as tax_rate
      FROM variants v
      JOIN products p ON p.id = v.product_id
      JOIN prices pr ON pr.variant_id = v.id
+     LEFT JOIN tax_rates tr ON tr.id = p.tax_rate_id
      WHERE v.id IN (${placeholders})
      ORDER BY pr.id DESC`
   ).bind(...variantIds).all<VariantPriceRow>();
@@ -120,17 +96,26 @@ quotations.post('/quotations', async (c) => {
     }
   }
 
-  // Calculate totals
-  let subtotal = 0;
-  let currency = 'JPY';
-  for (const item of items) {
+  // Calculate totals with proper tax rate lookup
+  const taxInputs: TaxCalculationInput[] = items.map((item) => {
     const row = variantMap.get(item.variantId)!;
-    subtotal += row.amount * item.quantity;
+    return {
+      unitPrice: row.amount,
+      quantity: item.quantity,
+      taxRate: row.tax_rate ?? 0.10
+    };
+  });
+
+  const taxCalculation = calculateOrderTax(taxInputs);
+  const subtotal = taxCalculation.subtotal;
+  const taxAmount = taxCalculation.taxAmount;
+  const totalAmount = taxCalculation.totalAmount;
+
+  let currency = 'JPY';
+  if (items.length > 0) {
+    const row = variantMap.get(items[0].variantId)!;
     currency = (row.currency || 'JPY').toUpperCase();
   }
-
-  const taxAmount = Math.floor(subtotal * 0.1);
-  const totalAmount = subtotal + taxAmount;
 
   // Calculate valid_until (30 days from now)
   const validUntilDate = new Date();
