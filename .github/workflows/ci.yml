@@ -18,7 +18,7 @@ concurrency:
 jobs:
   api:
     name: API - Typecheck / Test / Integration / Build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -64,7 +64,7 @@ jobs:
 
   storefront:
     name: Storefront - Typecheck / Test / Build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
