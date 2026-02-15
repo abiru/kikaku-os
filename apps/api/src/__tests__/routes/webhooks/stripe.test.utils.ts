@@ -183,6 +183,10 @@ export const createMockDb = (options?: MockDbOptions) => {
             const order = getOrCreateOrder(id);
             return { id: order.id };
           }
+          if (sql.includes('SELECT order_id FROM payments WHERE provider_payment_id')) {
+            const payment = paymentsByProviderId.get(String(args[0]));
+            return payment ? { order_id: payment.order_id } : null;
+          }
           if (sql.includes('SELECT id, order_id FROM payments WHERE provider_payment_id')) {
             const payment = paymentsByProviderId.get(String(args[0]));
             return payment ? { id: payment.id, order_id: payment.order_id } : null;
