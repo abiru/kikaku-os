@@ -11,6 +11,7 @@ const REQUIRED_SECRETS = [
   'STRIPE_WEBHOOK_SECRET',
   'CLERK_SECRET_KEY',
   'STOREFRONT_BASE_URL',
+  'RESEND_API_KEY',
 ] as const;
 
 function checkSecrets(env: Record<string, unknown>): {
