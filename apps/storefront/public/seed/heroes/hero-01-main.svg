@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-label="Hero 01 main">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c1626" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)" />
+  <circle cx="1540" cy="210" r="220" fill="#93c5fd" opacity="0.22" />
+  <circle cx="320" cy="940" r="320" fill="#bfdbfe" opacity="0.18" />
+  <g transform="translate(220 210)">
+    <rect x="0" y="0" width="780" height="420" rx="40" fill="#eff6ff" opacity="0.14" />
+    <text x="80" y="140" fill="#f8fafc" font-size="88" font-family="'Noto Sans JP', sans-serif" font-weight="700">LED KIKAKU</text>
+    <text x="80" y="240" fill="#dbeafe" font-size="44" font-family="'Noto Sans JP', sans-serif">High Fidelity Lighting</text>
+    <text x="80" y="320" fill="#bfdbfe" font-size="34" font-family="'Noto Sans JP', sans-serif">for Daily Comfort</text>
+  </g>
+</svg>

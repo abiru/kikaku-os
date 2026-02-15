@@ -145,7 +145,21 @@ pnpm -C apps/storefront dev
 curl -X POST http://localhost:8787/dev/seed \
   -H "x-admin-key: CHANGE_ME" \
   -H "content-type: application/json" \
-  -d '{"date":"2026-01-13","orders":5,"refunds":1}'
+  -d '{"date":"2026-01-13","orders":5,"refunds":1,"withImages":true}'
+```
+
+## Playwright UI/UX E2E
+
+Seedデータ投入後のブラウザ挙動（ホーム表示、商品一覧、モバイルメニュー）を自動確認できます。
+
+```bash
+pnpm test:e2e:seed-ui
+```
+
+初回のみブラウザが未インストールの場合:
+
+```bash
+pnpm exec playwright install chromium
 ```
 
 ## 管理画面（/admin/*）

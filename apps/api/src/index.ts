@@ -153,8 +153,12 @@ app.get('/r2', async (c) => {
   const key = c.req.query('key');
   if (!key) return jsonError(c, 'key required', 400);
 
-  // Security: Only allow access to product images
-  if (!key.startsWith('products/') && !key.startsWith('product-images/')) {
+  // Security: Only allow access to storefront image assets
+  if (
+    !key.startsWith('products/') &&
+    !key.startsWith('product-images/') &&
+    !key.startsWith('home-heroes/')
+  ) {
     return jsonError(c, 'Access denied', 403);
   }
 

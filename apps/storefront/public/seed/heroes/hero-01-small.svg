@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024" role="img" aria-label="Hero 01 small">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+  </defs>
+  <rect width="768" height="1024" fill="url(#bg)" />
+  <circle cx="120" cy="900" r="220" fill="#bfdbfe" opacity="0.22" />
+  <circle cx="620" cy="120" r="130" fill="#93c5fd" opacity="0.22" />
+  <text x="56" y="240" fill="#f8fafc" font-size="72" font-family="'Noto Sans JP', sans-serif" font-weight="700">LED</text>
+  <text x="56" y="330" fill="#dbeafe" font-size="72" font-family="'Noto Sans JP', sans-serif" font-weight="700">KIKAKU</text>
+  <text x="56" y="420" fill="#bfdbfe" font-size="34" font-family="'Noto Sans JP', sans-serif">Smart Lighting</text>
+</svg>

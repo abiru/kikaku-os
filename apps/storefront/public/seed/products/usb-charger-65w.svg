@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="USB charger 65W">
+  <rect width="1200" height="900" fill="#f8fafc" />
+  <rect x="360" y="190" width="480" height="520" rx="70" fill="#334155" />
+  <rect x="440" y="320" width="120" height="160" rx="18" fill="#94a3b8" />
+  <rect x="640" y="320" width="120" height="160" rx="18" fill="#94a3b8" />
+  <text x="360" y="780" fill="#334155" font-size="64" font-family="'Noto Sans JP', sans-serif" font-weight="700">USB CHARGER 65W</text>
+</svg>

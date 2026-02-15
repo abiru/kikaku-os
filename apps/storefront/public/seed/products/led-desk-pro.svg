@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="LED desk pro">
+  <rect width="1200" height="900" fill="#f0fdf4" />
+  <path d="M240 700 L780 420" stroke="#14532d" stroke-width="30" stroke-linecap="round" />
+  <circle cx="820" cy="390" r="110" fill="#86efac" stroke="#14532d" stroke-width="22" />
+  <rect x="130" y="700" width="520" height="54" rx="27" fill="#166534" />
+  <text x="120" y="180" fill="#14532d" font-size="62" font-family="'Noto Sans JP', sans-serif" font-weight="700">LED DESK PRO</text>
+</svg>

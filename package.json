@@ -12,12 +12,15 @@
 		"build:api": "pnpm -C apps/api build",
 		"build:store": "pnpm -C apps/storefront build",
 		"test": "pnpm -C apps/api test",
+		"test:e2e:seed-ui": "bash scripts/e2e-seed-ui.sh",
+		"test:e2e:seed-ui:headed": "bash scripts/e2e-seed-ui.sh --headed",
 		"typecheck": "pnpm -C apps/api typecheck",
 		"env:setup": "node scripts/setup-env.mjs",
 		"db:migrate": "pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local",
 		"db:seed": "curl -X POST http://localhost:8787/dev/seed -H 'x-admin-key: CHANGE_ME' -H 'content-type: application/json' -d '{\"date\":\"2026-01-15\",\"orders\":5,\"refunds\":1}'"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.58.2",
 		"concurrently": "^9.1.2",
 		"playwright": "^1.57.0"
 	}

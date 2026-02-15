@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-label="Hero 03 main">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3f1d0d" />
+      <stop offset="100%" stop-color="#c2410c" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)" />
+  <circle cx="1580" cy="840" r="320" fill="#fed7aa" opacity="0.2" />
+  <rect x="180" y="180" width="980" height="720" rx="42" fill="#fff7ed" opacity="0.12" />
+  <text x="260" y="370" fill="#fff7ed" font-size="84" font-family="'Noto Sans JP', sans-serif" font-weight="700">TOP RATED</text>
+  <text x="260" y="475" fill="#fed7aa" font-size="42" font-family="'Noto Sans JP', sans-serif">Trusted by Growers and Makers</text>
+</svg>
