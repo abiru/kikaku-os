@@ -66,20 +66,24 @@ const {
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
 				<span id="cart-badge" class="hidden absolute -top-2 -right-2 h-4 w-4 rounded-full bg-[#0071e3] text-[10px] font-medium text-white flex items-center justify-center">0</span>
 			</a>
-			{showAuthToggle ? (
-				<>
-					<SignedOut>
-						<a href="/sign-in" class="text-[12px] font-medium text-[#0071e3] hover:underline">
-							ログイン
-						</a>
-					</SignedOut>
-					<SignedIn>
-						<UserButton />
-					</SignedIn>
-				</>
-			) : (
-				<UserButton />
-			)}
+			{/* Auth area: reserve space to prevent CLS during Clerk loading */}
+			<div id="clerk-auth" class="relative min-w-[56px] min-h-[28px] flex items-center justify-end">
+				<div id="clerk-skeleton" class="absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-gray-200/60 animate-pulse pointer-events-none" aria-hidden="true"></div>
+				{showAuthToggle ? (
+					<>
+						<SignedOut>
+							<a href="/sign-in" class="text-[12px] font-medium text-[#0071e3] hover:underline whitespace-nowrap">
+								ログイン
+							</a>
+						</SignedOut>
+						<SignedIn>
+							<UserButton />
+						</SignedIn>
+					</>
+				) : (
+					<UserButton />
+				)}
+			</div>
 			{showMobileMenu && (
 				<button id="mobile-menu-btn" type="button" class="lg:hidden text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors" aria-label="メニュー" aria-expanded="false">
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
@@ -193,5 +197,25 @@ const {
 				closeMobileMenu();
 			}
 		});
+	}
+
+	// Remove clerk skeleton placeholder when Clerk initializes
+	const clerkSkeleton = document.getElementById('clerk-skeleton');
+	if (clerkSkeleton) {
+		const container = clerkSkeleton.parentElement;
+		if (container) {
+			const removeSkeleton = () => {
+				if (clerkSkeleton.parentElement) clerkSkeleton.remove();
+			};
+			const observer = new MutationObserver(() => {
+				if (container.querySelector('[class*="cl-"], a[href="/sign-in"]')) {
+					removeSkeleton();
+					observer.disconnect();
+				}
+			});
+			observer.observe(container, { childList: true, subtree: true });
+			// Fallback: remove skeleton if Clerk fails to load
+			setTimeout(removeSkeleton, 5000);
+		}
 	}
 </script>
