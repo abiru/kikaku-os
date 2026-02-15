@@ -50,7 +50,7 @@ const metaDescription = page?.meta_description || '';
 					{page?.title || '返品・返金について'}
 				</h1>
 				{page && (
-					<p class="mt-6 text-center text-[#86868b] text-lg font-medium">
+					<p class="mt-6 text-center text-[#6e6e73] text-lg font-medium">
 						最終更新日：{formatDate(page.updated_at, { year: 'numeric', month: 'long', day: 'numeric' })}
 					</p>
 				)}
@@ -64,11 +64,11 @@ const metaDescription = page?.meta_description || '';
 					<div class="prose prose-lg max-w-none" set:html={parseMarkdown(page.body)} />
 				) : error ? (
 					<div class="text-center py-12">
-						<p class="text-[#86868b]">{error}</p>
+						<p class="text-[#6e6e73]">{error}</p>
 					</div>
 				) : (
 					<div class="text-center py-12">
-						<p class="text-[#86868b]">このページは現在準備中です。</p>
+						<p class="text-[#6e6e73]">このページは現在準備中です。</p>
 					</div>
 				)}
 			</Container>

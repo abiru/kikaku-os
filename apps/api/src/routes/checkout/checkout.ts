@@ -58,13 +58,14 @@ checkout.post('/checkout/quote', async (c) => {
   } catch {
     return jsonError(c, 'Invalid JSON', 400);
   }
+  const bodyObj = body as Record<string, unknown> | null;
 
   const bodyObj = body as Record<string, unknown> | null;
 
   // Validate items
   let items: CheckoutItem[] = [];
   if (Array.isArray(bodyObj?.items)) {
-    for (const rawItem of bodyObj.items as unknown[]) {
+    for (const rawItem of (bodyObj.items as unknown[])) {
       const item = validateItem(rawItem);
       if (!item) {
         return jsonError(c, 'Invalid item in items array', 400);
@@ -160,14 +161,14 @@ checkout.post('/checkout/quote', async (c) => {
   const cartTotal = taxCalculation.totalAmount;
 
   let currency = 'JPY';
-  if (items.length > 0) {
-    const row = variantMap.get(items[0].variantId)!;
-    currency = (row.currency || 'JPY').toUpperCase();
+  const firstItem = items[0];
+  if (firstItem) {
+    const row = variantMap.get(firstItem.variantId);
+    currency = (row?.currency || 'JPY').toUpperCase();
   }
 
   // Coupon validation and discount calculation
-  const rawCouponCode = bodyObj?.couponCode;
-  const couponCode = typeof rawCouponCode === 'string' ? rawCouponCode.trim() : '';
+  const couponCode = typeof bodyObj?.couponCode === 'string' ? bodyObj.couponCode.trim() : '';
   let discountAmount = 0;
   let couponId: number | null = null;
 

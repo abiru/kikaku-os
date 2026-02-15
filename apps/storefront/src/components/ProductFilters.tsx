@@ -130,7 +130,7 @@ export default function ProductFilters() {
 								</label>
 								<a
 									href={`/categories/${encodeURIComponent(cat)}`}
-									className="text-[10px] text-[#86868b] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#0071e3]"
+									className="text-[10px] text-[#6e6e73] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#0071e3]"
 								>
 									&#8594;
 								</a>
@@ -155,21 +155,29 @@ export default function ProductFilters() {
 					<h3 className="text-sm font-semibold text-[#1d1d1f] mb-3">{t('filters.priceRange')}</h3>
 					<div className="space-y-3">
 						<div className="flex items-center gap-2">
-							<input
-								type="number"
-								placeholder={String(options.priceRange.min)}
-								value={minPriceInput}
-								onChange={(e) => setMinPriceInput(e.target.value)}
-								className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3]"
-							/>
-							<span className="text-gray-400">-</span>
-							<input
-								type="number"
-								placeholder={String(options.priceRange.max)}
-								value={maxPriceInput}
-								onChange={(e) => setMaxPriceInput(e.target.value)}
-								className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3]"
-							/>
+							<div className="w-full">
+								<label htmlFor="filter-min-price" className="sr-only">{t('filters.minPrice')}</label>
+								<input
+									id="filter-min-price"
+									type="number"
+									placeholder={String(options.priceRange.min)}
+									value={minPriceInput}
+									onChange={(e) => setMinPriceInput(e.target.value)}
+									className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3]"
+								/>
+							</div>
+							<span className="text-gray-500" aria-hidden="true">-</span>
+							<div className="w-full">
+								<label htmlFor="filter-max-price" className="sr-only">{t('filters.maxPrice')}</label>
+								<input
+									id="filter-max-price"
+									type="number"
+									placeholder={String(options.priceRange.max)}
+									value={maxPriceInput}
+									onChange={(e) => setMaxPriceInput(e.target.value)}
+									className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3]"
+								/>
+							</div>
 						</div>
 						<p className="text-xs text-gray-500">
 							{t('filters.range', {

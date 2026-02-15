@@ -125,7 +125,7 @@ async function triageWithClaude(
   const jsonMatch =
     rawText.match(/```json\n?([\s\S]*?)\n?```/) ||
     rawText.match(/```\n?([\s\S]*?)\n?```/);
-  const jsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
+  const jsonText = jsonMatch ? (jsonMatch[1] ?? '').trim() : rawText.trim();
   try {
     const data = JSON.parse(jsonText) as InboxTriageResult;
 
@@ -413,7 +413,7 @@ JSON形式で出力してください:
   let emailDraft: { subject: string; body: string };
   try {
     const jsonMatch = rawText.match(/```json\n?([\s\S]*?)\n?```/) || rawText.match(/```\n?([\s\S]*?)\n?```/);
-    const jsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
+    const jsonText = jsonMatch ? (jsonMatch[1] ?? '').trim() : rawText.trim();
     emailDraft = JSON.parse(jsonText) as { subject: string; body: string };
   } catch (parseErr) {
     console.error('Failed to parse email draft:', parseErr);

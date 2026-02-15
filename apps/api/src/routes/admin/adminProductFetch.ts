@@ -109,19 +109,19 @@ const extractSpecs = (text: string): Record<string, string> => {
 
   // LED chip info
   const ledMatch = text.match(/(Samsung\s*LM301[A-Z]*(?:\s*EVO)?|Bridgelux|Osram|Epistar)/i);
-  if (ledMatch) specs.led = ledMatch[1];
+  if (ledMatch && ledMatch[1]) specs.led = ledMatch[1];
 
   // LED count
   const ledCountMatch = text.match(/(?:^|[^\w-])(\d{2,4})\s*(?:pcs|pieces|個)\s*(?:LEDs?|ダイオード|diodes)/i)
     || text.match(/(\d{2,4})\s*(?:LEDs?|ダイオード|diodes)\s*(?:chips?|beads?)/i)
     || text.match(/(?:LED\s*(?:chips?|beads?|count)[:\s]*)(\d{2,4})/i);
-  if (ledCountMatch && parseInt(ledCountMatch[1]) >= 50) {
+  if (ledCountMatch && ledCountMatch[1] && parseInt(ledCountMatch[1]) >= 50) {
     specs.led_count = `${ledCountMatch[1]}個`;
   }
 
   // Lifespan
   const lifespanMatch = text.match(/(?:lifespan|lifetime|寿命)[:\s]*(\d{2,6})\s*(?:hours?|hrs?|時間)/i);
-  if (lifespanMatch) specs.lifespan = `${parseInt(lifespanMatch[1]).toLocaleString()}時間`;
+  if (lifespanMatch && lifespanMatch[1]) specs.lifespan = `${parseInt(lifespanMatch[1]).toLocaleString()}時間`;
 
   // Warranty
   const warrantyMatch = text.match(/(\d+)\s*(?:year|years?|年)\s*(?:warranty|保証)/i)
@@ -143,7 +143,7 @@ const extractSpecs = (text: string): Record<string, string> => {
 
   // Weight
   const weightMatch = text.match(/(?:weight|重量|重さ)[:\s]*([\d.]+)\s*(kg|g|lbs?|pounds?)/i);
-  if (weightMatch) {
+  if (weightMatch && weightMatch[1] && weightMatch[2]) {
     const unit = weightMatch[2].toLowerCase().startsWith('lb') ? 'lbs' : weightMatch[2];
     specs.weight = `${weightMatch[1]}${unit}`;
   }
@@ -177,7 +177,7 @@ const generateJapaneseTitle = (originalTitle: string, brand: string, specs: Reco
     const match = originalTitle.match(pattern);
     if (match) {
       // Escape the extracted model number
-      model = escapeHtml(match[1].toUpperCase().replace(/\s+/g, '-'));
+      model = escapeHtml((match[1] ?? '').toUpperCase().replace(/\s+/g, '-'));
       break;
     }
   }

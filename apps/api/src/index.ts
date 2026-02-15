@@ -6,6 +6,7 @@ import { jsonError, jsonOk } from './lib/http';
 import { clerkAuth } from './middleware/clerkAuth';
 import { requestLogger } from './middleware/logging';
 import { rateLimit } from './middleware/rateLimit';
+import { csrfProtection, generateCsrfToken } from './middleware/csrf';
 import { sendAlert } from './lib/alerts';
 import { captureException, getSentryConfig } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
@@ -20,6 +21,7 @@ import { journalizeDailyClose } from './services/journalize';
 import { enqueueDailyCloseAnomaly } from './services/inboxAnomalies';
 import { runAllAnomalyChecks } from './services/anomalyRules';
 import { startDailyCloseRun, completeDailyCloseRun } from './services/dailyCloseRuns';
+import { checkInventoryAlerts } from './services/inventoryAlerts';
 
 const app = new Hono<Env>();
 
@@ -94,7 +96,7 @@ app.use(
       const allowed = getAllowedOrigins(c.env);
       return origin && allowed.includes(origin) ? origin : undefined;
     },
-    allowHeaders: ['Content-Type', 'x-admin-key', 'Authorization'],
+    allowHeaders: ['Content-Type', 'x-admin-key', 'x-csrf-token', 'Authorization'],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     maxAge: 86400
   })
@@ -135,9 +137,24 @@ app.use('/quotations/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'quot' 
 app.use('/ai/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'ai' }));
 app.use('*', rateLimit({ max: 120, windowSeconds: 60, prefix: 'global' }));
 
+// CSRF token endpoint - clients call this before state-changing requests
+app.get('/csrf-token', (c) => {
+  const ip =
+    c.req.header('cf-connecting-ip') ||
+    c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown';
+  const sessionKey = `csrf:${ip}`;
+  const token = generateCsrfToken(sessionKey);
+  return jsonOk(c, { token });
+});
+
+// CSRF protection for state-changing requests
+app.use('*', csrfProtection());
+
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return c.body(null, 204);
   if (c.req.path === '/health') return next();
+  if (c.req.path === '/csrf-token') return next();
   if (c.req.path.startsWith('/webhooks/stripe')) return next();
   if (c.req.path.startsWith('/stripe/webhook')) return next();
   // Public checkout endpoints
@@ -279,6 +296,14 @@ const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
   }
 };
 
+const runInventoryAlerts = async (env: Env['Bindings'], date: string) => {
+  try {
+    await checkInventoryAlerts(env, date);
+  } catch (err) {
+    console.error('Inventory alert check failed:', err);
+  }
+};
+
 /**
  * Create the worker export with optional Sentry wrapping.
  * If SENTRY_DSN is configured, wrap with Sentry for error tracking.
@@ -310,6 +335,9 @@ const createWorkerExport = () => {
         ctx.waitUntil(runDailyCloseArtifacts(env, date));
         ctx.waitUntil(runAnomalyChecks(env, date));
       }
+
+      // Inventory alerts (always run, independent of Sentry)
+      ctx.waitUntil(runInventoryAlerts(env, date));
 
       // Cleanup tasks (always run, independent of Sentry)
       ctx.waitUntil(runCleanupTasks(env));

@@ -167,7 +167,7 @@ adminTaxRates.put(
       // Check if tax rate exists
       const existing = await c.env.DB.prepare('SELECT id FROM tax_rates WHERE id = ?')
         .bind(id)
-        .first();
+        .first<{ id: number }>();
 
       if (!existing) {
         return jsonError(c, 'Tax rate not found', 404);
@@ -263,7 +263,7 @@ adminTaxRates.delete(
       // Check if tax rate exists
       const existing = await c.env.DB.prepare('SELECT id, name FROM tax_rates WHERE id = ?')
         .bind(id)
-        .first();
+        .first<{ id: number; name: string }>();
 
       if (!existing) {
         return jsonError(c, 'Tax rate not found', 404);
