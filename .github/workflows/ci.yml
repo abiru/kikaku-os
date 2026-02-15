@@ -7,32 +7,56 @@ on:
     branches: [main]
 
 jobs:
-  ci:
-    name: Typecheck / Test / Build
+  api:
+    name: API - Typecheck / Test / Build
     runs-on: self-hosted
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install API dependencies
+      - name: Install dependencies
         run: pnpm -C apps/api install --frozen-lockfile
 
-      - name: Install Storefront dependencies
-        run: pnpm -C apps/storefront install --frozen-lockfile
-
-      - name: Type check API
+      - name: Type check
         run: pnpm -C apps/api typecheck
 
-      - name: Type check Storefront
-        run: pnpm -C apps/storefront exec astro check
-
-      - name: Test API
+      - name: Test with coverage
         run: pnpm -C apps/api test:coverage
 
-      - name: Test Storefront
-        run: pnpm -C apps/storefront test
-
-      - name: Build API
+      - name: Build
         run: pnpm -C apps/api build
 
-      - name: Build Storefront
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage
+          path: apps/api/coverage/
+          retention-days: 7
+
+  storefront:
+    name: Storefront - Typecheck / Test / Build
+    runs-on: self-hosted
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pnpm -C apps/storefront install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm -C apps/storefront exec astro check
+
+      - name: Test with coverage
+        run: pnpm -C apps/storefront test:coverage
+
+      - name: Build
         run: pnpm -C apps/storefront build
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storefront-coverage
+          path: apps/storefront/coverage/
+          retention-days: 7

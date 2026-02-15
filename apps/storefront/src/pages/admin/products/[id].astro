@@ -8,11 +8,13 @@ import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Textarea } from '../../../components/catalyst/textarea';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
-import { formatPrice, formatDate } from '../../../lib/format';
+import { formatDate } from '../../../lib/format';
 import MarkdownPreview from '../../../components/MarkdownPreview';
+import ProductWebUpdate from '../../../components/admin/ProductWebUpdate.astro';
+import ProductImages from '../../../components/admin/ProductImages.astro';
+import ProductVariants from '../../../components/admin/ProductVariants.astro';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -531,26 +533,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 					</div>
 				)}
 
-				<!-- Images Section -->
-				<div class="mt-8">
-					<div class="flex items-center justify-between mb-4">
-						<Subheading>Images (R2 Storage)</Subheading>
-						<label
-							class="text-sm text-[#0071e3] hover:underline flex items-center gap-1 cursor-pointer"
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-							</svg>
-							Add Images
-							<input
-								type="file"
-								id="image-upload"
-								accept="image/jpeg,image/png,image/gif,image/webp"
-								multiple
-								class="hidden"
-							/>
-						</label>
-					</div>
+				<ProductImages images={images} />
 
 					<div id="upload-progress" class="hidden mb-4">
 						<div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">

@@ -266,6 +266,7 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 </script>
 
 <script>
+  import DOMPurify from 'isomorphic-dompurify';
   import { getCartItems, clearCart } from '../../lib/cart';
   import { createQuotation } from '../../lib/quotationApi';
   import { formatPrice } from '../../lib/format';
@@ -298,20 +299,20 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
     if (!cartItemsEl || !subtotalEl || !taxEl || !totalEl) return;
 
     if (items.length === 0) {
-      cartItemsEl.innerHTML = `
+      cartItemsEl.innerHTML = DOMPurify.sanitize(`
         <div class="empty-cart">
           <div class="empty-cart-icon">🛒</div>
           <p>カートが空です</p>
           <p><a href="/products">商品を見る</a></p>
         </div>
-      `;
+      `);
       const formEl = document.getElementById('quotation-form');
       if (formEl) formEl.style.display = 'none';
       return;
     }
 
     // Display items
-    cartItemsEl.innerHTML = items.map(item => `
+    cartItemsEl.innerHTML = DOMPurify.sanitize(items.map(item => `
       <div class="cart-item">
         <div class="item-details">
           <div class="item-title">${escapeHtml(item.title)}</div>
@@ -322,7 +323,7 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
           <span class="item-price">${formatPrice(item.price * item.quantity, item.currency)}</span>
         </div>
       </div>
-    `).join('');
+    `).join(''));
 
     // Calculate totals
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
