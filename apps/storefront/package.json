@@ -8,6 +8,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "astro check"
   },
   "dependencies": {
@@ -43,6 +44,7 @@
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
+    "@vitest/coverage-v8": "^1.6.1",
     "vitest": "^1.6.1"
   }
 }
