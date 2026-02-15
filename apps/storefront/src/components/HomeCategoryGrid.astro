@@ -1,4 +1,6 @@
 ---
+import { t } from '../i18n';
+
 interface FeaturedProduct {
   id: number;
   title: string;
@@ -48,13 +50,13 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
               href={`/products?category=${encodeURIComponent(product.category || '')}`}
               class="rounded-full bg-[#0a67d6] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#0956b8] transition-colors"
             >
-              商品を見る
+              {t('home.viewProducts')}
             </a>
             <a
               href={`/products/${product.id}`}
               class="rounded-full border border-[#0a67d6] px-4 py-1.5 text-sm font-semibold text-[#0a67d6] hover:bg-[#0a67d6] hover:text-white transition-colors"
             >
-              詳細を見る
+              {t('home.viewDetails')}
             </a>
           </div>
 
@@ -64,7 +66,7 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
     })
   ) : (
     <div class="col-span-2 py-12 text-center text-gray-500">
-      フィーチャー製品を設定してください
+      {t('home.configureFeatured')}
     </div>
   )}
 </section>

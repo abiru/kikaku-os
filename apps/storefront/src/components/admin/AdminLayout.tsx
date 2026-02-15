@@ -24,6 +24,7 @@ import {
   StarIcon,
   ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline'
+import { t } from '../../i18n'
 import { SidebarLayout } from '../catalyst/sidebar-layout'
 import {
   Sidebar,
@@ -61,26 +62,26 @@ type NavigationItem = {
 
 // Navigation items with their required permissions
 const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/admin/', icon: HomeIcon, permission: 'dashboard:read' },
-  { name: 'Inbox', href: '/admin/inbox', icon: InboxIcon, permission: 'inbox:read' },
-  { name: 'Orders', href: '/admin/orders', icon: ShoppingCartIcon, permission: 'orders:read' },
-  { name: 'Customers', href: '/admin/customers', icon: UsersIcon, permission: 'customers:read' },
-  { name: 'Shipping', href: '/admin/shipping', icon: TruckIcon, permission: 'orders:read' },
-  { name: 'Events', href: '/admin/events', icon: CalendarIcon, permission: 'orders:read' },
-  { name: 'Products', href: '/admin/products', icon: CubeIcon, permission: 'products:read' },
-  { name: 'Home Heroes', href: '/admin/home-heroes', icon: PhotoIcon, permission: 'products:write' },
-  { name: 'Bulk Image Upload', href: '/admin/bulk-image-upload', icon: PhotoIcon, permission: 'products:write' },
-  { name: 'Categories', href: '/admin/categories', icon: FolderIcon, permission: 'products:read' },
-  { name: 'Coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'products:write' },
-  { name: 'Reviews', href: '/admin/reviews', icon: StarIcon, permission: 'products:read' },
-  { name: 'Inventory', href: '/admin/inventory', icon: ArchiveBoxIcon, permission: 'inventory:read' },
-  { name: 'Inquiries', href: '/admin/inquiries', icon: ChatBubbleLeftRightIcon, permission: 'inbox:read' },
-  { name: 'Pages', href: '/admin/pages', icon: DocumentDuplicateIcon, permission: 'settings:write' },
-  { name: 'Email Templates', href: '/admin/email-templates', icon: EnvelopeIcon, permission: 'settings:write' },
-  { name: 'Google Ads', href: '/admin/ads', icon: MegaphoneIcon, permission: 'settings:write' },
-  { name: 'Reports', href: '/admin/reports', icon: ChartBarIcon, permission: 'reports:read' },
-  { name: 'Ledger', href: '/admin/ledger', icon: DocumentTextIcon, permission: 'ledger:read' },
-  { name: 'Users', href: '/admin/users', icon: UserGroupIcon, permission: 'users:read' },
+  { name: 'admin.dashboard', href: '/admin/', icon: HomeIcon, permission: 'dashboard:read' },
+  { name: 'admin.inbox', href: '/admin/inbox', icon: InboxIcon, permission: 'inbox:read' },
+  { name: 'admin.orders', href: '/admin/orders', icon: ShoppingCartIcon, permission: 'orders:read' },
+  { name: 'admin.customers', href: '/admin/customers', icon: UsersIcon, permission: 'customers:read' },
+  { name: 'admin.shipping', href: '/admin/shipping', icon: TruckIcon, permission: 'orders:read' },
+  { name: 'admin.events', href: '/admin/events', icon: CalendarIcon, permission: 'orders:read' },
+  { name: 'admin.products', href: '/admin/products', icon: CubeIcon, permission: 'products:read' },
+  { name: 'admin.homeHeroes', href: '/admin/home-heroes', icon: PhotoIcon, permission: 'products:write' },
+  { name: 'admin.bulkImageUpload', href: '/admin/bulk-image-upload', icon: PhotoIcon, permission: 'products:write' },
+  { name: 'admin.categories', href: '/admin/categories', icon: FolderIcon, permission: 'products:read' },
+  { name: 'admin.coupons', href: '/admin/coupons', icon: TicketIcon, permission: 'products:write' },
+  { name: 'admin.reviews', href: '/admin/reviews', icon: StarIcon, permission: 'products:read' },
+  { name: 'admin.inventory', href: '/admin/inventory', icon: ArchiveBoxIcon, permission: 'inventory:read' },
+  { name: 'admin.inquiries', href: '/admin/inquiries', icon: ChatBubbleLeftRightIcon, permission: 'inbox:read' },
+  { name: 'admin.pages', href: '/admin/pages', icon: DocumentDuplicateIcon, permission: 'settings:write' },
+  { name: 'admin.emailTemplates', href: '/admin/email-templates', icon: EnvelopeIcon, permission: 'settings:write' },
+  { name: 'admin.googleAds', href: '/admin/ads', icon: MegaphoneIcon, permission: 'settings:write' },
+  { name: 'admin.reports', href: '/admin/reports', icon: ChartBarIcon, permission: 'reports:read' },
+  { name: 'admin.ledger', href: '/admin/ledger', icon: DocumentTextIcon, permission: 'ledger:read' },
+  { name: 'admin.users', href: '/admin/users', icon: UserGroupIcon, permission: 'users:read' },
 ]
 
 // Settings requires settings:read permission
@@ -228,7 +229,7 @@ export default function AdminLayout({ currentPath, children, rbacUser, lowStockC
                 return (
                   <SidebarItem key={item.name} href={item.href} current={isCurrent}>
                     <Icon data-slot="icon" />
-                    <SidebarLabel>{item.name}</SidebarLabel>
+                    <SidebarLabel>{t(item.name)}</SidebarLabel>
                     {showBadge && (
                       <span className="ml-auto inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                         {lowStockCount}
@@ -245,7 +246,7 @@ export default function AdminLayout({ currentPath, children, rbacUser, lowStockC
               <SidebarSection>
                 <SidebarItem href="/admin/settings" current={currentPath === '/admin/settings'}>
                   <Cog6ToothIcon data-slot="icon" />
-                  <SidebarLabel>Settings</SidebarLabel>
+                  <SidebarLabel>{t('admin.settings')}</SidebarLabel>
                 </SidebarItem>
               </SidebarSection>
             )}
@@ -261,14 +262,14 @@ export default function AdminLayout({ currentPath, children, rbacUser, lowStockC
                 </SidebarLabel>
               </DropdownButton>
               <DropdownMenu anchor="top start">
-                <DropdownItem href="/">View Store</DropdownItem>
+                <DropdownItem href="/">{t('admin.viewStore')}</DropdownItem>
                 <DropdownItem
                   onClick={(e) => {
                     e.preventDefault()
                     signOut()
                   }}
                 >
-                  Sign out
+                  {t('admin.signOut')}
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>

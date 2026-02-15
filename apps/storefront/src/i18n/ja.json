@@ -23,7 +23,10 @@
     "store": "ストア",
     "products": "製品",
     "support": "サポート",
-    "openCart": "カートを開く"
+    "openCart": "カートを開く",
+    "signIn": "ログイン",
+    "menu": "メニュー",
+    "mobileMenu": "モバイルメニュー"
   },
   "footer": {
     "shopAndLearn": "ショップとサービス",
@@ -236,7 +239,12 @@
     "lowStockAlerts": "低在庫アラート",
     "lowStock": "低在庫",
     "outOfStock": "在庫切れ",
-    "stockLevel": "在庫数"
+    "stockLevel": "在庫数",
+    "homeHeroes": "ホームヒーロー",
+    "bulkImageUpload": "一括画像アップロード",
+    "reviews": "レビュー",
+    "googleAds": "Google 広告",
+    "users": "ユーザー"
   },
   "wishlist": {
     "title": "お気に入り",
@@ -445,7 +453,8 @@
     "toClose": "で閉じる"
   },
   "breadcrumb": {
-    "home": "ホーム"
+    "home": "ホーム",
+    "label": "パンくずリスト"
   },
   "cookie": {
     "title": "Cookieの使用について",
@@ -483,6 +492,12 @@
     "serverError": "サーバーエラー",
     "serverErrorCode": "500",
     "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
-    "reload": "再読み込み"
+    "reload": "再読み込み",
+    "componentError": "表示中にエラーが発生しました。ページを再読み込みしてください。"
+  },
+  "home": {
+    "viewProducts": "商品を見る",
+    "viewDetails": "詳細を見る",
+    "configureFeatured": "フィーチャー製品を設定してください"
   }
 }

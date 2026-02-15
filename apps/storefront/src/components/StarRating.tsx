@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t } from '../i18n';
 
 type DisplayProps = {
   rating: number;
@@ -93,7 +94,7 @@ export function StarRatingInput({ value, onChange, size = 'lg' }: InputProps) {
           onMouseEnter={() => setHovered(star)}
           onMouseLeave={() => setHovered(0)}
           className="focus:outline-none transition-transform hover:scale-110"
-          aria-label={`${star}つ星`}
+          aria-label={`${star}${t('reviews.stars')}`}
         >
           <Star
             filled={star <= (hovered || value)}

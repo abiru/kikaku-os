@@ -1,4 +1,6 @@
 ---
+import { t } from '../i18n';
+
 interface BreadcrumbItem {
 	label: string;
 	href?: string;
@@ -22,7 +24,7 @@ const jsonLd = {
 };
 ---
 
-<nav aria-label="パンくずリスト" class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+<nav aria-label={t('breadcrumb.label')} class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
 	<ol class="flex items-center gap-1.5 text-sm text-gray-500">
 		{items.map((item, index) => (
 			<li class="flex items-center gap-1.5">
