@@ -32,6 +32,11 @@ const handleWebhook = async (c: Context<Env>) => {
     return jsonError(c, 'Invalid payload', 400);
   }
 
+  // Validate event.id exists and is a string
+  if (!event.id || typeof event.id !== 'string') {
+    return jsonError(c, 'Invalid payload', 400);
+  }
+
   try {
     // Phase 1: イベントを保存（冪等性チェック）
     const recorded = await recordStripeEvent(c.env, event, payload);
