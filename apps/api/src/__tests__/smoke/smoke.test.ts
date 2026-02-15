@@ -127,18 +127,18 @@ describe('Smoke Tests', () => {
   // 1. API Health Check
   // -----------------------------------------------------------------------
   describe('Health Check', () => {
-    it('GET /health returns 200 when all services are healthy', async () => {
+    it('GET /health returns 200 with minimal status (unauthenticated)', async () => {
       const { fetch } = createSmokeApp();
       const res = await fetch('/health');
       expect(res.status).toBe(200);
 
       const json = (await res.json()) as any;
       expect(json.ok).toBe(true);
-      expect(json.api).toBe('ok');
-      expect(json.database).toBe('ok');
-      expect(json.r2).toBe('ok');
-      expect(json.secrets).toBe('ok');
-      expect(typeof json.timestamp).toBe('string');
+      expect(json.status).toBe('ok');
+      // Unauthenticated should not expose internal details
+      expect(json.database).toBeUndefined();
+      expect(json.r2).toBeUndefined();
+      expect(json.secrets).toBeUndefined();
     });
 
     it('GET /health returns 503 when database is down', async () => {
@@ -159,7 +159,6 @@ describe('Smoke Tests', () => {
 
       const json = (await res.json()) as any;
       expect(json.ok).toBe(false);
-      expect(json.database).toBe('error');
     });
   });
 

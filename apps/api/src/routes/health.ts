@@ -38,8 +38,20 @@ function checkSecrets(env: Record<string, unknown>): {
   return { allConfigured, required, optional };
 }
 
+function isAuthenticated(c: { req: { header: (name: string) => string | undefined }; env: { ADMIN_API_KEY?: string } }): boolean {
+  const adminKey = c.req.header('x-admin-key');
+  return !!(adminKey && c.env.ADMIN_API_KEY && timingSafeCompare(adminKey, c.env.ADMIN_API_KEY));
+}
+
 health.get('/health', async (c) => {
   const detailed = c.req.query('detailed') === 'true';
+  const authenticated = isAuthenticated(c);
+
+  // Detailed view requires authentication
+  if (detailed && !authenticated) {
+    return jsonError(c, 'Unauthorized', 401);
+  }
+
   const secretsResult = checkSecrets(c.env as unknown as Record<string, unknown>);
 
   const checks: Record<string, unknown> = {
@@ -65,11 +77,18 @@ health.get('/health', async (c) => {
     checks.r2 = 'error';
   }
 
+  const allHealthy =
+    checks.database === 'ok' && checks.r2 === 'ok' && secretsResult.allConfigured;
+
+  // Unauthenticated: return only status
+  if (!authenticated) {
+    return allHealthy
+      ? jsonOk(c, { status: 'ok' })
+      : jsonError(c, 'Health check failed', 503);
+  }
+
+  // Authenticated: return full details
   if (detailed) {
-    const adminKey = c.req.header('x-admin-key');
-    if (!adminKey || !c.env.ADMIN_API_KEY || !timingSafeCompare(adminKey, c.env.ADMIN_API_KEY)) {
-      return jsonError(c, 'Unauthorized', 401);
-    }
     checks.secretsDetail = {
       required: Object.fromEntries(
         Object.entries(secretsResult.required).map(([k, v]) => [k, { configured: v }])
@@ -79,9 +98,6 @@ health.get('/health', async (c) => {
       ),
     };
   }
-
-  const allHealthy =
-    checks.database === 'ok' && checks.r2 === 'ok' && secretsResult.allConfigured;
 
   return allHealthy
     ? jsonOk(c, checks)

@@ -36,8 +36,8 @@ const BASE_ENV = {
 };
 
 describe('Health Check', () => {
-  describe('GET /health', () => {
-    it('returns 200 when all checks pass', async () => {
+  describe('GET /health (unauthenticated)', () => {
+    it('returns 200 with minimal status when healthy', async () => {
       const { fetch } = createApp({
         ...BASE_ENV,
         DB: createMockDb(),
@@ -49,15 +49,15 @@ describe('Health Check', () => {
 
       expect(res.status).toBe(200);
       expect(json.ok).toBe(true);
-      expect(json.api).toBe('ok');
-      expect(json.database).toBe('ok');
-      expect(json.r2).toBe('ok');
-      expect(json.secrets).toBe('ok');
-      expect(json.environment).toBe('development');
-      expect(typeof json.timestamp).toBe('string');
+      expect(json.status).toBe('ok');
+      // Should NOT expose internal details
+      expect(json.database).toBeUndefined();
+      expect(json.r2).toBeUndefined();
+      expect(json.secrets).toBeUndefined();
+      expect(json.environment).toBeUndefined();
     });
 
-    it('returns 503 when database check fails', async () => {
+    it('returns 503 with minimal info when database is down', async () => {
       const { fetch } = createApp({
         ...BASE_ENV,
         DB: createMockDb(null, true),
@@ -69,7 +69,8 @@ describe('Health Check', () => {
 
       expect(res.status).toBe(503);
       expect(json.ok).toBe(false);
-      expect(json.database).toBe('error');
+      // Should NOT expose which component failed
+      expect(json.database).toBeUndefined();
     });
 
     it('returns 503 when R2 check fails', async () => {
@@ -84,7 +85,6 @@ describe('Health Check', () => {
 
       expect(res.status).toBe(503);
       expect(json.ok).toBe(false);
-      expect(json.r2).toBe('error');
     });
 
     it('returns 503 when required secrets are missing', async () => {
@@ -99,7 +99,30 @@ describe('Health Check', () => {
 
       expect(res.status).toBe(503);
       expect(json.ok).toBe(false);
-      expect(json.secrets).toBe('error');
+    });
+  });
+
+  describe('GET /health (authenticated)', () => {
+    it('returns full details with valid admin key', async () => {
+      const { fetch } = createApp({
+        ...BASE_ENV,
+        DB: createMockDb(),
+        R2: createMockR2(),
+      });
+
+      const res = await fetch('/health', {
+        headers: { 'x-admin-key': 'test-admin-key' },
+      });
+      const json = (await res.json()) as any;
+
+      expect(res.status).toBe(200);
+      expect(json.ok).toBe(true);
+      expect(json.api).toBe('ok');
+      expect(json.database).toBe('ok');
+      expect(json.r2).toBe('ok');
+      expect(json.secrets).toBe('ok');
+      expect(json.environment).toBe('development');
+      expect(typeof json.timestamp).toBe('string');
     });
 
     it('returns production environment when DEV_MODE is not true', async () => {
@@ -110,20 +133,24 @@ describe('Health Check', () => {
         R2: createMockR2(),
       });
 
-      const res = await fetch('/health');
+      const res = await fetch('/health', {
+        headers: { 'x-admin-key': 'test-admin-key' },
+      });
       const json = (await res.json()) as any;
 
       expect(json.environment).toBe('production');
     });
 
-    it('returns 503 when DB returns unexpected result', async () => {
+    it('returns 503 with details when DB returns unexpected result', async () => {
       const { fetch } = createApp({
         ...BASE_ENV,
         DB: createMockDb({ result: 0 }),
         R2: createMockR2(),
       });
 
-      const res = await fetch('/health');
+      const res = await fetch('/health', {
+        headers: { 'x-admin-key': 'test-admin-key' },
+      });
       const json = (await res.json()) as any;
 
       expect(res.status).toBe(503);
