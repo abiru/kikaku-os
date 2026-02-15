@@ -130,6 +130,18 @@ inventory.post(
         return jsonError(c, 'Variant not found', 404);
       }
 
+      // Prevent negative stock for outgoing movements
+      if (delta < 0) {
+        const currentStock = await c.env.DB.prepare(`
+          SELECT COALESCE(SUM(delta), 0) as on_hand FROM inventory_movements WHERE variant_id = ?
+        `).bind(variant_id).first<{ on_hand: number }>();
+
+        const onHand = currentStock?.on_hand ?? 0;
+        if (onHand + delta < 0) {
+          return jsonError(c, `Insufficient stock. Available: ${onHand}, Requested: ${Math.abs(delta)}`, 400);
+        }
+      }
+
       // Insert movement
       const result = await c.env.DB.prepare(`
         INSERT INTO inventory_movements (variant_id, delta, reason, created_at, updated_at)
