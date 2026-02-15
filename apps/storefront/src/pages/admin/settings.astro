@@ -11,6 +11,7 @@ import { Input } from '../../components/catalyst/input';
 import { Textarea } from '../../components/catalyst/textarea';
 import { Checkbox } from '../../components/catalyst/checkbox';
 import { Field } from '../../components/catalyst/fieldset';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -36,7 +37,7 @@ let success: string | null = null;
 
 // Fetch settings
 if (!apiKey) {
-  error = 'ADMIN_API_KEY is missing in server environment';
+  error = t('errors.adminKeyMissing');
 } else {
   try {
     const res = await fetch(`${apiBase}/admin/settings`, {
@@ -142,13 +143,13 @@ const formatBooleanValue = (value: string): boolean => {
 };
 ---
 
-<AdminLayout title="Settings - Admin">
+<AdminLayout title={`${t('admin.settings')} - Admin`}>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <Heading>Application Settings</Heading>
+        <Heading>{t('admin.applicationSettings')}</Heading>
         <span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">
-          {Object.values(grouped).flat().length} settings
+          {Object.values(grouped).flat().length} {t('admin.settings')}
         </span>
       </div>
     </div>
@@ -205,7 +206,7 @@ const formatBooleanValue = (value: string): boolean => {
                           value="true"
                           checked={formatBooleanValue(setting.value)}
                         />
-                        <label for={`setting_${setting.key}`} class="text-base/6 text-zinc-950 select-none sm:text-sm/6">Enabled</label>
+                        <label for={`setting_${setting.key}`} class="text-base/6 text-zinc-950 select-none sm:text-sm/6">{t('admin.enabled')}</label>
                       </div>
                     </Field>
                   ) : (
@@ -228,16 +229,16 @@ const formatBooleanValue = (value: string): boolean => {
 
       <div class="flex gap-3 sticky bottom-4 bg-white p-4 rounded-xl border border-zinc-200 shadow-lg">
         <Button type="submit" color="indigo" client:load>
-          Save All Settings
+          {t('admin.saveAllSettings')}
         </Button>
         <Button href="/admin/" outline client:load>
-          Cancel
+          {t('common.cancel')}
         </Button>
       </div>
     </form>
 
     <Alert color="blue" client:load>
-      <strong>Note:</strong> Settings apply immediately after saving. Secret keys (Stripe, Clerk) must be managed through environment variables.
+      {t('admin.settingsNote')}
     </Alert>
   </div>
 </AdminLayout>

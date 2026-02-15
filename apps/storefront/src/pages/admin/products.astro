@@ -9,6 +9,7 @@ import { Input } from '../../components/catalyst/input';
 import { Heading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
 import type { Product } from '../../lib/types';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -45,22 +46,22 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load products. Please check your admin key.';
+		error = t('errors.failedToLoadProducts');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error = t('errors.adminKeyMissing');
 }
 ---
 
-<AdminLayout title="Products - Admin">
+<AdminLayout title={`${t('admin.products')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<Heading>Products</Heading>
-				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				<Heading>{t('admin.products')}</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.items')}</span>
 			</div>
 			<Button client:only="react" href="/admin/products/new">
-				+ New Product
+				{t('admin.newProduct')}
 			</Button>
 		</div>
 
@@ -74,7 +75,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200'
 				}`}
 			>
-				All
+				{t('common.all')}
 			</a>
 			<a
 				href="?status=active"
@@ -84,7 +85,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200'
 				}`}
 			>
-				Active
+				{t('admin.active')}
 			</a>
 			<a
 				href="?status=draft"
@@ -94,7 +95,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200'
 				}`}
 			>
-				Draft
+				{t('admin.draft')}
 			</a>
 			<a
 				href="?status=archived"
@@ -104,7 +105,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 						: 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200'
 				}`}
 			>
-				Archived
+				{t('admin.archived')}
 			</a>
 		</div>
 
@@ -115,7 +116,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 					type="search"
 					name="q"
 					value={q}
-					placeholder="Search by title..."
+					placeholder={t('admin.searchByTitle')}
 					className="pl-10"
 					client:load
 				/>

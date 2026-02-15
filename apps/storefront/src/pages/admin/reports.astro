@@ -7,6 +7,7 @@ import { Heading } from '../../components/catalyst/heading';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
 import { getApiBase } from '../../lib/api';
 import ReportsTable from '../../components/admin/ReportsTable';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
@@ -34,10 +35,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load reports.';
+		error = t('errors.failedToLoadOrders');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing.';
+	error = t('errors.adminKeyMissing');
 }
 
 const hasNext = page < meta.totalPages;
@@ -56,11 +57,11 @@ const reportsWithUrls = reports.map(r => ({
 }));
 ---
 
-<AdminLayout title="Daily Reports - Admin">
+<AdminLayout title={`${t('admin.reports')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<Heading>Reports</Heading>
-			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} reports</span>
+			<Heading>{t('admin.reports')}</Heading>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.reports')}</span>
 		</div>
 
 		{error && (
@@ -74,7 +75,7 @@ const reportsWithUrls = reports.map(r => ({
 		{/* Pagination */}
 		<div class="flex items-center justify-between">
 			<div class="text-xs text-zinc-500">
-				Page {page} of {meta.totalPages}
+				{t('admin.pageOf', { page, totalPages: meta.totalPages })}
 			</div>
 			<Pagination client:load>
 				<PaginationPrevious href={hasPrev ? `?page=${page - 1}` : null} />

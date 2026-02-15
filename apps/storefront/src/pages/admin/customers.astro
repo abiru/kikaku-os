@@ -6,6 +6,7 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import CustomersTable from '../../components/admin/CustomersTable';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -52,19 +53,19 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load customers. Please check your admin key.';
+		error = t('errors.failedToLoadOrders');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error = t('errors.adminKeyMissing');
 }
 
 ---
 
-<AdminLayout title="Customers - Admin">
+<AdminLayout title={`${t('admin.customers')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<Heading>Customers</Heading>
-			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} customers</span>
+			<Heading>{t('admin.customers')}</Heading>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.customers')}</span>
 		</div>
 
 		{/* Search Bar */}
@@ -74,7 +75,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 					type="search"
 					name="q"
 					value={q}
-					placeholder="Search by name or email..."
+					placeholder={t('admin.searchByNameOrEmail')}
 					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
 				/>
 				<svg

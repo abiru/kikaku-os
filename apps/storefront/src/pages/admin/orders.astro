@@ -7,6 +7,7 @@ import OrdersTable from'../../components/admin/OrdersTable';
 import { Heading } from'../../components/catalyst/heading';
 import { getApiBase } from'../../lib/api';
 import type { Order } from'../../lib/types';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') ||'';
@@ -36,18 +37,18 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load orders.';
+		error = t('errors.failedToLoadOrders');
 	}
 } else {
-	error ='ADMIN_API_KEY is missing.';
+	error = t('errors.adminKeyMissing');
 }
 ---
 
-<AdminLayout title="Orders - Admin">
+<AdminLayout title={`${t('admin.orders')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<Heading>Orders</Heading>
-			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} total</span>
+			<Heading>{t('admin.orders')}</Heading>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.total')}</span>
 		</div>
 
 		{/* Toolbar */}
@@ -57,7 +58,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 					type="search"
 					name="q"
 					value={q}
-					placeholder="Search orders..."
+					placeholder={t('admin.searchOrders')}
 					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
 				/>
 				<svg

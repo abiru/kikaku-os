@@ -6,6 +6,7 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import EventsTable from '../../components/admin/EventsTable';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
@@ -37,10 +38,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load events.';
+		error = t('errors.failedToLoadOrders');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing.';
+	error = t('errors.adminKeyMissing');
 }
 
 const buildFilterUrl = (newStatus: string) => {
@@ -54,11 +55,11 @@ const buildFilterUrl = (newStatus: string) => {
 const failedCount = events.filter(e => e.processing_status === 'failed').length;
 ---
 
-<AdminLayout title="Stripe Events - Admin">
+<AdminLayout title={`${t('admin.stripeEvents')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<Heading>Stripe Events</Heading>
-			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} total</span>
+			<Heading>{t('admin.stripeEvents')}</Heading>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.total')}</span>
 		</div>
 			{/* Filter Tabs */}
 			<div class="mb-6 flex gap-2 flex-wrap">
@@ -69,7 +70,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 						!status ? "bg-indigo-600 text-white" : "bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
 					]}
 				>
-					All
+					{t('common.all')}
 				</a>
 				<a
 					href={buildFilterUrl('completed')}
@@ -78,7 +79,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 						status === 'completed' ? "bg-indigo-600 text-white" : "bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
 					]}
 				>
-					Completed
+					{t('admin.completed')}
 				</a>
 				<a
 					href={buildFilterUrl('pending')}
@@ -87,7 +88,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 						status === 'pending' ? "bg-indigo-600 text-white" : "bg-white border border-zinc-200 text-zinc-950 hover:bg-zinc-50"
 					]}
 				>
-					Pending
+					{t('admin.pending')}
 				</a>
 				<a
 					href={buildFilterUrl('failed')}
@@ -96,7 +97,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 						status === 'failed' ? "bg-red-600 text-white" : "bg-white border border-red-200 text-red-600 hover:bg-red-50"
 					]}
 				>
-					Failed
+					{t('admin.failed')}
 					{meta.totalCount > 0 && status !== 'failed' && (
 						<span class="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">{failedCount > 0 ? failedCount : ''}</span>
 					)}
