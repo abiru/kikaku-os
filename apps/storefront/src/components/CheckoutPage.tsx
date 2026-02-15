@@ -38,6 +38,49 @@ type PaymentIntentResponse = {
 	publishableKey: string;
 };
 
+function CheckoutSkeleton() {
+	return (
+		<div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+			{/* Title skeleton */}
+			<div className="animate-pulse mb-8">
+				<div className="h-8 bg-gray-200 rounded w-48" />
+			</div>
+
+			{/* Step indicator skeleton */}
+			<div className="animate-pulse flex justify-center gap-4 mb-8">
+				<div className="h-7 w-7 bg-gray-200 rounded-full" />
+				<div className="h-px w-12 bg-gray-200 self-center" />
+				<div className="h-7 w-7 bg-gray-200 rounded-full" />
+				<div className="h-px w-12 bg-gray-200 self-center" />
+				<div className="h-7 w-7 bg-gray-200 rounded-full" />
+			</div>
+
+			<div className="lg:grid lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
+				{/* Left column skeleton */}
+				<div className="lg:col-span-7 animate-pulse space-y-4">
+					<div className="h-5 bg-gray-200 rounded w-32" />
+					<div className="h-12 bg-gray-200 rounded" />
+					<div className="h-12 bg-gray-200 rounded" />
+				</div>
+
+				{/* Right column skeleton */}
+				<div className="mt-10 lg:mt-0 lg:col-span-5 animate-pulse">
+					<div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
+						<div className="h-5 bg-gray-200 rounded w-24" />
+						<div className="h-4 bg-gray-200 rounded" />
+						<div className="h-4 bg-gray-200 rounded w-3/4" />
+						<div className="border-t border-gray-200 pt-4 space-y-2">
+							<div className="h-4 bg-gray-200 rounded" />
+							<div className="h-4 bg-gray-200 rounded" />
+							<div className="h-6 bg-gray-200 rounded w-1/2 mt-4" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
 function CheckoutPageContent() {
 	const { t } = useTranslation();
 	const cartItems = useStore($cartArray);
@@ -96,7 +139,6 @@ function CheckoutPageContent() {
 			setQuoteId(quoteData.quoteId);
 			setLoading(false);
 		} catch (err) {
-			console.error('Checkout initialization error:', err);
 			setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
 			setLoading(false);
 		}
@@ -166,9 +208,16 @@ function CheckoutPageContent() {
 			setEmailSubmitted(true);
 			setLoading(false);
 		} catch (err) {
-			console.error('Payment intent error:', err);
 			setError(err instanceof Error ? err.message : 'Failed to create payment');
 			setLoading(false);
+		}
+	};
+
+	const handleGoBack = () => {
+		if (emailSubmitted) {
+			setEmailSubmitted(false);
+			setClientSecret(null);
+			setOrderToken(null);
 		}
 	};
 
@@ -178,15 +227,11 @@ function CheckoutPageContent() {
 		await createQuoteOnly(couponCode);
 	};
 
+	const currentStep = !breakdown ? 'cart' as const : !emailSubmitted ? 'email' as const : 'payment' as const;
+	const canGoBack = emailSubmitted;
+
 	if (loading) {
-		return (
-			<div className="flex items-center justify-center min-h-[60vh]">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-					<p className="mt-4 text-gray-600">{t('checkout.loading')}</p>
-				</div>
-			</div>
-		);
+		return <CheckoutSkeleton />;
 	}
 
 	if (error && !breakdown) {
@@ -199,7 +244,7 @@ function CheckoutPageContent() {
 						</svg>
 					</div>
 					<p className="text-lg text-gray-900 font-medium">{error}</p>
-					<a href="/cart" className="mt-6 inline-block text-indigo-600 hover:text-indigo-700">
+					<a href="/cart" className="mt-6 inline-block text-indigo-600 hover:text-indigo-700 min-h-[44px] flex items-center justify-center">
 						{t('checkout.returnToCart')}
 					</a>
 				</div>
@@ -212,7 +257,7 @@ function CheckoutPageContent() {
 			<div className="flex items-center justify-center min-h-[60vh]">
 				<div className="text-center">
 					<p className="text-lg text-gray-900">{t('cart.empty')}</p>
-					<a href="/products" className="mt-4 inline-block text-indigo-600 hover:text-indigo-700">
+					<a href="/products" className="mt-4 inline-block text-indigo-600 hover:text-indigo-700 min-h-[44px] flex items-center justify-center">
 						{t('cart.continueShopping')}
 					</a>
 				</div>
@@ -222,11 +267,27 @@ function CheckoutPageContent() {
 
 	return (
 		<div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-			<h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-8">
+			<h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 mb-8">
 				{t('checkout.title')}
 			</h1>
 
-			<CheckoutSteps currentStep={!breakdown ? 'cart' : !emailSubmitted ? 'email' : 'payment'} />
+			<CheckoutSteps currentStep={currentStep} />
+
+			{/* Back button */}
+			{canGoBack && (
+				<div className="mb-6">
+					<button
+						type="button"
+						onClick={handleGoBack}
+						className="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 min-h-[44px] touch-manipulation"
+					>
+						<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+							<path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+						</svg>
+						{t('checkout.goBack')}
+					</button>
+				</div>
+			)}
 
 			{error && (
 				<div className="mb-6 rounded-md bg-red-50 p-4">
@@ -252,13 +313,7 @@ function CheckoutPageContent() {
 									onChange={(e) => handleEmailChange(e.target.value)}
 									onBlur={handleEmailBlur}
 									placeholder={t('checkout.emailPlaceholder') || 'your@email.com'}
-									aria-invalid={emailTouched && !!emailError}
-									aria-describedby={emailError ? 'email-error' : undefined}
-									className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm p-3 border ${
-										emailTouched && emailError
-											? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-											: 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
-									}`}
+									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base p-3 border"
 								/>
 								{emailTouched && emailError && (
 									<p id="email-error" className="text-red-500 text-sm mt-1">{emailError}</p>
@@ -266,8 +321,8 @@ function CheckoutPageContent() {
 							</div>
 							<button
 								type="submit"
-								disabled={loading}
-								className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+								disabled={loading || !customerEmail.includes('@')}
+								className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] text-base font-medium touch-manipulation"
 							>
 								{loading ? (t('checkout.loading') || 'Loading...') : (t('checkout.proceedToPayment') || 'Proceed to Payment')}
 							</button>

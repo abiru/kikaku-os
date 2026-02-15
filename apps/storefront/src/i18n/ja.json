@@ -146,6 +146,10 @@
     "returnToHome": "ホームに戻る",
     "shippingAddress": "配送先住所",
     "phone": "電話番号",
+    "stepOf": "ステップ {current}/{total}",
+    "goBack": "← 戻る",
+    "proceedToPayment": "お支払いへ進む",
+    "emailPlaceholder": "your@email.com",
     "steps": {
       "cart": "カート確認",
       "email": "メールアドレス",
