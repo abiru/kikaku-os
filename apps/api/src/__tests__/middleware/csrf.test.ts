@@ -1,52 +1,54 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { Hono } from 'hono';
 import type { Env } from '../../env';
 import {
   csrfProtection,
   generateCsrfToken,
   validateCsrfToken,
-  _clearTokenStore,
 } from '../../middleware/csrf';
 
-beforeEach(() => {
-  _clearTokenStore();
-});
-
 describe('generateCsrfToken', () => {
-  it('returns a UUID-format token', () => {
-    const token = generateCsrfToken('test-session');
-    expect(token).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-    );
+  it('returns a base64url-encoded token', () => {
+    const token = generateCsrfToken();
+    // Base64url characters: A-Za-z0-9-_
+    expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(token.length).toBeGreaterThan(0);
   });
 
-  it('returns different tokens for different sessions', () => {
-    const token1 = generateCsrfToken('session-1');
-    const token2 = generateCsrfToken('session-2');
+  it('returns different tokens on each call', () => {
+    const token1 = generateCsrfToken();
+    const token2 = generateCsrfToken();
     expect(token1).not.toBe(token2);
   });
 });
 
 describe('validateCsrfToken', () => {
-  it('validates a correct token', () => {
-    const token = generateCsrfToken('session-a');
-    expect(validateCsrfToken('session-a', token)).toBe(true);
+  it('validates matching tokens', () => {
+    const token = 'test-token-123';
+    expect(validateCsrfToken(token, token)).toBe(true);
   });
 
-  it('rejects an incorrect token', () => {
-    generateCsrfToken('session-b');
-    expect(validateCsrfToken('session-b', 'wrong-token')).toBe(false);
+  it('rejects mismatched tokens', () => {
+    expect(validateCsrfToken('token-a', 'token-b')).toBe(false);
   });
 
-  it('rejects a token for unknown session', () => {
-    expect(validateCsrfToken('unknown', 'any-token')).toBe(false);
+  it('rejects empty cookie token', () => {
+    expect(validateCsrfToken('', 'some-token')).toBe(false);
   });
 
-  it('consumes the token on successful validation (one-time use)', () => {
-    const token = generateCsrfToken('session-c');
-    expect(validateCsrfToken('session-c', token)).toBe(true);
-    // Second use should fail
-    expect(validateCsrfToken('session-c', token)).toBe(false);
+  it('rejects empty header token', () => {
+    expect(validateCsrfToken('some-token', '')).toBe(false);
+  });
+
+  it('rejects tokens of different lengths', () => {
+    expect(validateCsrfToken('short', 'much-longer-token')).toBe(false);
+  });
+
+  it('uses constant-time comparison', () => {
+    // This is a behavioral test - ensure no early return on mismatch
+    const token1 = 'aaaaaaaaaaaaaaaaaaaa';
+    const token2 = 'zzzzzzzzzzzzzzzzzzzz';
+    expect(validateCsrfToken(token1, token2)).toBe(false);
   });
 });
 
@@ -54,6 +56,12 @@ describe('csrfProtection middleware', () => {
   const createApp = () => {
     const app = new Hono<Env>();
     app.use('*', csrfProtection());
+    app.get('/csrf-token', (c) => {
+      const tokenFromContext = c.get('csrfToken');
+      return c.json({
+        token: typeof tokenFromContext === 'string' ? tokenFromContext : '',
+      });
+    });
     app.get('/test', (c) => c.json({ ok: true }));
     app.post('/test', (c) => c.json({ ok: true }));
     app.put('/test', (c) => c.json({ ok: true }));
@@ -64,13 +72,38 @@ describe('csrfProtection middleware', () => {
     return app;
   };
 
-  it('allows GET requests without CSRF token', async () => {
+  it('returns a non-empty token on first /csrf-token request', async () => {
+    const app = createApp();
+    const res = await app.request('/csrf-token', { method: 'GET' });
+    expect(res.status).toBe(200);
+
+    const body = await res.json() as { token: string };
+    expect(body.token).toMatch(/^[A-Za-z0-9_-]+$/);
+
+    const setCookieHeader = res.headers.get('set-cookie') || '';
+    const cookieMatch = setCookieHeader.match(/__csrf=([^;]+)/);
+    expect(cookieMatch?.[1]).toBe(body.token);
+  });
+
+  it('allows GET requests and sets CSRF cookie', async () => {
     const app = createApp();
     const res = await app.request('/test', { method: 'GET' });
     expect(res.status).toBe(200);
+    const setCookieHeader = res.headers.get('set-cookie');
+    expect(setCookieHeader).toContain('__csrf=');
+    expect(setCookieHeader).toContain('HttpOnly');
+    expect(setCookieHeader).toContain('SameSite=Strict');
   });
 
-  it('allows OPTIONS requests without CSRF token', async () => {
+  it('allows HEAD requests and sets CSRF cookie', async () => {
+    const app = createApp();
+    const res = await app.request('/test', { method: 'HEAD' });
+    expect(res.status).toBe(200);
+    const setCookieHeader = res.headers.get('set-cookie');
+    expect(setCookieHeader).toContain('__csrf=');
+  });
+
+  it('allows OPTIONS requests without setting cookie', async () => {
     const app = createApp();
     const res = await app.request('/test', { method: 'OPTIONS' });
     // OPTIONS may return 404 because no explicit OPTIONS handler, but CSRF middleware passes
@@ -81,7 +114,7 @@ describe('csrfProtection middleware', () => {
     const app = createApp();
     const res = await app.request('/test', { method: 'POST' });
     expect(res.status).toBe(403);
-    const body = await res.json();
+    const body = await res.json() as { message: string };
     expect(body.message).toBe('CSRF token required');
   });
 
@@ -97,26 +130,57 @@ describe('csrfProtection middleware', () => {
     expect(res.status).toBe(403);
   });
 
-  it('rejects POST with invalid CSRF token', async () => {
+  it('rejects POST with mismatched CSRF token', async () => {
     const app = createApp();
+    const token = generateCsrfToken();
     const res = await app.request('/test', {
       method: 'POST',
-      headers: { 'x-csrf-token': 'invalid-token' },
+      headers: {
+        'cookie': `__csrf=${token}`,
+        'x-csrf-token': 'different-token',
+      },
     });
     expect(res.status).toBe(403);
-    const body = await res.json();
-    expect(body.message).toBe('Invalid or expired CSRF token');
+    const body = await res.json() as { message: string };
+    expect(body.message).toBe('Invalid CSRF token');
   });
 
   it('allows POST with valid CSRF token', async () => {
     const app = createApp();
-    const sessionKey = 'csrf:unknown'; // default IP in test
-    const token = generateCsrfToken(sessionKey);
+    const token = generateCsrfToken();
     const res = await app.request('/test', {
       method: 'POST',
-      headers: { 'x-csrf-token': token },
+      headers: {
+        'cookie': `__csrf=${token}`,
+        'x-csrf-token': token,
+      },
     });
     expect(res.status).toBe(200);
+  });
+
+  it('allows reusing the same CSRF token (not one-time use)', async () => {
+    const app = createApp();
+    const token = generateCsrfToken();
+
+    // First request
+    const res1 = await app.request('/test', {
+      method: 'POST',
+      headers: {
+        'cookie': `__csrf=${token}`,
+        'x-csrf-token': token,
+      },
+    });
+    expect(res1.status).toBe(200);
+
+    // Second request with same token should also succeed
+    const res2 = await app.request('/test', {
+      method: 'POST',
+      headers: {
+        'cookie': `__csrf=${token}`,
+        'x-csrf-token': token,
+      },
+    });
+    expect(res2.status).toBe(200);
   });
 
   it('exempts webhook endpoints from CSRF', async () => {

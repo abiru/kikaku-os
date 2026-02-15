@@ -40,7 +40,6 @@ import { Dropdown, DropdownButton, DropdownMenu, DropdownItem } from '../catalys
 import { Avatar } from '../catalyst/avatar'
 import { Navbar, NavbarItem } from '../catalyst/navbar'
 import { Badge } from '../catalyst/badge'
-import { t } from '../../i18n'
 
 type UserInfo = {
   email: string | null

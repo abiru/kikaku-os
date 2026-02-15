@@ -80,7 +80,7 @@ export default function OrderSummary({ items, breakdown, onCouponApply }: OrderS
 					<button
 						type="button"
 						onClick={() => setShowCouponInput(true)}
-						className="text-sm text-indigo-600 hover:text-indigo-700 font-medium min-h-[44px] flex items-center touch-manipulation"
+						className="text-sm text-[#0071e3] hover:text-[#005bb5] font-medium min-h-[44px] flex items-center touch-manipulation"
 					>
 						{t('checkout.haveCoupon')}
 					</button>
@@ -92,13 +92,13 @@ export default function OrderSummary({ items, breakdown, onCouponApply }: OrderS
 								value={couponCode}
 								onChange={(e) => setCouponCode(e.target.value)}
 								placeholder={t('checkout.enterCoupon')}
-								className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base px-3 py-2 border min-h-[44px]"
+								className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-[#0071e3] focus:ring-[#0071e3] text-base px-3 py-2 border min-h-[44px]"
 							/>
 							<button
 								type="button"
 								onClick={handleApplyCoupon}
 								disabled={isApplyingCoupon}
-								className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 min-h-[44px] touch-manipulation"
+								className="rounded-md bg-[#0071e3] px-4 py-2 text-sm font-medium text-white hover:bg-[#005bb5] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:ring-offset-2 disabled:bg-gray-300 min-h-[44px] touch-manipulation"
 							>
 								{isApplyingCoupon ? '...' : t('checkout.apply')}
 							</button>

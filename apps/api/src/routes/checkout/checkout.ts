@@ -60,8 +60,6 @@ checkout.post('/checkout/quote', async (c) => {
   }
   const bodyObj = body as Record<string, unknown> | null;
 
-  const bodyObj = body as Record<string, unknown> | null;
-
   // Validate items
   let items: CheckoutItem[] = [];
   if (Array.isArray(bodyObj?.items)) {
