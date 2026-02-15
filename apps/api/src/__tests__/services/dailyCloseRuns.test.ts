@@ -25,7 +25,7 @@ const createMockDB = () => {
             });
             return { id: lastInsertedId };
           }
-          if (sql.includes('FROM daily_close_runs WHERE date') && !sql.includes('COUNT')) {
+          if (sql.includes('FROM daily_close_runs WHERE date') && sql.includes('ORDER BY')) {
             const found = rows.find((r) => r.date === args[0]);
             return found || null;
           }

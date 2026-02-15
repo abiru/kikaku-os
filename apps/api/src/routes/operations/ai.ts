@@ -160,8 +160,8 @@ ai.post('/sql', async (c) => {
     const body = await c.req.json<{ prompt?: string }>();
     const prompt = (body.prompt || '').trim();
     const draft = prompt
-      ? `SELECT * FROM orders WHERE status='paid'`
-      : 'SELECT * FROM orders';
+      ? `SELECT id, customer_id, status, total_amount, currency, created_at, paid_at FROM orders WHERE status='paid'`
+      : 'SELECT id, customer_id, status, total_amount, currency, created_at, paid_at FROM orders';
     const validated = validateSql(draft);
     if (!validated.ok) return jsonError(c, validated.message, 400);
     return jsonOk(c, { sql: validated.sql, notes: 'Dummy SQL generated. Please review before executing.' });
