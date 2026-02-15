@@ -9,6 +9,7 @@ import { rateLimit } from './middleware/rateLimit';
 import { sendAlert } from './lib/alerts';
 import { captureException, getSentryConfig } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
+import { AppError } from './lib/errors';
 import { registerRoutes } from './routes';
 import { generateDailyReport } from './services/dailyReport';
 import { generateStripeEvidence } from './services/stripeEvidence';
@@ -24,15 +25,29 @@ const app = new Hono<Env>();
 
 // Global error handler - ensures all errors return JSON
 app.onError((err, c) => {
-  console.error('Unhandled error:', err);
+  // Handle known application errors with appropriate status codes
+  if (err instanceof AppError) {
+    if (err.statusCode >= 500) {
+      console.error('Application error:', err);
+      captureException(err, {
+        path: c.req.path,
+        method: c.req.method,
+        env: c.env
+      });
+    }
+    return c.json(
+      { ok: false, message: err.message, code: err.code },
+      err.statusCode as 400 | 401 | 403 | 404 | 409 | 500
+    );
+  }
 
-  // Capture exception for error tracking (production only)
+  // Unknown errors - log and return generic message
+  console.error('Unhandled error:', err);
   captureException(err, {
     path: c.req.path,
     method: c.req.method,
     env: c.env
   });
-
   return c.json(
     { ok: false, message: 'Internal Server Error' },
     500

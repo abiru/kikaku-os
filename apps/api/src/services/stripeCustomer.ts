@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { AppError } from '../lib/errors';
 
 export type CustomerInfo = {
   id: number;
@@ -34,7 +35,7 @@ export const ensureStripeCustomer = async (
     .first<CustomerInfo>();
 
   if (!customer) {
-    throw new Error(`Customer ${customerId} not found`);
+    throw AppError.notFound(`Customer ${customerId} not found`);
   }
 
   // 2. Return existing Stripe Customer ID if already set (idempotent)
@@ -82,7 +83,11 @@ export const ensureStripeCustomer = async (
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Failed to create Stripe Customer: ${text}`);
+    const statusCode = response.status >= 500 ? 502 : 400;
+    throw new AppError(`Failed to create Stripe Customer: ${text}`, {
+      statusCode,
+      code: 'STRIPE_CUSTOMER_ERROR'
+    });
   }
 
   const stripeCustomer = (await response.json()) as StripeCustomerResponse;

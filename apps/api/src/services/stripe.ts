@@ -1,4 +1,5 @@
 import type { D1Database } from '@cloudflare/workers-types';
+import { AppError } from '../lib/errors';
 
 type ProductInfo = {
   id: number;
@@ -61,7 +62,11 @@ const stripeRequest = async <T>(
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Stripe API error: ${res.status} - ${text}`);
+    const statusCode = res.status >= 500 ? 502 : 400;
+    throw new AppError(`Stripe API error: ${res.status} - ${text}`, {
+      statusCode,
+      code: 'STRIPE_API_ERROR'
+    });
   }
 
   return res.json() as Promise<T>;
@@ -179,7 +184,7 @@ export const ensureStripePriceForVariant = async (
     .first<ProductInfo>();
 
   if (!product) {
-    throw new Error(`Product ${variant.product_id} not found`);
+    throw AppError.notFound(`Product ${variant.product_id} not found`);
   }
 
   const stripeProductId = await ensureStripeProduct(db, stripeKey, product, imageUrl);
