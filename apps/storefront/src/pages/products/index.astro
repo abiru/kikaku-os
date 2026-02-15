@@ -525,27 +525,53 @@ const skeletonCards = Array.from({ length: 6 });
 		const mobileFilterClose = document.getElementById('mobile-filter-close');
 
 		if (mobileFilterBtn && mobileFilterSheet && mobileFilterOverlay) {
+			const getFocusableElements = (): HTMLElement[] => {
+				const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+				return Array.from(mobileFilterSheet.querySelectorAll<HTMLElement>(selector));
+			};
+
+			const handleTrapKeydown = (e: KeyboardEvent) => {
+				if (e.key === 'Escape') {
+					closeFilters();
+					return;
+				}
+				if (e.key !== 'Tab') return;
+				const focusable = getFocusableElements();
+				if (focusable.length === 0) return;
+				const first = focusable[0]!;
+				const last = focusable[focusable.length - 1]!
+				if (e.shiftKey) {
+					if (document.activeElement === first) {
+						e.preventDefault();
+						last.focus();
+					}
+				} else {
+					if (document.activeElement === last) {
+						e.preventDefault();
+						first.focus();
+					}
+				}
+			};
+
 			const openFilters = () => {
 				mobileFilterSheet.classList.remove('translate-y-full');
 				mobileFilterOverlay.classList.remove('hidden');
 				document.body.style.overflow = 'hidden';
+				document.addEventListener('keydown', handleTrapKeydown);
+				mobileFilterClose?.focus();
 			};
 
 			const closeFilters = () => {
 				mobileFilterSheet.classList.add('translate-y-full');
 				mobileFilterOverlay.classList.add('hidden');
 				document.body.style.overflow = '';
+				document.removeEventListener('keydown', handleTrapKeydown);
+				mobileFilterBtn.focus();
 			};
 
 			mobileFilterBtn.addEventListener('click', openFilters);
 			mobileFilterClose?.addEventListener('click', closeFilters);
 			mobileFilterOverlay.addEventListener('click', closeFilters);
-
-			document.addEventListener('keydown', (e) => {
-				if (e.key === 'Escape' && !mobileFilterSheet.classList.contains('translate-y-full')) {
-					closeFilters();
-				}
-			});
 		}
 	</script>
 </Layout>
