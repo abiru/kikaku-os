@@ -27,7 +27,11 @@ const app = new Hono<Env>();
 app.onError((err, c) => {
   // Handle known application errors with appropriate status codes
   if (err instanceof AppError) {
-    if (err.statusCode >= 500) {
+    const allowedStatuses = new Set([400, 401, 403, 404, 409, 500, 501, 502, 503]);
+    const status = allowedStatuses.has(err.statusCode) ? err.statusCode : 500;
+    const isServerError = status >= 500;
+
+    if (isServerError) {
       console.error('Application error:', err);
       captureException(err, {
         path: c.req.path,
@@ -35,9 +39,13 @@ app.onError((err, c) => {
         env: c.env
       });
     }
+
+    const message = isServerError ? 'Internal Server Error' : err.message;
+    const code = isServerError ? 'INTERNAL_ERROR' : err.code;
+
     return c.json(
-      { ok: false, message: err.message, code: err.code },
-      err.statusCode as 400 | 401 | 403 | 404 | 409 | 500
+      { ok: false, message, code },
+      status as 400 | 401 | 403 | 404 | 409 | 500 | 501 | 502 | 503
     );
   }
 
