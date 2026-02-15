@@ -74,7 +74,7 @@ async function getOrCreateCustomerByClerkId(
 ): Promise<CustomerRow | null> {
   // First, try to find existing customer
   const existing = await db
-    .prepare('SELECT * FROM customers WHERE clerk_user_id = ?')
+    .prepare('SELECT id, name, email, metadata, clerk_user_id, created_at, updated_at FROM customers WHERE clerk_user_id = ?')
     .bind(clerkUserId)
     .first<CustomerRow>();
 
@@ -85,7 +85,7 @@ async function getOrCreateCustomerByClerkId(
   // If no customer found by Clerk ID, try to find by email and link
   if (email) {
     const byEmail = await db
-      .prepare('SELECT * FROM customers WHERE email = ? AND clerk_user_id IS NULL')
+      .prepare('SELECT id, name, email, metadata, clerk_user_id, created_at, updated_at FROM customers WHERE email = ? AND clerk_user_id IS NULL')
       .bind(email)
       .first<CustomerRow>();
 

@@ -28,7 +28,7 @@ async function fetchUserPermissions(
 ): Promise<{ adminUser: AdminUserRow | null; permissions: string[] }> {
   // Get admin user
   const adminUser = await db
-    .prepare('SELECT * FROM admin_users WHERE clerk_user_id = ? AND is_active = 1')
+    .prepare('SELECT id, clerk_user_id, email, name, role_id, is_active, last_login_at, created_at, updated_at FROM admin_users WHERE clerk_user_id = ? AND is_active = 1')
     .bind(clerkUserId)
     .first<AdminUserRow>();
 
