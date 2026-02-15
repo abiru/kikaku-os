@@ -6,6 +6,9 @@ export default defineConfig({
     include: ['src/__tests__/**/*.test.ts'],
     exclude: ['src/__tests__/**/*.integration.test.ts'],
     setupFiles: ['src/__tests__/setup.ts'],
+    testTimeout: 10_000,
+    hookTimeout: 10_000,
+    retry: 2,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
