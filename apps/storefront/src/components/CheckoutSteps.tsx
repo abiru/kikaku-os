@@ -76,18 +76,37 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
           const isCurrent = index === currentIndex;
 
           return (
-            <span
-              key={step}
-              className={`rounded-full transition-all ${
-                isCompleted
-                  ? 'h-2.5 w-2.5 bg-[#0071e3]'
-                  : isCurrent
-                    ? 'h-3 w-3 bg-[#0071e3] ring-2 ring-[#0071e3]/30'
-                    : 'h-2.5 w-2.5 bg-[#d2d2d7]'
-              }`}
-              aria-label={t(`checkout.steps.${step}`)}
-              aria-current={isCurrent ? 'step' : undefined}
-            />
+            <li key={step} className="flex items-center">
+              {index > 0 && (
+                <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-[#0071e3]' : 'bg-[#d2d2d7]'}`} />
+              )}
+              <div className="flex items-center gap-2">
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                    isCompleted
+                      ? 'bg-[#0071e3] text-white'
+                      : isCurrent
+                        ? 'border-2 border-[#0071e3] text-[#0071e3]'
+                        : 'border-2 border-[#d2d2d7] text-[#6e6e73]'
+                  }`}
+                >
+                  {isCompleted ? (
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    index + 1
+                  )}
+                </span>
+                <span
+                  className={`text-xs sm:text-sm font-medium ${
+                    isCurrent ? 'text-[#1d1d1f]' : isCompleted ? 'text-[#0071e3]' : 'text-[#6e6e73]'
+                  }`}
+                >
+                  {t(`checkout.steps.${step}`)}
+                </span>
+              </div>
+            </li>
           );
         })}
       </div>

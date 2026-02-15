@@ -168,7 +168,7 @@ export default function SearchModal() {
 												}`}
 											>
 												<div className="h-12 w-12 flex-shrink-0 rounded-lg bg-gray-100 flex items-center justify-center">
-													<span className="text-xs font-medium text-gray-400">IMG</span>
+													<span className="text-xs font-medium text-gray-500">IMG</span>
 												</div>
 												<div className="flex-1 min-w-0">
 													<p className="text-sm font-medium text-gray-900 truncate">
@@ -207,7 +207,7 @@ export default function SearchModal() {
 									<p className="mt-2 text-sm text-gray-500">
 										{t('common.noResults')}
 									</p>
-									<p className="mt-1 text-xs text-gray-400">
+									<p className="mt-1 text-xs text-gray-500">
 										{t('search.tryDifferent')}
 									</p>
 								</div>

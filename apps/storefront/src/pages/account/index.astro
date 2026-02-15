@@ -76,7 +76,7 @@ const statusLabels: Record<string, string> = {
         <h1 class="text-2xl font-semibold text-[#1d1d1f]">
           {t('account.welcome')}、{account?.name || 'お客様'}
         </h1>
-        <p class="text-[#86868b] mt-1">
+        <p class="text-[#6e6e73] mt-1">
           {account?.email}
         </p>
       </div>
@@ -84,7 +84,7 @@ const statusLabels: Record<string, string> = {
       {/* Stats Cards */}
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div class="text-[#86868b] text-sm font-medium mb-1">
+          <div class="text-[#6e6e73] text-sm font-medium mb-1">
             {t('account.totalOrders')}
           </div>
           <div class="text-3xl font-semibold text-[#1d1d1f]">
@@ -92,7 +92,7 @@ const statusLabels: Record<string, string> = {
           </div>
         </div>
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div class="text-[#86868b] text-sm font-medium mb-1">
+          <div class="text-[#6e6e73] text-sm font-medium mb-1">
             {t('account.totalSpent')}
           </div>
           <div class="text-3xl font-semibold text-[#1d1d1f]">
@@ -116,7 +116,7 @@ const statusLabels: Record<string, string> = {
 
         {recentOrders.length === 0 ? (
           <div class="p-8 text-center">
-            <div class="text-[#86868b] mb-4">{t('account.noOrders')}</div>
+            <div class="text-[#6e6e73] mb-4">{t('account.noOrders')}</div>
             <a
               href="/products"
               class="inline-flex items-center justify-center px-6 py-2.5 bg-[#0071e3] text-white rounded-full text-sm font-medium hover:bg-[#0077ed] transition-colors"
@@ -135,7 +135,7 @@ const statusLabels: Record<string, string> = {
                   <div class="font-medium text-[#1d1d1f]">
                     {t('account.orderNumber')} #{order.id}
                   </div>
-                  <div class="text-sm text-[#86868b] mt-1">
+                  <div class="text-sm text-[#6e6e73] mt-1">
                     {formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
                   </div>
                 </div>
