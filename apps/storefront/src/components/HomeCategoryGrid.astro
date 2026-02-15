@@ -36,16 +36,16 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
             loading="lazy"
             class="absolute inset-0 w-full h-full object-cover -z-10"
           />
-          <div class="space-y-2">
+          <div class="category-text space-y-2">
             <h3 class="text-4xl font-black text-neutral-900">
               {categoryName}
             </h3>
-            <p class="mt-4 text-xl font-semibold text-neutral-500">
+            <p class="mt-4 text-xl font-semibold text-neutral-600">
               {description}
             </p>
           </div>
 
-          <div class="mt-4 flex gap-2">
+          <div class="category-text mt-4 flex gap-2">
             <a
               href={`/products?category=${encodeURIComponent(product.category || '')}`}
               class="rounded-full bg-[#0071e3] px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#005bb5] transition-colors"
@@ -79,8 +79,14 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.3) 100%);
+    background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.7) 100%);
     pointer-events: none;
     z-index: 0;
+  }
+
+  .category-text {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.6);
   }
 </style>
