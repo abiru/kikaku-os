@@ -10,7 +10,7 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { unstable_dev, type Unstable_DevWorker } from 'wrangler';
-import { computeStripeSignature } from '../lib/stripe';
+import { computeStripeSignature } from '../../../lib/stripe';
 
 const TEST_WEBHOOK_SECRET = 'whsec_test_secret';
 
