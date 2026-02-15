@@ -113,31 +113,33 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 
     <div class="card">
       <h2>明細</h2>
-      <table class="items-table">
-        <thead>
-          <tr>
-            <th>No.</th>
-            <th>品名</th>
-            <th>数量</th>
-            <th>単価</th>
-            <th>小計</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item: QuotationItemRecord, index: number) => (
+      <div class="overflow-x-auto">
+        <table class="items-table">
+          <thead>
             <tr>
-              <td class="center">{index + 1}</td>
-              <td>
-                {item.product_title}
-                {item.variant_title && ` - ${item.variant_title}`}
-              </td>
-              <td class="center">{item.quantity}</td>
-              <td class="right">{formatCurrency(item.unit_price, quotation.currency)}</td>
-              <td class="right">{formatCurrency(item.subtotal, quotation.currency)}</td>
+              <th>No.</th>
+              <th>品名</th>
+              <th>数量</th>
+              <th>単価</th>
+              <th>小計</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.map((item: QuotationItemRecord, index: number) => (
+              <tr>
+                <td class="center">{index + 1}</td>
+                <td>
+                  {item.product_title}
+                  {item.variant_title && ` - ${item.variant_title}`}
+                </td>
+                <td class="center">{item.quantity}</td>
+                <td class="right">{formatCurrency(item.unit_price, quotation.currency)}</td>
+                <td class="right">{formatCurrency(item.subtotal, quotation.currency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div class="summary">
         <div class="summary-row">
