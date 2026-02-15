@@ -135,15 +135,39 @@ if (orderToken) {
 	</div>
 </Layout>
 
-<script define:vars={{ apiBase }}>
+<script define:vars={{ apiBase, order }}>
 	window.__CHECKOUT_SUCCESS_API_BASE__ = apiBase;
+	window.__CHECKOUT_ORDER__ = order;
 </script>
 
 <script>
 	declare global {
 		interface Window {
 			__CHECKOUT_SUCCESS_API_BASE__?: string;
+			__CHECKOUT_ORDER__?: { id: number; total_amount: number; currency: string; items: Array<{ title: string; quantity: number; unit_price: number; product_id?: number; variant_title?: string }> } | null;
+			dataLayer: Record<string, unknown>[];
 		}
+	}
+
+	// GTM: purchase event
+	const orderData = window.__CHECKOUT_ORDER__;
+	if (orderData) {
+		window.dataLayer = window.dataLayer || [];
+		window.dataLayer.push({
+			event: 'purchase',
+			ecommerce: {
+				transaction_id: String(orderData.id),
+				value: orderData.total_amount,
+				currency: orderData.currency || 'JPY',
+				items: orderData.items.map((item, index) => ({
+					item_id: String(item.product_id || index),
+					item_name: item.title,
+					item_variant: item.variant_title || '',
+					price: item.unit_price,
+					quantity: item.quantity,
+				})),
+			},
+		});
 	}
 
 	// Clear cart after successful payment
