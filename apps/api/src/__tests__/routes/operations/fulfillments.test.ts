@@ -39,9 +39,9 @@ const createMockDb = (options: {
           }
           // Fetch updated record after UPDATE
           if (
-            sql.includes('SELECT *') &&
-            sql.includes('FROM fulfillments') &&
-            !sql.includes('old_status')
+            sql.includes('SELECT') &&
+            sql.includes('tracking_number') &&
+            sql.includes('FROM fulfillments')
           ) {
             return options.updatedFulfillment ?? options.createdFulfillment ?? null;
           }

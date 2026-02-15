@@ -29,8 +29,7 @@ export function createProxyHandler(basePath: string): APIRoute {
 
     if (!['GET', 'HEAD'].includes(request.method) && request.body) {
       init.body = request.body
-      // @ts-ignore - duplex needed for streaming body
-      init.duplex = 'half'
+      ;(init as Record<string, unknown>).duplex = 'half'
     }
 
     const response = await fetch(targetUrl, init)

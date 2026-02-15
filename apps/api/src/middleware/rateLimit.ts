@@ -77,9 +77,11 @@ export const rateLimit = (options: RateLimitOptions) => {
 
     if (!entry || entry.resetAt <= now) {
       // New window
-      store.set(key, { count: 1, resetAt: now + windowMs });
+      const resetAt = now + windowMs;
+      store.set(key, { count: 1, resetAt });
       c.res.headers.set('X-RateLimit-Limit', String(max));
       c.res.headers.set('X-RateLimit-Remaining', String(max - 1));
+      c.res.headers.set('X-RateLimit-Reset', String(Math.ceil(resetAt / 1000)));
       return next();
     }
 
@@ -100,6 +102,7 @@ export const rateLimit = (options: RateLimitOptions) => {
     store.set(key, { ...entry, count: entry.count + 1 });
     c.res.headers.set('X-RateLimit-Limit', String(max));
     c.res.headers.set('X-RateLimit-Remaining', String(max - entry.count - 1));
+    c.res.headers.set('X-RateLimit-Reset', String(Math.ceil(entry.resetAt / 1000)));
     return next();
   };
 };

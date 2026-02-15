@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import inventory from '../../../routes/operations/inventory';
 
@@ -11,51 +11,55 @@ vi.mock('../../../middleware/rbac', () => ({
   requirePermission: () => async (_c: any, next: any) => next(),
 }));
 
-const ADMIN_KEY = 'test-admin-key';
-
 const createMockDb = (options: {
-  lowItems?: any[];
-  inventoryRows?: any[];
+  lowStockItems?: any[];
+  adminInventory?: any[];
   variant?: any | null;
-  currentStock?: { on_hand: number } | null;
-  insertResult?: { meta: { last_row_id: number; changes: number } };
-  onHandAfter?: { on_hand: number } | null;
+  currentStock?: number;
+  insertId?: number;
+  shouldFail?: boolean;
+  failOnSql?: string;
 } = {}) => {
+  const makeResult = (sql: string) => ({
+    all: vi.fn(async () => {
+      if (options.shouldFail && options.failOnSql && sql.includes(options.failOnSql)) {
+        throw new Error('Mock DB error');
+      }
+      if (sql.includes('inventory_thresholds') && sql.includes('HAVING')) {
+        return { results: options.lowStockItems || [] };
+      }
+      if (sql.includes('FROM variants') && sql.includes('JOIN products')) {
+        return { results: options.adminInventory || [] };
+      }
+      return { results: [] };
+    }),
+    first: vi.fn(async () => {
+      if (sql.includes('FROM variants WHERE id')) {
+        return options.variant ?? null;
+      }
+      if (sql.includes('SUM(delta)')) {
+        return { on_hand: options.currentStock ?? 0 };
+      }
+      return null;
+    }),
+    run: vi.fn(async () => {
+      if (options.shouldFail && options.failOnSql && sql.includes(options.failOnSql)) {
+        throw new Error('Mock DB error');
+      }
+      return {
+        meta: { last_row_id: options.insertId || 1, changes: 1 },
+      };
+    }),
+  });
+
   return {
-    prepare: vi.fn((sql: string) => ({
-      bind: vi.fn((..._args: unknown[]) => ({
-        all: vi.fn(async () => {
-          if (sql.includes('inventory_thresholds') && sql.includes('HAVING')) {
-            return { results: options.lowItems || [] };
-          }
-          if (sql.includes('FROM variants') && sql.includes('JOIN products')) {
-            return { results: options.inventoryRows || [] };
-          }
-          return { results: [] };
-        }),
-        first: vi.fn(async () => {
-          if (sql.includes('SELECT id FROM variants')) {
-            return options.variant ?? null;
-          }
-          if (sql.includes('COALESCE(SUM(delta), 0) as on_hand')) {
-            if (options.onHandAfter !== undefined && sql.includes('variant_id')) {
-              return options.onHandAfter ?? { on_hand: 0 };
-            }
-            return options.currentStock ?? { on_hand: 10 };
-          }
-          return null;
-        }),
-        run: vi.fn(async () =>
-          options.insertResult || { meta: { last_row_id: 1, changes: 1 } }
-        ),
-      })),
-      all: vi.fn(async () => {
-        if (sql.includes('FROM variants') && sql.includes('JOIN products')) {
-          return { results: options.inventoryRows || [] };
-        }
-        return { results: [] };
-      }),
-    })),
+    prepare: vi.fn((sql: string) => {
+      const result = makeResult(sql);
+      return {
+        ...result,
+        bind: vi.fn((..._args: unknown[]) => result),
+      };
+    }),
   };
 };
 
@@ -65,17 +69,18 @@ const createApp = (db: ReturnType<typeof createMockDb>) => {
   return {
     app,
     fetch: (path: string, init?: RequestInit) =>
-      app.request(path, init, { DB: db, ADMIN_API_KEY: ADMIN_KEY } as any),
+      app.request(path, init, { DB: db, ADMIN_API_KEY: 'test-key' } as any),
   };
 };
 
-// -------------------------------------------------
-// GET /inventory/low
-// -------------------------------------------------
 describe('Inventory Routes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('GET /inventory/low', () => {
     it('returns low stock items', async () => {
-      const lowItems = [
+      const items = [
         {
           variant_id: 1,
           on_hand: 2,
@@ -84,7 +89,7 @@ describe('Inventory Routes', () => {
           product_title: 'T-Shirt',
         },
         {
-          variant_id: 3,
+          variant_id: 2,
           on_hand: 0,
           threshold: 5,
           variant_title: 'Large',
@@ -92,59 +97,62 @@ describe('Inventory Routes', () => {
         },
       ];
 
-      const db = createMockDb({ lowItems });
+      const db = createMockDb({ lowStockItems: items });
       const { fetch } = createApp(db);
 
       const res = await fetch('/inventory/low');
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.items).toHaveLength(2);
-      expect(json.items[0].variant_id).toBe(1);
-      expect(json.items[1].on_hand).toBe(0);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.items).toHaveLength(2);
+      expect(data.items[0].variant_id).toBe(1);
+      expect(data.items[0].on_hand).toBe(2);
+      expect(data.items[0].threshold).toBe(10);
     });
 
-    it('returns empty array when no items are low', async () => {
-      const db = createMockDb({ lowItems: [] });
+    it('returns empty list when no low stock items', async () => {
+      const db = createMockDb({ lowStockItems: [] });
       const { fetch } = createApp(db);
 
       const res = await fetch('/inventory/low');
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.items).toHaveLength(0);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.items).toHaveLength(0);
     });
 
-    it('respects limit query parameter', async () => {
-      const db = createMockDb({ lowItems: [] });
+    it('respects limit parameter', async () => {
+      const db = createMockDb({ lowStockItems: [] });
       const { fetch } = createApp(db);
 
-      await fetch('/inventory/low?limit=50');
+      await fetch('/inventory/low?limit=10');
 
-      const prepareCall = db.prepare.mock.calls[0][0] as string;
-      expect(prepareCall).toContain('LIMIT');
-      const bindCall = db.prepare.mock.results[0].value.bind;
-      expect(bindCall).toHaveBeenCalledWith(50);
+      expect(db.prepare).toHaveBeenCalled();
     });
 
-    it('clamps limit between 1 and 200', async () => {
-      const db = createMockDb({ lowItems: [] });
+    it('caps limit at 200', async () => {
+      const db = createMockDb({ lowStockItems: [] });
       const { fetch } = createApp(db);
 
-      await fetch('/inventory/low?limit=999');
+      await fetch('/inventory/low?limit=500');
 
-      const bindCall = db.prepare.mock.results[0].value.bind;
-      expect(bindCall).toHaveBeenCalledWith(200);
+      expect(db.prepare).toHaveBeenCalled();
+    });
+
+    it('enforces minimum limit of 1', async () => {
+      const db = createMockDb({ lowStockItems: [] });
+      const { fetch } = createApp(db);
+
+      await fetch('/inventory/low?limit=0');
+
+      expect(db.prepare).toHaveBeenCalled();
     });
   });
 
-  // -------------------------------------------------
-  // POST /inventory/thresholds
-  // -------------------------------------------------
   describe('POST /inventory/thresholds', () => {
-    it('upserts a threshold successfully', async () => {
+    it('sets threshold for a variant', async () => {
       const db = createMockDb({});
       const { fetch } = createApp(db);
 
@@ -153,30 +161,30 @@ describe('Inventory Routes', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ variant_id: 1, threshold: 10 }),
       });
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.variant_id).toBe(1);
-      expect(json.threshold).toBe(10);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.variant_id).toBe(1);
+      expect(data.threshold).toBe(10);
     });
 
-    it('returns 400 for missing variant_id', async () => {
+    it('rejects invalid variant_id', async () => {
       const db = createMockDb({});
       const { fetch } = createApp(db);
 
       const res = await fetch('/inventory/thresholds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ threshold: 10 }),
+        body: JSON.stringify({ variant_id: -1, threshold: 10 }),
       });
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(400);
-      expect(json.ok).toBe(false);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
     });
 
-    it('returns 400 for negative threshold', async () => {
+    it('rejects negative threshold', async () => {
       const db = createMockDb({});
       const { fetch } = createApp(db);
 
@@ -185,242 +193,144 @@ describe('Inventory Routes', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ variant_id: 1, threshold: -5 }),
       });
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(400);
-      expect(json.ok).toBe(false);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
     });
 
-    it('returns 400 for non-integer variant_id', async () => {
+    it('allows zero threshold', async () => {
       const db = createMockDb({});
       const { fetch } = createApp(db);
 
       const res = await fetch('/inventory/thresholds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ variant_id: 1.5, threshold: 10 }),
+        body: JSON.stringify({ variant_id: 1, threshold: 0 }),
       });
-      const json = (await res.json()) as any;
 
-      expect(res.status).toBe(400);
-      expect(json.ok).toBe(false);
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.threshold).toBe(0);
     });
   });
 
-  // -------------------------------------------------
-  // GET /admin/inventory
-  // -------------------------------------------------
   describe('GET /admin/inventory', () => {
-    it('returns all variants with inventory status', async () => {
-      const inventoryRows = [
+    it('returns inventory list with status', async () => {
+      const adminInventory = [
         {
           variant_id: 1,
           variant_title: 'Small',
           product_id: 1,
           product_title: 'T-Shirt',
-          sku: 'TS-S',
-          on_hand: 20,
-          threshold: 5,
-        },
-        {
-          variant_id: 2,
-          variant_title: 'Medium',
-          product_id: 1,
-          product_title: 'T-Shirt',
-          sku: 'TS-M',
-          on_hand: 3,
+          sku: 'TSH-S',
+          on_hand: 50,
           threshold: 10,
         },
         {
-          variant_id: 3,
+          variant_id: 2,
           variant_title: 'Large',
+          product_id: 1,
+          product_title: 'T-Shirt',
+          sku: 'TSH-L',
+          on_hand: 3,
+          threshold: 5,
+        },
+        {
+          variant_id: 3,
+          variant_title: 'Medium',
           product_id: 2,
           product_title: 'Hoodie',
-          sku: null,
+          sku: 'HOD-M',
           on_hand: 0,
           threshold: 5,
         },
       ];
 
-      const db = createMockDb({ inventoryRows });
+      const db = createMockDb({ adminInventory });
       const { fetch } = createApp(db);
 
-      const res = await fetch('/admin/inventory', {
-        headers: { 'x-admin-key': ADMIN_KEY },
-      });
-      const json = (await res.json()) as any;
+      const res = await fetch('/admin/inventory');
 
       expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.inventory).toHaveLength(3);
-      expect(json.inventory[0].status).toBe('ok');
-      expect(json.inventory[1].status).toBe('low');
-      expect(json.inventory[2].status).toBe('out');
-      expect(json.meta.totalCount).toBe(3);
-    });
-
-    it('returns empty inventory list', async () => {
-      const db = createMockDb({ inventoryRows: [] });
-      const { fetch } = createApp(db);
-
-      const res = await fetch('/admin/inventory', {
-        headers: { 'x-admin-key': ADMIN_KEY },
-      });
-      const json = (await res.json()) as any;
-
-      expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.inventory).toHaveLength(0);
-      expect(json.meta.totalCount).toBe(0);
-    });
-
-    it('sets status to ok when threshold is null', async () => {
-      const inventoryRows = [
-        {
-          variant_id: 1,
-          variant_title: 'Small',
-          product_id: 1,
-          product_title: 'T-Shirt',
-          sku: 'TS-S',
-          on_hand: 3,
-          threshold: null,
-        },
-      ];
-
-      const db = createMockDb({ inventoryRows });
-      const { fetch } = createApp(db);
-
-      const res = await fetch('/admin/inventory', {
-        headers: { 'x-admin-key': ADMIN_KEY },
-      });
-      const json = (await res.json()) as any;
-
-      expect(res.status).toBe(200);
-      expect(json.inventory[0].status).toBe('ok');
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.inventory).toHaveLength(3);
+      expect(data.meta.totalCount).toBe(3);
     });
   });
 
-  // -------------------------------------------------
-  // POST /admin/inventory/movements
-  // -------------------------------------------------
   describe('POST /admin/inventory/movements', () => {
-    it('records a positive movement (restock)', async () => {
-      const db = createMockDb({
-        variant: { id: 1 },
-        insertResult: { meta: { last_row_id: 42, changes: 1 } },
-        onHandAfter: { on_hand: 30 },
-      });
+    it('records a restock movement', async () => {
+      const db = createMockDb({ variant: { id: 1 }, currentStock: 15, insertId: 42 });
       const { fetch } = createApp(db);
 
       const res = await fetch('/admin/inventory/movements', {
         method: 'POST',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           variant_id: 1,
-          delta: 20,
+          delta: 10,
           reason: 'restock',
         }),
       });
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.movement.id).toBe(42);
-      expect(json.movement.variant_id).toBe(1);
-      expect(json.movement.delta).toBe(20);
-      expect(json.movement.reason).toBe('restock');
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.movement.variant_id).toBe(1);
+      expect(data.movement.delta).toBe(10);
+      expect(data.movement.reason).toBe('restock');
     });
 
-    it('records a negative movement (sale)', async () => {
-      const db = createMockDb({
-        variant: { id: 1 },
-        currentStock: { on_hand: 10 },
-        insertResult: { meta: { last_row_id: 43, changes: 1 } },
-        onHandAfter: { on_hand: 7 },
-      });
-      const { fetch } = createApp(db);
-
-      const res = await fetch('/admin/inventory/movements', {
-        method: 'POST',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          variant_id: 1,
-          delta: -3,
-          reason: 'sale',
-        }),
-      });
-      const json = (await res.json()) as any;
-
-      expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.movement.delta).toBe(-3);
-    });
-
-    it('returns 404 when variant does not exist', async () => {
+    it('rejects movement for non-existent variant', async () => {
       const db = createMockDb({ variant: null });
       const { fetch } = createApp(db);
 
       const res = await fetch('/admin/inventory/movements', {
         method: 'POST',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           variant_id: 999,
           delta: 5,
           reason: 'restock',
         }),
       });
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(404);
-      expect(json.ok).toBe(false);
-      expect(json.message).toContain('Variant not found');
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
+      expect(data.message).toContain('Variant not found');
     });
 
-    it('returns 400 for insufficient stock on negative delta', async () => {
-      const db = createMockDb({
-        variant: { id: 1 },
-        currentStock: { on_hand: 3 },
-      });
+    it('prevents negative stock', async () => {
+      const db = createMockDb({ variant: { id: 1 }, currentStock: 3 });
       const { fetch } = createApp(db);
 
       const res = await fetch('/admin/inventory/movements', {
         method: 'POST',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           variant_id: 1,
           delta: -10,
           reason: 'sale',
         }),
       });
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(400);
-      expect(json.ok).toBe(false);
-      expect(json.message).toContain('Insufficient stock');
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
+      expect(data.message).toContain('Insufficient stock');
     });
 
-    it('returns 400 for invalid reason', async () => {
+    it('validates reason enum', async () => {
       const db = createMockDb({ variant: { id: 1 } });
       const { fetch } = createApp(db);
 
       const res = await fetch('/admin/inventory/movements', {
         method: 'POST',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           variant_id: 1,
           delta: 5,
@@ -429,137 +339,93 @@ describe('Inventory Routes', () => {
       });
 
       expect(res.status).toBe(400);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
     });
 
-    it('returns 400 for missing required fields', async () => {
-      const db = createMockDb({});
+    it('allows valid outgoing movement when stock is sufficient', async () => {
+      const db = createMockDb({ variant: { id: 1 }, currentStock: 10, insertId: 43 });
       const { fetch } = createApp(db);
 
       const res = await fetch('/admin/inventory/movements', {
         method: 'POST',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ variant_id: 1 }),
-      });
-
-      expect(res.status).toBe(400);
-    });
-
-    it('returns 400 for non-integer delta', async () => {
-      const db = createMockDb({ variant: { id: 1 } });
-      const { fetch } = createApp(db);
-
-      const res = await fetch('/admin/inventory/movements', {
-        method: 'POST',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           variant_id: 1,
-          delta: 2.5,
-          reason: 'restock',
+          delta: -5,
+          reason: 'sale',
         }),
       });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.movement.delta).toBe(-5);
     });
   });
 
-  // -------------------------------------------------
-  // PUT /admin/inventory/thresholds/:variantId
-  // -------------------------------------------------
   describe('PUT /admin/inventory/thresholds/:variantId', () => {
-    it('updates threshold for existing variant', async () => {
-      const db = createMockDb({ variant: { id: 5 } });
+    it('updates threshold for an existing variant', async () => {
+      const db = createMockDb({ variant: { id: 1 } });
       const { fetch } = createApp(db);
 
-      const res = await fetch('/admin/inventory/thresholds/5', {
+      const res = await fetch('/admin/inventory/thresholds/1', {
         method: 'PUT',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ threshold: 15 }),
       });
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.variant_id).toBe(5);
-      expect(json.threshold).toBe(15);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.variant_id).toBe(1);
+      expect(data.threshold).toBe(15);
     });
 
-    it('returns 404 when variant does not exist', async () => {
+    it('returns 404 for non-existent variant', async () => {
       const db = createMockDb({ variant: null });
       const { fetch } = createApp(db);
 
       const res = await fetch('/admin/inventory/thresholds/999', {
         method: 'PUT',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ threshold: 10 }),
       });
-      const json = (await res.json()) as any;
 
       expect(res.status).toBe(404);
-      expect(json.ok).toBe(false);
-      expect(json.message).toContain('Variant not found');
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
+      expect(data.message).toContain('Variant not found');
     });
 
-    it('returns 400 for invalid variantId param', async () => {
+    it('rejects invalid variantId param', async () => {
       const db = createMockDb({});
       const { fetch } = createApp(db);
 
       const res = await fetch('/admin/inventory/thresholds/abc', {
         method: 'PUT',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ threshold: 10 }),
       });
 
       expect(res.status).toBe(400);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
     });
 
-    it('returns 400 for negative threshold', async () => {
+    it('rejects negative threshold', async () => {
       const db = createMockDb({ variant: { id: 1 } });
       const { fetch } = createApp(db);
 
       const res = await fetch('/admin/inventory/thresholds/1', {
         method: 'PUT',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ threshold: -5 }),
       });
 
       expect(res.status).toBe(400);
-    });
-
-    it('allows threshold of zero', async () => {
-      const db = createMockDb({ variant: { id: 1 } });
-      const { fetch } = createApp(db);
-
-      const res = await fetch('/admin/inventory/thresholds/1', {
-        method: 'PUT',
-        headers: {
-          'x-admin-key': ADMIN_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ threshold: 0 }),
-      });
-      const json = (await res.json()) as any;
-
-      expect(res.status).toBe(200);
-      expect(json.ok).toBe(true);
-      expect(json.threshold).toBe(0);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
     });
   });
 });

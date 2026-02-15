@@ -254,7 +254,7 @@ export default function ReviewSection({ productId }: Props) {
       ) : (
         <div className="mt-6 text-center py-8">
           <p className="text-sm text-gray-500">{t('reviews.noReviews')}</p>
-          <p className="mt-1 text-sm text-gray-400">{t('reviews.noReviewsDescription')}</p>
+          <p className="mt-1 text-sm text-gray-500">{t('reviews.noReviewsDescription')}</p>
           {!showForm && (
             <button
               type="button"

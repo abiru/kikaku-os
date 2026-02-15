@@ -8,6 +8,7 @@
     "dist"
   ],
   "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   }

@@ -20,26 +20,26 @@ const extractMetaTags = (html: string): Record<string, string> => {
   // og:image
   const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
     || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-  if (ogImageMatch) meta.ogImage = ogImageMatch[1];
+  if (ogImageMatch && ogImageMatch[1]) meta.ogImage = ogImageMatch[1];
 
   // og:title
   const ogTitleMatch = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
     || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
-  if (ogTitleMatch) meta.ogTitle = ogTitleMatch[1];
+  if (ogTitleMatch && ogTitleMatch[1]) meta.ogTitle = ogTitleMatch[1];
 
   // og:description
   const ogDescMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
     || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i);
-  if (ogDescMatch) meta.ogDescription = ogDescMatch[1];
+  if (ogDescMatch && ogDescMatch[1]) meta.ogDescription = ogDescMatch[1];
 
   // description
   const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
     || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i);
-  if (descMatch) meta.description = descMatch[1];
+  if (descMatch && descMatch[1]) meta.description = descMatch[1];
 
   // title tag
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  if (titleMatch) meta.title = titleMatch[1].trim();
+  if (titleMatch && titleMatch[1]) meta.title = titleMatch[1].trim();
 
   return meta;
 };
@@ -64,7 +64,7 @@ const extractMainImage = (html: string, baseUrl: string): string | null => {
 
   for (const pattern of patterns) {
     const match = html.match(pattern);
-    if (match) {
+    if (match && match[1]) {
       let url = match[1];
       if (url.startsWith('//')) {
         url = 'https:' + url;
@@ -84,38 +84,38 @@ const extractSpecs = (html: string): Record<string, string> => {
 
   // Power/Wattage
   const powerMatch = html.match(/(?:消費電力|Power|Wattage|Actual\s*Power)[:\s]*(\d+)\s*[Ww]/i);
-  if (powerMatch) specs.power = `${powerMatch[1]}W`;
+  if (powerMatch && powerMatch[1]) specs.power = `${powerMatch[1]}W`;
 
   // PPE/Efficacy
   const ppeMatch = html.match(/(?:PPE|Efficacy)[:\s]*([\d.]+)\s*(?:μmol\/J|umol\/J)/i);
-  if (ppeMatch) specs.ppe = `${ppeMatch[1]} μmol/J`;
+  if (ppeMatch && ppeMatch[1]) specs.ppe = `${ppeMatch[1]} μmol/J`;
 
   // PPF
   const ppfMatch = html.match(/(?:PPF)[:\s]*([\d.]+)\s*(?:μmol\/S|umol\/S|μmol\/s)/i);
-  if (ppfMatch) specs.ppf = `${ppfMatch[1]} μmol/S`;
+  if (ppfMatch && ppfMatch[1]) specs.ppf = `${ppfMatch[1]} μmol/S`;
 
   // Coverage - various formats
   const coverageMatch = html.match(/(?:Coverage|カバレッジ|Flower(?:ing)?\s*Coverage)[:\s]*([\d.]+)\s*[x×]\s*([\d.]+)\s*(ft|m|cm)/i);
-  if (coverageMatch) specs.coverage = `${coverageMatch[1]}x${coverageMatch[2]} ${coverageMatch[3]}`;
+  if (coverageMatch && coverageMatch[1] && coverageMatch[2] && coverageMatch[3]) specs.coverage = `${coverageMatch[1]}x${coverageMatch[2]} ${coverageMatch[3]}`;
 
   // LED chip info
   const ledMatch = html.match(/(Samsung\s*LM301[A-Z]*(?:\s*EVO)?|Bridgelux|Osram|Epistar)/i);
-  if (ledMatch) specs.led = ledMatch[1];
+  if (ledMatch && ledMatch[1]) specs.led = ledMatch[1];
 
   // LED count
   const ledCountMatch = html.match(/(\d+)\s*(?:pcs|pieces|個)?\s*(?:LEDs?|ダイオード|diodes)/i);
-  if (ledCountMatch) specs.led_count = `${ledCountMatch[1]}個`;
+  if (ledCountMatch && ledCountMatch[1]) specs.led_count = `${ledCountMatch[1]}個`;
 
   // Spectrum
   const spectrumMatch = html.match(/(?:Full\s*Spectrum|フルスペクトラム|Spectrum)[:\s]*([^<\n]+)/i);
-  if (spectrumMatch && spectrumMatch[1].length < 100) specs.spectrum = spectrumMatch[1].trim();
+  if (spectrumMatch && spectrumMatch[1] && spectrumMatch[1].length < 100) specs.spectrum = spectrumMatch[1].trim();
 
   return specs;
 };
 
 const extractBrandFromUrl = (url: string): string => {
   const urlMatch = url.match(/(?:www\.)?([^.]+)\./i);
-  if (urlMatch) {
+  if (urlMatch && urlMatch[1]) {
     const domain = urlMatch[1].toLowerCase();
     if (domain.includes('mars')) return 'Mars Hydro';
     if (domain.includes('spider')) return 'Spider Farmer';
@@ -151,7 +151,7 @@ const extractBrand = (html: string, url: string): string => {
 const generateJapaneseTitle = (originalTitle: string, brand: string, specs: Record<string, string>): string => {
   // Extract model from title
   const modelMatch = originalTitle.match(/([A-Z]{2,}[-\s]?\d{3,}[A-Z]*)/i);
-  const model = modelMatch ? modelMatch[1].toUpperCase() : '';
+  const model = modelMatch && modelMatch[1] ? modelMatch[1].toUpperCase() : '';
 
   let title = '';
   if (brand) title += `【${brand}】`;
