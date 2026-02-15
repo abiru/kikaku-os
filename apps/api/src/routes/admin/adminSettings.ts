@@ -32,14 +32,15 @@ adminSettings.get('/', requirePermission(PERMISSIONS.SETTINGS_READ), async (c) =
     const settings = result.results || [];
 
     // Group by category
-    const grouped = settings.reduce((acc: Record<string, AppSettingRow[]>, setting: AppSettingRow) => {
-      const category = setting.category || 'general';
+    type SettingRow = Record<string, unknown> & { category?: string };
+    const grouped = settings.reduce((acc: Record<string, SettingRow[]>, setting) => {
+      const row = setting as SettingRow;
+      const category = (row.category as string) || 'general';
       if (!acc[category]) {
-        acc[category] = [];
+        return { ...acc, [category]: [row] };
       }
-      acc[category].push(setting);
-      return acc;
-    }, {});
+      return { ...acc, [category]: [...acc[category], row] };
+    }, {} as Record<string, SettingRow[]>);
 
     return jsonOk(c, { settings, grouped });
   } catch (error) {
