@@ -110,7 +110,7 @@ export const getEmailTemplate = async (
   slug: string
 ): Promise<EmailTemplate | null> => {
   const result = await env.DB.prepare(
-    `SELECT * FROM email_templates WHERE slug = ?`
+    `SELECT id, slug, name, subject, body_html, body_text, variables, created_at, updated_at FROM email_templates WHERE slug = ?`
   ).bind(slug).first<EmailTemplate>();
 
   return result || null;
@@ -120,7 +120,7 @@ export const getAllEmailTemplates = async (
   env: Env['Bindings']
 ): Promise<EmailTemplate[]> => {
   const result = await env.DB.prepare(
-    `SELECT * FROM email_templates ORDER BY name`
+    `SELECT id, slug, name, subject, body_html, body_text, variables, created_at, updated_at FROM email_templates ORDER BY name`
   ).all<EmailTemplate>();
 
   return result.results || [];

@@ -196,7 +196,10 @@ quotations.get('/quotations/:token', async (c) => {
 
   // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
   const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE public_token = ?`
+    `SELECT id, quotation_number, customer_company, customer_name, customer_email, customer_phone,
+            subtotal, tax_amount, total_amount, currency, valid_until, status,
+            converted_order_id, notes, metadata, public_token, created_at, updated_at
+     FROM quotations WHERE public_token = ?`
   ).bind(token).first();
 
   if (!quotation) {
@@ -204,7 +207,8 @@ quotations.get('/quotations/:token', async (c) => {
   }
 
   const items = await c.env.DB.prepare(
-    `SELECT * FROM quotation_items WHERE quotation_id = ? ORDER BY id`
+    `SELECT id, quotation_id, variant_id, product_title, variant_title, quantity, unit_price, subtotal, metadata, created_at, updated_at
+     FROM quotation_items WHERE quotation_id = ? ORDER BY id`
   ).bind(quotation.id).all();
 
   return jsonOk(c, {
@@ -222,7 +226,9 @@ quotations.get('/quotations/:token/html', async (c) => {
 
   // Public endpoint: ONLY allow public_token lookup (no numeric ID to prevent IDOR)
   const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE public_token = ?`
+    `SELECT id, quotation_number, customer_company, customer_name, customer_email, customer_phone,
+            subtotal, tax_amount, total_amount, currency, valid_until, status, notes, created_at
+     FROM quotations WHERE public_token = ?`
   ).bind(token).first();
 
   if (!quotation) {
@@ -283,7 +289,9 @@ quotations.post('/quotations/:token/accept', async (c) => {
   const email = normalizeString(body?.email);
 
   const quotation = await c.env.DB.prepare(
-    `SELECT * FROM quotations WHERE public_token = ?`
+    `SELECT id, quotation_number, customer_company, customer_name, customer_email,
+            status, total_amount, currency, valid_until, public_token
+     FROM quotations WHERE public_token = ?`
   ).bind(token).first<any>();
 
   if (!quotation) {
@@ -306,7 +314,8 @@ quotations.post('/quotations/:token/accept', async (c) => {
 
   // Get quotation items
   const quotationItems = await c.env.DB.prepare(
-    `SELECT * FROM quotation_items WHERE quotation_id = ? ORDER BY id`
+    `SELECT id, quotation_id, variant_id, quantity, unit_price
+     FROM quotation_items WHERE quotation_id = ? ORDER BY id`
   ).bind(id).all<any>();
 
   if (!quotationItems.results || quotationItems.results.length === 0) {
@@ -537,7 +546,10 @@ quotations.get('/quotations', async (c) => {
 
   const offset = (page - 1) * perPage;
 
-  let query = `SELECT * FROM quotations`;
+  let query = `SELECT id, quotation_number, customer_company, customer_name, customer_email, customer_phone,
+          subtotal, tax_amount, total_amount, currency, valid_until, status,
+          converted_order_id, notes, metadata, public_token, created_at, updated_at
+   FROM quotations`;
   const params: any[] = [];
 
   if (status) {
