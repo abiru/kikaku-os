@@ -284,6 +284,14 @@ describe('AI SQL Security', () => {
         }
       });
 
+      it('blocks comma joins with non-whitelisted tables', () => {
+        const result = validateSql('SELECT * FROM products, sqlite_master');
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.message).toContain("Access to table 'sqlite_master' is not allowed");
+        }
+      });
+
       it('validates all tables in complex JOINs', () => {
         const result = validateSql(
           'SELECT * FROM orders ' +
@@ -325,6 +333,22 @@ describe('AI SQL Security', () => {
         expect(result.ok).toBe(true);
         if (result.ok) {
           expect(result.sql).toMatch(/LIMIT 150/i);
+        }
+      });
+
+      it('rejects negative LIMIT values', () => {
+        const result = validateSql('SELECT * FROM products LIMIT -1');
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.message).toContain('LIMIT clause must use non-negative integer values');
+        }
+      });
+
+      it('caps LIMIT while preserving OFFSET', () => {
+        const result = validateSql('SELECT * FROM products LIMIT 1000 OFFSET 10');
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.sql).toContain('LIMIT 200 OFFSET 10');
         }
       });
     });
@@ -391,6 +415,12 @@ describe('AI SQL Security', () => {
     it('returns lowercase table names', () => {
       const tables = extractTableNames('SELECT * FROM Products JOIN Variants');
       expect(tables).toEqual(['products', 'variants']);
+    });
+
+    it('extracts tables from comma joins', () => {
+      const tables = extractTableNames('SELECT * FROM products, variants');
+      expect(tables).toContain('products');
+      expect(tables).toContain('variants');
     });
   });
 

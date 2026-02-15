@@ -31,14 +31,24 @@ const MAX_LIMIT = 200;
  * Looks for identifiers after FROM, JOIN keywords
  */
 export const extractTableNames = (sql: string): string[] => {
-  const tables: string[] = [];
-  // Match table names after FROM and JOIN variants
-  const tablePattern = /\b(?:FROM|JOIN|INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|CROSS\s+JOIN|LEFT\s+OUTER\s+JOIN)\s+(\w+)/gi;
-  let match;
-  while ((match = tablePattern.exec(sql)) !== null) {
-    tables.push(match[1].toLowerCase());
+  const withoutStrings = sql.replace(/'[^']*'/g, '');
+  const fromMatch = withoutStrings.match(/\bFROM\b([\s\S]+)/i);
+  if (!fromMatch) return [];
+
+  const fromClause = fromMatch[1]
+    .split(/\bWHERE\b|\bGROUP\b|\bORDER\b|\bLIMIT\b|\bHAVING\b|\bUNION\b|\bEXCEPT\b|\bINTERSECT\b/i)[0]
+    .replace(/\b(?:INNER|LEFT(?:\s+OUTER)?|RIGHT(?:\s+OUTER)?|CROSS)\s+JOIN\b/gi, ',')
+    .replace(/\bJOIN\b/gi, ',');
+
+  const tables = new Set<string>();
+  const tableTokenPattern = /^\s*([A-Za-z_][A-Za-z0-9_]*)\b/;
+  for (const token of fromClause.split(',')) {
+    const tableMatch = token.match(tableTokenPattern);
+    if (tableMatch) {
+      tables.add(tableMatch[1].toLowerCase());
+    }
   }
-  return tables;
+  return [...tables];
 };
 
 /**
@@ -100,14 +110,17 @@ export const validateSql = (input: string): { ok: true; sql: string } | { ok: fa
   const hasLimit = /\bLIMIT\b/i.test(sql);
   let finalSql = sql;
   if (hasLimit) {
-    // Validate existing LIMIT isn't too high
-    const limitMatch = sql.match(/\bLIMIT\s+(\d+)/i);
-    if (limitMatch) {
-      const limitVal = parseInt(limitMatch[1], 10);
-      if (limitVal > MAX_LIMIT) {
-        finalSql = sql.replace(/\bLIMIT\s+\d+/i, `LIMIT ${MAX_LIMIT}`);
-      }
+    const limitMatch = sql.match(/\bLIMIT\s+(\d+)(?:\s+OFFSET\s+(\d+))?\s*$/i);
+    if (!limitMatch) {
+      return { ok: false, message: 'LIMIT clause must use non-negative integer values' };
     }
+    const limitVal = parseInt(limitMatch[1], 10);
+    const offsetVal = limitMatch[2];
+    const cappedLimit = Math.min(limitVal, MAX_LIMIT);
+    finalSql = sql.replace(
+      /\bLIMIT\s+\d+(?:\s+OFFSET\s+\d+)?\s*$/i,
+      `LIMIT ${cappedLimit}${offsetVal ? ` OFFSET ${offsetVal}` : ''}`
+    );
   } else {
     finalSql = `${sql} LIMIT ${MAX_LIMIT}`;
   }
