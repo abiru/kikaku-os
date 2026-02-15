@@ -165,7 +165,7 @@ adminTaxRates.put(
       const data = c.req.valid('json') as UpdateTaxRateInput;
 
       // Check if tax rate exists
-      const existing = await c.env.DB.prepare('SELECT * FROM tax_rates WHERE id = ?')
+      const existing = await c.env.DB.prepare('SELECT id FROM tax_rates WHERE id = ?')
         .bind(id)
         .first();
 
@@ -261,7 +261,7 @@ adminTaxRates.delete(
       const { id } = c.req.valid('param') as TaxRateIdParam;
 
       // Check if tax rate exists
-      const existing = await c.env.DB.prepare('SELECT * FROM tax_rates WHERE id = ?')
+      const existing = await c.env.DB.prepare('SELECT id, name FROM tax_rates WHERE id = ?')
         .bind(id)
         .first();
 
