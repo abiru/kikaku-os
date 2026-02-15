@@ -8,9 +8,33 @@ on:
   workflow_dispatch:  # Allow manual deployment
 
 jobs:
+  validate-config:
+    name: Validate deployment config
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    steps:
+      - name: Show deployment URLs
+        env:
+          PROD_API_BASE_URL: ${{ vars.PROD_API_BASE_URL || 'https://kikaku-os-api.workers.dev' }}
+          PROD_STOREFRONT_URL: ${{ vars.PROD_STOREFRONT_URL || 'https://kikaku-storefront.pages.dev' }}
+        run: |
+          echo "API URL: $PROD_API_BASE_URL"
+          echo "Storefront URL: $PROD_STOREFRONT_URL"
+          if [ -z "${{ vars.PROD_API_BASE_URL }}" ]; then
+            echo "::warning::PROD_API_BASE_URL not set — using default workers.dev URL"
+          fi
+          if [ -z "${{ vars.PROD_STOREFRONT_URL }}" ]; then
+            echo "::warning::PROD_STOREFRONT_URL not set — using default pages.dev URL"
+          fi
+
   build-api:
     name: Build API
     runs-on: ubuntu-latest
+    needs: [validate-config]
     if: >-
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_run' &&
@@ -39,6 +63,7 @@ jobs:
   build-storefront:
     name: Build Storefront
     runs-on: ubuntu-latest
+    needs: [validate-config]
     if: >-
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_run' &&
@@ -64,8 +89,7 @@ jobs:
       - name: Build storefront
         run: pnpm -C apps/storefront build
         env:
-          # NOTE: Update these URLs after custom domain setup
-          PUBLIC_API_BASE: https://kikaku-os-api.workers.dev
+          PUBLIC_API_BASE: ${{ vars.PROD_API_BASE_URL || 'https://kikaku-os-api.workers.dev' }}
           PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
 
@@ -137,10 +161,11 @@ jobs:
 
       - name: Verify API deployment
         run: |
-          # NOTE: Update with your actual API domain after custom domain setup
-          API_URL="https://kikaku-os-api.workers.dev"
+          API_URL="${PROD_API_BASE_URL}"
           echo "Testing health endpoint: $API_URL/health"
           curl -sf "$API_URL/health" | jq -e '.database == "ok"'
+        env:
+          PROD_API_BASE_URL: ${{ vars.PROD_API_BASE_URL || 'https://kikaku-os-api.workers.dev' }}
 
   deploy-storefront:
     name: Deploy Storefront to Cloudflare Pages
@@ -172,8 +197,7 @@ jobs:
       - name: Build storefront
         run: pnpm -C apps/storefront build
         env:
-          # NOTE: Update these URLs after custom domain setup
-          PUBLIC_API_BASE: https://kikaku-os-api.workers.dev
+          PUBLIC_API_BASE: ${{ vars.PROD_API_BASE_URL || 'https://kikaku-os-api.workers.dev' }}
           PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PUBLIC_CLERK_PUBLISHABLE_KEY }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
 
@@ -186,10 +210,11 @@ jobs:
       - name: Verify storefront deployment
         run: |
           sleep 10
-          # NOTE: Update with your actual storefront domain after custom domain setup
-          STOREFRONT_URL="https://kikaku-storefront.pages.dev"
+          STOREFRONT_URL="${PROD_STOREFRONT_URL}"
           echo "Testing storefront: $STOREFRONT_URL"
           curl -sf "$STOREFRONT_URL/" | grep -q "Led Kikaku" || echo "Warning: Could not verify storefront content"
+        env:
+          PROD_STOREFRONT_URL: ${{ vars.PROD_STOREFRONT_URL || 'https://kikaku-storefront.pages.dev' }}
 
   smoke-test:
     name: Production Smoke Tests
@@ -207,8 +232,21 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Run smoke tests
+        env:
+          PROD_API_BASE_URL: ${{ vars.PROD_API_BASE_URL || 'https://kikaku-os-api.workers.dev' }}
+          PROD_STOREFRONT_URL: ${{ vars.PROD_STOREFRONT_URL || 'https://kikaku-storefront.pages.dev' }}
         run: |
-          # NOTE: Update these URLs after custom domain setup
-          export API_URL="https://kikaku-os-api.workers.dev"
-          export STOREFRONT_URL="https://kikaku-storefront.pages.dev"
+          export API_URL="${PROD_API_BASE_URL}"
+          export STOREFRONT_URL="${PROD_STOREFRONT_URL}"
           bash scripts/smoke-test-prod.sh
+
+          # Auth protection (should return 401)
+          echo "✓ Testing auth protection"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/admin/products")
+          if [ "$STATUS" != "401" ]; then
+            echo "Error: Expected 401, got $STATUS"
+            exit 1
+          fi
+
+          echo "✅ All smoke tests passed!"
+
