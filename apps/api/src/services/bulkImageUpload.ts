@@ -98,7 +98,9 @@ export const parseCSV = async (content: string, db: D1Database): Promise<ParseRe
 
   for (let i = 0; i < dataLines.length; i++) {
     const rowNum = i + 2; // +2 because row 1 is header
-    const line = dataLines[i].trim();
+    const rawLine = dataLines[i];
+    if (!rawLine) continue;
+    const line = rawLine.trim();
 
     if (!line) continue;
 
@@ -109,11 +111,12 @@ export const parseCSV = async (content: string, db: D1Database): Promise<ParseRe
       continue;
     }
 
-    const productId = parseInt(parts[0], 10);
-    const imageUrl = parts[1];
+    const productIdStr = parts[0] ?? '';
+    const imageUrl = parts[1] ?? '';
+    const productId = parseInt(productIdStr, 10);
 
     if (isNaN(productId) || productId <= 0) {
-      errors.push({ row: rowNum, error: `Invalid product ID: ${parts[0]}` });
+      errors.push({ row: rowNum, error: `Invalid product ID: ${productIdStr}` });
       continue;
     }
 
@@ -203,6 +206,7 @@ export const parseJSON = async (content: string, db: D1Database): Promise<ParseR
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
+    if (!entry) continue;
     const rowNum = i + 1;
 
     if (!entry.product_id || !entry.image_urls || !Array.isArray(entry.image_urls)) {

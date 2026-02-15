@@ -7,8 +7,8 @@ export const parseStripeSignature = (header: string | null) => {
   const signatures: string[] = [];
   for (const part of parts) {
     const [key, value] = part.split('=');
-    if (key === 't') timestamp = value;
-    if (key === 'v1') signatures.push(value);
+    if (key === 't' && value !== undefined) timestamp = value;
+    if (key === 'v1' && value !== undefined) signatures.push(value);
   }
   if (!timestamp || signatures.length === 0) return null;
   return { timestamp, signatures };
@@ -18,7 +18,7 @@ const timingSafeEqual = (a: Uint8Array, b: Uint8Array) => {
   if (a.length !== b.length) return false;
   let result = 0;
   for (let i = 0; i < a.length; i += 1) {
-    result |= a[i] ^ b[i];
+    result |= (a[i] ?? 0) ^ (b[i] ?? 0);
   }
   return result === 0;
 };

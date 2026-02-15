@@ -189,7 +189,8 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 	if (!acc[perm.resource]) {
 		acc[perm.resource] = [];
 	}
-	acc[perm.resource].push(perm);
+	const group = acc[perm.resource];
+	if (group) group.push(perm);
 	return acc;
 }, {} as Record<string, Permission[]>);
 ---

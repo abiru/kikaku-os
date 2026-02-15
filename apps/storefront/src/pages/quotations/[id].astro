@@ -75,7 +75,7 @@ const getStatusBadge = (status: string) => {
     expired: { label: '期限切れ', class: 'bg-red-100 text-red-800' },
     cancelled: { label: 'キャンセル', class: 'bg-gray-100 text-gray-800' }
   };
-  return badges[status] || badges.draft;
+  return badges[status] ?? { label: '下書き', class: 'bg-gray-100 text-gray-800' };
 };
 
 const statusBadge = getStatusBadge(quotation.status);

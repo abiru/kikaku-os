@@ -159,9 +159,10 @@ checkout.post('/checkout/quote', async (c) => {
   const cartTotal = taxCalculation.totalAmount;
 
   let currency = 'JPY';
-  if (items.length > 0) {
-    const row = variantMap.get(items[0].variantId)!;
-    currency = (row.currency || 'JPY').toUpperCase();
+  const firstItem = items[0];
+  if (firstItem) {
+    const row = variantMap.get(firstItem.variantId);
+    currency = (row?.currency || 'JPY').toUpperCase();
   }
 
   // Coupon validation and discount calculation

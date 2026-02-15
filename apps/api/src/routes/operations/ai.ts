@@ -35,8 +35,9 @@ export const extractTableNames = (sql: string): string[] => {
   const fromMatch = withoutStrings.match(/\bFROM\b([\s\S]+)/i);
   if (!fromMatch) return [];
 
-  const fromClause = fromMatch[1]
-    .split(/\bWHERE\b|\bGROUP\b|\bORDER\b|\bLIMIT\b|\bHAVING\b|\bUNION\b|\bEXCEPT\b|\bINTERSECT\b/i)[0]
+  const fromRaw = fromMatch[1] ?? '';
+  const fromClause = (fromRaw
+    .split(/\bWHERE\b|\bGROUP\b|\bORDER\b|\bLIMIT\b|\bHAVING\b|\bUNION\b|\bEXCEPT\b|\bINTERSECT\b/i)[0] ?? '')
     .replace(/\b(?:INNER|LEFT(?:\s+OUTER)?|RIGHT(?:\s+OUTER)?|CROSS)\s+JOIN\b/gi, ',')
     .replace(/\bJOIN\b/gi, ',');
 
@@ -44,7 +45,7 @@ export const extractTableNames = (sql: string): string[] => {
   const tableTokenPattern = /^\s*([A-Za-z_][A-Za-z0-9_]*)\b/;
   for (const token of fromClause.split(',')) {
     const tableMatch = token.match(tableTokenPattern);
-    if (tableMatch) {
+    if (tableMatch && tableMatch[1]) {
       tables.add(tableMatch[1].toLowerCase());
     }
   }
@@ -114,7 +115,7 @@ export const validateSql = (input: string): { ok: true; sql: string } | { ok: fa
     if (!limitMatch) {
       return { ok: false, message: 'LIMIT clause must use non-negative integer values' };
     }
-    const limitVal = parseInt(limitMatch[1], 10);
+    const limitVal = parseInt(limitMatch[1] ?? '0', 10);
     const offsetVal = limitMatch[2];
     const cappedLimit = Math.min(limitVal, MAX_LIMIT);
     finalSql = sql.replace(
@@ -132,7 +133,8 @@ const extractLimit = (sql: string): number => {
   const matches = [...sql.matchAll(/\bLIMIT\s+(\d+)/gi)];
   if (matches.length === 0) return MAX_LIMIT;
   const last = matches[matches.length - 1];
-  const value = Number(last[1]);
+  if (!last) return MAX_LIMIT;
+  const value = Number(last[1] ?? '0');
   return Number.isFinite(value) ? Math.min(value, MAX_LIMIT) : MAX_LIMIT;
 };
 
