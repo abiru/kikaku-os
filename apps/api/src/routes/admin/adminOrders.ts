@@ -5,7 +5,8 @@ import { jsonError, jsonOk } from '../../lib/http';
 import { validationErrorHandler } from '../../lib/validation';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
-import { orderIdParamSchema, orderListQuerySchema, createRefundSchema, PERMISSIONS } from '../../lib/schemas';
+import { orderIdParamSchema, orderListQuerySchema, createRefundSchema, cancelOrderSchema, PERMISSIONS } from '../../lib/schemas';
+import { cancelOrder } from '../../services/orderCancel';
 
 const adminOrders = new Hono<Env>();
 
@@ -337,6 +338,36 @@ adminOrders.post(
       console.error('Refund creation error:', err);
       return jsonError(c, 'Failed to create refund');
     }
+  }
+);
+
+// Cancel Order
+adminOrders.post(
+  '/admin/orders/:id/cancel',
+  requirePermission(PERMISSIONS.ORDERS_WRITE),
+  zValidator('param', orderIdParamSchema, validationErrorHandler),
+  zValidator('json', cancelOrderSchema, validationErrorHandler),
+  async (c) => {
+    const { id: orderId } = c.req.valid('param');
+    const { reason } = c.req.valid('json');
+
+    const result = await cancelOrder({
+      db: c.env.DB,
+      orderId,
+      reason,
+      actor: getActor(c),
+      stripeSecretKey: c.env.STRIPE_SECRET_KEY,
+    });
+
+    if (!result.ok) {
+      return jsonError(c, result.error, result.status);
+    }
+
+    return jsonOk(c, {
+      order: result.order,
+      stripeRefunded: result.stripeRefunded,
+      inventoryRestored: result.inventoryRestored,
+    });
   }
 );
 
