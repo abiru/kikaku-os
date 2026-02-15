@@ -75,7 +75,7 @@ export default function MarkdownPreview({
       )}
 
       {/* Character Count */}
-      <div className="mt-2 text-xs text-gray-400 text-right">
+      <div className="mt-2 text-xs text-gray-500 text-right">
         {value.length} 文字
       </div>
     </div>

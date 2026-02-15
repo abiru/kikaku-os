@@ -9,7 +9,7 @@ export function extractJSON(text: string): string {
     text.match(/```\n?([\s\S]*?)\n?```/);
 
   if (jsonMatch) {
-    return jsonMatch[1].trim();
+    return (jsonMatch[1] ?? '').trim();
   }
 
   // Try to find JSON object in text

@@ -35,6 +35,19 @@ type OrderResponse = {
   };
 };
 
+// NOTE: These integration tests require wrangler's unstable_dev API which
+// depends on a running local D1 database with applied migrations. They are
+// skipped in CI because:
+// 1. `unstable_dev` starts a full Cloudflare Workers runtime which is slow
+//    and flaky in CI environments (30s+ startup, port conflicts).
+// 2. The local D1 state is not pre-seeded in CI runners.
+// 3. All core webhook logic is thoroughly covered by the unit tests in
+//    stripe-basic, stripe-refunds, stripe-edge-cases, stripe-event-handlers,
+//    and stripe-security test files using the mock DB.
+//
+// To run locally:
+//   1. pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
+//   2. pnpm test -- --run stripe.integration
 describe.skip('Stripe Webhook Integration', () => {
   let worker: Unstable_DevWorker;
   let testOrderId: number;

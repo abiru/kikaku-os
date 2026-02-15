@@ -38,7 +38,7 @@ if (orderToken) {
 				<h1 class="mt-8 text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
 					{t('checkout.thankYou')}
 				</h1>
-				<p class="mt-4 text-xl text-[#86868b]">
+				<p class="mt-4 text-xl text-[#6e6e73]">
 					{t('checkout.orderConfirmed')}
 				</p>
 
@@ -46,7 +46,7 @@ if (orderToken) {
 				{order ? (
 					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm" data-order-container data-order-status={order.status}>
 						<div class="flex items-center justify-between mb-6">
-							<p class="text-sm text-[#86868b]">{t('admin.order')} #{order.id}</p>
+							<p class="text-sm text-[#6e6e73]">{t('admin.order')} #{order.id}</p>
 							<span class={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
 								order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
 							}`}>
@@ -60,7 +60,7 @@ if (orderToken) {
 								<div class="flex justify-between">
 									<div>
 										<p class="font-medium text-[#1d1d1f]">{item.title}</p>
-										<p class="text-sm text-[#86868b]">{t('checkout.quantity')}: {item.quantity}</p>
+										<p class="text-sm text-[#6e6e73]">{t('checkout.quantity')}: {item.quantity}</p>
 									</div>
 									<p class="font-medium text-[#1d1d1f]">
 										{formatPrice(item.unit_price * item.quantity, order.currency)}
@@ -80,7 +80,7 @@ if (orderToken) {
 						{/* Email */}
 						{order.customer_email && (
 							<div class="mt-6 border-t border-gray-100 pt-6">
-								<p class="text-sm text-[#86868b]">
+								<p class="text-sm text-[#6e6e73]">
 									{t('checkout.confirmationSentTo')}: <span class="text-[#1d1d1f]">{order.customer_email}</span>
 								</p>
 							</div>
@@ -90,7 +90,7 @@ if (orderToken) {
 						{order.shipping && (
 							<div class="mt-6 border-t border-gray-100 pt-6">
 								<p class="text-sm font-medium text-[#1d1d1f] mb-2">{t('checkout.shippingAddress')}</p>
-								<div class="text-sm text-[#86868b]">
+								<div class="text-sm text-[#6e6e73]">
 									{order.shipping.name && <p>{order.shipping.name}</p>}
 									{order.shipping.address && (
 										<>
@@ -109,7 +109,7 @@ if (orderToken) {
 					</div>
 				) : (
 					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm">
-						<p class="mb-2 text-sm text-[#86868b]">{t('checkout.orderConfirmation')}</p>
+						<p class="mb-2 text-sm text-[#6e6e73]">{t('checkout.orderConfirmation')}</p>
 						<p class="text-lg text-[#1d1d1f]">
 							{t('checkout.confirmationEmailSent')}
 						</p>
@@ -135,8 +135,9 @@ if (orderToken) {
 	</div>
 </Layout>
 
-<script define:vars={{ apiBase }}>
+<script define:vars={{ apiBase, order }}>
 	window.__CHECKOUT_SUCCESS_API_BASE__ = apiBase;
+	window.__CHECKOUT_ORDER__ = order;
 </script>
 
 <script>
@@ -145,7 +146,30 @@ if (orderToken) {
 	declare global {
 		interface Window {
 			__CHECKOUT_SUCCESS_API_BASE__?: string;
+			__CHECKOUT_ORDER__?: { id: number; total_amount: number; currency: string; items: Array<{ title: string; quantity: number; unit_price: number; product_id?: number; variant_title?: string }> } | null;
+			dataLayer: Record<string, unknown>[];
 		}
+	}
+
+	// GTM: purchase event
+	const orderData = window.__CHECKOUT_ORDER__;
+	if (orderData) {
+		window.dataLayer = window.dataLayer || [];
+		window.dataLayer.push({
+			event: 'purchase',
+			ecommerce: {
+				transaction_id: String(orderData.id),
+				value: orderData.total_amount,
+				currency: orderData.currency || 'JPY',
+				items: orderData.items.map((item, index) => ({
+					item_id: String(item.product_id || index),
+					item_name: item.title,
+					item_variant: item.variant_title || '',
+					price: item.unit_price,
+					quantity: item.quantity,
+				})),
+			},
+		});
 	}
 
 	// Clear cart after successful payment

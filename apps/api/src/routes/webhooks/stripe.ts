@@ -27,16 +27,7 @@ const handleWebhook = async (c: Context<Env>) => {
 
   let event: StripeEvent;
   try {
-    const parsed: unknown = JSON.parse(payload);
-    if (
-      !parsed ||
-      typeof parsed !== 'object' ||
-      !('id' in parsed) ||
-      typeof (parsed as Record<string, unknown>).id !== 'string'
-    ) {
-      return jsonError(c, 'Invalid payload', 400);
-    }
-    event = parsed as StripeEvent;
+    event = JSON.parse(payload) as StripeEvent;
   } catch {
     return jsonError(c, 'Invalid payload', 400);
   }

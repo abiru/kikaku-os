@@ -17,7 +17,9 @@
     "none": "なし",
     "or": "または",
     "and": "および",
-    "free": "無料"
+    "free": "無料",
+    "menu": "メニュー",
+    "login": "ログイン"
   },
   "nav": {
     "store": "ストア",
@@ -107,6 +109,9 @@
     "title": "チェックアウト",
     "loading": "読み込み中...",
     "email": "メールアドレス",
+    "emailRequired": "メールアドレスを入力してください",
+    "emailInvalid": "有効なメールアドレスを入力してください",
+    "emailPlaceholder": "your@email.com",
     "paymentDetails": "お支払い情報",
     "processing": "処理中...",
     "payNow": "お支払い",
@@ -143,6 +148,10 @@
     "returnToHome": "ホームに戻る",
     "shippingAddress": "配送先住所",
     "phone": "電話番号",
+    "stepOf": "ステップ {current}/{total}",
+    "goBack": "← 戻る",
+    "proceedToPayment": "お支払いへ進む",
+    "emailPlaceholder": "your@email.com",
     "steps": {
       "cart": "カート確認",
       "email": "メールアドレス",
@@ -444,7 +453,11 @@
     "priceRange": "価格帯",
     "range": "範囲: {min} - {max} 円",
     "applyFilters": "フィルターを適用",
-    "clearAll": "すべてクリア"
+    "clearAll": "すべてクリア",
+    "minPrice": "最低価格",
+    "maxPrice": "最高価格",
+    "showFilters": "フィルター",
+    "closeFilters": "フィルターを閉じる"
   },
   "search": {
     "tryDifferent": "別の検索キーワードを試してください",
@@ -478,7 +491,14 @@
   "errors": {
     "storeUnavailable": "ストアが利用できません",
     "storeUnavailableDescription": "カタログを読み込めませんでした。しばらくしてからもう一度お試しください。",
+    "networkError": "ネットワークエラー",
+    "networkErrorDescription": "インターネット接続を確認して、もう一度お試しください。",
+    "serverError": "サーバーエラー",
+    "serverErrorDescription": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
+    "notFoundError": "ページが見つかりません",
+    "notFoundErrorDescription": "お探しのリソースは見つかりませんでした。",
     "refresh": "更新",
+    "retry": "再試行",
     "failedToLoadDashboard": "ダッシュボードデータの読み込みに失敗しました",
     "failedToLoadOrders": "注文の読み込みに失敗しました。",
     "failedToLoadProducts": "製品の読み込みに失敗しました。管理者キーを確認してください。",

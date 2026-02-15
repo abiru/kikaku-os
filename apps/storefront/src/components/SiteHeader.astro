@@ -18,7 +18,7 @@ const {
 } = Astro.props;
 ---
 
-<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50">
+<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50" role="banner">
 	<Container class="flex h-[48px] items-center justify-between">
 		{/* Logo Area */}
 		<a href="/" class="flex items-center gap-2 group transition-opacity hover:opacity-80">
@@ -49,22 +49,22 @@ const {
 		</nav>
 
 		{/* Utilities: Search, Wishlist, Cart & Account */}
-		<div class="flex items-center gap-6">
-			<button id="search-btn" type="button" class="text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
+		<div class="flex items-center gap-2">
+			<button id="search-btn" type="button" class="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
 				<span class="sr-only">{t('common.search')}</span>
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 			</button>
 			{showWishlist && (
-				<a href="/wishlist" id="wishlist-link" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
+				<a href="/wishlist" id="wishlist-link" class="relative min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
 					<span class="sr-only">{t('wishlist.openWishlist')}</span>
 					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-					<span id="wishlist-badge" class="hidden absolute -top-2 -right-2 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">0</span>
+					<span id="wishlist-badge" class="hidden absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">0</span>
 				</a>
 			)}
-			<a href="/cart" id="cart-link" class="relative text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
+			<a href="/cart" id="cart-link" class="relative min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1d1d1f]/80 hover:text-[#1d1d1f] transition-colors">
 				<span class="sr-only">{t('nav.openCart')}</span>
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-				<span id="cart-badge" class="hidden absolute -top-2 -right-2 h-4 w-4 rounded-full bg-[#0071e3] text-[10px] font-medium text-white flex items-center justify-center">0</span>
+				<span id="cart-badge" class="hidden absolute -top-1 -right-1 h-4 w-4 rounded-full bg-[#0071e3] text-[10px] font-medium text-white flex items-center justify-center">0</span>
 			</a>
 			{showAuthToggle ? (
 				<>
@@ -193,5 +193,25 @@ const {
 				closeMobileMenu();
 			}
 		});
+	}
+
+	// Remove clerk skeleton placeholder when Clerk initializes
+	const clerkSkeleton = document.getElementById('clerk-skeleton');
+	if (clerkSkeleton) {
+		const container = clerkSkeleton.parentElement;
+		if (container) {
+			const removeSkeleton = () => {
+				if (clerkSkeleton.parentElement) clerkSkeleton.remove();
+			};
+			const observer = new MutationObserver(() => {
+				if (container.querySelector('[class*="cl-"], a[href="/sign-in"]')) {
+					removeSkeleton();
+					observer.disconnect();
+				}
+			});
+			observer.observe(container, { childList: true, subtree: true });
+			// Fallback: remove skeleton if Clerk fails to load
+			setTimeout(removeSkeleton, 5000);
+		}
 	}
 </script>

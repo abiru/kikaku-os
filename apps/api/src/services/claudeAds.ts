@@ -90,6 +90,9 @@ export async function generateAdCopy(
   // Validate each candidate structure
   for (let i = 0; i < parsed.candidates.length; i++) {
     const candidate = parsed.candidates[i];
+    if (!candidate) {
+      throw new Error(`Candidate ${i + 1}: missing from response`);
+    }
     if (!candidate.headlines || !Array.isArray(candidate.headlines)) {
       throw new Error(`Candidate ${i + 1}: missing headlines array`);
     }
