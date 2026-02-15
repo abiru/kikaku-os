@@ -2,12 +2,17 @@ import { Hono } from 'hono';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { PERMISSIONS } from '../../lib/schemas';
 import { parseCSV, parseJSON, ImageMapping } from '../../services/bulkImageUpload';
 
 const app = new Hono<Env>();
 
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
+
 // POST /admin/bulk-image-upload/parse - Parse and validate CSV/JSON file
-app.post('/parse', async (c) => {
+app.post('/parse', requirePermission(PERMISSIONS.PRODUCTS_WRITE), async (c) => {
   try {
     const contentType = c.req.header('content-type') || '';
     if (!contentType.includes('multipart/form-data')) {
@@ -57,7 +62,7 @@ app.post('/parse', async (c) => {
 });
 
 // POST /admin/bulk-image-upload/execute - Create inbox item for approval
-app.post('/execute', async (c) => {
+app.post('/execute', requirePermission(PERMISSIONS.PRODUCTS_WRITE), async (c) => {
   try {
     const body = await c.req.json<{
       mappings: ImageMapping[];

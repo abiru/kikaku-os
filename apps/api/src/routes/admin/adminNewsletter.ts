@@ -3,9 +3,14 @@ import { zValidator } from '@hono/zod-validator';
 import type { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { newsletterListQuerySchema } from '../../lib/schemas/newsletter';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { PERMISSIONS } from '../../lib/schemas';
 import { validationErrorHandler } from '../../lib/validation';
 
 const adminNewsletter = new Hono<Env>();
+
+// Apply RBAC middleware to all routes in this file
+adminNewsletter.use('*', loadRbac);
 
 type SubscriberRow = {
   id: number;
@@ -18,6 +23,7 @@ type SubscriberRow = {
 // GET /admin/newsletter/subscribers - List newsletter subscribers
 adminNewsletter.get(
   '/subscribers',
+  requirePermission(PERMISSIONS.CUSTOMERS_READ),
   zValidator('query', newsletterListQuerySchema, validationErrorHandler),
   async (c) => {
     const { status, limit, offset } = c.req.valid('query');

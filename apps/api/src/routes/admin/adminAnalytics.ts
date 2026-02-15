@@ -2,8 +2,13 @@ import { Hono } from 'hono';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureDate } from '../../lib/date';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { PERMISSIONS } from '../../lib/schemas';
 
 const adminAnalytics = new Hono<Env>();
+
+// Apply RBAC middleware to all routes in this file
+adminAnalytics.use('*', loadRbac);
 
 type DailySalesRow = {
   date: string;
@@ -25,7 +30,7 @@ type AnalyticsResponse = {
 };
 
 // GET /admin/analytics - Analytics data for charts
-adminAnalytics.get('/analytics', async (c) => {
+adminAnalytics.get('/analytics', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const fromParam = c.req.query('from');
   const toParam = c.req.query('to');
 

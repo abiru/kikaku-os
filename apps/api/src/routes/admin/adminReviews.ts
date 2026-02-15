@@ -3,9 +3,14 @@ import { zValidator } from '@hono/zod-validator';
 import type { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { reviewListQuerySchema, reviewIdParamSchema } from '../../lib/schemas/review';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { PERMISSIONS } from '../../lib/schemas';
 import { validationErrorHandler } from '../../lib/validation';
 
 const adminReviews = new Hono<Env>();
+
+// Apply RBAC middleware to all routes in this file
+adminReviews.use('*', loadRbac);
 
 type ReviewRow = {
   id: number;
@@ -24,6 +29,7 @@ type ReviewRow = {
 // GET /admin/reviews - List reviews with optional status filter
 adminReviews.get(
   '/reviews',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('query', reviewListQuerySchema, validationErrorHandler),
   async (c) => {
     const { status, limit, offset } = c.req.valid('query');
@@ -62,6 +68,7 @@ adminReviews.get(
 // POST /admin/reviews/:id/approve - Approve a review
 adminReviews.post(
   '/reviews/:id/approve',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', reviewIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -93,6 +100,7 @@ adminReviews.post(
 // POST /admin/reviews/:id/reject - Reject a review
 adminReviews.post(
   '/reviews/:id/reject',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', reviewIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');

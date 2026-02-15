@@ -3,6 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   createProductSchema,
@@ -14,13 +15,18 @@ import {
   productVariantParamSchema,
   variantIdParamSchema,
   updatePricesSchema,
+  PERMISSIONS,
 } from '../../lib/schemas';
 
 const app = new Hono<Env>();
 
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
+
 // GET /products - List products with pagination and search
 app.get(
   '/products',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('query', productListQuerySchema, validationErrorHandler),
   async (c) => {
     const { q, status, page, perPage } = c.req.valid('query');
@@ -86,6 +92,7 @@ app.get(
 // GET /products/:id - Fetch single product
 app.get(
   '/products/:id',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -117,6 +124,7 @@ app.get(
 // POST /products - Create product
 app.post(
   '/products',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('json', createProductSchema, validationErrorHandler),
   async (c) => {
     const { title, description, status, category, tax_rate_id } = c.req.valid('json');
@@ -151,6 +159,7 @@ app.post(
 // PUT /products/:id - Update product
 app.put(
   '/products/:id',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   zValidator('json', updateProductSchema, validationErrorHandler),
   async (c) => {
@@ -192,6 +201,7 @@ app.put(
 // DELETE /products/:id - Archive product
 app.delete(
   '/products/:id',
+  requirePermission(PERMISSIONS.PRODUCTS_DELETE),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -249,6 +259,7 @@ app.delete(
 // POST /products/:id/restore - Restore archived product
 app.post(
   '/products/:id/restore',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -318,6 +329,7 @@ type PriceRow = {
 // GET /products/:id/variants - List variants with prices
 app.get(
   '/products/:id/variants',
+  requirePermission(PERMISSIONS.PRODUCTS_READ),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   async (c) => {
     const { id } = c.req.valid('param');
@@ -373,6 +385,7 @@ app.get(
 // POST /products/:id/variants - Create variant
 app.post(
   '/products/:id/variants',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', productIdParamSchema, validationErrorHandler),
   zValidator('json', createVariantSchema, validationErrorHandler),
   async (c) => {
@@ -420,6 +433,7 @@ app.post(
 // PUT /products/:id/variants/:variantId - Update variant
 app.put(
   '/products/:id/variants/:variantId',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', productVariantParamSchema, validationErrorHandler),
   zValidator('json', updateVariantSchema, validationErrorHandler),
   async (c) => {
@@ -473,6 +487,7 @@ app.put(
 // DELETE /products/:id/variants/:variantId - Delete variant (cascade prices)
 app.delete(
   '/products/:id/variants/:variantId',
+  requirePermission(PERMISSIONS.PRODUCTS_DELETE),
   zValidator('param', productVariantParamSchema, validationErrorHandler),
   async (c) => {
     const { id, variantId } = c.req.valid('param');
@@ -513,6 +528,7 @@ app.delete(
 // PUT /variants/:variantId/prices - Update/replace prices for variant
 app.put(
   '/variants/:variantId/prices',
+  requirePermission(PERMISSIONS.PRODUCTS_WRITE),
   zValidator('param', variantIdParamSchema, validationErrorHandler),
   zValidator('json', updatePricesSchema, validationErrorHandler),
   async (c) => {

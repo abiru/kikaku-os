@@ -2,11 +2,13 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   emailTemplateSlugParamSchema,
   updateEmailTemplateSchema,
   previewEmailTemplateSchema,
+  PERMISSIONS,
 } from '../../lib/schemas';
 import {
   getAllEmailTemplates,
@@ -19,9 +21,11 @@ import {
 
 const app = new Hono<Env>();
 
+// Apply RBAC middleware to all routes in this file
+app.use('*', loadRbac);
 
 // GET /email-templates - List all email templates
-app.get('/email-templates', async (c) => {
+app.get('/email-templates', requirePermission(PERMISSIONS.SETTINGS_READ), async (c) => {
   try {
     const templates = await getAllEmailTemplates(c.env);
 
@@ -39,6 +43,7 @@ app.get('/email-templates', async (c) => {
 // GET /email-templates/:slug - Get single email template
 app.get(
   '/email-templates/:slug',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   zValidator('param', emailTemplateSlugParamSchema, validationErrorHandler),
   async (c) => {
     const { slug } = c.req.valid('param');
@@ -77,6 +82,7 @@ app.get(
 // PUT /email-templates/:slug - Update email template
 app.put(
   '/email-templates/:slug',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', emailTemplateSlugParamSchema, validationErrorHandler),
   zValidator('json', updateEmailTemplateSchema, validationErrorHandler),
   async (c) => {
@@ -120,6 +126,7 @@ app.put(
 // POST /email-templates/:slug/preview - Send preview email
 app.post(
   '/email-templates/:slug/preview',
+  requirePermission(PERMISSIONS.SETTINGS_WRITE),
   zValidator('param', emailTemplateSlugParamSchema, validationErrorHandler),
   zValidator('json', previewEmailTemplateSchema, validationErrorHandler),
   async (c) => {
@@ -185,6 +192,7 @@ app.post(
 // POST /email-templates/:slug/render - Render template without sending
 app.post(
   '/email-templates/:slug/render',
+  requirePermission(PERMISSIONS.SETTINGS_READ),
   zValidator('param', emailTemplateSlugParamSchema, validationErrorHandler),
   async (c) => {
     const { slug } = c.req.valid('param');

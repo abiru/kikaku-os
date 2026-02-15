@@ -79,6 +79,19 @@ const createMockEnv = (overrides: any = {}) => {
   };
 
   const getAllResult = (sql: string) => {
+    // RBAC: return all admin permissions for API key auth
+    if (sql.includes('FROM permissions') && sql.includes('role_permissions')) {
+      return {
+        results: [
+          { id: 'dashboard:read' }, { id: 'users:read' }, { id: 'users:write' }, { id: 'users:delete' },
+          { id: 'orders:read' }, { id: 'orders:write' }, { id: 'products:read' }, { id: 'products:write' },
+          { id: 'products:delete' }, { id: 'inventory:read' }, { id: 'inventory:write' },
+          { id: 'inbox:read' }, { id: 'inbox:approve' }, { id: 'reports:read' }, { id: 'ledger:read' },
+          { id: 'settings:read' }, { id: 'settings:write' }, { id: 'customers:read' }, { id: 'customers:write' },
+          { id: 'tax-rates:read' }, { id: 'tax-rates:write' },
+        ]
+      };
+    }
     if (sql.includes('FROM orders o') && sql.includes('LEFT JOIN customers')) {
       return defaultResults.recentOrders;
     }

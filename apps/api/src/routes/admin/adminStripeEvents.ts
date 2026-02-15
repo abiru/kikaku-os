@@ -2,10 +2,15 @@ import { Hono } from "hono";
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { handleStripeEvent } from '../../services/stripeEventHandlers';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
+import { PERMISSIONS } from '../../lib/schemas';
 
 const adminStripeEvents = new Hono<Env>();
 
-adminStripeEvents.get("/stripe-events", async (c) => {
+// Apply RBAC middleware to all routes in this file
+adminStripeEvents.use('*', loadRbac);
+
+adminStripeEvents.get("/stripe-events", requirePermission(PERMISSIONS.ORDERS_READ), async (c) => {
   const page = parseInt(c.req.query('page') || '1');
   const perPage = parseInt(c.req.query('perPage') || '50');
   const status = c.req.query('status'); // pending, completed, failed
@@ -55,7 +60,7 @@ adminStripeEvents.get("/stripe-events", async (c) => {
   }
 });
 
-adminStripeEvents.get("/stripe-events/:id", async (c) => {
+adminStripeEvents.get("/stripe-events/:id", requirePermission(PERMISSIONS.ORDERS_READ), async (c) => {
   const id = parseInt(c.req.param('id'));
   if (!Number.isFinite(id) || id <= 0) {
     return jsonError(c, "Invalid event ID", 400);
@@ -79,7 +84,7 @@ adminStripeEvents.get("/stripe-events/:id", async (c) => {
   }
 });
 
-adminStripeEvents.post("/stripe-events/:id/retry", async (c) => {
+adminStripeEvents.post("/stripe-events/:id/retry", requirePermission(PERMISSIONS.ORDERS_WRITE), async (c) => {
   const id = parseInt(c.req.param('id'));
   if (!Number.isFinite(id) || id <= 0) {
     return jsonError(c, "Invalid event ID", 400);
