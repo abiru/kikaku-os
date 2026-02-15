@@ -4,13 +4,13 @@ import adminSettings from './adminSettings';
 
 describe('Admin Settings API', () => {
   let app: Hono;
-  let mockEnv: any;
+  let mockEnv: Record<string, unknown>;
 
   beforeEach(() => {
     app = new Hono();
     app.route('/admin/settings', adminSettings);
 
-    const settingsData: Record<string, any> = {
+    const settingsData: Record<string, Record<string, unknown>> = {
       shipping_fee_amount: {
         id: 1,
         key: 'shipping_fee_amount',
@@ -43,7 +43,7 @@ describe('Admin Settings API', () => {
       DB: {
         prepare: (query: string) => {
           const preparedQuery = {
-            bind: (...args: any[]) => ({
+            bind: (...args: unknown[]) => ({
               first: async () => {
                 if (query.includes('SELECT') && query.includes('WHERE key')) {
                   const key = args[0];

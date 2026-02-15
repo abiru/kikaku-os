@@ -23,7 +23,7 @@ export async function getSetting(
 
     // Fallback to environment variable (legacy compatibility)
     const envKey = key.toUpperCase();
-    const envValue = (env as any)[envKey];
+    const envValue = env[envKey as keyof typeof env];
     if (envValue !== undefined) {
       return String(envValue);
     }
@@ -58,18 +58,26 @@ export async function getSettingBool(
   return ['true', '1', 'yes'].includes(value.toLowerCase());
 }
 
-export async function getAllSettings(env: Env['Bindings']): Promise<Record<string, any[]>> {
+type SettingRow = {
+  key: string;
+  value: string;
+  category: string | null;
+  data_type: string;
+  description: string | null;
+};
+
+export async function getAllSettings(env: Env['Bindings']): Promise<Record<string, SettingRow[]>> {
   try {
     const result = await env.DB.prepare(
       `SELECT key, value, category, data_type, description
        FROM app_settings
        WHERE is_active = 1
        ORDER BY category ASC, display_order ASC`
-    ).all();
+    ).all<SettingRow>();
 
     const settings = result.results || [];
 
-    return settings.reduce((acc: Record<string, any[]>, setting: any) => {
+    return settings.reduce((acc: Record<string, SettingRow[]>, setting: SettingRow) => {
       const category = setting.category || 'general';
       if (!acc[category]) {
         acc[category] = [];

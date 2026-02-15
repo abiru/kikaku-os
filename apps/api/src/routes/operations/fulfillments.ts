@@ -58,7 +58,7 @@ fulfillments.put(
 
       // Fetch updated record
       const updated = await c.env.DB.prepare(
-        'SELECT * FROM fulfillments WHERE id = ?'
+        'SELECT id, order_id, status, tracking_number, metadata, created_at, updated_at FROM fulfillments WHERE id = ?'
       ).bind(id).first<FulfillmentRow>();
 
       // Audit log
@@ -116,7 +116,7 @@ fulfillments.post(
       `).bind(orderId, status || 'pending', tracking_number || null, metadata).run();
 
       const fulfillment = await c.env.DB.prepare(
-        'SELECT * FROM fulfillments WHERE id = ?'
+        'SELECT id, order_id, status, tracking_number, metadata, created_at, updated_at FROM fulfillments WHERE id = ?'
       ).bind(result.meta.last_row_id).first<FulfillmentRow>();
 
       // Audit log

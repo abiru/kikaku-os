@@ -84,6 +84,20 @@ export const updateFulfillmentSchema = z.object({
     .transform((v) => v?.trim() || null),
 });
 
+// === Cancel Order Schemas ===
+
+export const cancelOrderSchema = z.object({
+  reason: z
+    .string()
+    .min(1, 'Reason is required')
+    .max(500, 'Reason must be 500 characters or less'),
+});
+
+export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;
+
+// Statuses that can be cancelled
+export const CANCELLABLE_STATUSES = ['pending', 'paid'] as const;
+
 // === Refund Schemas ===
 
 export const createRefundSchema = z.object({

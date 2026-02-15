@@ -1,0 +1,174 @@
+---
+import { Fieldset, Field, Label } from '../catalyst/fieldset';
+import { Input } from '../catalyst/input';
+import { Subheading } from '../catalyst/heading';
+import { formatPrice } from '../../lib/format';
+
+type Price = {
+	id: number;
+	variant_id: number;
+	currency: string;
+	amount: number;
+	provider_price_id: string | null;
+};
+
+type Variant = {
+	id: number;
+	product_id: number;
+	title: string;
+	sku: string | null;
+	options: string | null;
+	metadata: string | null;
+	created_at: string;
+	updated_at: string;
+	prices: Price[];
+};
+
+interface Props {
+	variants: Variant[];
+}
+
+const { variants } = Astro.props;
+---
+
+<div class="mt-8">
+	<div class="flex items-center justify-between mb-4">
+		<Subheading>Variants</Subheading>
+		<button
+			type="button"
+			id="add-variant-btn"
+			class="text-sm text-[#0071e3] hover:underline flex items-center gap-1"
+		>
+			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+			</svg>
+			Add Variant
+		</button>
+	</div>
+
+	{variants.length === 0 ? (
+		<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+			<p class="text-[#86868b] text-sm">No variants yet. Add one to set prices.</p>
+		</div>
+	) : (
+		<div class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+			{variants.map((variant) => {
+				const price = variant.prices?.[0];
+				return (
+					<div class="p-4 flex items-center justify-between" data-variant-id={variant.id}>
+						<div class="flex-1">
+							<div class="font-medium text-zinc-950">{variant.title}</div>
+							<div class="text-sm text-[#86868b] mt-1 flex flex-wrap gap-x-4 gap-y-1">
+								<span>SKU: {variant.sku || '-'}</span>
+								<span class="tabular-nums">
+									{price ? formatPrice(price.amount, price.currency) : 'No price set'}
+								</span>
+								<span class="font-mono text-xs">
+									Stripe: {price?.provider_price_id || '-'}
+								</span>
+							</div>
+						</div>
+						<div class="flex items-center gap-2 ml-4">
+							<button
+								type="button"
+								class="edit-variant-btn text-sm text-[#0071e3] hover:underline"
+								data-variant={JSON.stringify(variant)}
+							>
+								Edit
+							</button>
+							<button
+								type="button"
+								class="delete-variant-btn text-sm text-red-500 hover:underline"
+								data-variant-id={variant.id}
+								data-variant-title={variant.title}
+							>
+								Delete
+							</button>
+						</div>
+					</div>
+				);
+			})}
+		</div>
+	)}
+</div>
+
+<!-- Variant Modal -->
+<div id="variant-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+	<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+		<div class="p-6 border-b border-gray-100">
+			<h3 id="modal-title" class="text-lg font-semibold text-zinc-950">Add Variant</h3>
+		</div>
+		<form id="variant-form" class="p-6 space-y-4">
+			<input type="hidden" id="variant-id" name="variantId" value="" />
+
+			<Fieldset client:load>
+				<Field>
+					<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Title *</label>
+					<Input
+						type="text"
+						id="variant-title"
+						name="title"
+						required
+						placeholder="e.g., Default, Size M, Color Red"
+					/>
+				</Field>
+
+				<Field>
+					<Label>SKU</Label>
+					<Input
+						type="text"
+						id="variant-sku"
+						name="sku"
+						placeholder="Optional SKU code"
+					/>
+				</Field>
+
+				<Field>
+					<Label>Price (JPY) *</Label>
+					<Input
+						type="number"
+						id="price-amount"
+						name="amount"
+						required
+						min="0"
+						step="1"
+						className="tabular-nums"
+						placeholder="1000"
+					/>
+				</Field>
+
+				<Field>
+					<Label>Stripe Price ID</Label>
+					<Input
+						type="text"
+						id="stripe-price-id"
+						name="provider_price_id"
+						className="font-mono"
+						placeholder="price_xxxxxxxx"
+					/>
+					<p class="text-xs text-[#86868b] mt-1">Required for checkout. Get this from your Stripe Dashboard.</p>
+				</Field>
+			</Fieldset>
+
+			<div id="modal-error" class="hidden">
+				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+			</div>
+
+			<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+				<button
+					type="button"
+					id="cancel-modal-btn"
+					class="px-4 py-2 text-sm font-medium text-zinc-950 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+				>
+					Cancel
+				</button>
+				<button
+					type="submit"
+					class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+				>
+					Save
+				</button>
+			</div>
+		</form>
+	</div>
+</div>
