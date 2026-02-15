@@ -24,7 +24,7 @@ import {
   calculateOrderStatus,
   getStatusChangeReason
 } from './orderStatus';
-import { sendOrderConfirmationEmail } from './orderEmail';
+import { sendOrderConfirmationEmail, sendBankTransferInstructionsEmail } from './orderEmail';
 import {
   consumeStockReservationForOrder,
   deductStockForOrder,
@@ -750,8 +750,30 @@ export const handleStripeEvent = async (
         )
         .run();
 
-      // Future: Send customer email with bank transfer instructions
-      // Bank transfer details are in dataObject.next_action.display_bank_transfer_instructions
+      // Send bank transfer instructions email to customer
+      if (dataObject.next_action?.display_bank_transfer_instructions) {
+        try {
+          // Get customer email from order
+          const order = await env.DB.prepare(
+            `SELECT o.id, c.email FROM orders o
+             LEFT JOIN customers c ON c.id = o.customer_id
+             WHERE o.id = ?`
+          ).bind(orderId).first<{ id: number; email: string | null }>();
+
+          if (order?.email) {
+            await sendBankTransferInstructionsEmail(env, {
+              customerEmail: order.email,
+              orderId,
+              amount: dataObject.amount || 0,
+              currency: (dataObject.currency || 'JPY').toUpperCase(),
+              bankTransferInstructions: dataObject.next_action.display_bank_transfer_instructions,
+            });
+          }
+        } catch (emailErr) {
+          console.error('Failed to send bank transfer instructions email:', emailErr);
+          // Non-critical: email failure should not block webhook processing
+        }
+      }
     }
     return { received: true };
   }
