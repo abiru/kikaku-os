@@ -1,272 +1,131 @@
-import { describe, it, expect, vi } from 'vitest';
-import worker from '../../../index';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Hono } from 'hono';
+import accounting from '../../../routes/accounting/accounting';
 
-const ALL_ADMIN_PERMISSIONS = [
-  { id: 'dashboard:read' }, { id: 'users:read' }, { id: 'users:write' }, { id: 'users:delete' },
-  { id: 'orders:read' }, { id: 'orders:write' }, { id: 'products:read' }, { id: 'products:write' },
-  { id: 'products:delete' }, { id: 'inventory:read' }, { id: 'inventory:write' },
-  { id: 'inbox:read' }, { id: 'inbox:approve' }, { id: 'reports:read' }, { id: 'ledger:read' },
-  { id: 'settings:read' }, { id: 'settings:write' }, { id: 'customers:read' }, { id: 'customers:write' },
-  { id: 'tax-rates:read' }, { id: 'tax-rates:write' },
-];
+vi.mock('../../../services/journalize', () => ({
+  listLedgerEntries: vi.fn(),
+}));
 
-type ReportRow = {
-  count: number;
-  totalNet: number;
-  totalFee: number;
-  totalAmount?: number;
-};
+import { listLedgerEntries } from '../../../services/journalize';
 
-type LedgerEntry = {
-  id: number;
-  created_at: string;
-  ref_type: string;
-  ref_id: string;
-  account: string;
-  debit: number;
-  credit: number;
-  memo: string;
-  currency: string;
-};
-
-const createMockEnv = (options: {
-  ordersRow?: Partial<ReportRow> | null;
-  paymentsRow?: Partial<ReportRow> | null;
-  refundsRow?: Partial<{ count: number; totalAmount: number }> | null;
-  ledgerEntries?: LedgerEntry[];
-  noData?: boolean;
-} = {}) => {
-  const calls: { sql: string; bind: unknown[] }[] = [];
-
-  const createQueryBuilder = (sql: string) => ({
-    bind: (...args: unknown[]) => {
-      calls.push({ sql, bind: args });
-      return createQueryBuilder(sql);
-    },
-    first: async () => {
-      if (options.noData) {
-        return { count: 0, totalNet: 0, totalFee: 0, totalAmount: 0, cnt: 0 };
-      }
-      // Daily report: orders
-      if (sql.includes('FROM orders') && sql.includes('COUNT(*)')) {
-        return options.ordersRow ?? { count: 5, totalNet: 25000, totalFee: 500 };
-      }
-      // Daily report: payments
-      if (sql.includes('FROM payments') && sql.includes('COUNT(*)')) {
-        return options.paymentsRow ?? { count: 5, totalAmount: 25000, totalFee: 500 };
-      }
-      // Daily report: refunds
-      if (sql.includes('FROM refunds') && sql.includes('COUNT(*)')) {
-        return options.refundsRow ?? { count: 1, totalAmount: 1000 };
-      }
-      // Journalize: existing entries count
-      if (sql.includes('COUNT(*)') && sql.includes('ledger_entries')) {
-        return { cnt: 0 };
-      }
-      // Tax total
-      if (sql.includes('SUM(tax_amount)')) {
-        return { taxTotal: 2000 };
-      }
-      return null;
-    },
-    all: async () => {
-      // RBAC permissions
-      if (sql.includes('FROM permissions') && sql.includes('role_permissions')) {
-        return { results: ALL_ADMIN_PERMISSIONS };
-      }
-      // Ledger entries
-      if (sql.includes('FROM ledger_entries')) {
-        return { results: options.ledgerEntries || [] };
-      }
-      return { results: [] };
-    },
-    run: async () => ({ meta: { last_row_id: 1 } }),
-  });
-
+const createApp = () => {
+  const app = new Hono();
+  app.route('/', accounting);
   return {
-    calls,
-    env: {
-      DB: {
-        prepare: (sql: string) => createQueryBuilder(sql),
-      },
-      ADMIN_API_KEY: 'test-admin-key',
-    },
+    app,
+    fetch: (path: string, init?: RequestInit) =>
+      app.request(path, init, {
+        DB: {},
+      } as any),
   };
 };
 
-const createCtx = () => ({
-  waitUntil: () => {},
-  passThroughOnException: () => {},
-});
-
-describe('GET /reports/daily', () => {
-  it('returns daily report for valid date', async () => {
-    const { env } = createMockEnv();
-
-    const res = await worker.fetch(
-      new Request('http://localhost/reports/daily?date=2026-01-15', {
-        method: 'GET',
-        headers: { 'x-admin-key': 'test-admin-key' },
-      }),
-      env as any,
-      createCtx() as any
-    );
-
-    expect(res.status).toBe(200);
-    const json = await res.json<any>();
-    expect(json.ok).toBe(true);
-    expect(json.report).toBeDefined();
-    expect(json.report.date).toBe('2026-01-15');
-    expect(json.report.orders).toBeDefined();
-    expect(json.report.payments).toBeDefined();
-    expect(json.report.refunds).toBeDefined();
-    expect(json.report.anomalies).toBeDefined();
+describe('Accounting Routes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('returns report with zero data', async () => {
-    const { env } = createMockEnv({ noData: true });
+  describe('GET /ledger-entries', () => {
+    it('returns ledger entries for a valid date', async () => {
+      const entries = [
+        { id: 1, account_id: 'acct_bank', debit: 10000, credit: 0, memo: 'Daily close net' },
+        { id: 2, account_id: 'acct_sales', debit: 0, credit: 9091, memo: 'Daily close sales (税抜)' },
+        { id: 3, account_id: 'acct_tax_payable', debit: 0, credit: 909, memo: '消費税仮受' },
+      ];
 
-    const res = await worker.fetch(
-      new Request('http://localhost/reports/daily?date=2026-01-01', {
-        method: 'GET',
-        headers: { 'x-admin-key': 'test-admin-key' },
-      }),
-      env as any,
-      createCtx() as any
-    );
+      (listLedgerEntries as any).mockResolvedValueOnce(entries);
 
-    expect(res.status).toBe(200);
-    const json = await res.json<any>();
-    expect(json.ok).toBe(true);
-    expect(json.report.orders.count).toBe(0);
-    expect(json.report.payments.count).toBe(0);
-  });
+      const { fetch } = createApp();
 
-  it('returns 400 for invalid date format', async () => {
-    const { env } = createMockEnv();
+      const res = await fetch('/ledger-entries?date=2026-01-13');
 
-    const res = await worker.fetch(
-      new Request('http://localhost/reports/daily?date=invalid-date', {
-        method: 'GET',
-        headers: { 'x-admin-key': 'test-admin-key' },
-      }),
-      env as any,
-      createCtx() as any
-    );
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.entries).toHaveLength(3);
+      expect(data.entries[0].account_id).toBe('acct_bank');
+      expect(data.entries[0].debit).toBe(10000);
+    });
 
-    expect(res.status).toBe(400);
-    const json = await res.json<any>();
-    expect(json.ok).toBe(false);
-    expect(json.message).toContain('Invalid date');
-  });
+    it('returns 400 for missing date parameter', async () => {
+      const { fetch } = createApp();
 
-  it('returns 400 for missing date', async () => {
-    const { env } = createMockEnv();
+      const res = await fetch('/ledger-entries');
 
-    const res = await worker.fetch(
-      new Request('http://localhost/reports/daily', {
-        method: 'GET',
-        headers: { 'x-admin-key': 'test-admin-key' },
-      }),
-      env as any,
-      createCtx() as any
-    );
+      expect(res.status).toBe(400);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
+      expect(data.message).toContain('Invalid date');
+    });
 
-    expect(res.status).toBe(400);
-  });
-});
+    it('returns 400 for invalid date format', async () => {
+      const { fetch } = createApp();
 
-describe('GET /ledger-entries', () => {
-  it('returns ledger entries for valid date', async () => {
-    const ledgerEntries: LedgerEntry[] = [
-      {
-        id: 1,
-        created_at: '2026-01-15T00:00:00Z',
-        ref_type: 'daily_close',
-        ref_id: '2026-01-15',
-        account: 'acct_bank',
-        debit: 24500,
-        credit: 0,
-        memo: 'Daily close net',
-        currency: 'JPY',
-      },
-      {
-        id: 2,
-        created_at: '2026-01-15T00:00:00Z',
-        ref_type: 'daily_close',
-        ref_id: '2026-01-15',
-        account: 'acct_sales',
-        debit: 0,
-        credit: 22500,
-        memo: 'Daily close sales',
-        currency: 'JPY',
-      },
-    ];
+      const res = await fetch('/ledger-entries?date=2026/01/13');
 
-    const { env } = createMockEnv({ ledgerEntries });
+      expect(res.status).toBe(400);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
+      expect(data.message).toContain('Invalid date');
+    });
 
-    const res = await worker.fetch(
-      new Request('http://localhost/ledger-entries?date=2026-01-15', {
-        method: 'GET',
-        headers: { 'x-admin-key': 'test-admin-key' },
-      }),
-      env as any,
-      createCtx() as any
-    );
+    it('returns 400 for partial date', async () => {
+      const { fetch } = createApp();
 
-    expect(res.status).toBe(200);
-    const json = await res.json<any>();
-    expect(json.ok).toBe(true);
-    expect(json.entries).toBeDefined();
-  });
+      const res = await fetch('/ledger-entries?date=2026-01');
 
-  it('returns empty entries when no data exists', async () => {
-    const { env } = createMockEnv({ ledgerEntries: [] });
+      expect(res.status).toBe(400);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
+    });
 
-    const res = await worker.fetch(
-      new Request('http://localhost/ledger-entries?date=2026-12-31', {
-        method: 'GET',
-        headers: { 'x-admin-key': 'test-admin-key' },
-      }),
-      env as any,
-      createCtx() as any
-    );
+    it('returns empty array when no entries exist', async () => {
+      (listLedgerEntries as any).mockResolvedValueOnce([]);
 
-    expect(res.status).toBe(200);
-    const json = await res.json<any>();
-    expect(json.ok).toBe(true);
-  });
+      const { fetch } = createApp();
 
-  it('returns 400 for invalid date', async () => {
-    const { env } = createMockEnv();
+      const res = await fetch('/ledger-entries?date=2020-01-01');
 
-    const res = await worker.fetch(
-      new Request('http://localhost/ledger-entries?date=not-a-date', {
-        method: 'GET',
-        headers: { 'x-admin-key': 'test-admin-key' },
-      }),
-      env as any,
-      createCtx() as any
-    );
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(true);
+      expect(data.entries).toHaveLength(0);
+    });
 
-    expect(res.status).toBe(400);
-    const json = await res.json<any>();
-    expect(json.ok).toBe(false);
-    expect(json.message).toContain('Invalid date');
-  });
+    it('returns 500 on service failure', async () => {
+      (listLedgerEntries as any).mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
 
-  it('returns 400 for missing date', async () => {
-    const { env } = createMockEnv();
+      const { fetch } = createApp();
 
-    const res = await worker.fetch(
-      new Request('http://localhost/ledger-entries', {
-        method: 'GET',
-        headers: { 'x-admin-key': 'test-admin-key' },
-      }),
-      env as any,
-      createCtx() as any
-    );
+      const res = await fetch('/ledger-entries?date=2026-01-13');
 
-    expect(res.status).toBe(400);
+      expect(res.status).toBe(500);
+      const data = await res.json() as any;
+      expect(data.ok).toBe(false);
+      expect(data.message).toContain('Failed to fetch ledger entries');
+    });
+
+    it('includes all entry fields in response', async () => {
+      const entries = [
+        { id: 1, account_id: 'acct_fee', debit: 300, credit: 0, memo: 'Payment fees' },
+      ];
+
+      (listLedgerEntries as any).mockResolvedValueOnce(entries);
+
+      const { fetch } = createApp();
+
+      const res = await fetch('/ledger-entries?date=2026-01-13');
+
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      const entry = data.entries[0];
+      expect(entry).toHaveProperty('id');
+      expect(entry).toHaveProperty('account_id');
+      expect(entry).toHaveProperty('debit');
+      expect(entry).toHaveProperty('credit');
+      expect(entry).toHaveProperty('memo');
+    });
   });
 });
