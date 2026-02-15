@@ -20,6 +20,7 @@ import { journalizeDailyClose } from './services/journalize';
 import { enqueueDailyCloseAnomaly } from './services/inboxAnomalies';
 import { runAllAnomalyChecks } from './services/anomalyRules';
 import { startDailyCloseRun, completeDailyCloseRun } from './services/dailyCloseRuns';
+import { checkInventoryAlerts } from './services/inventoryAlerts';
 
 const app = new Hono<Env>();
 
@@ -279,6 +280,14 @@ const runAnomalyChecks = async (env: Env['Bindings'], date: string) => {
   }
 };
 
+const runInventoryAlerts = async (env: Env['Bindings'], date: string) => {
+  try {
+    await checkInventoryAlerts(env, date);
+  } catch (err) {
+    console.error('Inventory alert check failed:', err);
+  }
+};
+
 /**
  * Create the worker export with optional Sentry wrapping.
  * If SENTRY_DSN is configured, wrap with Sentry for error tracking.
@@ -310,6 +319,9 @@ const createWorkerExport = () => {
         ctx.waitUntil(runDailyCloseArtifacts(env, date));
         ctx.waitUntil(runAnomalyChecks(env, date));
       }
+
+      // Inventory alerts (always run, independent of Sentry)
+      ctx.waitUntil(runInventoryAlerts(env, date));
 
       // Cleanup tasks (always run, independent of Sentry)
       ctx.waitUntil(runCleanupTasks(env));
