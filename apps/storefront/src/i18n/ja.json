@@ -66,7 +66,11 @@
     "from": "から",
     "buy": "購入",
     "inStock": "在庫あり",
-    "outOfStock": "在庫なし"
+    "outOfStock": "在庫なし",
+    "showingCount": "{start}〜{end}件目（全{total}件）",
+    "pageInfo": "ページ {page} / {totalPages}",
+    "priceAbove": "{min}円以上",
+    "priceUpTo": "{max}円以下"
   },
   "cart": {
     "title": "ショッピングカート",
@@ -391,10 +395,40 @@
     "relatedProducts": "関連商品",
     "addToCart": "カートに追加",
     "inStock": "在庫あり",
-    "checkAvailability": "在庫状況をご確認ください"
+    "checkAvailability": "在庫状況をご確認ください",
+    "description": "説明",
+    "details": "詳細",
+    "securePayment": "安全な決済",
+    "securePaymentDescription": "Stripe経由の安全なチェックアウト",
+    "checkPrice": "価格をチェック",
+    "policies": "ポリシー",
+    "notFound": "商品が見つかりません",
+    "notFoundDescription": "この商品は存在しないか、削除されました。",
+    "unavailable": "商品を表示できません",
+    "unavailableDescription": "この商品を読み込めませんでした。しばらくしてからもう一度お試しください。",
+    "retry": "再試行",
+    "backToProducts": "商品一覧に戻る",
+    "defaultDetail1": "高品質な素材",
+    "defaultDetail2": "プロ仕様",
+    "defaultDetail3": "簡単な取り付け",
+    "defaultDetail4": "長持ちする性能"
   },
   "recentlyViewed": {
     "title": "最近チェックした商品"
+  },
+  "filters": {
+    "category": "カテゴリー",
+    "clearCategory": "カテゴリーをクリア",
+    "priceRange": "価格帯",
+    "range": "範囲: {min} - {max} 円",
+    "applyFilters": "フィルターを適用",
+    "clearAll": "すべてクリア"
+  },
+  "search": {
+    "tryDifferent": "別の検索キーワードを試してください",
+    "toNavigate": "で移動",
+    "toSelect": "で選択",
+    "toClose": "で閉じる"
   },
   "breadcrumb": {
     "home": "ホーム"

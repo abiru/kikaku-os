@@ -63,7 +63,7 @@ const formatPriceWithTax = (amount: number, currency: string = 'JPY') => {
 
 const priceLabel = variant?.price
 	? formatPriceWithTax(variant.price.amount, variant.price.currency)
-	: 'Check Price';
+	: t('product.checkPrice');
 
 const stockValue =
 	typeof variant?.stock === 'number'
@@ -92,7 +92,7 @@ if (product?.images && Array.isArray(product.images)) {
 
 // Breadcrumbs
 const breadcrumbs = [
-	{ id: 1, name: 'Products', href: '/products' },
+	{ id: 1, name: t('nav.products'), href: '/products' },
 ];
 if (product?.category) {
 	breadcrumbs.push({ id: 2, name: product.category, href: `/categories/${encodeURIComponent(product.category)}` });
@@ -100,10 +100,10 @@ if (product?.category) {
 
 // Product details/features
 const productDetails = product?.details || [
-	'High-quality materials',
-	'Professional grade',
-	'Easy installation',
-	'Long-lasting performance',
+	t('product.defaultDetail1'),
+	t('product.defaultDetail2'),
+	t('product.defaultDetail3'),
+	t('product.defaultDetail4'),
 ];
 
 // Policies
@@ -121,7 +121,7 @@ const shippingPolicy = stockValue !== null && stockValue > 0
 
 const policies = [
 	shippingPolicy,
-	{ name: 'Secure Payment', icon: 'currency', description: 'Safe checkout via Stripe' },
+	{ name: t('product.securePayment'), icon: 'currency', description: t('product.securePaymentDescription') },
 ];
 // JSON-LD structured data for SEO
 const jsonLd = product && variant?.price ? {
@@ -337,7 +337,7 @@ const jsonLd = product && variant?.price ? {
 							{/* Product description */}
 							{product.description && (
 								<div class="mt-10">
-									<h2 class="text-sm font-medium text-gray-900">Description</h2>
+									<h2 class="text-sm font-medium text-gray-900">{t('product.description')}</h2>
 
 									<div
 										class="mt-4 space-y-4 text-sm leading-6 text-gray-500 product-description"
@@ -348,7 +348,7 @@ const jsonLd = product && variant?.price ? {
 
 							{/* Product details */}
 							<div class="mt-8 border-t border-gray-200 pt-8">
-								<h2 class="text-sm font-medium text-gray-900">Details</h2>
+								<h2 class="text-sm font-medium text-gray-900">{t('product.details')}</h2>
 
 								<div class="mt-4">
 									<ul role="list" class="list-disc space-y-1 pl-5 text-sm leading-6 text-gray-500 marker:text-gray-300">
@@ -361,7 +361,7 @@ const jsonLd = product && variant?.price ? {
 
 							{/* Policies */}
 							<section aria-labelledby="policies-heading" class="mt-10">
-								<h2 id="policies-heading" class="sr-only">Our Policies</h2>
+								<h2 id="policies-heading" class="sr-only">{t('product.policies')}</h2>
 
 								<dl class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
 									{policies.map((policy) => (
@@ -440,18 +440,18 @@ const jsonLd = product && variant?.price ? {
 	) : loadState === 'unavailable' ? (
 		<div class="mt-8">
 			<EmptyState
-				title="Product unavailable"
-				description="We couldn't load this product. Please retry in a moment."
-				ctaLabel="Retry"
+				title={t('product.unavailable')}
+				description={t('product.unavailableDescription')}
+				ctaLabel={t('product.retry')}
 				ctaHref={`/products/${encodedId}`}
 			/>
 		</div>
 	) : (
 		<div class="mt-8">
 			<EmptyState
-				title="Product not found"
-				description="This item doesn't exist or has been removed."
-				ctaLabel="Back to Products"
+				title={t('product.notFound')}
+				description={t('product.notFoundDescription')}
+				ctaLabel={t('product.backToProducts')}
 				ctaHref="/products"
 			/>
 		</div>

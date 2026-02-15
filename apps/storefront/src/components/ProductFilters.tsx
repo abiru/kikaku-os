@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getApiBase } from '../lib/api';
+import { useTranslation } from '../i18n';
 
 type FilterOptions = {
 	categories: string[];
@@ -16,6 +17,7 @@ type CurrentFilters = {
 };
 
 export default function ProductFilters() {
+	const { t } = useTranslation();
 	const [options, setOptions] = useState<FilterOptions | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [filters, setFilters] = useState<CurrentFilters>({
@@ -110,7 +112,7 @@ export default function ProductFilters() {
 			{/* Category Filter */}
 			{options && options.categories.length > 0 && (
 				<div>
-					<h3 className="text-sm font-semibold text-[#1d1d1f] mb-3">Category</h3>
+					<h3 className="text-sm font-semibold text-[#1d1d1f] mb-3">{t('filters.category')}</h3>
 					<div className="space-y-2">
 						{options.categories.map((cat) => (
 							<div key={cat} className="flex items-center justify-between group">
@@ -140,7 +142,7 @@ export default function ProductFilters() {
 								onClick={() => setFilters((prev) => ({ ...prev, category: null }))}
 								className="text-xs text-[#0071e3] hover:underline mt-1"
 							>
-								Clear category
+								{t('filters.clearCategory')}
 							</button>
 						)}
 					</div>
@@ -150,7 +152,7 @@ export default function ProductFilters() {
 			{/* Price Range Filter */}
 			{options && (
 				<div>
-					<h3 className="text-sm font-semibold text-[#1d1d1f] mb-3">Price Range</h3>
+					<h3 className="text-sm font-semibold text-[#1d1d1f] mb-3">{t('filters.priceRange')}</h3>
 					<div className="space-y-3">
 						<div className="flex items-center gap-2">
 							<input
@@ -170,7 +172,10 @@ export default function ProductFilters() {
 							/>
 						</div>
 						<p className="text-xs text-gray-500">
-							Range: {options.priceRange.min.toLocaleString()} - {options.priceRange.max.toLocaleString()} JPY
+							{t('filters.range', {
+								min: options.priceRange.min.toLocaleString(),
+								max: options.priceRange.max.toLocaleString()
+							})}
 						</p>
 					</div>
 				</div>
@@ -183,7 +188,7 @@ export default function ProductFilters() {
 					onClick={applyFilters}
 					className="w-full px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ed] transition-colors"
 				>
-					Apply Filters
+					{t('filters.applyFilters')}
 				</button>
 				{hasActiveFilters && (
 					<button
@@ -191,7 +196,7 @@ export default function ProductFilters() {
 						onClick={clearFilters}
 						className="w-full px-4 py-2 text-sm font-medium text-[#0071e3] bg-white border border-[#0071e3] rounded-lg hover:bg-[#f5f5f7] transition-colors"
 					>
-						Clear All
+						{t('filters.clearAll')}
 					</button>
 				)}
 			</div>

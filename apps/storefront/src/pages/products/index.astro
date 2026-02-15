@@ -73,9 +73,9 @@ const skeletonCards = Array.from({ length: 6 });
 							{/* Error State */}
 							<div id="product-error" class="hidden py-20">
 								<EmptyState
-									title="Store unavailable"
-									description="We couldn't load the catalog. Please try again later."
-									ctaLabel="Refresh"
+									title={t('errors.storeUnavailable')}
+									description={t('errors.storeUnavailableDescription')}
+									ctaLabel={t('errors.refresh')}
 									ctaHref="/products"
 								/>
 							</div>
@@ -83,9 +83,9 @@ const skeletonCards = Array.from({ length: 6 });
 							{/* Empty State */}
 							<div id="product-empty" class="hidden py-20">
 								<EmptyState
-									title="No products found"
-									description="Try a different search term or adjust your filters."
-									ctaLabel="View all products"
+									title={t('products.noProducts')}
+									description={t('products.noProductsDescription')}
+									ctaLabel={t('products.viewAllProducts')}
 									ctaHref="/products"
 								/>
 							</div>
@@ -93,6 +93,23 @@ const skeletonCards = Array.from({ length: 6 });
 							{/* Loaded Grid */}
 							<div id="product-grid" class="hidden grid grid-cols-1 gap-6 sm:grid-cols-2 xl:gap-8"></div>
 						</div>
+
+						{/* i18n data for client script */}
+						<div
+							id="i18n-data"
+							class="hidden"
+							data-new={t('products.new')}
+							data-from={t('products.from')}
+							data-buy={t('products.buy')}
+							data-search-results={t('products.searchResults')}
+							data-filtered-results={t('products.filteredResults')}
+							data-showing-count={t('products.showingCount')}
+							data-page-info={t('products.pageInfo')}
+							data-price-above={t('products.priceAbove')}
+							data-price-up-to={t('products.priceUpTo')}
+							data-domestic-shipping={t('category.domesticShipping')}
+							data-international-shipping={t('category.internationalShipping')}
+						></div>
 
 						{/* Pagination */}
 						<div id="pagination" class="hidden mt-12 flex items-center justify-between border-t border-gray-200 pt-6">
@@ -118,6 +135,22 @@ const skeletonCards = Array.from({ length: 6 });
 	<script>
 		import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 		import { $wishlistItems, toggleWishlist, type WishlistItem } from '../../lib/wishlist';
+
+		// Read i18n translations from data attributes
+		const i18nEl = document.getElementById('i18n-data');
+		const i18n = {
+			new: i18nEl?.dataset.new || '新着',
+			from: i18nEl?.dataset.from || 'から',
+			buy: i18nEl?.dataset.buy || '購入',
+			searchResults: i18nEl?.dataset.searchResults || '検索結果',
+			filteredResults: i18nEl?.dataset.filteredResults || 'フィルター結果',
+			showingCount: i18nEl?.dataset.showingCount || '{start}〜{end}件目（全{total}件）',
+			pageInfo: i18nEl?.dataset.pageInfo || 'ページ {page} / {totalPages}',
+			priceAbove: i18nEl?.dataset.priceAbove || '{min}円以上',
+			priceUpTo: i18nEl?.dataset.priceUpTo || '{max}円以下',
+			domesticShipping: i18nEl?.dataset.domesticShipping || '国内発送 2〜3日',
+			internationalShipping: i18nEl?.dataset.internationalShipping || '海外発送 10日程',
+		};
 
 		const setState = (next: string) => {
 			const skeleton = document.getElementById('product-skeleton');
@@ -208,7 +241,7 @@ const skeletonCards = Array.from({ length: 6 });
 				// 1. Tag / Badge (Top Left)
 				const tag = document.createElement('span');
 				tag.className = 'mb-2 text-[10px] font-bold uppercase tracking-wider text-[#bf4800]';
-				tag.textContent = 'New';
+				tag.textContent = i18n.new;
 				card.appendChild(tag);
 
 				// 2. Title & Desc
@@ -230,7 +263,7 @@ const skeletonCards = Array.from({ length: 6 });
 				shippingBadge.className = stock > 0
 					? 'mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'
 					: 'mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
-				shippingBadge.textContent = stock > 0 ? '国内発送 2〜3日' : '海外発送 10日程';
+				shippingBadge.textContent = stock > 0 ? i18n.domesticShipping : i18n.internationalShipping;
 				card.appendChild(shippingBadge);
 
 				// 3. Image Container
@@ -261,11 +294,11 @@ const skeletonCards = Array.from({ length: 6 });
 
 				const priceEl = document.createElement('span');
 				priceEl.className = 'text-[15px] text-[#1d1d1f]';
-				priceEl.textContent = price ? `From ${price.amount} ${price.currency}` : '';
+				priceEl.textContent = price ? `${i18n.from} ${price.amount.toLocaleString()} ${price.currency}` : '';
 
 				const buyBtn = document.createElement('span');
 				buyBtn.className = 'rounded-full bg-[#0071e3] px-4 py-1.5 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100';
-				buyBtn.textContent = 'Buy';
+				buyBtn.textContent = i18n.buy;
 
 				footer.appendChild(priceEl);
 				footer.appendChild(buyBtn);
@@ -294,8 +327,13 @@ const skeletonCards = Array.from({ length: 6 });
 			const start = (page - 1) * perPage + 1;
 			const end = Math.min(page * perPage, totalCount);
 
-			paginationInfo.textContent = `Showing ${start}-${end} of ${totalCount} products`;
-			currentPage.textContent = `Page ${page} / ${totalPages}`;
+			paginationInfo.textContent = i18n.showingCount
+				.replace('{start}', String(start))
+				.replace('{end}', String(end))
+				.replace('{total}', String(totalCount));
+			currentPage.textContent = i18n.pageInfo
+				.replace('{page}', String(page))
+				.replace('{totalPages}', String(totalPages));
 
 			// Show/hide prev/next buttons
 			if (page > 1) {
@@ -343,7 +381,7 @@ const skeletonCards = Array.from({ length: 6 });
 			if (searchQuery && searchInfo && searchTerm && sectionTitle) {
 				searchTerm.textContent = searchQuery;
 				searchInfo.classList.remove('hidden');
-				sectionTitle.textContent = 'Search results';
+				sectionTitle.textContent = i18n.searchResults;
 			}
 
 			// Show active filters info
@@ -355,14 +393,14 @@ const skeletonCards = Array.from({ length: 6 });
 					const priceLabel = minPrice && maxPrice
 						? `${Number(minPrice).toLocaleString()} - ${Number(maxPrice).toLocaleString()} JPY`
 						: minPrice
-						? `${Number(minPrice).toLocaleString()}+ JPY`
-						: `Up to ${Number(maxPrice).toLocaleString()} JPY`;
+						? i18n.priceAbove.replace('{min}', Number(minPrice).toLocaleString())
+						: i18n.priceUpTo.replace('{max}', Number(maxPrice).toLocaleString());
 					badges.push(`<span class="px-2 py-1 text-xs bg-[#0071e3]/10 text-[#0071e3] rounded-full">${priceLabel}</span>`);
 				}
 				activeFilters.innerHTML = badges.join('');
 				filterInfo.classList.remove('hidden');
 				if (sectionTitle && !searchQuery) {
-					sectionTitle.textContent = 'Filtered results';
+					sectionTitle.textContent = i18n.filteredResults;
 				}
 			}
 
