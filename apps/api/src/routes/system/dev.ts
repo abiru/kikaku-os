@@ -35,6 +35,14 @@ type ProductSeedDef = {
 
 const dev = new Hono<Env>();
 
+// Block all dev routes in production
+dev.use('*', async (c, next) => {
+  if (c.env.DEV_MODE !== 'true') {
+    return jsonError(c, 'Not found', 404);
+  }
+  await next();
+});
+
 const yesterday = () => {
   const d = new Date();
   d.setDate(d.getDate() - 1);
@@ -159,8 +167,6 @@ dev.get('/tmux-test', (c) => {
 });
 
 dev.post('/seed', async (c) => {
-  if (c.env.DEV_MODE !== 'true') return jsonError(c, 'Not found', 404);
-
   let payload: SeedRequest = {};
   try {
     payload = await c.req.json();
@@ -467,8 +473,6 @@ dev.post('/seed', async (c) => {
 });
 
 dev.post('/provision-stripe-prices', async (c) => {
-  if (c.env.DEV_MODE !== 'true') return jsonError(c, 'Not found', 404);
-
   const stripeKey = c.env.STRIPE_SECRET_KEY;
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
   if (stripeKey.startsWith('pk_')) {
