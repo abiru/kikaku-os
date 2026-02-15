@@ -17,13 +17,16 @@
     "none": "なし",
     "or": "または",
     "and": "および",
-    "free": "無料"
+    "free": "無料",
+    "menu": "メニュー",
+    "login": "ログイン"
   },
   "nav": {
     "store": "ストア",
     "products": "製品",
     "support": "サポート",
-    "openCart": "カートを開く"
+    "openCart": "カートを開く",
+    "mobileMenu": "モバイルメニュー"
   },
   "footer": {
     "shopAndLearn": "ショップとサービス",
@@ -236,7 +239,12 @@
     "lowStockAlerts": "低在庫アラート",
     "lowStock": "低在庫",
     "outOfStock": "在庫切れ",
-    "stockLevel": "在庫数"
+    "stockLevel": "在庫数",
+    "homeHeroes": "ホームヒーロー",
+    "bulkImageUpload": "画像一括アップロード",
+    "reviews": "レビュー",
+    "googleAds": "Google広告",
+    "users": "ユーザー"
   },
   "wishlist": {
     "title": "お気に入り",
@@ -483,6 +491,7 @@
     "serverError": "サーバーエラー",
     "serverErrorCode": "500",
     "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
-    "reload": "再読み込み"
+    "reload": "再読み込み",
+    "displayError": "表示中にエラーが発生しました。ページを再読み込みしてください。"
   }
 }
