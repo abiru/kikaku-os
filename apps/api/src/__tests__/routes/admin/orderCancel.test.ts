@@ -187,7 +187,7 @@ describe('POST /admin/orders/:id/cancel', () => {
     expect(json.ok).toBe(false);
   });
 
-  it('returns 401 without auth', async () => {
+  it('returns 403 without auth', async () => {
     const db = createMockDb();
 
     const res = await worker.fetch(
@@ -200,6 +200,6 @@ describe('POST /admin/orders/:id/cancel', () => {
       { waitUntil: () => {}, passThroughOnException: () => {} } as unknown as ExecutionContext
     );
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });

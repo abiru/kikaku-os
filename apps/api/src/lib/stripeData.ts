@@ -27,6 +27,9 @@ export type StripeDataObject = Record<string, unknown> & {
   payment_intent?: string;
   payment_intent_id?: string;
   status?: string;
+  next_action?: Record<string, unknown> & {
+    display_bank_transfer_instructions?: unknown;
+  };
 };
 
 /**

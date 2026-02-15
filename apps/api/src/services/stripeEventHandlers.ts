@@ -11,6 +11,7 @@
 
 import type { Env } from '../env';
 import {
+  type StripeDataObject,
   type StripeEvent,
   extractOrderId
 } from '../lib/stripeData';

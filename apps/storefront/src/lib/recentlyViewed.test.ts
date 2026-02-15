@@ -24,8 +24,9 @@ describe('recentlyViewed', () => {
 			addToRecentlyViewed(sampleProduct);
 			const items = $recentlyViewed.get();
 			expect(items).toHaveLength(1);
-			expect(items[0].name).toBe('Test Product');
-			expect(items[0].viewedAt).toBeGreaterThan(0);
+			expect(items[0]).toBeDefined();
+			expect(items[0]!.name).toBe('Test Product');
+			expect(items[0]!.viewedAt).toBeGreaterThan(0);
 		});
 
 		it('moves existing product to front', () => {
@@ -34,7 +35,8 @@ describe('recentlyViewed', () => {
 			addToRecentlyViewed(sampleProduct);
 			const items = $recentlyViewed.get();
 			expect(items).toHaveLength(2);
-			expect(items[0].id).toBe(1);
+			expect(items[0]).toBeDefined();
+			expect(items[0]!.id).toBe(1);
 		});
 
 		it('limits to 10 items', () => {
@@ -46,7 +48,9 @@ describe('recentlyViewed', () => {
 
 		it('handles null image', () => {
 			addToRecentlyViewed({ ...sampleProduct, image: null });
-			expect($recentlyViewed.get()[0].image).toBeNull();
+			const items = $recentlyViewed.get();
+			expect(items[0]).toBeDefined();
+			expect(items[0]!.image).toBeNull();
 		});
 	});
 
@@ -61,8 +65,10 @@ describe('recentlyViewed', () => {
 			addToRecentlyViewed({ ...sampleProduct, id: 2 });
 
 			const sorted = $recentlyViewedList.get();
-			expect(sorted[0].id).toBe(2);
-			expect(sorted[1].id).toBe(1);
+			expect(sorted[0]).toBeDefined();
+			expect(sorted[1]).toBeDefined();
+			expect(sorted[0]!.id).toBe(2);
+			expect(sorted[1]!.id).toBe(1);
 
 			vi.restoreAllMocks();
 		});
@@ -73,7 +79,8 @@ describe('recentlyViewed', () => {
 			addToRecentlyViewed(sampleProduct);
 			const items = getRecentlyViewed();
 			expect(items).toHaveLength(1);
-			expect(items[0].name).toBe('Test Product');
+			expect(items[0]).toBeDefined();
+			expect(items[0]!.name).toBe('Test Product');
 		});
 
 		it('returns empty array when nothing viewed', () => {
