@@ -1,0 +1,52 @@
+---
+export const prerender = false;
+
+import Container from '../components/Container.astro';
+import Layout from '../layouts/Layout.astro';
+import { t } from '../i18n';
+---
+
+<Layout title={t('pages.social.pageTitle')}>
+	<div class="bg-white min-h-screen">
+		<section class="pt-24 pb-20 md:pt-32 md:pb-28">
+			<Container class="max-w-3xl">
+				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[#1d1d1f] text-center">
+					{t('pages.social.title')}
+				</h1>
+				<p class="mt-6 text-center text-[#6e6e73] text-lg">
+					{t('pages.social.description')}
+				</p>
+
+				<div class="mt-10 space-y-4">
+					<section id="x" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+						<div class="flex items-center gap-3">
+							<h2 class="text-xl font-semibold text-[#1d1d1f]">{t('pages.social.xTitle')}</h2>
+							<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">{t('pages.social.comingSoonBadge')}</span>
+						</div>
+						<p class="mt-2 text-[#6e6e73]">{t('pages.social.comingSoon')}</p>
+					</section>
+					<section id="instagram" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+						<div class="flex items-center gap-3">
+							<h2 class="text-xl font-semibold text-[#1d1d1f]">{t('pages.social.instagramTitle')}</h2>
+							<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">{t('pages.social.comingSoonBadge')}</span>
+						</div>
+						<p class="mt-2 text-[#6e6e73]">{t('pages.social.comingSoon')}</p>
+					</section>
+					<section id="facebook" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+						<div class="flex items-center gap-3">
+							<h2 class="text-xl font-semibold text-[#1d1d1f]">{t('pages.social.facebookTitle')}</h2>
+							<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">{t('pages.social.comingSoonBadge')}</span>
+						</div>
+						<p class="mt-2 text-[#6e6e73]">{t('pages.social.comingSoon')}</p>
+					</section>
+				</div>
+
+				<div class="mt-8 text-center">
+					<a href="/contact" class="inline-flex items-center rounded-full bg-[#0071e3] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#0077ed]">
+						{t('pages.social.contactButton')}
+					</a>
+				</div>
+			</Container>
+		</section>
+	</div>
+</Layout>
