@@ -111,13 +111,12 @@ if (import.meta.env.ADMIN_API_KEY) {
 		<div class="flex flex-wrap items-center gap-4">
 			{/* Search */}
 			<form method="get" class="relative flex-1 max-w-md">
-				<input type="hidden" name="role" value={roleFilter} />
-				<input type="hidden" name="active" value={activeFilter} />
-				<label for="user-search" class="sr-only">Search by name or email</label>
-				<label for="user-search" class="sr-only">Search by name or email</label>
-				<input
-					type="search"
-					id="user-search"
+					<input type="hidden" name="role" value={roleFilter} />
+					<input type="hidden" name="active" value={activeFilter} />
+					<label for="user-search" class="sr-only">Search by name or email</label>
+					<input
+						type="search"
+						id="user-search"
 					name="q"
 					value={q}
 					placeholder="Search by name or email..."
