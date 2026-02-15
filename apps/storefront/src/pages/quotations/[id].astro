@@ -377,6 +377,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 </script>
 
 <script>
+  import DOMPurify from 'isomorphic-dompurify';
   import { acceptQuotation, fetchQuotationHtml } from '../../lib/quotationApi';
 
   declare global {
@@ -417,7 +418,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
       script.onload = () => {
         // Create temporary container
         const container = document.createElement('div');
-        container.innerHTML = html;
+        container.innerHTML = DOMPurify.sanitize(html);
         container.style.position = 'absolute';
         container.style.left = '-9999px';
         document.body.appendChild(container);

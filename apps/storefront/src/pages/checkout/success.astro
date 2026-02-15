@@ -140,6 +140,8 @@ if (orderToken) {
 </script>
 
 <script>
+	import DOMPurify from 'isomorphic-dompurify';
+
 	declare global {
 		interface Window {
 			__CHECKOUT_SUCCESS_API_BASE__?: string;
@@ -172,7 +174,7 @@ if (orderToken) {
 					// Show processing message
 					const container = document.querySelector('[data-order-container]');
 					if (container) {
-						container.innerHTML = `
+						container.innerHTML = DOMPurify.sanitize(`
 							<div class="mt-10 rounded-3xl bg-white p-8 text-center shadow-sm">
 								<div class="mx-auto h-12 w-12 text-yellow-500 mb-4">
 									<svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -182,7 +184,7 @@ if (orderToken) {
 								<p class="text-lg text-gray-900 font-medium mb-2">Payment processing</p>
 								<p class="text-sm text-gray-600">Your payment is being processed. You'll receive a confirmation email shortly.</p>
 							</div>
-						`;
+						`, { ADD_TAGS: ['svg', 'path'], ADD_ATTR: ['viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd'] });
 					}
 					return;
 				}
