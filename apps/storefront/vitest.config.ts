@@ -18,7 +18,11 @@ export default defineConfig({
 				'src/env.d.ts',
 				'src/components/catalyst/**',
 				'src/components/admin/**'
-			]
+			],
+			thresholds: {
+				lines: 30,
+				statements: 30
+			}
 		}
 	}
 });
