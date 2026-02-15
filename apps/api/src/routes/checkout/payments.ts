@@ -316,7 +316,7 @@ payments.post('/payments/intent', async (c) => {
     return jsonError(c, 'Failed to create payment intent', 500);
   }
 
-  const paymentIntent = await stripeRes.json<any>();
+  const paymentIntent = await stripeRes.json<{ id?: string; client_secret?: string }>();
 
   if (!paymentIntent?.client_secret || !paymentIntent?.id) {
     await cleanupFailedOrder(c.env.DB, orderId);

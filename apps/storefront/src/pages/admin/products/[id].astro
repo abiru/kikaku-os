@@ -8,11 +8,13 @@ import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
-import { Textarea } from '../../../components/catalyst/textarea';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
-import { formatPrice, formatDate } from '../../../lib/format';
+import { formatDate } from '../../../lib/format';
 import MarkdownPreview from '../../../components/MarkdownPreview';
+import ProductWebUpdate from '../../../components/admin/ProductWebUpdate.astro';
+import ProductImages from '../../../components/admin/ProductImages.astro';
+import ProductVariants from '../../../components/admin/ProductVariants.astro';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -308,7 +310,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									ホームページに表示（Featured）
 								</label>
 							</div>
-							<p class="text-xs text-[#86868b] mt-1">チェックするとホームページのカテゴリグリッドに表示されます</p>
+							<p class="text-xs text-[#6e6e73] mt-1">チェックするとホームページのカテゴリグリッドに表示されます</p>
 						</Field>
 
 						<Field>
@@ -325,7 +327,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									<option value={cat.category} />
 								))}
 							</datalist>
-							<p class="text-xs text-[#86868b] mt-1">Type to create a new category or select from existing ones.</p>
+							<p class="text-xs text-[#6e6e73] mt-1">Type to create a new category or select from existing ones.</p>
 						</Field>
 
 						<Field>
@@ -338,18 +340,18 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									</option>
 								))}
 							</Select>
-							<p class="text-xs text-[#86868b] mt-1">All prices are tax-inclusive (税込)</p>
+							<p class="text-xs text-[#6e6e73] mt-1">All prices are tax-inclusive (税込)</p>
 						</Field>
 					</Fieldset>
 
 					<div class="pt-4 border-t border-gray-100">
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
-								<dt class="text-[#86868b]">Created</dt>
+								<dt class="text-[#6e6e73]">Created</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(product.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#86868b]">Updated</dt>
+								<dt class="text-[#6e6e73]">Updated</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(product.updated_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
@@ -415,7 +417,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									<span id="fetch-label">取得</span>
 								</button>
 								</div>
-								<p class="text-xs text-[#86868b] mt-1">メーカーの公式サイトURLを入力して情報を取得します</p>
+								<p class="text-xs text-[#6e6e73] mt-1">メーカーの公式サイトURLを入力して情報を取得します</p>
 							</Field>
 						</Fieldset>
 
@@ -433,20 +435,20 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 							<!-- Image -->
 							<div class="flex gap-4">
 								<div class="flex-shrink-0">
-									<p class="text-xs text-[#86868b] mb-1">画像</p>
+									<p class="text-xs text-[#6e6e73] mb-1">画像</p>
 									<img id="preview-image" src="" alt="Preview" class="w-32 h-32 object-contain rounded-lg bg-gray-50" />
 								</div>
 								<div class="flex-1 space-y-2">
 									<div>
-										<p class="text-xs text-[#86868b]">取得元タイトル</p>
+										<p class="text-xs text-[#6e6e73]">取得元タイトル</p>
 										<p id="preview-original-title" class="text-sm text-zinc-950"></p>
 									</div>
 									<div>
-										<p class="text-xs text-[#86868b]">スペック</p>
+										<p class="text-xs text-[#6e6e73]">スペック</p>
 										<p id="preview-specs" class="text-xs text-zinc-950 font-mono"></p>
 									</div>
 									<div>
-										<p class="text-xs text-[#86868b]">ソース</p>
+										<p class="text-xs text-[#6e6e73]">ソース</p>
 										<p id="preview-source" class="text-sm text-zinc-950 font-mono"></p>
 									</div>
 								</div>
@@ -460,7 +462,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 							<!-- Generated Description -->
 							<div>
-								<p class="text-xs text-[#86868b] mb-1">生成された説明文</p>
+								<p class="text-xs text-[#6e6e73] mb-1">生成された説明文</p>
 								<div id="preview-generated-description" class="p-4 bg-gray-50 rounded-lg text-sm prose prose-sm max-w-none max-h-64 overflow-y-auto"></div>
 							</div>
 
@@ -523,7 +525,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									class="w-32 h-32 object-contain rounded-lg bg-gray-50"
 								/>
 								<div class="flex-1 min-w-0">
-									<p class="text-xs text-[#86868b] mb-1">Image URL (from web search)</p>
+									<p class="text-xs text-[#6e6e73] mb-1">Image URL (from web search)</p>
 									<p class="text-sm text-zinc-950 break-all font-mono">{externalImageUrl}</p>
 								</div>
 							</div>
@@ -531,26 +533,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 					</div>
 				)}
 
-				<!-- Images Section -->
-				<div class="mt-8">
-					<div class="flex items-center justify-between mb-4">
-						<Subheading>Images (R2 Storage)</Subheading>
-						<label
-							class="text-sm text-[#0071e3] hover:underline flex items-center gap-1 cursor-pointer"
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-							</svg>
-							Add Images
-							<input
-								type="file"
-								id="image-upload"
-								accept="image/jpeg,image/png,image/gif,image/webp"
-								multiple
-								class="hidden"
-							/>
-						</label>
-					</div>
+				<ProductImages images={images} />
 
 					<div id="upload-progress" class="hidden mb-4">
 						<div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
@@ -568,7 +551,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 					{images.length === 0 ? (
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-							<p class="text-[#86868b] text-sm">No images yet. Add product images to showcase your products.</p>
+							<p class="text-[#6e6e73] text-sm">No images yet. Add product images to showcase your products.</p>
 						</div>
 					) : (
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
@@ -627,7 +610,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 					{variants.length === 0 ? (
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-							<p class="text-[#86868b] text-sm">No variants yet. Add one to set prices.</p>
+							<p class="text-[#6e6e73] text-sm">No variants yet. Add one to set prices.</p>
 						</div>
 					) : (
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
@@ -637,7 +620,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									<div class="p-4 flex items-center justify-between" data-variant-id={variant.id}>
 										<div class="flex-1">
 											<div class="font-medium text-zinc-950">{variant.title}</div>
-											<div class="text-sm text-[#86868b] mt-1 flex flex-wrap gap-x-4 gap-y-1">
+											<div class="text-sm text-[#6e6e73] mt-1 flex flex-wrap gap-x-4 gap-y-1">
 												<span>SKU: {variant.sku || '-'}</span>
 												<span class="tabular-nums">
 													{price ? formatPrice(price.amount, price.currency) : 'No price set'}
@@ -725,7 +708,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										className="font-mono"
 										placeholder="price_xxxxxxxx"
 									/>
-									<p class="text-xs text-[#86868b] mt-1">Required for checkout. Get this from your Stripe Dashboard.</p>
+									<p class="text-xs text-[#6e6e73] mt-1">Required for checkout. Get this from your Stripe Dashboard.</p>
 								</Field>
 							</Fieldset>
 

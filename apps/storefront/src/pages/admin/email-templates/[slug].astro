@@ -159,7 +159,7 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 
 				{/* Subject */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-[#86868b]">Email Subject</h2>
+					<h2 class="text-sm font-medium text-[#6e6e73]">Email Subject</h2>
 					<Field>
 						<Input client:load
 							type="text"
@@ -175,7 +175,7 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 				{/* HTML Body */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
 					<div class="flex items-center justify-between">
-						<h2 class="text-sm font-medium text-[#86868b]">HTML Content</h2>
+						<h2 class="text-sm font-medium text-[#6e6e73]">HTML Content</h2>
 						<div class="flex gap-2">
 							<button
 								type="button"
@@ -203,7 +203,7 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 
 				{/* Text Body */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-[#86868b]">Plain Text Content (Fallback)</h2>
+					<h2 class="text-sm font-medium text-[#6e6e73]">Plain Text Content (Fallback)</h2>
 					<Field>
 						<Textarea client:load
 							id="body_text"
@@ -216,7 +216,7 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 
 				{/* Preview Email */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-[#86868b]">Send Test Email</h2>
+					<h2 class="text-sm font-medium text-[#6e6e73]">Send Test Email</h2>
 					<div class="flex gap-4">
 						<Input client:load
 							type="email"
@@ -232,7 +232,7 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 							Send Preview
 						</CatalystButton>
 					</div>
-					<p class="text-xs text-[#86868b]">A test email will be sent with sample data</p>
+					<p class="text-xs text-[#6e6e73]">A test email will be sent with sample data</p>
 					<div id="preview-result" class="hidden"></div>
 				</div>
 
@@ -240,11 +240,11 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 					<dl class="grid grid-cols-2 gap-4 text-sm">
 						<div>
-							<dt class="text-[#86868b]">Created</dt>
+							<dt class="text-[#6e6e73]">Created</dt>
 							<dd class="text-zinc-950 tabular-nums">{formatDate(template.created_at, dateTimeOpts)}</dd>
 						</div>
 						<div>
-							<dt class="text-[#86868b]">Updated</dt>
+							<dt class="text-[#6e6e73]">Updated</dt>
 							<dd class="text-zinc-950 tabular-nums">{formatDate(template.updated_at, dateTimeOpts)}</dd>
 						</div>
 					</dl>

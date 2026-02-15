@@ -80,7 +80,7 @@ export const getLatestRunForDate = async (
   date: string
 ): Promise<DailyCloseRun | null> => {
   const row = await env.DB.prepare(
-    `SELECT * FROM daily_close_runs WHERE date = ? ORDER BY started_at DESC LIMIT 1`
+    `SELECT id, date, status, started_at, completed_at, error_message, artifacts_generated, ledger_entries_created, anomaly_detected, forced, created_at, updated_at FROM daily_close_runs WHERE date = ? ORDER BY started_at DESC LIMIT 1`
   ).bind(date).first<DailyCloseRun>();
   return row || null;
 };
@@ -89,7 +89,7 @@ export const listDailyCloseRuns = async (
   env: Env['Bindings'],
   options?: { limit?: number; offset?: number; status?: DailyCloseRunStatus }
 ): Promise<DailyCloseRun[]> => {
-  let query = 'SELECT * FROM daily_close_runs';
+  let query = 'SELECT id, date, status, started_at, completed_at, error_message, artifacts_generated, ledger_entries_created, anomaly_detected, forced, created_at, updated_at FROM daily_close_runs';
   const params: (string | number)[] = [];
 
   if (options?.status) {

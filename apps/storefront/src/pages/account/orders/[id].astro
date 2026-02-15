@@ -107,7 +107,7 @@ const statusLabels: Record<string, string> = {
           <h1 class="text-2xl font-semibold text-[#1d1d1f]">
             {t('account.orderNumber')} #{order.id}
           </h1>
-          <p class="text-[#86868b] mt-1">
+          <p class="text-[#6e6e73] mt-1">
             {formatDate(order.created_at, dateTimeLongOpts)}
           </p>
         </div>
@@ -132,7 +132,7 @@ const statusLabels: Record<string, string> = {
                 <div class="p-4 flex justify-between items-start">
                   <div>
                     <div class="font-medium text-[#1d1d1f]">{item.title}</div>
-                    <div class="text-sm text-[#86868b] mt-1">
+                    <div class="text-sm text-[#6e6e73] mt-1">
                       {t('account.quantity')}: {item.quantity} x {formatCurrency(item.unit_price, order.currency)}
                     </div>
                   </div>
@@ -155,7 +155,7 @@ const statusLabels: Record<string, string> = {
                   <div class="font-medium mb-2">{order.shipping.name}</div>
                 )}
                 {order.shipping.address && (
-                  <div class="text-sm text-[#86868b] space-y-1">
+                  <div class="text-sm text-[#6e6e73] space-y-1">
                     {order.shipping.address.postal_code && (
                       <div>{order.shipping.address.postal_code}</div>
                     )}
@@ -183,25 +183,25 @@ const statusLabels: Record<string, string> = {
             </div>
             <div class="p-4 space-y-3">
               <div class="flex justify-between text-sm">
-                <span class="text-[#86868b]">{t('account.subtotal')}</span>
+                <span class="text-[#6e6e73]">{t('account.subtotal')}</span>
                 <span class="text-[#1d1d1f]">{formatCurrency(order.subtotal, order.currency)}</span>
               </div>
 
               <div class="flex justify-between text-sm">
-                <span class="text-[#86868b]">{t('account.tax')}</span>
+                <span class="text-[#6e6e73]">{t('account.tax')}</span>
                 <span class="text-[#1d1d1f]">{formatCurrency(order.tax_amount, order.currency)}</span>
               </div>
 
               {order.shipping_fee > 0 && (
                 <div class="flex justify-between text-sm">
-                  <span class="text-[#86868b]">{t('account.shipping')}</span>
+                  <span class="text-[#6e6e73]">{t('account.shipping')}</span>
                   <span class="text-[#1d1d1f]">{formatCurrency(order.shipping_fee, order.currency)}</span>
                 </div>
               )}
 
               {order.total_discount > 0 && (
                 <div class="flex justify-between text-sm">
-                  <span class="text-[#86868b]">{t('account.discount')}</span>
+                  <span class="text-[#6e6e73]">{t('account.discount')}</span>
                   <span class="text-green-600">-{formatCurrency(order.total_discount, order.currency)}</span>
                 </div>
               )}
@@ -215,7 +215,7 @@ const statusLabels: Record<string, string> = {
 
               {order.paid_at && (
                 <div class="pt-3 border-t border-gray-200 text-sm">
-                  <span class="text-[#86868b]">{t('account.paymentStatus')}: </span>
+                  <span class="text-[#6e6e73]">{t('account.paymentStatus')}: </span>
                   <span class="text-green-600">{t('account.paid')}</span>
                 </div>
               )}
