@@ -6,6 +6,7 @@
     "types": ["@cloudflare/workers-types"],
     "esModuleInterop": true,
     "strict": true,
+    "noUncheckedIndexedAccess": true,
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true

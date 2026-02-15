@@ -151,9 +151,10 @@ quotations.post('/quotations', async (c) => {
   const totalAmount = taxCalculation.totalAmount;
 
   let currency = 'JPY';
-  if (items.length > 0) {
-    const row = variantMap.get(items[0].variantId)!;
-    currency = (row.currency || 'JPY').toUpperCase();
+  const firstItem = items[0];
+  if (firstItem) {
+    const row = variantMap.get(firstItem.variantId);
+    currency = (row?.currency || 'JPY').toUpperCase();
   }
 
   // Calculate valid_until (30 days from now)

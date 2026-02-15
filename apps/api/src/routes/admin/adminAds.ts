@@ -604,6 +604,9 @@ app.post(
 
       // Use first candidate
       const candidate = content.candidates[0];
+      if (!candidate) {
+        return jsonError(c, 'No candidate found in history', 400);
+      }
 
       // Update draft with candidate content
       await c.env.DB.prepare(

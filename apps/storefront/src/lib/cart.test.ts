@@ -46,19 +46,19 @@ describe('cart', () => {
       addToCart(sampleItem);
       const items = $cartArray.get();
       expect(items).toHaveLength(1);
-      expect(items[0].quantity).toBe(1);
-      expect(items[0].title).toBe('Test Product');
+      expect(items[0]?.quantity).toBe(1);
+      expect(items[0]?.title).toBe('Test Product');
     });
 
     it('adds with specified quantity', () => {
       addToCart(sampleItem, 3);
-      expect($cartArray.get()[0].quantity).toBe(3);
+      expect($cartArray.get()[0]?.quantity).toBe(3);
     });
 
     it('increments quantity for existing variant', () => {
       addToCart(sampleItem, 2);
       addToCart(sampleItem, 3);
-      expect($cartArray.get()[0].quantity).toBe(5);
+      expect($cartArray.get()[0]?.quantity).toBe(5);
     });
 
     it('adds different variants separately', () => {
@@ -86,7 +86,7 @@ describe('cart', () => {
     it('updates quantity of existing item', () => {
       addToCart(sampleItem, 2);
       updateQuantity(1, 5);
-      expect($cartArray.get()[0].quantity).toBe(5);
+      expect($cartArray.get()[0]?.quantity).toBe(5);
     });
 
     it('removes item when quantity is 0 or negative', () => {
@@ -99,7 +99,7 @@ describe('cart', () => {
       addToCart(sampleItem);
       updateQuantity(999, 5);
       expect($cartArray.get()).toHaveLength(1);
-      expect($cartArray.get()[0].quantity).toBe(1);
+      expect($cartArray.get()[0]?.quantity).toBe(1);
     });
   });
 
