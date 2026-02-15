@@ -7,6 +7,7 @@ import {
 import { getApiBase, fetchJson } from '../lib/api';
 import { useTranslation } from '../i18n';
 import CheckoutForm from './CheckoutForm';
+import CheckoutSteps from './CheckoutSteps';
 import OrderSummary from './OrderSummary';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -194,6 +195,8 @@ function CheckoutPageContent() {
 			<h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-8">
 				{t('checkout.title')}
 			</h1>
+
+			<CheckoutSteps currentStep={!breakdown ? 'cart' : !emailSubmitted ? 'email' : 'payment'} />
 
 			{error && (
 				<div className="mb-6 rounded-md bg-red-50 p-4">

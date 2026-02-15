@@ -13,6 +13,20 @@ function getStripePromise(publishableKey: string): Promise<Stripe | null> {
 	return promise;
 }
 
+const getStripeErrorMessage = (error: { type?: string; code?: string; decline_code?: string; message?: string }, t: (key: string) => string): string => {
+	if (error.decline_code) {
+		const key = `checkout.stripeErrors.${error.decline_code}`;
+		const translated = t(key);
+		if (translated !== key) return translated;
+	}
+	if (error.code) {
+		const key = `checkout.stripeErrors.${error.code}`;
+		const translated = t(key);
+		if (translated !== key) return translated;
+	}
+	return t('checkout.stripeErrors.default');
+};
+
 type CheckoutFormProps = {
 	clientSecret: string | null;
 	orderToken: string | null;
@@ -69,7 +83,7 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 			});
 
 			if (error) {
-				setErrorMessage(error.message || 'Payment failed');
+				setErrorMessage(getStripeErrorMessage(error, t));
 				setIsProcessing(false);
 			}
 			// If successful, user will be redirected by Stripe
