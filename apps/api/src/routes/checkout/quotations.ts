@@ -164,7 +164,10 @@ quotations.post('/quotations/:token/accept', async (c) => {
   }
 
   const email = normalizeString(acceptBody?.email);
-  const baseUrl = c.env.STOREFRONT_BASE_URL || 'http://localhost:4321';
+  const baseUrl = c.env.STOREFRONT_BASE_URL;
+  if (!baseUrl) {
+    return jsonError(c, 'STOREFRONT_BASE_URL is not configured', 500);
+  }
 
   try {
     const result = await acceptQuotation(c.env.DB, stripeKey, baseUrl, token, email);

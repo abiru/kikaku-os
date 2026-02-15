@@ -317,7 +317,7 @@ function validateSettingValue(
         }
       }
     } catch (e) {
-      // Invalid JSON in validation_rules, skip
+      logger.error('Invalid JSON in validation_rules', { error: String(e) });
     }
   }
 
