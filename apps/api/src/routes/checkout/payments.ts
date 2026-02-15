@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import type { D1Database, D1PreparedStatement } from '@cloudflare/workers-types';
 import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { ensureStripeCustomer } from '../../services/stripeCustomer';
@@ -14,6 +15,66 @@ const paymentIntentSchema = z.object({
   quoteId: z.string().min(1, 'quoteId is required'),
   email: z.string().email('Valid email is required'),
 });
+
+const runStatements = async (
+  db: D1Database,
+  statements: D1PreparedStatement[]
+): Promise<void> => {
+  if (typeof db.batch === 'function') {
+    await db.batch(statements);
+    return;
+  }
+
+  for (const statement of statements) {
+    await statement.run();
+  }
+};
+
+/**
+ * Clean up a failed order creation: release stock, delete order items and order.
+ * Logs to Inbox on cleanup failure.
+ */
+const cleanupFailedOrder = async (
+  db: D1Database,
+  orderId: number
+): Promise<void> => {
+  try {
+    await releaseStockReservationForOrder(db, orderId);
+  } catch (releaseErr) {
+    console.error('Failed to release stock reservation during cleanup:', releaseErr);
+    try {
+      await db.prepare(
+        `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
+         VALUES (?, ?, 'critical', 'open', datetime('now'), datetime('now'))`
+      ).bind(
+        `Order cleanup failed: stock reservation release for order #${orderId}`,
+        `Manual cleanup required. Error: ${releaseErr instanceof Error ? releaseErr.message : String(releaseErr)}`
+      ).run();
+    } catch {
+      // Last resort: already logged
+    }
+  }
+
+  try {
+    await runStatements(db, [
+      db.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId),
+      db.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId),
+    ]);
+  } catch (deleteErr) {
+    console.error('Failed to delete order during cleanup:', deleteErr);
+    try {
+      await db.prepare(
+        `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
+         VALUES (?, ?, 'critical', 'open', datetime('now'), datetime('now'))`
+      ).bind(
+        `Order cleanup failed: could not delete order #${orderId}`,
+        `Orphaned order record may exist. Manual cleanup required. Error: ${deleteErr instanceof Error ? deleteErr.message : String(deleteErr)}`
+      ).run();
+    } catch {
+      // Last resort: already logged
+    }
+  }
+};
 
 const payments = new Hono<Env>();
 
@@ -183,25 +244,31 @@ payments.post('/payments/intent', async (c) => {
 
   const orderId = Number(orderRes.meta.last_row_id);
 
-  // Insert order_items from quote items
-  for (const item of quoteItems) {
+  // Insert order_items from quote items (batched for atomicity)
+  const orderItemStatements = quoteItems.map((item) => {
     const pricing = variantPricing.get(item.variantId)!;
     const unitPrice = pricing.unitPrice;
     const lineTotal = unitPrice * item.quantity;
     const taxRatePercent = Math.round(pricing.taxRate * 100);
     const taxAmount = Math.floor((lineTotal * taxRatePercent) / (100 + taxRatePercent));
 
-    await c.env.DB.prepare(
+    return c.env.DB.prepare(
       `INSERT INTO order_items (order_id, variant_id, quantity, unit_price, tax_rate, tax_amount, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
-    ).bind(orderId, item.variantId, item.quantity, unitPrice, taxRatePercent, taxAmount).run();
+    ).bind(orderId, item.variantId, item.quantity, unitPrice, taxRatePercent, taxAmount);
+  });
+
+  if (orderItemStatements.length > 0) {
+    await runStatements(c.env.DB, orderItemStatements);
   }
 
   // Reserve stock atomically right before payment creation
   const reservation = await reserveStockForOrder(c.env.DB, orderId, quoteItems);
   if (!reservation.reserved) {
-    await c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId).run();
-    await c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
+    await runStatements(c.env.DB, [
+      c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId),
+      c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId),
+    ]);
     return c.json({
       ok: false,
       message: 'Some items are out of stock',
@@ -245,48 +312,14 @@ payments.post('/payments/intent', async (c) => {
   if (!stripeRes.ok) {
     const text = await stripeRes.text();
     console.error('Stripe PaymentIntent creation failed:', text);
-    try {
-      await releaseStockReservationForOrder(c.env.DB, orderId);
-    } catch (releaseErr) {
-      console.error('Failed to release stock reservation:', releaseErr);
-      try {
-        await c.env.DB.prepare(
-          `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
-           VALUES (?, ?, 'critical', 'open', datetime('now'), datetime('now'))`
-        ).bind(
-          `Stock reservation cleanup failed for order #${orderId}`,
-          `releaseStockReservationForOrder failed. Manual cleanup required. Error: ${releaseErr instanceof Error ? releaseErr.message : String(releaseErr)}`
-        ).run();
-      } catch {
-        // Last resort: already logged above
-      }
-    }
-    await c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId).run();
-    await c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
+    await cleanupFailedOrder(c.env.DB, orderId);
     return jsonError(c, 'Failed to create payment intent', 500);
   }
 
   const paymentIntent = await stripeRes.json<any>();
 
   if (!paymentIntent?.client_secret || !paymentIntent?.id) {
-    try {
-      await releaseStockReservationForOrder(c.env.DB, orderId);
-    } catch (releaseErr) {
-      console.error('Failed to release stock reservation:', releaseErr);
-      try {
-        await c.env.DB.prepare(
-          `INSERT INTO inbox_items (title, body, severity, status, created_at, updated_at)
-           VALUES (?, ?, 'critical', 'open', datetime('now'), datetime('now'))`
-        ).bind(
-          `Stock reservation cleanup failed for order #${orderId}`,
-          `releaseStockReservationForOrder failed. Manual cleanup required. Error: ${releaseErr instanceof Error ? releaseErr.message : String(releaseErr)}`
-        ).run();
-      } catch {
-        // Last resort: already logged above
-      }
-    }
-    await c.env.DB.prepare(`DELETE FROM order_items WHERE order_id = ?`).bind(orderId).run();
-    await c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(orderId).run();
+    await cleanupFailedOrder(c.env.DB, orderId);
     return jsonError(c, 'Invalid payment intent response', 500);
   }
 
