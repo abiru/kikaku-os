@@ -11,19 +11,31 @@ const REQUIRED_SECRETS = [
   'STRIPE_WEBHOOK_SECRET',
   'CLERK_SECRET_KEY',
   'STOREFRONT_BASE_URL',
+] as const;
+
+const OPTIONAL_SECRETS = [
   'RESEND_API_KEY',
 ] as const;
 
+function isConfigured(env: Record<string, unknown>, key: string): boolean {
+  return typeof env[key] === 'string' && env[key] !== '';
+}
+
 function checkSecrets(env: Record<string, unknown>): {
   allConfigured: boolean;
-  details: Record<string, boolean>;
+  required: Record<string, boolean>;
+  optional: Record<string, boolean>;
 } {
-  const details: Record<string, boolean> = {};
+  const required: Record<string, boolean> = {};
   for (const key of REQUIRED_SECRETS) {
-    details[key] = typeof env[key] === 'string' && env[key] !== '';
+    required[key] = isConfigured(env, key);
   }
-  const allConfigured = Object.values(details).every(Boolean);
-  return { allConfigured, details };
+  const optional: Record<string, boolean> = {};
+  for (const key of OPTIONAL_SECRETS) {
+    optional[key] = isConfigured(env, key);
+  }
+  const allConfigured = Object.values(required).every(Boolean);
+  return { allConfigured, required, optional };
 }
 
 health.get('/health', async (c) => {
@@ -58,9 +70,14 @@ health.get('/health', async (c) => {
     if (!adminKey || !c.env.ADMIN_API_KEY || !timingSafeCompare(adminKey, c.env.ADMIN_API_KEY)) {
       return jsonError(c, 'Unauthorized', 401);
     }
-    checks.secretsDetail = Object.fromEntries(
-      Object.entries(secretsResult.details).map(([k, v]) => [k, { configured: v }])
-    );
+    checks.secretsDetail = {
+      required: Object.fromEntries(
+        Object.entries(secretsResult.required).map(([k, v]) => [k, { configured: v }])
+      ),
+      optional: Object.fromEntries(
+        Object.entries(secretsResult.optional).map(([k, v]) => [k, { configured: v }])
+      ),
+    };
   }
 
   const allHealthy =
