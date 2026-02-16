@@ -914,5 +914,12 @@
     "loadError": "ページの読み込みに失敗しました。",
     "preparing": "このページは現在準備中です。",
     "lastUpdated": "最終更新日：{date}"
+  },
+  "seo": {
+    "siteName": "Led Kikaku",
+    "homeDescription": "Led Kikaku - プロ仕様の植物育成ライト・LED照明製品のオンラインストア。研究機関・大学への豊富な納品実績。",
+    "productsDescription": "Led Kikakuの植物育成ライト・LED照明製品一覧。プロ仕様の高品質な製品を取り揃えています。",
+    "categoryDescription": "{category}カテゴリの植物育成ライト・LED照明製品一覧 - Led Kikaku",
+    "orgDescription": "Led Kikakuは、プロ仕様の植物育成ライト・LED照明製品を提供する専門店です。大学・研究機関への豊富な納品実績があります。"
   }
 }

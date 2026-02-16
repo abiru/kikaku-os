@@ -55,7 +55,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 		{ogImage && <meta property="og:image" content={ogImage} />}
 		<meta property="og:url" content={canonicalURL.href} />
 		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content="Led Kikaku Store" />
+		<meta property="og:site_name" content={t('seo.siteName')} />
 
 		<!-- Twitter Card -->
 		<meta name="twitter:card" content="summary_large_image" />

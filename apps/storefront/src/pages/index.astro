@@ -34,9 +34,20 @@ try {
 } catch (error) {
   console.error('Failed to fetch featured products:', error);
 }
+// Organization JSON-LD for SEO
+const siteUrl = 'https://led-kikaku.com';
+const jsonLdOrganization = {
+	'@context': 'https://schema.org',
+	'@type': 'Organization',
+	name: t('seo.siteName'),
+	url: siteUrl,
+	description: t('seo.orgDescription'),
+	logo: `${siteUrl}/favicon.svg`,
+};
 ---
 
-<Layout title="Led Kikaku - Pro Growth">
+<Layout title="Led Kikaku - Pro Growth" description={t('seo.homeDescription')}>
+	<script type="application/ld+json" set:html={JSON.stringify(jsonLdOrganization)} />
 	<div class="bg-subtle">
 		{/* Hero Section - Apple Style Jumbotron */}
 
