@@ -228,20 +228,19 @@ function CartContent() {
 				</ul>
 			</section>
 
-			{shippingState === 'error' && (
-				<div className="lg:col-span-5 mt-4 lg:mt-0 rounded-md bg-yellow-50 border border-yellow-200 p-4 text-center">
-					<p className="text-sm text-yellow-800">{t('cart.shippingConfigError')}</p>
-					<button
-						type="button"
-						onClick={retryShipping}
-						className="mt-2 text-sm font-medium text-yellow-700 underline hover:text-yellow-900"
-					>
-						{t('cart.retry')}
-					</button>
-				</div>
-			)}
-
-			{shippingState !== 'error' && (
+			<div className="lg:col-span-5">
+				{shippingState === 'error' && (
+					<div className="mb-4 rounded-md bg-yellow-50 border border-yellow-200 p-4 text-center">
+						<p className="text-sm text-yellow-800">{t('cart.shippingConfigError')}</p>
+						<button
+							type="button"
+							onClick={retryShipping}
+							className="mt-2 text-sm font-medium text-yellow-700 underline hover:text-yellow-900"
+						>
+							{t('cart.retry')}
+						</button>
+					</div>
+				)}
 				<CartOrderSummary
 					subtotal={subtotal}
 					taxAmount={taxAmount}
@@ -252,7 +251,7 @@ function CartContent() {
 					currency={currency}
 					onCheckout={handleCheckout}
 				/>
-			)}
+			</div>
 		</div>
 	);
 }
