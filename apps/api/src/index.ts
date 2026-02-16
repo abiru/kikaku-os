@@ -108,6 +108,18 @@ app.use(
 
 app.options('*', (c) => c.body(null, 204));
 
+// Startup validation: warn once if ADMIN_API_KEY is missing
+let adminKeyChecked = false;
+app.use('*', async (c, next) => {
+  if (!adminKeyChecked) {
+    adminKeyChecked = true;
+    if (!c.env.ADMIN_API_KEY) {
+      logger.error('ADMIN_API_KEY is not set - admin endpoints will be inaccessible');
+    }
+  }
+  return next();
+});
+
 // Enable foreign key constraints (D1/SQLite disables by default)
 app.use('*', async (c, next) => {
   try {
@@ -126,6 +138,15 @@ app.use('*', async (c, next) => {
   c.res.headers.set('X-XSS-Protection', '0');
   c.res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   c.res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  c.res.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+
+  // Content-Security-Policy: stricter for JSON, allow inline styles for HTML
+  const contentType = c.res.headers.get('Content-Type') || '';
+  const isHtml = contentType.includes('text/html');
+  const csp = isHtml
+    ? "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'"
+    : "default-src 'none'; frame-ancestors 'none'";
+  c.res.headers.set('Content-Security-Policy', csp);
 });
 
 // Production request logging (after CORS, before auth)
@@ -215,7 +236,7 @@ app.get('/r2', async (c) => {
     const headers = new Headers();
     obj.writeHttpMetadata(headers);
     headers.set('cache-control', 'public, max-age=31536000, immutable');
-    headers.set('access-control-allow-origin', '*');
+    headers.set('access-control-allow-origin', c.env.STOREFRONT_BASE_URL || '');
     headers.set('access-control-allow-methods', 'GET');
     if (obj.httpMetadata?.contentType) headers.set('content-type', obj.httpMetadata.contentType);
     return new Response(obj.body, { headers });

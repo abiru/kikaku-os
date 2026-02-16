@@ -32,9 +32,9 @@ try {
 
 	const data = await res.json();
 	hero = data.hero;
-} catch (e: any) {
+} catch (e: unknown) {
 	console.error(e);
-	error = e.message || 'Failed to load hero section';
+	error = e instanceof Error ? e.message : 'Failed to load hero section';
 }
 
 // Handle form submission
@@ -95,13 +95,12 @@ if (Astro.request.method === 'POST' && hero) {
 				const refreshData = await refreshRes.json();
 				hero = refreshData.hero;
 			}
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error(e);
-			error = e.message || 'Failed to update hero section';
-			// Extract detailed error from JSON response
-			if (e.message.includes('Invalid input')) {
-				error = 'Validation error: Please check all required fields';
-			}
+			const msg = e instanceof Error ? e.message : 'Failed to update hero section';
+			error = msg.includes('Invalid input')
+				? 'Validation error: Please check all required fields'
+				: msg;
 		}
 	}
 
@@ -130,9 +129,9 @@ if (Astro.request.method === 'POST' && hero) {
 			});
 			const refreshData = await refreshRes.json();
 			hero = refreshData.hero;
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error(e);
-			imageUploadError = e.message || 'Failed to delete image';
+			imageUploadError = e instanceof Error ? e.message : 'Failed to delete image';
 		}
 	}
 	// Handle image upload
@@ -165,9 +164,9 @@ if (Astro.request.method === 'POST' && hero) {
 			});
 			const refreshData = await refreshRes.json();
 			hero = refreshData.hero;
-		} catch (e: any) {
+		} catch (e: unknown) {
 			console.error(e);
-			imageUploadError = e.message || 'Failed to upload image';
+			imageUploadError = e instanceof Error ? e.message : 'Failed to upload image';
 		}
 	}
 }
@@ -197,7 +196,7 @@ if (Astro.request.method === 'POST' && hero) {
 		)}
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+			<div role="alert" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
 				{error}
 			</div>
 		)}

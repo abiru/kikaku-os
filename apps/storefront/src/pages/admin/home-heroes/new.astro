@@ -60,9 +60,9 @@ if (Astro.request.method === 'POST') {
 		if (createdId) {
 			return Astro.redirect(`/admin/home-heroes/${createdId}`);
 		}
-	} catch (e: any) {
+	} catch (e: unknown) {
 		console.error(e);
-		error = e.message || 'Failed to create hero section';
+		error = e instanceof Error ? e.message : 'Failed to create hero section';
 	}
 }
 ---
@@ -78,7 +78,7 @@ if (Astro.request.method === 'POST') {
 		<h1 class="text-2xl font-semibold text-gray-900">Create New Hero Section</h1>
 
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+			<div role="alert" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
 				{error}
 			</div>
 		)}

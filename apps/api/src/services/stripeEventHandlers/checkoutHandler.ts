@@ -10,6 +10,7 @@ import type { HandlerResult } from './shared';
 import { recordCouponUsage } from './shared';
 import {
   type StripeEvent,
+  type StripeDataObject,
   extractOrderId,
   insertPayment,
   extractPaymentMethod
@@ -79,7 +80,7 @@ const ensureFulfillmentExists = async (
 export const handleCheckoutSessionCompleted = async (
   env: Env['Bindings'],
   event: StripeEvent,
-  dataObject: any
+  dataObject: StripeDataObject
 ): Promise<HandlerResult> => {
   const orderId = extractOrderId(dataObject.metadata);
   if (!orderId) {
@@ -96,18 +97,20 @@ export const handleCheckoutSessionCompleted = async (
     return { received: true, ignored: true };
   }
 
-  const sessionId = dataObject.id;
-  const paymentIntentId = dataObject.payment_intent;
+  const sessionId = dataObject.id ?? '';
+  const paymentIntentId = dataObject.payment_intent ?? null;
 
   await updateOrderToPaid(env, orderId, sessionId, paymentIntentId);
   await ensureFulfillmentExists(env, orderId, sessionId, paymentIntentId, event.id);
 
   // Save shipping information if provided
-  if (dataObject.shipping_details || dataObject.customer_details?.phone) {
+  const shippingDetails = dataObject.shipping_details as Record<string, unknown> | undefined;
+  const customerDetails = dataObject.customer_details as Record<string, unknown> | undefined;
+  if (shippingDetails || customerDetails?.phone) {
     const shippingInfo = {
-      address: dataObject.shipping_details?.address || null,
-      name: dataObject.shipping_details?.name || null,
-      phone: dataObject.customer_details?.phone || null
+      address: shippingDetails?.address || null,
+      name: shippingDetails?.name || null,
+      phone: customerDetails?.phone || null
     };
 
     await env.DB.prepare(

@@ -1,7 +1,7 @@
 'use client'
 import * as Headless from '@headlessui/react'
 import clsx from 'clsx'
-import { LayoutGroup, motion } from 'motion/react'
+import { LayoutGroup, motion, useReducedMotion } from 'motion/react'
 import React, { forwardRef, useId } from 'react'
 import { TouchTarget } from './button'
 import { Link } from './link'
@@ -34,6 +34,7 @@ export const NavbarItem = forwardRef(function NavbarItem(
  ),
  ref: React.ForwardedRef<HTMLAnchorElement | HTMLButtonElement>
 ) {
+ let shouldReduceMotion = useReducedMotion()
  let classes = clsx(
  // Base
  'relative flex min-w-0 items-center gap-3 rounded-lg p-2 text-left text-base/6 font-medium text-zinc-950 sm:text-sm/5',
@@ -52,10 +53,14 @@ export const NavbarItem = forwardRef(function NavbarItem(
  return (
  <span className={clsx(className, 'relative')}>
  {current && (
+ shouldReduceMotion ? (
+ <span className="absolute inset-x-2 -bottom-2.5 h-0.5 rounded-full bg-zinc-950" />
+ ) : (
  <motion.span
  layoutId="current-indicator"
  className="absolute inset-x-2 -bottom-2.5 h-0.5 rounded-full bg-zinc-950"
  />
+ )
  )}
  {typeof props.href === 'string' ? (
  <Link

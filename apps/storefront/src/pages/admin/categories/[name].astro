@@ -88,8 +88,10 @@ const hasPrev = page > 1;
 		{/* Search Bar */}
 		<div class="mb-6">
 			<form method="get" class="relative max-w-md">
+				<label for="category-product-search" class="sr-only">Search products in this category</label>
 				<input
 					type="search"
+					id="category-product-search"
 					name="q"
 					value={q}
 					placeholder="Search products in this category..."

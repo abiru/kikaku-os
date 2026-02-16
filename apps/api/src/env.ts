@@ -30,7 +30,7 @@ export type Env = {
     R2: R2Bucket;
     BROWSER?: BrowserWorker;
     AI?: Ai;
-    ADMIN_API_KEY?: string;
+    ADMIN_API_KEY: string;
     DEV_MODE: string;
     STRIPE_SECRET_KEY: string;
     STRIPE_PUBLISHABLE_KEY?: string;

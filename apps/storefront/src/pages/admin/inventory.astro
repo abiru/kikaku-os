@@ -138,8 +138,10 @@ const buildFilterUrl = (newStatus: string) => {
 		<div class="mb-6">
 			<form method="get" class="relative max-w-md">
 				<input type="hidden" name="status" value={statusFilter} />
+				<label for="inventory-search" class="sr-only">{t('admin.searchByProductVariantSku')}</label>
 				<input
 					type="search"
+					id="inventory-search"
 					name="q"
 					value={searchQuery}
 					placeholder={t('admin.searchByProductVariantSku')}
