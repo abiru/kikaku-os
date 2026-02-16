@@ -17,9 +17,9 @@ describe('t() translation helper', () => {
 		expect(t('checkout.steps.payment')).toBe('お支払い');
 	});
 
-	it('returns key when not found', () => {
-		expect(t('nonexistent.key')).toBe('nonexistent.key');
-		expect(t('nav.nonexistent')).toBe('nav.nonexistent');
+	it('returns empty string when not found', () => {
+		expect(t('nonexistent.key')).toBe('');
+		expect(t('nav.nonexistent')).toBe('');
 	});
 
 	it('returns key for empty string key', () => {
@@ -36,9 +36,9 @@ describe('t() translation helper', () => {
 		expect(result).toContain('2026');
 	});
 
-	it('returns key for non-string leaf value', () => {
+	it('returns empty string for non-string leaf value', () => {
 		// 'common' resolves to an object, not a string
-		expect(t('common')).toBe('common');
+		expect(t('common')).toBe('');
 	});
 
 	it('exports translations object', () => {

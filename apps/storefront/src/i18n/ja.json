@@ -27,6 +27,9 @@
   "signIn": {
     "pageTitle": "ログイン - Led Kikaku Store"
   },
+  "signUp": {
+    "pageTitle": "新規登録 - Led Kikaku Store"
+  },
   "nav": {
     "store": "ストア",
     "products": "製品",
@@ -34,7 +37,10 @@
     "openCart": "カートを開く",
     "signIn": "ログイン",
     "menu": "メニュー",
-    "mobileMenu": "モバイルメニュー"
+    "mobileMenu": "モバイルメニュー",
+    "categories": "カテゴリ",
+    "faq": "FAQ",
+    "quotation": "法人向け"
   },
   "footer": {
     "shopAndLearn": "ショップ",
@@ -57,7 +63,9 @@
     "shippingPolicy": "配送ポリシー",
     "refundPolicy": "返金ポリシー",
     "salesAndRefunds": "販売と返金",
-    "copyright": "Copyright © {year} Led Kikaku Inc. All rights reserved."
+    "copyright": "Copyright © {year} Led Kikaku Inc. All rights reserved.",
+    "business": "法人・業務用",
+    "quotation": "見積依頼"
   },
   "products": {
     "title": "ストア。",
@@ -86,7 +94,8 @@
     "sortLabel": "並び替え",
     "sortNewest": "新着順",
     "sortPriceAsc": "価格が安い順",
-    "sortPriceDesc": "価格が高い順"
+    "sortPriceDesc": "価格が高い順",
+    "announceCount": "{count}件の商品が見つかりました"
   },
   "cart": {
     "title": "ショッピングカート",
@@ -116,6 +125,7 @@
     "createQuotation": "見積書を作成",
     "itemCount": "カートに{count}件の商品",
     "quantity": "数量",
+    "cartWithCount": "カート（{count}点）",
     "quantityLabel": "{title}の数量",
     "shippingConfigLoading": "配送設定を読み込み中...",
     "shippingConfigError": "配送設定の読み込みに失敗しました",
@@ -172,7 +182,6 @@
     "stepOf": "ステップ {current}/{total}",
     "goBack": "← 戻る",
     "proceedToPayment": "お支払いへ進む",
-    "emailPlaceholder": "your@email.com",
     "steps": {
       "cart": "カート確認",
       "email": "メールアドレス",
@@ -444,6 +453,8 @@
     "newPage": "+ 新しいページ",
     "searchByTitleOrSlug": "タイトルまたはスラッグで検索...",
     "published": "公開済み",
+    "publish": "公開する",
+    "unpublish": "非公開にする",
     "manageAdDrafts": "広告ドラフトとAI生成コピーを管理",
     "newAdDraft": "+ 新しい広告ドラフト",
     "searchCampaign": "キャンペーン名または商品で検索...",
@@ -759,6 +770,8 @@
     "unavailable": "商品を表示できません",
     "unavailableDescription": "この商品を読み込めませんでした。しばらくしてからもう一度お試しください。",
     "retry": "再試行",
+    "noDescription": "詳細は準備中です。",
+    "categoryLabel": "カテゴリー",
     "backToProducts": "商品一覧に戻る",
     "defaultDetail1": "高品質な素材",
     "defaultDetail2": "プロ仕様",
@@ -799,9 +812,15 @@
   },
   "cookie": {
     "title": "Cookieの使用について",
-    "message": "当サイトでは、サービス向上のためにCookieを使用しています。サイトの利用を続けることで、Cookieの使用に同意したものとみなされます。",
+    "message": "当サイトでは、サービス向上のためにCookieを使用しています。",
     "accept": "同意する",
-    "learnMore": "詳細を見る"
+    "reject": "拒否する",
+    "manage": "設定",
+    "learnMore": "詳細を見る",
+    "preferencesTitle": "Cookie設定",
+    "essential": "必須Cookie（常に有効）",
+    "analytics": "分析・トラッキングCookie",
+    "savePreferences": "設定を保存"
   },
   "accessibility": {
     "skipToContent": "メインコンテンツへ",
@@ -846,7 +865,6 @@
     "notFoundCode": "404",
     "notFoundMessage": "お探しのページは移動、削除、またはURLが変更された可能性があります。",
     "backToHome": "ホームに戻る",
-    "serverError": "サーバーエラー",
     "serverErrorCode": "500",
     "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
     "reload": "再読み込み",
@@ -913,7 +931,12 @@
       "login": "ログイン",
       "needHelp": "お困りですか？",
       "needHelpDescription": "ご不明な点がございましたら、お気軽にお問い合わせください。",
-      "contactLink": "お問い合わせ →"
+      "contactLink": "お問い合わせ →",
+      "searchByToken": "注文番号で確認",
+      "searchByTokenDescription": "ご注文時に発行された注文番号を入力して、注文状況をご確認ください。",
+      "orderTokenLabel": "注文番号",
+      "orderTokenPlaceholder": "注文番号を入力してください",
+      "searchButton": "注文状況を確認"
     },
     "social": {
       "pageTitle": "SNS - Led Kikaku",
@@ -940,7 +963,22 @@
       "orderStatusLink": "注文状況を確認",
       "contactQuestion": "その他のお問い合わせ方法は？",
       "contactAnswer": "お問い合わせフォームからお気軽にご連絡ください。",
-      "contactLink": "お問い合わせ"
+      "contactLink": "お問い合わせ",
+      "paymentQuestion": "どのようなお支払い方法がありますか？",
+      "paymentAnswer": "クレジットカード（Visa, Mastercard, AMEX, JCB）および銀行振込に対応しております。法人のお客様には請求書払いもご利用いただけます。",
+      "warrantyQuestion": "製品の保証はありますか？",
+      "warrantyAnswer": "当社のLED製品には標準で1年間のメーカー保証が付いております。保証期間内の自然故障については無償で修理・交換いたします。",
+      "b2bQuestion": "法人・研究機関向けの購入方法は？",
+      "b2bAnswer": "法人・研究機関のお客様には、見積書の発行や請求書払いなど柔軟な対応が可能です。お気軽にお問い合わせください。",
+      "b2bLink": "見積依頼はこちら",
+      "internationalQuestion": "海外への発送は可能ですか？",
+      "internationalAnswer": "はい、海外発送に対応しております。配送には通常10日程度かかります。送料は地域によって異なりますので、チェックアウト時にご確認ください。",
+      "installationQuestion": "製品の取り付けは難しいですか？",
+      "installationAnswer": "当社のLED照明は簡単に取り付けられるよう設計されています。各製品には取り付けマニュアルが同梱されております。設置についてご不明な点がございましたらお問い合わせください。",
+      "specQuestion": "製品の仕様や技術的な詳細を教えてください。",
+      "specAnswer": "各製品ページに詳細な仕様（消費電力、光量、波長、寸法など）を掲載しております。さらに詳しい技術資料が必要な場合はお問い合わせください。",
+      "couponQuestion": "クーポンはどのように使えますか？",
+      "couponAnswer": "クーポンコードをお持ちの場合、カートページまたはチェックアウト時にクーポンコード入力欄に入力して「適用」ボタンを押してください。割引が自動的に適用されます。"
     },
     "legalNotice": {
       "pageTitle": "特定商取引法に基づく表記 - Led Kikaku",
@@ -964,12 +1002,23 @@
       "returnPolicy": "返品・交換について",
       "returnPolicyValue": "商品到着後7日以内にご連絡ください。詳しくは{link}をご確認ください。",
       "returnPolicyLink": "返品ポリシー"
+    },
+    "categories": {
+      "pageTitle": "カテゴリ一覧 - Led Kikaku",
+      "title": "カテゴリ一覧",
+      "description": "商品カテゴリからお探しの製品をお選びください。",
+      "noCategories": "カテゴリがありません",
+      "noCategoriesDescription": "現在カテゴリが登録されていません。",
+      "viewCategory": "商品を見る"
     }
   },
   "home": {
     "viewProducts": "商品を見る",
     "viewDetails": "詳細を見る",
     "configureFeatured": "フィーチャー製品を設定してください",
+    "heroCopy1": "Better Light.",
+    "heroCopy2": "Better Grow.",
+    "exploreProducts": "商品を探す",
     "heroTagline": "最新テクノロジーで、栽培パフォーマンスを最大化。",
     "heroSubtagline": "大学・研究機関が採用する、プロ仕様の植物育成ライト。",
     "learnMore": "詳しく見る",
@@ -1038,7 +1087,25 @@
   "cms": {
     "loadError": "ページの読み込みに失敗しました。",
     "preparing": "このページは現在準備中です。",
-    "lastUpdated": "最終更新日：{date}"
+    "lastUpdated": "最終更新日：{date}",
+    "fallback": {
+      "legal": "特定商取引法に基づく表記の内容は現在準備中です。詳しくは「特定商取引法に基づく表記」ページをご確認ください。お急ぎの場合はお問い合わせフォームよりご連絡ください。",
+      "privacy": "当社はお客様の個人情報を適切に管理し、法令に基づいて取り扱います。個人情報の収集・利用・保管・開示について、詳細なプライバシーポリシーを準備中です。ご不明な点がございましたらお問い合わせください。",
+      "terms": "本サービスのご利用にあたっての利用規約を準備中です。ご利用条件、禁止事項、免責事項等を記載予定です。ご不明な点がございましたらお問い合わせください。",
+      "refund": "商品到着後7日以内であれば返品・返金を承ります。未開封・未使用の商品に限ります。返品送料はお客様のご負担となります。初期不良の場合は当社にて送料を負担いたします。詳しくはお問い合わせください。",
+      "about": "Led Kikakuは、プロ仕様の植物育成ライト・LED照明製品を提供する専門店です。大学・研究機関・企業への豊富な納品実績を持ち、お客様の研究やビジネスに最適なソリューションを提供しています。",
+      "shipping": "国内配送は通常2〜3営業日でお届けいたします。送料は商品やお届け先によって異なります。一部商品は送料無料でお届けしております。海外配送にも対応しており、通常10日程度でお届けいたします。"
+    }
+  },
+  "restock": {
+    "title": "再入荷通知を受け取る",
+    "description": "この商品が再入荷した際にメールでお知らせします。",
+    "emailPlaceholder": "メールアドレスを入力",
+    "subscribe": "通知を受け取る",
+    "submitting": "登録中...",
+    "success": "再入荷通知の登録が完了しました。入荷次第メールでお知らせします。",
+    "error": "登録に失敗しました。しばらくしてからもう一度お試しください。",
+    "invalidEmail": "有効なメールアドレスを入力してください"
   },
   "seo": {
     "siteName": "Led Kikaku",
@@ -1046,5 +1113,9 @@
     "productsDescription": "Led Kikakuの植物育成ライト・LED照明製品一覧。プロ仕様の高品質な製品を取り揃えています。",
     "categoryDescription": "{category}カテゴリの植物育成ライト・LED照明製品一覧 - Led Kikaku",
     "orgDescription": "Led Kikakuは、プロ仕様の植物育成ライト・LED照明製品を提供する専門店です。大学・研究機関への豊富な納品実績があります。"
+  },
+  "logoGrid": {
+    "title": "導入実績",
+    "subtitle": "大学・研究機関・企業への豊富な納品実績があります。"
   }
 }

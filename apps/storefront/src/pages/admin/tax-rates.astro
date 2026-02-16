@@ -10,6 +10,7 @@ import AdminLayout from'../../layouts/AdminLayout.astro';
 import { getApiBase } from'../../lib/api';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
+import { logError } from '../../utils/logger';
 
 const apiBase = getApiBase();
 
@@ -43,7 +44,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		const data = await res.json();
 		taxRates = data || [];
 	} catch (e) {
-		console.error(e);
+		logError({ page: 'admin/tax-rates' }, e);
 		error = t('errors.failedToLoadTaxRates');
 	}
 } else {

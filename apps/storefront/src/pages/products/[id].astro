@@ -6,6 +6,7 @@ import RelatedProducts from '../../components/RelatedProducts.astro';
 import ShareButtons from '../../components/ShareButtons.astro';
 import ShippingPolicy from '../../components/ShippingPolicy.astro';
 import WishlistButton from '../../components/WishlistButton';
+import RestockNotification from '../../components/RestockNotification';
 import ReviewSection from '../../components/ReviewSection';
 import RecentlyViewed from '../../components/RecentlyViewed';
 import Layout from '../../layouts/Layout.astro';
@@ -117,7 +118,7 @@ if (product?.category) {
 
 // Product details/features
 const productDetails = product?.details || [
-	t('product.defaultDetail1'),
+	product?.category ? `${t('product.categoryLabel')}: ${product.category}` : t('product.defaultDetail1'),
 	t('product.defaultDetail2'),
 	t('product.defaultDetail3'),
 	t('product.defaultDetail4'),
@@ -290,7 +291,10 @@ const jsonLdBreadcrumb = product ? {
 												</div>
 											</>
 										) : (
-											<p class="text-sm text-gray-500">{t('product.checkAvailability')}</p>
+											<>
+												<p class="text-sm text-gray-500">{t('product.checkAvailability')}</p>
+												<RestockNotification client:only="react" productId={product.id} />
+											</>
 										)}
 									</div>
 								</div>
@@ -304,16 +308,20 @@ const jsonLdBreadcrumb = product ? {
 							<ProductVariantSelector variantId={variantId} addedToCartLabel={t('wishlist.addedToCart')} />
 
 							{/* Product description */}
-							{product.description && (
-								<div class="mt-10">
-									<h2 class="text-sm font-medium text-gray-900">{t('product.description')}</h2>
+							<div class="mt-10">
+								<h2 class="text-sm font-medium text-gray-900">{t('product.description')}</h2>
 
+								{product.description ? (
 									<div
 										class="mt-4 space-y-4 text-sm leading-6 text-gray-500 product-description"
 										set:html={renderMarkdown(product.description)}
 									/>
-								</div>
-							)}
+								) : (
+									<p class="mt-4 text-sm leading-6 text-gray-500">
+										{t('product.noDescription')}
+									</p>
+								)}
+							</div>
 
 							{/* Product details */}
 							<div class="mt-8 border-t border-gray-200 pt-8">

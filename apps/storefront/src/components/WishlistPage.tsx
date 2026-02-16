@@ -15,7 +15,7 @@ function EmptyWishlist() {
 			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('wishlist.empty')}</h2>
 			<p className="mt-2 text-sm text-gray-500">{t('wishlist.emptyDescription')}</p>
 			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-md bg-[#0071e3] px-4 py-2 text-sm font-medium text-white hover:bg-[#005bb5]">
+				<a href="/products" className="inline-flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
 					{t('wishlist.browseProducts')}
 				</a>
 			</div>
@@ -55,8 +55,11 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 							className="size-24 rounded-md object-cover sm:size-48 hover:opacity-80 transition-opacity"
 						/>
 					) : (
-						<div className="size-24 rounded-md bg-gray-100 flex items-center justify-center sm:size-48">
-							<span className="text-2xl font-bold text-gray-300 select-none sm:text-4xl">IMG</span>
+						<div className="size-24 rounded-md bg-gray-100 flex items-center justify-center sm:size-48" aria-hidden="true">
+							<svg className="size-8 text-gray-300 sm:size-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+							</svg>
 						</div>
 					)}
 				</a>
@@ -99,7 +102,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 						<button
 							type="button"
 							onClick={handleAddToCart}
-							className="inline-flex items-center rounded-md bg-[#0071e3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005bb5] transition-colors disabled:opacity-50"
+							className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-active transition-colors disabled:opacity-50"
 							disabled={addedToCart}
 						>
 							{addedToCart ? t('wishlist.addedToCart') : t('wishlist.addToCart')}
@@ -107,7 +110,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 					) : (
 						<a
 							href={`/products/${item.productId}`}
-							className="inline-flex items-center rounded-md bg-[#0071e3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005bb5] transition-colors"
+							className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-active transition-colors"
 						>
 							{t('wishlist.viewProduct')}
 						</a>
@@ -137,7 +140,7 @@ export default function WishlistPage() {
 				))}
 			</ul>
 			<div className="mt-6 text-center text-sm">
-				<a href="/products" className="font-medium text-[#0071e3] hover:text-[#005bb5]">
+				<a href="/products" className="font-medium text-brand hover:text-brand-active">
 					{t('wishlist.continueShopping')}
 					<span aria-hidden="true"> &rarr;</span>
 				</a>

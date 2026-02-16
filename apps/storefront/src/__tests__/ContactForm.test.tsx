@@ -114,10 +114,15 @@ describe('ContactForm', () => {
 	});
 
 	it('shows success message after successful submission', async () => {
-		(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-			ok: true,
-			json: () => Promise.resolve({ ok: true }),
-		});
+		(global.fetch as ReturnType<typeof vi.fn>)
+			.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({ token: 'test-csrf-token' }),
+			})
+			.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({ ok: true }),
+			});
 
 		render(<ContactForm />);
 
@@ -135,10 +140,15 @@ describe('ContactForm', () => {
 	});
 
 	it('shows error message on submission failure', async () => {
-		(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-			ok: false,
-			json: () => Promise.resolve({ ok: false, message: 'Server error' }),
-		});
+		(global.fetch as ReturnType<typeof vi.fn>)
+			.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({ token: 'test-csrf-token' }),
+			})
+			.mockResolvedValueOnce({
+				ok: false,
+				json: () => Promise.resolve({ ok: false, message: 'Server error' }),
+			});
 
 		render(<ContactForm />);
 

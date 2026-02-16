@@ -136,11 +136,12 @@ if (orderToken) {
 	</div>
 </Layout>
 
-<script define:vars={{ apiBase, order, paymentProcessingLabel: t('checkout.paymentProcessing'), paymentProcessingDesc: t('checkout.paymentProcessingDescription') }}>
+<script define:vars={{ apiBase, order, paymentProcessingLabel: t('checkout.paymentProcessing'), paymentProcessingDesc: t('checkout.paymentProcessingDescription'), confirmedLabel: t('checkout.confirmed') }}>
 	window.__CHECKOUT_SUCCESS_API_BASE__ = apiBase;
 	window.__CHECKOUT_ORDER__ = order;
 	window.__I18N_PAYMENT_PROCESSING__ = paymentProcessingLabel;
 	window.__I18N_PAYMENT_PROCESSING_DESC__ = paymentProcessingDesc;
+	window.__I18N_CONFIRMED__ = confirmedLabel;
 </script>
 
 <script>
@@ -152,6 +153,7 @@ if (orderToken) {
 			__CHECKOUT_ORDER__?: { id: number; total_amount: number; currency: string; items: Array<{ title: string; quantity: number; unit_price: number; product_id?: number; variant_title?: string }> } | null;
 			__I18N_PAYMENT_PROCESSING__?: string;
 			__I18N_PAYMENT_PROCESSING_DESC__?: string;
+			__I18N_CONFIRMED__?: string;
 			dataLayer: Record<string, unknown>[];
 		}
 	}
@@ -240,9 +242,17 @@ if (orderToken) {
 						attempts++;
 						pollOrder();
 					} else if (res.ok) {
-						// Payment confirmed - clear cart then reload
+						// Payment confirmed - clear cart and update DOM
 						clearCartStorage();
-						window.location.reload();
+						const container = document.querySelector('[data-order-container]');
+						if (container) {
+							container.setAttribute('data-order-status', 'paid');
+							const badge = container.querySelector('span[class*="rounded-full"]');
+							if (badge) {
+								badge.className = 'inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-green-100 text-green-800';
+								badge.textContent = window.__I18N_CONFIRMED__ || 'Confirmed';
+							}
+						}
 					} else {
 						// Non-retriable server error, retry with backoff
 						attempts++;

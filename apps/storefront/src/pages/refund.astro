@@ -68,8 +68,8 @@ const metaDescription = page?.meta_description || '';
 						<p class="text-secondary">{error}</p>
 					</div>
 				) : (
-					<div class="text-center py-12">
-						<p class="text-secondary">{t('cms.preparing')}</p>
+					<div class="prose prose-lg max-w-none">
+						<p>{t('cms.fallback.refund')}</p>
 					</div>
 				)}
 			</Container>

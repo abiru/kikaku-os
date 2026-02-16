@@ -1,0 +1,94 @@
+---
+import Container from '../../components/Container.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import Layout from '../../layouts/Layout.astro';
+import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
+import { t } from '../../i18n';
+
+export const prerender = false;
+
+const apiBase = getApiBase();
+
+type FiltersResponse = {
+	categories: string[];
+	priceRange: { min: number; max: number };
+};
+
+let categories: string[] = [];
+let loadState: 'ready' | 'error' = 'ready';
+
+try {
+	const data = await fetchJson<FiltersResponse>(
+		buildStoreUrl('/products/filters', apiBase)
+	);
+	categories = data?.categories ?? [];
+} catch {
+	loadState = 'error';
+}
+
+const formatCategoryName = (slug: string): string =>
+	slug
+		.split(/[-_]/)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ');
+---
+
+<Layout title={t('pages.categories.pageTitle')} description={t('pages.categories.description')}>
+	<div class="bg-white min-h-screen">
+		<section class="pt-24 pb-12 sm:pt-32 border-b border-gray-200">
+			<Container>
+				<h1 class="text-4xl font-semibold tracking-tight text-primary md:text-5xl">
+					{t('pages.categories.title')}
+				</h1>
+				<p class="mt-4 text-lg text-secondary">
+					{t('pages.categories.description')}
+				</p>
+			</Container>
+		</section>
+
+		<section class="py-12 bg-subtle">
+			<Container>
+				{loadState === 'error' ? (
+					<EmptyState
+						title={t('errors.storeUnavailable')}
+						description={t('errors.storeUnavailableDescription')}
+						ctaLabel={t('errors.refresh')}
+						ctaHref="/categories"
+					/>
+				) : categories.length === 0 ? (
+					<EmptyState
+						title={t('pages.categories.noCategories')}
+						description={t('pages.categories.noCategoriesDescription')}
+						ctaLabel={t('products.viewAllProducts')}
+						ctaHref="/products"
+					/>
+				) : (
+					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-8">
+						{categories.map((category) => (
+							<a
+								href={`/categories/${encodeURIComponent(category)}`}
+								class="group relative flex flex-col overflow-hidden rounded-3xl bg-white p-8 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-xl hover:scale-[1.01]"
+							>
+								<div class="flex items-center gap-3">
+									<div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+										<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+											<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+										</svg>
+									</div>
+									<h2 class="text-xl font-semibold text-primary group-hover:underline decoration-1 underline-offset-2">
+										{formatCategoryName(category)}
+									</h2>
+								</div>
+								<div class="mt-auto pt-6 flex items-center justify-end">
+									<span class="rounded-full bg-brand px-4 py-1.5 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+										{t('pages.categories.viewCategory')}
+									</span>
+								</div>
+							</a>
+						))}
+					</div>
+				)}
+			</Container>
+		</section>
+	</div>
+</Layout>
