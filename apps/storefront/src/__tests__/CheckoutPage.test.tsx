@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 
 vi.mock('../i18n', () => ({
 	t: (key: string) => key,
@@ -27,12 +27,8 @@ vi.mock('@stripe/react-stripe-js', () => ({
 		<div data-testid="stripe-elements">{children}</div>
 	),
 	PaymentElement: () => <div data-testid="payment-element">PaymentElement</div>,
-	AddressElement: () => <div data-testid="address-element">AddressElement</div>,
-	ExpressCheckoutElement: () => (
-		<div data-testid="express-checkout">ExpressCheckout</div>
-	),
 	useStripe: () => ({ confirmPayment: vi.fn() }),
-	useElements: () => ({ getElement: vi.fn() }),
+	useElements: () => ({ submit: vi.fn().mockResolvedValue({}), getElement: vi.fn() }),
 }));
 
 vi.mock('@stripe/stripe-js', () => ({
@@ -68,7 +64,6 @@ const mockQuoteResponse = {
 const mockIntentResponse = {
 	ok: true,
 	clientSecret: 'pi_test_secret',
-	orderId: 1,
 	orderPublicToken: 'tok_pub_123',
 	publishableKey: 'pk_test_xxx',
 };
@@ -117,7 +112,7 @@ describe('CheckoutPage', () => {
 		expect(skeleton).toBeInTheDocument();
 	});
 
-	it('shows email form after quote is created', async () => {
+	it('shows Stripe prebuilt payment form after quote/intent is created', async () => {
 		$cartItems.set({
 			'1': {
 				variantId: 1,
@@ -131,15 +126,19 @@ describe('CheckoutPage', () => {
 			},
 		});
 
-		mockFetchJson.mockResolvedValueOnce(mockQuoteResponse);
+		mockFetchJson
+			.mockResolvedValueOnce(mockQuoteResponse)
+			.mockResolvedValueOnce(mockIntentResponse);
 
 		await act(async () => {
 			render(<CheckoutPage />);
 		});
 
 		await waitFor(() => {
-			const emailInput = document.getElementById('checkout-page-email');
-			expect(emailInput).toBeInTheDocument();
+			expect(screen.getByRole('heading', { level: 1, name: 'checkout.title' })).toBeInTheDocument();
+			expect(screen.getByTestId('stripe-elements')).toBeInTheDocument();
+			expect(screen.getByTestId('payment-element')).toBeInTheDocument();
+			expect(document.getElementById('checkout-page-email')).not.toBeInTheDocument();
 		});
 	});
 
@@ -157,18 +156,20 @@ describe('CheckoutPage', () => {
 			},
 		});
 
-		mockFetchJson.mockResolvedValueOnce(mockQuoteResponse);
+		mockFetchJson
+			.mockResolvedValueOnce(mockQuoteResponse)
+			.mockResolvedValueOnce(mockIntentResponse);
 
 		await act(async () => {
 			render(<CheckoutPage />);
 		});
 
 		await waitFor(() => {
-			expect(screen.getByText('checkout.title')).toBeInTheDocument();
+			expect(screen.getByRole('heading', { level: 1, name: 'checkout.title' })).toBeInTheDocument();
 		});
 	});
 
-	it('shows checkout steps navigation', async () => {
+	it('does not render wizard step navigation', async () => {
 		$cartItems.set({
 			'1': {
 				variantId: 1,
@@ -182,19 +183,21 @@ describe('CheckoutPage', () => {
 			},
 		});
 
-		mockFetchJson.mockResolvedValueOnce(mockQuoteResponse);
+		mockFetchJson
+			.mockResolvedValueOnce(mockQuoteResponse)
+			.mockResolvedValueOnce(mockIntentResponse);
 
 		await act(async () => {
 			render(<CheckoutPage />);
 		});
 
 		await waitFor(() => {
-			const nav = screen.getByRole('navigation', { name: /checkout steps/i });
-			expect(nav).toBeInTheDocument();
+			const nav = screen.queryByRole('navigation', { name: /checkout steps/i });
+			expect(nav).not.toBeInTheDocument();
 		});
 	});
 
-	it('validates email format', async () => {
+	it('calls quote and intent APIs in order', async () => {
 		$cartItems.set({
 			'1': {
 				variantId: 1,
@@ -208,63 +211,18 @@ describe('CheckoutPage', () => {
 			},
 		});
 
-		mockFetchJson.mockResolvedValueOnce(mockQuoteResponse);
+		mockFetchJson
+			.mockResolvedValueOnce(mockQuoteResponse)
+			.mockResolvedValueOnce(mockIntentResponse);
 
 		await act(async () => {
 			render(<CheckoutPage />);
 		});
 
 		await waitFor(() => {
-			const emailInput = document.getElementById('checkout-page-email');
-			expect(emailInput).toBeInTheDocument();
-		});
-
-		const emailInput = document.getElementById('checkout-page-email')!;
-
-		// Type invalid email and blur
-		fireEvent.change(emailInput, { target: { value: 'invalid' } });
-		fireEvent.blur(emailInput);
-
-		await waitFor(() => {
-			const errorElement = document.getElementById('checkout-email-error');
-			expect(errorElement).toBeInTheDocument();
-			expect(errorElement?.textContent).toBe('checkout.emailInvalid');
-		});
-	});
-
-	it('shows required error when email is empty', async () => {
-		$cartItems.set({
-			'1': {
-				variantId: 1,
-				productId: 100,
-				title: 'Required Test Product',
-				variantTitle: 'Default',
-				price: 3000,
-				currency: 'JPY',
-				quantity: 1,
-				taxRate: 0.1,
-			},
-		});
-
-		mockFetchJson.mockResolvedValueOnce(mockQuoteResponse);
-
-		await act(async () => {
-			render(<CheckoutPage />);
-		});
-
-		await waitFor(() => {
-			const emailInput = document.getElementById('checkout-page-email');
-			expect(emailInput).toBeInTheDocument();
-		});
-
-		// Submit form with empty email
-		const form = document.querySelector('form')!;
-		fireEvent.submit(form);
-
-		await waitFor(() => {
-			const errorElement = document.getElementById('checkout-email-error');
-			expect(errorElement).toBeInTheDocument();
-			expect(errorElement?.textContent).toBe('checkout.emailRequired');
+			expect(mockFetchJson).toHaveBeenCalledTimes(2);
+			expect(mockFetchJson.mock.calls[0]?.[0]).toContain('/checkout/quote');
+			expect(mockFetchJson.mock.calls[1]?.[0]).toContain('/payments/intent');
 		});
 	});
 
@@ -273,7 +231,7 @@ describe('CheckoutPage', () => {
 			'1': {
 				variantId: 1,
 				productId: 100,
-				title: 'Error Test Product',
+				title: 'Required Test Product',
 				variantTitle: 'Default',
 				price: 3000,
 				currency: 'JPY',
@@ -344,38 +302,6 @@ describe('CheckoutPage', () => {
 		});
 	});
 
-	it('email input has proper aria attributes', async () => {
-		$cartItems.set({
-			'1': {
-				variantId: 1,
-				productId: 100,
-				title: 'A11y Test Product',
-				variantTitle: 'Default',
-				price: 3000,
-				currency: 'JPY',
-				quantity: 1,
-				taxRate: 0.1,
-			},
-		});
-
-		mockFetchJson.mockResolvedValueOnce(mockQuoteResponse);
-
-		await act(async () => {
-			render(<CheckoutPage />);
-		});
-
-		await waitFor(() => {
-			const emailInput = document.getElementById('checkout-page-email');
-			expect(emailInput).toBeInTheDocument();
-			expect(emailInput).toHaveAttribute('aria-required', 'true');
-			expect(emailInput).toHaveAttribute('type', 'email');
-		});
-
-		// Verify label is associated
-		const label = document.querySelector('label[for="checkout-page-email"]');
-		expect(label).toBeInTheDocument();
-	});
-
 	it('renders order summary with items', async () => {
 		$cartItems.set({
 			'1': {
@@ -400,7 +326,9 @@ describe('CheckoutPage', () => {
 			},
 		});
 
-		mockFetchJson.mockResolvedValueOnce(mockQuoteResponse);
+		mockFetchJson
+			.mockResolvedValueOnce(mockQuoteResponse)
+			.mockResolvedValueOnce(mockIntentResponse);
 
 		await act(async () => {
 			render(<CheckoutPage />);

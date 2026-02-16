@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
 	$cartArray,
 	$appliedCoupon
@@ -7,11 +7,8 @@ import {
 import { getApiBase, fetchJson } from '../lib/api';
 import { useTranslation } from '../i18n';
 import CheckoutForm from './CheckoutForm';
-import CheckoutSteps from './CheckoutSteps';
 import OrderSummary from './OrderSummary';
 import { ErrorBoundary } from './ErrorBoundary';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type QuoteBreakdown = {
 	subtotal: number;
@@ -33,18 +30,8 @@ type QuoteResponse = {
 type PaymentIntentResponse = {
 	ok: boolean;
 	clientSecret: string;
-	orderId: number;
 	orderPublicToken: string;
 	publishableKey: string;
-};
-
-type CheckoutStep = 'cart' | 'email' | 'payment';
-type CheckoutPaymentMethod = 'card' | 'bank_transfer';
-
-const computeStep = (breakdown: QuoteBreakdown | null, emailSubmitted: boolean): CheckoutStep => {
-	if (!breakdown) return 'cart';
-	if (!emailSubmitted) return 'email';
-	return 'payment';
 };
 
 function CheckoutSkeleton() {
@@ -96,18 +83,11 @@ function CheckoutPageContent() {
 	const appliedCoupon = useStore($appliedCoupon);
 
 	const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
-	const [quoteId, setQuoteId] = useState<string | null>(null);
 	const [clientSecret, setClientSecret] = useState<string | null>(null);
 	const [orderToken, setOrderToken] = useState<string | null>(null);
 	const [publishableKey, setPublishableKey] = useState<string>('');
-	const [customerEmail, setCustomerEmail] = useState<string>('');
-	const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('card');
-	const [emailError, setEmailError] = useState<string | null>(null);
-	const [emailTouched, setEmailTouched] = useState(false);
-	const [emailSubmitted, setEmailSubmitted] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const emailInputRef = useRef<HTMLInputElement>(null);
 
 	// Fix 1: Stable fingerprint of cart contents for dependency tracking
 	const cartFingerprint = useMemo(
@@ -117,13 +97,12 @@ function CheckoutPageContent() {
 
 	useEffect(() => {
 		// Reset payment state when cart changes
-		setEmailSubmitted(false);
 		setClientSecret(null);
 		setOrderToken(null);
-		createQuoteOnly();
+		createQuoteAndIntent();
 	}, [cartFingerprint]);
 
-	const createQuoteOnly = async (couponCode?: string) => {
+	const createQuoteAndIntent = async (couponCode?: string) => {
 		try {
 			setLoading(true);
 			setError(null);
@@ -156,63 +135,18 @@ function CheckoutPageContent() {
 			}
 
 			setBreakdown(quoteData.breakdown);
-			setQuoteId(quoteData.quoteId);
-			setLoading(false);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Failed to initialize checkout');
-			setLoading(false);
-		}
-	};
-
-	const validateEmail = useCallback((email: string): string | null => {
-		if (!email) return t('checkout.emailRequired');
-		if (!EMAIL_REGEX.test(email)) return t('checkout.emailInvalid');
-		return null;
-	}, [t]);
-
-	const handleEmailBlur = useCallback(() => {
-		setEmailTouched(true);
-		setEmailError(validateEmail(customerEmail));
-	}, [customerEmail, validateEmail]);
-
-	const handleEmailChange = useCallback((value: string) => {
-		setCustomerEmail(value);
-		// Real-time validation: validate whenever value is non-empty
-		if (value.length > 0) {
-			setEmailError(validateEmail(value));
-			setEmailTouched(true);
-		} else if (emailTouched) {
-			setEmailError(validateEmail(value));
-		}
-	}, [emailTouched, validateEmail]);
-
-	const handleEmailSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		const validationError = validateEmail(customerEmail);
-		if (validationError) {
-			setEmailTouched(true);
-			setEmailError(validationError);
-			emailInputRef.current?.focus();
-			return;
-		}
-		if (!quoteId) return;
-
-		try {
-			setLoading(true);
-			setError(null);
 
 			const intentData = await fetchJson<PaymentIntentResponse>(
 				`${getApiBase()}/payments/intent`,
 				{
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
-						body: JSON.stringify({
-							quoteId,
-							email: customerEmail,
-							paymentMethod
-						})
-					}
-				);
+					body: JSON.stringify({
+						quoteId: quoteData.quoteId,
+						paymentMethod: 'auto'
+					})
+				}
+			);
 
 			if (!intentData.ok) {
 				throw new Error('Failed to create payment intent');
@@ -230,7 +164,6 @@ function CheckoutPageContent() {
 				throw new Error('Stripe publishable key is not configured');
 			}
 			setPublishableKey(pubKey);
-			setEmailSubmitted(true);
 			setLoading(false);
 		} catch (err) {
 			if (err instanceof TypeError && err.message.includes('fetch')) {
@@ -242,22 +175,10 @@ function CheckoutPageContent() {
 		}
 	};
 
-	const handleGoBack = () => {
-		if (emailSubmitted) {
-			setEmailSubmitted(false);
-			setClientSecret(null);
-			setOrderToken(null);
-		}
-	};
-
 	const createQuote = async (couponCode?: string) => {
-		setEmailSubmitted(false);
 		setClientSecret(null);
-		await createQuoteOnly(couponCode);
+		await createQuoteAndIntent(couponCode);
 	};
-
-	const currentStep = computeStep(breakdown, emailSubmitted);
-	const canGoBack = emailSubmitted;
 
 	if (loading) {
 		return <CheckoutSkeleton />;
@@ -273,13 +194,13 @@ function CheckoutPageContent() {
 						</svg>
 					</div>
 					<p className="text-lg text-gray-900 font-medium">{error}</p>
-					<div className="mt-6 flex flex-col items-center gap-3">
-						<button
-							type="button"
-							onClick={() => createQuoteOnly()}
-							className="text-brand hover:text-brand-active font-medium min-h-[44px] flex items-center justify-center"
-						>
-							{t('errors.retry')}
+						<div className="mt-6 flex flex-col items-center gap-3">
+							<button
+								type="button"
+								onClick={() => createQuoteAndIntent()}
+								className="text-brand hover:text-brand-active font-medium min-h-[44px] flex items-center justify-center"
+							>
+								{t('errors.retry')}
 						</button>
 						<a href="/cart" className="text-sm text-gray-500 hover:text-gray-700 min-h-[44px] flex items-center justify-center">
 							{t('checkout.returnToCart')}
@@ -309,24 +230,6 @@ function CheckoutPageContent() {
 				{t('checkout.title')}
 			</h1>
 
-			<CheckoutSteps currentStep={currentStep} />
-
-			{/* Back button */}
-			{canGoBack && (
-				<div className="mb-6">
-					<button
-						type="button"
-						onClick={handleGoBack}
-						className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:text-brand-active min-h-[44px] touch-manipulation"
-					>
-						<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-							<path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-						</svg>
-						{t('checkout.goBack')}
-					</button>
-				</div>
-			)}
-
 			{error && (
 				<div className="mb-6 rounded-md bg-red-50 p-4" role="alert">
 					<p className="text-sm text-red-800">{error}</p>
@@ -334,76 +237,13 @@ function CheckoutPageContent() {
 			)}
 
 			<div className="lg:grid lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
-				{/* Left column - Email + Checkout form */}
+				{/* Left column - Stripe prebuilt payment form */}
 				<div className="lg:col-span-7">
-					{!emailSubmitted ? (
-						<form onSubmit={handleEmailSubmit} className="space-y-4" noValidate>
-							<div>
-								<label htmlFor="checkout-page-email" className="block text-sm font-medium text-gray-700">
-									{t('checkout.email') || 'Email'} <span className="text-red-500">*</span>
-								</label>
-								<input
-									ref={emailInputRef}
-									type="email"
-									id="checkout-page-email"
-									required
-									aria-required="true"
-									aria-invalid={emailTouched && !!emailError}
-									aria-describedby={emailTouched && emailError ? 'checkout-email-error' : undefined}
-									value={customerEmail}
-									onChange={(e) => handleEmailChange(e.target.value)}
-									onBlur={handleEmailBlur}
-									placeholder={t('checkout.emailPlaceholder') || 'your@email.com'}
-									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand text-base p-3 border"
-								/>
-									{emailTouched && emailError && (
-										<p id="checkout-email-error" className="text-red-500 text-sm mt-1" role="alert">{emailError}</p>
-									)}
-								</div>
-								<fieldset>
-									<legend className="block text-sm font-medium text-gray-700">
-										{t('checkout.paymentMethodLabel') || 'Payment Method'}
-									</legend>
-									<div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-										<label className="flex items-center gap-2 rounded-md border border-gray-300 p-3 cursor-pointer hover:border-brand">
-											<input
-												type="radio"
-												name="payment-method"
-												value="card"
-												checked={paymentMethod === 'card'}
-												onChange={() => setPaymentMethod('card')}
-												className="h-4 w-4 text-brand focus:ring-brand"
-											/>
-											<span className="text-sm text-gray-900">{t('checkout.paymentMethodCard') || 'Card Payment'}</span>
-										</label>
-										<label className="flex items-center gap-2 rounded-md border border-gray-300 p-3 cursor-pointer hover:border-brand">
-											<input
-												type="radio"
-												name="payment-method"
-												value="bank_transfer"
-												checked={paymentMethod === 'bank_transfer'}
-												onChange={() => setPaymentMethod('bank_transfer')}
-												className="h-4 w-4 text-brand focus:ring-brand"
-											/>
-											<span className="text-sm text-gray-900">{t('checkout.paymentMethodBankTransfer') || 'Bank Transfer'}</span>
-										</label>
-									</div>
-								</fieldset>
-								<button
-								type="submit"
-								disabled={loading || !customerEmail.includes('@')}
-								className="w-full bg-brand text-white py-3 px-4 rounded-md hover:bg-brand-active disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] text-base font-medium touch-manipulation"
-							>
-								{loading ? (t('checkout.loading') || 'Loading...') : (t('checkout.proceedToPayment') || 'Proceed to Payment')}
-							</button>
-						</form>
-					) : (
-						<CheckoutForm
-							clientSecret={clientSecret}
-							orderToken={orderToken}
-							publishableKey={publishableKey}
-						/>
-					)}
+					<CheckoutForm
+						clientSecret={clientSecret}
+						orderToken={orderToken}
+						publishableKey={publishableKey}
+					/>
 				</div>
 
 				{/* Right column - Order summary */}

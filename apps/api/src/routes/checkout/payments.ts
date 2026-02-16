@@ -16,8 +16,8 @@ const logger = createLogger('payments');
 
 const paymentIntentSchema = z.object({
   quoteId: z.string().min(1, 'quoteId is required'),
-  email: z.string().email('Valid email is required'),
-  paymentMethod: z.enum(['card', 'bank_transfer']).optional().default('card'),
+  email: z.string().email('Valid email is required').optional(),
+  paymentMethod: z.enum(['card', 'bank_transfer', 'auto']).optional().default('auto'),
 });
 
 const runStatements = async (
@@ -195,24 +195,26 @@ payments.post('/payments/intent', async (c) => {
     }
   }
 
-  // Get or create customer
+  // Get or create customer only when email is explicitly provided.
   let customerId: number | null = null;
   let stripeCustomerId: string | null = null;
 
-  const existingCustomer = await c.env.DB.prepare(
-    `SELECT id, stripe_customer_id FROM customers WHERE email=?`
-  ).bind(email).first<{ id: number; stripe_customer_id: string | null }>();
+  if (email) {
+    const existingCustomer = await c.env.DB.prepare(
+      `SELECT id, stripe_customer_id FROM customers WHERE email=?`
+    ).bind(email).first<{ id: number; stripe_customer_id: string | null }>();
 
-  if (existingCustomer?.id) {
-    customerId = existingCustomer.id;
-    stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
-  } else {
-    const res = await c.env.DB.prepare(
-      `INSERT INTO customers (name, email, created_at, updated_at)
-       VALUES (?, ?, datetime('now'), datetime('now'))`
-    ).bind('Storefront Customer', email).run();
-    customerId = Number(res.meta.last_row_id);
-    stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
+    if (existingCustomer?.id) {
+      customerId = existingCustomer.id;
+      stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
+    } else {
+      const res = await c.env.DB.prepare(
+        `INSERT INTO customers (name, email, created_at, updated_at)
+         VALUES (?, ?, datetime('now'), datetime('now'))`
+      ).bind('Storefront Customer', email).run();
+      customerId = Number(res.meta.last_row_id);
+      stripeCustomerId = await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
+    }
   }
 
   // Create order record
@@ -239,7 +241,7 @@ payments.post('/payments/intent', async (c) => {
     quote.currency,
     JSON.stringify({
       source: 'storefront_elements',
-      email,
+      email: email || null,
       items: JSON.parse(quote.items_json),
       tax_breakdown: { subtotal: quote.subtotal, tax_amount: quote.tax_amount }
     }),
@@ -284,7 +286,9 @@ payments.post('/payments/intent', async (c) => {
   const params = new URLSearchParams();
   params.set('amount', String(quote.grand_total));
   params.set('currency', quote.currency.toLowerCase());
-  params.set('customer', stripeCustomerId!);
+  if (stripeCustomerId) {
+    params.set('customer', stripeCustomerId);
+  }
   params.set('metadata[orderId]', String(orderId));
   params.set('metadata[order_id]', String(orderId));
   params.set('metadata[quoteId]', quoteId);
@@ -294,8 +298,13 @@ payments.post('/payments/intent', async (c) => {
     params.append('payment_method_types[]', 'customer_balance');
     params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
     params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
-  } else {
+  } else if (paymentMethod === 'card') {
     params.append('payment_method_types[]', 'card');
+  } else {
+    params.set('automatic_payment_methods[enabled]', 'true');
+    params.set('automatic_payment_methods[allow_redirects]', 'never');
+    params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
+    params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
   }
 
   // Store coupon metadata for webhook handler
