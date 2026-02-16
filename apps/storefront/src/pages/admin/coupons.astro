@@ -6,6 +6,7 @@ import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../lib/api';
 import CouponsTable from '../../components/admin/CouponsTable';
 import { t } from '../../i18n';
@@ -148,4 +149,5 @@ const hasPrev = page > 1;
 			</Pagination>
 		</div>
 	</div>
+	<ConfirmDialog />
 </AdminLayout>

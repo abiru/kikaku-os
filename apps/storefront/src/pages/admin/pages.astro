@@ -5,6 +5,7 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../lib/api';
 import PagesTable from '../../components/admin/PagesTable';
 import { t } from '../../i18n';
@@ -175,4 +176,5 @@ const CORE_SLUGS = ['terms', 'privacy', 'shipping', 'refund', 'legal'];
 			</div>
 		</div>
 	</div>
+	<ConfirmDialog />
 </AdminLayout>

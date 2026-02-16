@@ -54,6 +54,10 @@ const exportOrdersCSV = (orders: readonly Order[], selectedIds: ReadonlySet<numb
   URL.revokeObjectURL(url)
 }
 
+const confirmDialog = (window as any).__confirmDialog as
+  | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
+  | undefined
+
 export default function OrdersTable({ orders: initialOrders, currentPage, totalPages, searchQuery }: Props) {
   const [orders, setOrders] = useState(initialOrders)
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(new Set())
@@ -129,6 +133,17 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
     }
 
     if (action === 'fulfill') {
+      const confirmed = confirmDialog
+        ? await confirmDialog({
+            title: t('admin.confirm.title'),
+            message: t('admin.confirm.bulkFulfill', { count: selectedIds.size }),
+            confirmLabel: t('admin.markAsShipped'),
+            cancelLabel: t('common.cancel'),
+            danger: false,
+          })
+        : window.confirm(t('admin.confirm.bulkFulfill', { count: selectedIds.size }))
+      if (!confirmed) return
+
       setBulkLoading(true)
       let successCount = 0
       let failCount = 0

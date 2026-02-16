@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from'../../layouts/AdminLayout.astro';
 import { Alert } from'../../components/catalyst/alert-banner';
 import OrdersTable from'../../components/admin/OrdersTable';
+import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { Heading } from'../../components/catalyst/heading';
 import { getApiBase } from'../../lib/api';
 import type { Order } from'../../lib/types';
@@ -238,4 +239,5 @@ const hasFilters = paymentStatus || fulfillmentStatus || dateFrom || dateTo;
 			});
 		}
 	</script>
+	<ConfirmDialog />
 </AdminLayout>

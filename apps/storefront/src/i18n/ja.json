@@ -581,7 +581,18 @@
     "emptyShippingDesc": "支払い済みの注文が入ると出荷待ちとして表示されます。",
     "emptyNewsletter": "登録者がまだいません",
     "emptyNewsletterDesc": "ニュースレターに登録があるとここに表示されます。",
-    "pageUpdated": "ページが更新されました"
+    "pageUpdated": "ページが更新されました",
+    "confirm": {
+      "title": "確認",
+      "archiveProduct": "「{title}」をアーカイブしますか？",
+      "restoreProduct": "「{title}」を復元しますか？",
+      "bulkArchiveProducts": "{count}件の商品をアーカイブしますか？",
+      "deletePages": "{count}件のページを削除しますか？この操作は取り消せません。",
+      "corePagesSkipped": "※ {count}件のコアページはスキップされます。",
+      "deleteCoupons": "{count}件のクーポンを削除しますか？この操作は取り消せません。",
+      "usedCouponsSkipped": "※ {count}件の使用済みクーポンはスキップされます。",
+      "bulkFulfill": "{count}件の注文を発送済みに変更しますか？"
+    }
   },
   "wishlist": {
     "title": "お気に入り",

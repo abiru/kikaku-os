@@ -28,6 +28,10 @@ type Props = {
   statusFilter: string
 }
 
+const confirmDialog = (window as any).__confirmDialog as
+  | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
+  | undefined
+
 export default function ProductsTable({
   products: initialProducts,
   currentPage,
@@ -41,7 +45,6 @@ export default function ProductsTable({
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [showConfirm, setShowConfirm] = useState<{ type: string; id?: number; title?: string } | null>(null)
 
   const sortedProducts = [...products].sort((a: Product, b: Product) => {
     let cmp = 0
@@ -94,42 +97,70 @@ export default function ProductsTable({
   }, [])
 
   const handleArchive = async (productId: number, productTitle: string) => {
-    setShowConfirm({ type: 'archive', id: productId, title: productTitle })
+    const confirmed = confirmDialog
+      ? await confirmDialog({
+          title: t('admin.confirm.title'),
+          message: t('admin.confirm.archiveProduct', { title: productTitle }),
+          confirmLabel: t('admin.archive'),
+          cancelLabel: t('common.cancel'),
+          danger: true,
+        })
+      : window.confirm(t('admin.confirm.archiveProduct', { title: productTitle }))
+    if (!confirmed) return
+
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setProducts(prev => prev.map(p => p.id === productId ? { ...p, status: 'archived' } : p))
+      } else {
+        const data = await res.json()
+        setBulkMessage({ type: 'error', text: data.message || 'Failed to archive' })
+      }
+    } catch {
+      setBulkMessage({ type: 'error', text: 'Failed to archive product' })
+    }
   }
 
   const handleRestore = async (productId: number, productTitle: string) => {
-    setShowConfirm({ type: 'restore', id: productId, title: productTitle })
+    const confirmed = confirmDialog
+      ? await confirmDialog({
+          title: t('admin.confirm.title'),
+          message: t('admin.confirm.restoreProduct', { title: productTitle }),
+          confirmLabel: t('admin.restore'),
+          cancelLabel: t('common.cancel'),
+          danger: false,
+        })
+      : window.confirm(t('admin.confirm.restoreProduct', { title: productTitle }))
+    if (!confirmed) return
+
+    try {
+      const res = await fetch(`/api/admin/products/${productId}/restore`, { method: 'POST' })
+      if (res.ok) {
+        setProducts(prev => prev.map(p => p.id === productId ? { ...p, status: 'active' } : p))
+      } else {
+        const data = await res.json()
+        setBulkMessage({ type: 'error', text: data.message || 'Failed to restore' })
+      }
+    } catch {
+      setBulkMessage({ type: 'error', text: 'Failed to restore product' })
+    }
   }
 
-  const executeConfirmAction = async () => {
-    if (!showConfirm) return
-    const { type, id } = showConfirm
+  const handleBulkAction = useCallback(async (action: string) => {
+    if (!action) return
+    setBulkMessage(null)
+    if (action === 'archive') {
+      const confirmed = confirmDialog
+        ? await confirmDialog({
+            title: t('admin.confirm.title'),
+            message: t('admin.confirm.bulkArchiveProducts', { count: selectedIds.size }),
+            confirmLabel: t('admin.archive'),
+            cancelLabel: t('common.cancel'),
+            danger: true,
+          })
+        : window.confirm(t('admin.confirm.bulkArchiveProducts', { count: selectedIds.size }))
+      if (!confirmed) return
 
-    if (type === 'archive' && id) {
-      try {
-        const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
-        if (res.ok) {
-          setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'archived' } : p))
-        } else {
-          const data = await res.json()
-          setBulkMessage({ type: 'error', text: data.message || 'Failed to archive' })
-        }
-      } catch {
-        setBulkMessage({ type: 'error', text: 'Failed to archive product' })
-      }
-    } else if (type === 'restore' && id) {
-      try {
-        const res = await fetch(`/api/admin/products/${id}/restore`, { method: 'POST' })
-        if (res.ok) {
-          setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'active' } : p))
-        } else {
-          const data = await res.json()
-          setBulkMessage({ type: 'error', text: data.message || 'Failed to restore' })
-        }
-      } catch {
-        setBulkMessage({ type: 'error', text: 'Failed to restore product' })
-      }
-    } else if (type === 'bulk-archive') {
       setBulkLoading(true)
       let success = 0
       let fail = 0
@@ -151,16 +182,7 @@ export default function ProductsTable({
         setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
       }
     }
-    setShowConfirm(null)
-  }
-
-  const handleBulkAction = useCallback((action: string) => {
-    if (!action) return
-    setBulkMessage(null)
-    if (action === 'archive') {
-      setShowConfirm({ type: 'bulk-archive' })
-    }
-  }, [])
+  }, [selectedIds])
 
   if (sortedProducts.length === 0) {
     return (
@@ -176,48 +198,6 @@ export default function ProductsTable({
 
   return (
     <div>
-      {/* Confirm Dialog */}
-      {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-zinc-950 mb-2">
-                {showConfirm.type === 'archive' && 'Archive Product'}
-                {showConfirm.type === 'restore' && 'Restore Product'}
-                {showConfirm.type === 'bulk-archive' && 'Bulk Archive'}
-              </h3>
-              <p className="text-sm text-zinc-600">
-                {showConfirm.type === 'archive' && `Are you sure you want to archive "${showConfirm.title}"?`}
-                {showConfirm.type === 'restore' && `Are you sure you want to restore "${showConfirm.title}"?`}
-                {showConfirm.type === 'bulk-archive' && `Are you sure you want to archive ${selectedIds.size} products?`}
-              </p>
-            </div>
-            <div className="flex justify-end gap-3 px-6 py-4 bg-zinc-50 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={() => setShowConfirm(null)}
-                className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={executeConfirmAction}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${
-                  showConfirm.type === 'restore'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-red-600 hover:bg-red-700'
-                }`}
-              >
-                {showConfirm.type === 'archive' && 'Archive'}
-                {showConfirm.type === 'restore' && 'Restore'}
-                {showConfirm.type === 'bulk-archive' && 'Archive All'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Bulk action bar */}
       {someSelected && (
         <div className="mb-4 flex items-center gap-4 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3">
