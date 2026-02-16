@@ -26,6 +26,7 @@ vi.mock('@stripe/react-stripe-js', () => ({
 	Elements: ({ children }: { children: React.ReactNode }) => (
 		<div data-testid="stripe-elements">{children}</div>
 	),
+	AddressElement: () => <div data-testid="address-element">AddressElement</div>,
 	PaymentElement: () => <div data-testid="payment-element">PaymentElement</div>,
 	useStripe: () => ({ confirmPayment: vi.fn() }),
 	useElements: () => ({ submit: vi.fn().mockResolvedValue({}), getElement: vi.fn() }),
@@ -137,8 +138,9 @@ describe('CheckoutPage', () => {
 		await waitFor(() => {
 			expect(screen.getByRole('heading', { level: 1, name: 'checkout.title' })).toBeInTheDocument();
 			expect(screen.getByTestId('stripe-elements')).toBeInTheDocument();
+			expect(screen.getByTestId('address-element')).toBeInTheDocument();
 			expect(screen.getByTestId('payment-element')).toBeInTheDocument();
-			expect(document.getElementById('checkout-page-email')).not.toBeInTheDocument();
+			expect(document.getElementById('checkout-email')).toBeInTheDocument();
 		});
 	});
 
