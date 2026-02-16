@@ -6,6 +6,7 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
 import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
+import { t } from '../../i18n';
 ---
 
 <!doctype html>
@@ -14,7 +15,7 @@ import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<title>Login - Led Kikaku OS</title>
+		<title>{`${t('common.login')} - Led Kikaku OS`}</title>
 	</head>
 	<body class="h-full font-sans antialiased">
 		<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -23,7 +24,7 @@ import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
 					Led Kikaku OS
 				</Heading>
 				<p class="mt-2 text-center text-sm text-zinc-600">
-					Admin Panel
+					{t('admin.adminPanel')}
 				</p>
 			</div>
 
@@ -39,9 +40,9 @@ import { SignIn, SignedIn, SignedOut } from '@clerk/astro/components';
 					</SignedOut>
 					<SignedIn>
 						<div class="text-center">
-							<p class="text-zinc-600 mb-4">You are already signed in.</p>
+							<p class="text-zinc-600 mb-4">{t('admin.alreadySignedIn')}</p>
 							<Button href="/admin/" color="indigo" client:load>
-								Go to Admin Dashboard
+								{t('admin.goToAdminDashboard')}
 							</Button>
 						</div>
 					</SignedIn>

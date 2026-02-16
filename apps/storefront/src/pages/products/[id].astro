@@ -109,14 +109,14 @@ const productDetails = product?.details || [
 // Policies
 const shippingPolicy = stockValue !== null && stockValue > 0
 	? {
-		name: '国内発送',
+		name: t('product.domesticShipping'),
 		icon: 'globe',
-		description: '2〜3日でお届け'
+		description: t('product.domesticShippingDescription')
 	}
 	: {
-		name: '海外発送',
+		name: t('product.internationalShipping'),
 		icon: 'globe',
-		description: '10日程度でお届け'
+		description: t('product.internationalShippingDescription')
 	};
 
 const policies = [
@@ -269,7 +269,7 @@ const jsonLdBreadcrumb = product ? {
 
 						{/* Image gallery */}
 						<div class="mt-8 lg:col-span-7 lg:col-start-1 lg:row-span-3 lg:row-start-1 lg:mt-0">
-							<h2 class="sr-only">Images</h2>
+							<h2 class="sr-only">{t('product.images')}</h2>
 
 							<div class="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-3 lg:gap-8">
 								{productImages.length > 0 ? (
@@ -362,7 +362,7 @@ const jsonLdBreadcrumb = product ? {
 
 							{/* Error message */}
 							<div id="checkout-error" class="hidden mt-4">
-								<Alert severity="critical" title="Error">
+								<Alert severity="critical" title={t('errors.error')}>
 									<p id="checkout-error-message" class="text-sm"></p>
 								</Alert>
 							</div>
