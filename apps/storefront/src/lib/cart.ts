@@ -10,6 +10,7 @@ export type CartItem = {
 	quantity: number;
 	taxRate?: number; // e.g., 0.10 for 10%
 	imageUrl?: string;
+	stock?: number; // available stock for dynamic quantity options
 };
 
 type CartState = Record<string, CartItem>;
