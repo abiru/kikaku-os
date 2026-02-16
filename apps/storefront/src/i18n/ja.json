@@ -24,6 +24,9 @@
     "next": "次へ",
     "page": "ページ"
   },
+  "signIn": {
+    "pageTitle": "ログイン - Led Kikaku Store"
+  },
   "nav": {
     "store": "ストア",
     "products": "製品",
@@ -469,6 +472,35 @@
     "itemApproved": "項目が承認されました。",
     "itemRejected": "項目が却下されました。",
     "nameLabel": "名前",
+    "bulkActions": "一括操作...",
+    "markAsShipped": "発送済みに変更",
+    "csvExport": "CSVエクスポート",
+    "deselect": "選択解除",
+    "selectOrder": "注文 #{id} を選択",
+    "bulkExportSuccess": "{count}件の注文をCSVエクスポートしました",
+    "bulkFulfillSuccess": "{count}件の注文を発送済みに変更しました",
+    "bulkPartialFail": "{succeeded}件成功、{failed}件失敗しました",
+    "shippingInfo": "配送情報",
+    "shipButton": "発送",
+    "noShippingOrders": "出荷待ちの注文はありません。",
+    "shippingStatusShipped": "発送済み",
+    "shippingStatusProcessing": "準備中",
+    "shippingStatusDelivered": "配達済み",
+    "shippingStatusUnfulfilled": "未発送",
+    "inquiryStatusOpen": "未対応",
+    "inquiryStatusReplied": "返信済み",
+    "inquiryStatusClosed": "クローズ",
+    "inquirySubject": "件名",
+    "inquiryName": "お名前",
+    "inquiryEmail": "メール",
+    "inquiryReceivedAt": "受付日時",
+    "noInquiries": "お問い合わせはありません。",
+    "settingsCategoryShipping": "配送設定",
+    "settingsCategoryCompany": "会社情報",
+    "settingsCategoryStore": "ストア設定",
+    "settingsCategoryGeneral": "一般設定",
+    "settingsUpdated": "{count}件の設定を更新しました",
+    "settingsPartialFail": "一部の設定の保存に失敗しました: {keys}",
     "quotations": "見積管理",
     "quotationNumber": "見積番号",
     "noQuotations": "見積がありません。",
@@ -655,7 +687,13 @@
     "saving": "保存中...",
     "saved": "保存しました",
     "saveFailed": "保存に失敗しました",
-    "loadError": "アカウントデータの読み込みに失敗しました"
+    "loadError": "アカウントデータの読み込みに失敗しました",
+    "pageTitle": "マイアカウント - Led Kikaku Store",
+    "profilePageTitle": "プロフィール編集 - Led Kikaku Store",
+    "ordersPageTitle": "注文履歴 - Led Kikaku Store",
+    "orderDetailPageTitle": "注文 #{id} - Led Kikaku Store",
+    "basicInfo": "基本情報",
+    "emailManagedByClerk": "メールアドレスはClerkアカウントで管理されています"
   },
   "category": {
     "home": "ホーム",
@@ -809,7 +847,11 @@
     "rateRange": "税率は0から1の間で指定してください（例：10%は0.10）。",
     "rateBetween": "税率は0から1の間で指定してください。",
     "applicableFromRequired": "適用開始日は必須です。",
-    "failedToLoadQuotations": "見積の読み込みに失敗しました。"
+    "failedToLoadQuotations": "見積の読み込みに失敗しました。",
+    "failedToLoadSettingsStatus": "設定の読み込みに失敗しました: {status}",
+    "failedToLoadSettingsGeneric": "設定の読み込みに失敗しました",
+    "failedToUpdateSettings": "設定の更新に失敗しました",
+    "failedToSaveSettings": "設定の保存に失敗しました"
   },
   "pages": {
     "orderStatus": {
@@ -939,7 +981,10 @@
     "statusSent": "送信済み",
     "statusAccepted": "承認済み",
     "statusExpired": "期限切れ",
-    "statusCancelled": "キャンセル"
+    "statusCancelled": "キャンセル",
+    "ordered": "注文作成済み",
+    "emailLabel": "Email",
+    "phoneLabel": "TEL"
   },
   "cms": {
     "loadError": "ページの読み込みに失敗しました。",

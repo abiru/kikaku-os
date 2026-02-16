@@ -2,9 +2,10 @@
 import Layout from '../layouts/Layout.astro';
 import Container from '../components/Container.astro';
 import { SignIn as ClerkSignIn } from '@clerk/astro/components';
+import { t } from '../i18n';
 ---
 
-<Layout title="ログイン - Led Kikaku Store">
+<Layout title={t('signIn.pageTitle')}>
   <Container class="py-16">
     <div class="flex justify-center">
       <ClerkSignIn />
