@@ -12,7 +12,7 @@ import { Checkbox } from '../../../components/catalyst/checkbox';
 import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../../lib/csrf';
 import { t } from '../../../i18n';
-import { logError } from '../../../utils/logger';
+import { logError } from '../../../lib/logger';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -51,7 +51,7 @@ if (!apiKey) {
 			error = t('errors.failedToLoadTaxRates');
 		}
 	} catch (e) {
-		logError({ page: 'admin/tax-rates/[id]' }, e);
+		logError('Failed to load tax rate', e, { page: 'admin/tax-rates/[id]', action: 'fetchTaxRate', resourceId: id });
 		error = t('errors.failedToLoadTaxRates');
 	}
 }
@@ -124,7 +124,7 @@ if (Astro.request.method === 'POST' && taxRate) {
 			}
 		}
 	} catch (e) {
-		logError({ page: 'admin/tax-rates/[id]' }, e);
+		logError('Failed to process tax rate request', e, { page: 'admin/tax-rates/[id]', action: 'postAction', resourceId: id });
 		error = t('errors.failedToProcessRequest');
 	}
 }

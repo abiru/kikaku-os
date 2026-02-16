@@ -14,7 +14,7 @@ import { formatDate } from '../../../lib/format';
 import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../../lib/csrf';
 import { t } from '../../../i18n';
 import { handleCouponPost } from '../../../lib/admin/coupon-actions';
-import { logError } from '../../../utils/logger';
+import { logError } from '../../../lib/logger';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -64,7 +64,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 			successMessage = result.successMessage;
 		}
 	} catch (e) {
-		logError({ page: 'admin/coupons/[id]' }, e);
+		logError('Failed to update coupon', e, { page: 'admin/coupons/[id]', action: 'postAction', resourceId: id });
 		error = t('errors.failedToUpdateCoupon');
 	}
 }
@@ -89,7 +89,7 @@ if (!coupon && apiKey) {
 			stats = data.stats || stats;
 		}
 	} catch (e) {
-		logError({ page: 'admin/coupons/[id]' }, e);
+		logError('Failed to load coupon', e, { page: 'admin/coupons/[id]', action: 'fetchCoupon', resourceId: id });
 		error = error || t('errors.failedToLoadCoupons');
 	}
 } else if (!apiKey) {
@@ -107,7 +107,7 @@ if (coupon && apiKey && successMessage) {
 			stats = data.stats || stats;
 		}
 	} catch (e) {
-		logError({ page: 'admin/coupons/[id]', action: 'Failed to fetch stats' }, e);
+		logError('Failed to fetch coupon stats', e, { page: 'admin/coupons/[id]', action: 'fetchStats', resourceId: id });
 	}
 }
 

@@ -1,3 +1,5 @@
+import { logError } from '../logger';
+
 type Coupon = {
 	id: number;
 	code: string;
@@ -112,7 +114,7 @@ export async function handleCouponPost(
 
 		return { coupon: data.coupon, error: null, successMessage: t('admin.couponUpdated'), redirect: null };
 	} catch (e) {
-		console.error(e);
+		logError('Failed to update coupon', e, { page: 'lib/admin/coupon-actions', action: 'updateCoupon', resourceId: id });
 		return { coupon: null, error: t('errors.failedToUpdateCoupon'), successMessage: null, redirect: null };
 	}
 }

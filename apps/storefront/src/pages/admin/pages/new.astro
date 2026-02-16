@@ -9,6 +9,7 @@ import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { logError } from '../../../lib/logger';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -73,7 +74,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 			}
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to create page', e, { page: 'admin/pages/new', action: 'createPage' });
 		error = 'Failed to create page. Please check your connection.';
 	}
 }
@@ -258,6 +259,7 @@ Code block
 <script>
 	import { marked } from 'marked';
 	import DOMPurify from 'isomorphic-dompurify';
+	import { logError } from '../../../lib/logger';
 
 	const previewToggle = document.getElementById('preview-toggle');
 	const editorContainer = document.getElementById('editor-container');
@@ -288,7 +290,7 @@ Code block
 						});
 						previewContent.innerHTML = sanitized;
 					} catch (error) {
-						console.error('Failed to parse markdown:', error);
+						logError('Failed to parse markdown', error, { page: 'admin/pages/new', action: 'previewMarkdown' });
 						previewContent.innerHTML = '<p class="text-red-500">Failed to parse markdown. Please check your syntax.</p>';
 					}
 				}

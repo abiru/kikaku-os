@@ -1,5 +1,6 @@
 import DOMPurify from 'isomorphic-dompurify';
 import { acceptQuotation, fetchQuotationHtml } from '../lib/quotationApi';
+import { logError } from '../lib/logger';
 
 declare global {
   interface Window {
@@ -79,7 +80,7 @@ const handleDownloadPDF = async () => {
     };
     document.head.appendChild(script);
   } catch (error) {
-    console.error('Error downloading PDF:', error);
+    logError('Error downloading PDF', error, { page: 'quotationDetail', action: 'downloadPdf' });
     errorMessageEl.textContent = error instanceof Error ? error.message : i18n.pdfDownloadError;
     errorMessageEl.style.display = 'block';
     btn.disabled = false;
@@ -107,7 +108,7 @@ const handleAccept = async () => {
       throw new Error(i18n.checkoutUrlError);
     }
   } catch (error) {
-    console.error('Error accepting quotation:', error);
+    logError('Error accepting quotation', error, { page: 'quotationDetail', action: 'acceptQuotation' });
     errorMessageEl.textContent = error instanceof Error ? error.message : i18n.acceptError;
     errorMessageEl.style.display = 'block';
     btn.disabled = false;

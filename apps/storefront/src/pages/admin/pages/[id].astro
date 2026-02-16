@@ -364,6 +364,7 @@ Code block
 <script type="module">
 	import { marked } from 'marked';
 	import DOMPurify from 'isomorphic-dompurify';
+	import { logError } from '../../../lib/logger';
 
 	const { pageId, canDelete, currentStatus, pageTitle, i18nPublish, i18nUnpublish, i18nPublished, i18nDraft } = window.__PAGE_CONFIG__;
 
@@ -399,7 +400,7 @@ Code block
 						});
 						previewContent.innerHTML = sanitized;
 					} catch (error) {
-						console.error('Failed to parse markdown:', error);
+						logError('Failed to parse markdown', error, { page: 'admin/pages/[id]', action: 'previewMarkdown' });
 						previewContent.innerHTML = '<p class="text-red-500">Failed to parse markdown. Please check your syntax.</p>';
 					}
 				}

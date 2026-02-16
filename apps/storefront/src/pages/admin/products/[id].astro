@@ -16,6 +16,7 @@ import MarkdownPreview from '../../../components/MarkdownPreview';
 import ProductWebUpdate from '../../../components/admin/ProductWebUpdate.astro';
 import ProductImages from '../../../components/admin/ProductImages.astro';
 import ProductVariants from '../../../components/admin/ProductVariants.astro';
+import { logError } from '../../../lib/logger';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -120,7 +121,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 			}
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to update product', e, { page: 'admin/products/[id]', action: 'updateProduct', resourceId: id });
 		error = 'Failed to update product. Please check your connection.';
 	}
 }
@@ -144,7 +145,7 @@ if (!product && apiKey) {
 			product = data.product;
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to load product', e, { page: 'admin/products/[id]', action: 'fetchProduct', resourceId: id });
 		error = error || 'Failed to load product. Please check your connection.';
 	}
 } else if (!apiKey) {
@@ -162,7 +163,7 @@ if (product && apiKey) {
 			variants = data.variants || [];
 		}
 	} catch (e) {
-		console.error('Failed to fetch variants:', e);
+		logError('Failed to fetch variants', e, { page: 'admin/products/[id]', action: 'fetchVariants', resourceId: id });
 	}
 }
 
@@ -177,7 +178,7 @@ if (product && apiKey) {
 			images = data.images || [];
 		}
 	} catch (e) {
-		console.error('Failed to fetch images:', e);
+		logError('Failed to fetch images', e, { page: 'admin/products/[id]', action: 'fetchImages', resourceId: id });
 	}
 }
 
@@ -192,7 +193,7 @@ if (apiKey) {
 			categories = data.categories || [];
 		}
 	} catch (e) {
-		console.error('Failed to fetch categories:', e);
+		logError('Failed to fetch categories', e, { page: 'admin/products/[id]', action: 'fetchCategories', resourceId: id });
 	}
 }
 
@@ -207,7 +208,7 @@ if (apiKey) {
 			taxRates = data.filter((tr: TaxRate) => tr.is_active) || [];
 		}
 	} catch (e) {
-		console.error('Failed to fetch tax rates:', e);
+		logError('Failed to fetch tax rates', e, { page: 'admin/products/[id]', action: 'fetchTaxRates', resourceId: id });
 	}
 }
 

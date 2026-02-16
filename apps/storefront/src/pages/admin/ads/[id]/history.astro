@@ -7,6 +7,7 @@ import { Badge } from '../../../../components/catalyst/badge';
 import { Button } from '../../../../components/catalyst/button';
 import { getApiBase } from '../../../../lib/api';
 import { formatDate } from '../../../../lib/format';
+import { logError } from '../../../../lib/logger';
 
 const { id } = Astro.params;
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -41,7 +42,7 @@ if (apiKey && id) {
     }
   } catch (e) {
     error = 'Failed to load history';
-    console.error(e);
+    logError('Failed to load ad history', e, { page: 'admin/ads/[id]/history', action: 'fetchHistory', resourceId: id });
   }
 }
 
@@ -101,7 +102,7 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
             const content = JSON.parse(item.generated_content);
             candidates = content.candidates || [];
           } catch (e) {
-            console.error('Failed to parse generated_content:', e);
+            logError('Failed to parse generated_content', e, { page: 'admin/ads/[id]/history', action: 'parseContent', resourceId: id });
           }
 
           return (
