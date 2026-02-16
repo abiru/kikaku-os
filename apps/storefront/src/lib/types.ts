@@ -185,3 +185,14 @@ export type PaginationMeta = {
   total: number;
   totalPages: number;
 };
+
+export type StaticPage = {
+  id: number;
+  slug: string;
+  title: string;
+  meta_title: string | null;
+  meta_description: string | null;
+  body: string;
+  status: string;
+  updated_at: string;
+};

@@ -151,7 +151,7 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 			<button
 				type="submit"
 				disabled={!stripe || isProcessing || !paymentElementReady}
-				className="w-full rounded-md bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+				className="w-full rounded-full bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 			>
 				{isProcessing ? (
 					<span className="inline-flex items-center gap-2">

@@ -6,12 +6,13 @@ import { Alert } from '../../../components/catalyst/alert-banner';
 import { Button } from '../../../components/catalyst/button';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
 import { getApiBase } from '../../../lib/api';
+import type { AdDraft } from '../../../types/ads';
 
 const { id } = Astro.params;
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const apiBase = getApiBase();
 
-let draft: any | null = null;
+let draft: AdDraft | null = null;
 let error: string | null = null;
 
 if (apiKey && id) {

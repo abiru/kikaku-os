@@ -15,7 +15,7 @@ function EmptyWishlist() {
 			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('wishlist.empty')}</h2>
 			<p className="mt-2 text-sm text-gray-500">{t('wishlist.emptyDescription')}</p>
 			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-md bg-[#0071e3] px-4 py-2 text-sm font-medium text-white hover:bg-[#005bb5]">
+				<a href="/products" className="inline-flex items-center rounded-full bg-[#0071e3] px-4 py-2 text-sm font-medium text-white hover:bg-[#005bb5]">
 					{t('wishlist.browseProducts')}
 				</a>
 			</div>
@@ -99,7 +99,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 						<button
 							type="button"
 							onClick={handleAddToCart}
-							className="inline-flex items-center rounded-md bg-[#0071e3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005bb5] transition-colors disabled:opacity-50"
+							className="inline-flex items-center rounded-full bg-[#0071e3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005bb5] transition-colors disabled:opacity-50"
 							disabled={addedToCart}
 						>
 							{addedToCart ? t('wishlist.addedToCart') : t('wishlist.addToCart')}
@@ -107,7 +107,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 					) : (
 						<a
 							href={`/products/${item.productId}`}
-							className="inline-flex items-center rounded-md bg-[#0071e3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005bb5] transition-colors"
+							className="inline-flex items-center rounded-full bg-[#0071e3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005bb5] transition-colors"
 						>
 							{t('wishlist.viewProduct')}
 						</a>

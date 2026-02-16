@@ -12,6 +12,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
+import { handlePageUpdate } from '../../../lib/admin/page-actions';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -36,51 +37,11 @@ let successMessage: string | null = null;
 
 // Handle POST - Update page
 if (Astro.request.method === 'POST' && apiKey) {
-	try {
-		const formData = await Astro.request.formData();
-		const slug = formData.get('slug')?.toString().trim().toLowerCase() || '';
-		const title = formData.get('title')?.toString().trim() || '';
-		const meta_title = formData.get('meta_title')?.toString().trim() || '';
-		const meta_description = formData.get('meta_description')?.toString().trim() || '';
-		const body = formData.get('body')?.toString() || '';
-		const status = formData.get('status')?.toString() || 'draft';
-
-		if (!slug) {
-			error = 'Slug is required';
-		} else if (!/^[a-z0-9-]+$/.test(slug)) {
-			error = 'Slug must contain only lowercase letters, numbers, and hyphens';
-		} else if (!title) {
-			error = 'Title is required';
-		} else {
-			const res = await fetch(`${apiBase}/admin/pages/${id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
-				},
-				body: JSON.stringify({
-					slug,
-					title,
-					meta_title: meta_title || null,
-					meta_description: meta_description || null,
-					body,
-					status
-				})
-			});
-
-			const data = await res.json();
-
-			if (!res.ok) {
-				error = data.message || 'Failed to update page';
-			} else {
-				page = data.page;
-				successMessage = 'Page updated successfully';
-			}
-		}
-	} catch (e) {
-		console.error(e);
-		error = 'Failed to update page. Please check your connection.';
-	}
+	const formData = await Astro.request.formData();
+	const result = await handlePageUpdate(formData, apiBase, apiKey, id!);
+	page = result.page as Page | null;
+	error = result.error;
+	successMessage = result.successMessage;
 }
 
 // Fetch page data

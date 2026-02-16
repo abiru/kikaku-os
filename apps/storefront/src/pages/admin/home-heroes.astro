@@ -8,13 +8,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 import HomeHeroesPage from '../../components/admin/HomeHeroesPage';
 import { t } from '../../i18n';
+import type { HeroSection } from '../../lib/types';
 
 const apiBase = getApiBase();
 const status = Astro.url.searchParams.get('status') || 'all';
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
-let heroes: any[] = [];
+let heroes: HeroSection[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
 let error = null;
 
