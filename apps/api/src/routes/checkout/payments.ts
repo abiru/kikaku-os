@@ -34,6 +34,45 @@ const runStatements = async (
   }
 };
 
+const extractAccountIdFromRequestLogUrl = (requestLogUrl: string | undefined): string | null => {
+  if (!requestLogUrl) return null;
+  const match = requestLogUrl.match(/dashboard\.stripe\.com\/(acct_[^/]+)/);
+  return match?.[1] || null;
+};
+
+const getSecretKeyAccountId = async (secretKey: string): Promise<string | null> => {
+  try {
+    const res = await fetch('https://api.stripe.com/v1/account', {
+      headers: {
+        authorization: `Bearer ${secretKey}`,
+      },
+    });
+    if (!res.ok) return null;
+    const data = await res.json<{ id?: string }>();
+    return data.id || null;
+  } catch {
+    return null;
+  }
+};
+
+const getPublishableKeyAccountHint = async (publishableKey: string): Promise<string | null> => {
+  try {
+    const res = await fetch('https://api.stripe.com/v1/account', {
+      headers: {
+        authorization: `Bearer ${publishableKey}`,
+      },
+    });
+    const data = await res.json<{
+      error?: {
+        request_log_url?: string;
+      };
+    }>();
+    return extractAccountIdFromRequestLogUrl(data.error?.request_log_url);
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Clean up a failed order creation: release stock, delete order items and order.
  * Logs to Inbox on cleanup failure.
@@ -87,6 +126,26 @@ payments.post('/payments/intent', async (c) => {
   if (!stripeKey) return jsonError(c, 'Stripe API key not configured', 500);
   if (stripeKey.startsWith('pk_')) {
     return jsonError(c, 'Stripe secret key invalid', 500);
+  }
+  const publishableKey = c.env.STRIPE_PUBLISHABLE_KEY || '';
+
+  if (c.env.DEV_MODE === 'true' && publishableKey) {
+    const [secretAccountId, publishableAccountHint] = await Promise.all([
+      getSecretKeyAccountId(stripeKey),
+      getPublishableKeyAccountHint(publishableKey),
+    ]);
+
+    if (
+      secretAccountId &&
+      publishableAccountHint &&
+      secretAccountId !== publishableAccountHint
+    ) {
+      return jsonError(
+        c,
+        `Stripe key mismatch: STRIPE_SECRET_KEY is for ${secretAccountId} but STRIPE_PUBLISHABLE_KEY is for ${publishableAccountHint}`,
+        500
+      );
+    }
   }
 
   let body: unknown;
@@ -349,8 +408,6 @@ payments.post('/payments/intent', async (c) => {
   ).bind(quoteId).run();
 
   // Get publishable key from environment
-  const publishableKey = c.env.STRIPE_PUBLISHABLE_KEY || '';
-
   return jsonOk(c, {
     clientSecret: paymentIntent.client_secret,
     orderId,

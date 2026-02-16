@@ -100,9 +100,9 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 					onReady={() => {
 						setPaymentElementReady(true);
 					}}
-					onLoadError={() => {
+					onLoadError={(event) => {
 						setPaymentElementReady(false);
-						setErrorMessage(t('checkout.stripeLoadFailedDescription'));
+						setErrorMessage(event.error?.message || t('checkout.stripeLoadFailedDescription'));
 					}}
 				/>
 			</div>
