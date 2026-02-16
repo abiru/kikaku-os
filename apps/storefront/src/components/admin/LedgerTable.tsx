@@ -1,5 +1,7 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { formatPrice } from '../../lib/format'
+import TableEmptyState from './TableEmptyState'
+import { t } from '../../i18n'
 
 type LedgerEntry = {
   id: number
@@ -60,8 +62,12 @@ export default function LedgerTable({ entries }: Props) {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={6} className="text-center text-zinc-500 font-sans">
-              No ledger entries found.
+            <TableCell colSpan={6}>
+              <TableEmptyState
+                icon="book"
+                message={t('admin.emptyLedger')}
+                description={t('admin.emptyLedgerDesc')}
+              />
             </TableCell>
           </TableRow>
         )}

@@ -1,4 +1,6 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
+import TableEmptyState from './TableEmptyState'
+import { t } from '../../i18n'
 
 type Report = {
   id: number
@@ -51,8 +53,12 @@ export default function ReportsTable({ reports }: Props) {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-zinc-500">
-              No reports found.
+            <TableCell colSpan={4}>
+              <TableEmptyState
+                icon="bar-chart"
+                message={t('admin.emptyReports')}
+                description={t('admin.emptyReportsDesc')}
+              />
             </TableCell>
           </TableRow>
         )}

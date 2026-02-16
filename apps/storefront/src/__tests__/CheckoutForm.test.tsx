@@ -12,8 +12,6 @@ vi.mock('../i18n', () => ({
 vi.mock('@stripe/react-stripe-js', () => ({
 	Elements: ({ children }: { children: React.ReactNode }) => <div data-testid="stripe-elements">{children}</div>,
 	PaymentElement: () => <div data-testid="payment-element">PaymentElement</div>,
-	AddressElement: () => <div data-testid="address-element">AddressElement</div>,
-	ExpressCheckoutElement: () => <div data-testid="express-checkout">ExpressCheckout</div>,
 	useStripe: () => ({
 		confirmPayment: vi.fn(),
 	}),
@@ -71,23 +69,6 @@ describe('CheckoutForm', () => {
 
 		expect(screen.getByTestId('stripe-elements')).toBeInTheDocument();
 		expect(screen.getByTestId('payment-element')).toBeInTheDocument();
-		expect(screen.getByTestId('address-element')).toBeInTheDocument();
-		expect(screen.getByTestId('express-checkout')).toBeInTheDocument();
-	});
-
-	it('renders email input field', () => {
-		render(
-			<CheckoutForm
-				clientSecret="pi_secret_123"
-				orderToken="tok_123"
-				publishableKey="pk_test_xxx"
-			/>
-		);
-
-		const emailInput = screen.getByPlaceholderText('your@email.com');
-		expect(emailInput).toBeInTheDocument();
-		expect(emailInput).toHaveAttribute('type', 'email');
-		expect(emailInput).toBeRequired();
 	});
 
 	it('renders submit button', () => {
@@ -116,7 +97,7 @@ describe('CheckoutForm', () => {
 		expect(screen.getByText('checkout.title')).toBeInTheDocument();
 	});
 
-	it('renders shipping address label', () => {
+	it('renders payment details label', () => {
 		render(
 			<CheckoutForm
 				clientSecret="pi_secret_123"
@@ -125,6 +106,6 @@ describe('CheckoutForm', () => {
 			/>
 		);
 
-		expect(screen.getByText('checkout.shippingAddress')).toBeInTheDocument();
+		expect(screen.getByText('checkout.paymentDetails')).toBeInTheDocument();
 	});
 });

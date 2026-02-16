@@ -4,6 +4,7 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '.
 import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
 import { Button } from '../catalyst/button';
 import { formatDate } from '../../lib/format';
+import TableEmptyState from './TableEmptyState';
 import { t } from '../../i18n';
 
 type Subscriber = {
@@ -179,8 +180,12 @@ export default function NewsletterTable({ subscribers, total, currentPage, total
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-zinc-500">
-                {t('admin.newsletterNoSubscribers')}
+              <TableCell colSpan={5}>
+                <TableEmptyState
+                  icon="mail"
+                  message={t('admin.emptyNewsletter')}
+                  description={t('admin.emptyNewsletterDesc')}
+                />
               </TableCell>
             </TableRow>
           )}
