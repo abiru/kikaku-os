@@ -123,7 +123,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 						<div class="space-y-3 col-span-2 md:col-span-1">
 							<h3 class="font-semibold text-[#1d1d1f]">{t('newsletter.title')}</h3>
 							<p class="text-[11px] text-[#6e6e73]">{t('newsletter.description')}</p>
-							<NewsletterForm client:load />
+							<NewsletterForm client:idle />
 						</div>
 					</div>
 

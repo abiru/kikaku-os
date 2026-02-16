@@ -81,7 +81,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		)}
 
 		<OrdersTable
-			client:load
+			client:visible
 			orders={orders}
 			currentPage={page}
 			totalPages={meta.totalPages}

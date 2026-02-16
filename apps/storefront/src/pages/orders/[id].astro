@@ -75,7 +75,7 @@ try {
 	{loadState === 'ready' && order ? (
 		<div class="min-h-screen bg-[#f5f5f7]">
 			<Container class="py-10">
-				<OrderTracking order={order} client:load />
+				<OrderTracking order={order} client:visible />
 			</Container>
 		</div>
 	) : loadState === 'unavailable' ? (
