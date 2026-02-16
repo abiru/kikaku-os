@@ -7,6 +7,7 @@ import Copy from "../components/Copy.astro";
 import Research from "../components/Research.astro";
 import { getApiBase } from '../lib/api';
 import { t } from '../i18n';
+import { logError } from '../lib/logger';
 import type { HeroSection, Product } from '../lib/types';
 
 const apiBase = getApiBase();
@@ -19,8 +20,8 @@ try {
     const data = await res.json();
     heroes = data.heroes || [];
   }
-} catch (error) {
-  console.error('Failed to fetch heroes:', error);
+} catch (e) {
+  logError('Failed to fetch heroes', e, { page: 'index', action: 'fetchHeroes' });
 }
 
 // SSR: Fetch featured products for category grid
@@ -31,8 +32,8 @@ try {
     const data = await res.json();
     featuredProducts = data.products || [];
   }
-} catch (error) {
-  console.error('Failed to fetch featured products:', error);
+} catch (e) {
+  logError('Failed to fetch featured products', e, { page: 'index', action: 'fetchFeaturedProducts' });
 }
 // Organization JSON-LD for SEO
 const siteUrl = 'https://led-kikaku.com';
