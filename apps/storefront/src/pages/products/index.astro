@@ -170,7 +170,7 @@ const skeletonCards = Array.from({ length: 6 });
 						></div>
 
 						{/* Pagination */}
-						<div id="pagination" class="hidden mt-12 flex items-center justify-between border-t border-gray-200 pt-6">
+						<nav id="pagination" class="hidden mt-12 flex items-center justify-between border-t border-gray-200 pt-6" aria-label={t('products.pagination')}>
 							<div class="text-sm text-gray-600">
 								<span id="pagination-info"></span>
 							</div>
@@ -178,12 +178,12 @@ const skeletonCards = Array.from({ length: 6 });
 								<a id="prev-page" href="#" class="hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
 									← {t('admin.previous')}
 								</a>
-								<span id="current-page" class="px-4 py-2 text-sm font-medium text-gray-900"></span>
+								<span id="current-page" class="px-4 py-2 text-sm font-medium text-gray-900" aria-current="page"></span>
 								<a id="next-page" href="#" class="hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
 									{t('admin.next')} →
 								</a>
 							</div>
-						</div>
+						</nav>
 					</div>
 				</div>
 			</Container>

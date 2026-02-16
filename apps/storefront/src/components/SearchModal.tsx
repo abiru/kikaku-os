@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getApiBase } from '../lib/api';
 import { useTranslation } from '../i18n';
 import { formatPrice } from '../lib/format';
@@ -26,6 +26,7 @@ export default function SearchModal() {
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const resultsRef = useRef<HTMLDivElement>(null);
+	const modalRef = useRef<HTMLDivElement>(null);
 
 	// Listen for open-search event
 	useEffect(() => {
@@ -104,13 +105,46 @@ export default function SearchModal() {
 		}
 	}, [selectedIndex, results]);
 
+	// Focus trap: Tab key loops within modal
+	const handleFocusTrap = useCallback((e: KeyboardEvent) => {
+		if (e.key !== 'Tab' || !modalRef.current) return;
+
+		const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+			'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+		);
+		if (focusable.length === 0) return;
+
+		const first = focusable[0]!;
+		const last = focusable[focusable.length - 1]!;
+
+		if (e.shiftKey) {
+			if (document.activeElement === first) {
+				e.preventDefault();
+				last.focus();
+			}
+		} else {
+			if (document.activeElement === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
+	}, []);
+
+	useEffect(() => {
+		if (!isOpen) return;
+		document.addEventListener('keydown', handleFocusTrap);
+		return () => document.removeEventListener('keydown', handleFocusTrap);
+	}, [isOpen, handleFocusTrap]);
+
 	if (!isOpen) return null;
 
 	return (
 		<div
+			ref={modalRef}
 			className="fixed inset-0 z-50 overflow-y-auto"
 			role="dialog"
 			aria-modal="true"
+			aria-label={t('common.searchProducts')}
 		>
 			{/* Backdrop */}
 			<div

@@ -325,7 +325,7 @@ function CheckoutPageContent() {
 			)}
 
 			{error && (
-				<div className="mb-6 rounded-md bg-red-50 p-4">
+				<div className="mb-6 rounded-md bg-red-50 p-4" role="alert">
 					<p className="text-sm text-red-800">{error}</p>
 				</div>
 			)}
@@ -336,14 +336,17 @@ function CheckoutPageContent() {
 					{!emailSubmitted ? (
 						<form onSubmit={handleEmailSubmit} className="space-y-4" noValidate>
 							<div>
-								<label htmlFor="email" className="block text-sm font-medium text-gray-700">
+								<label htmlFor="checkout-page-email" className="block text-sm font-medium text-gray-700">
 									{t('checkout.email') || 'Email'} <span className="text-red-500">*</span>
 								</label>
 								<input
 									ref={emailInputRef}
 									type="email"
-									id="email"
+									id="checkout-page-email"
 									required
+									aria-required="true"
+									aria-invalid={emailTouched && !!emailError}
+									aria-describedby={emailTouched && emailError ? 'checkout-email-error' : undefined}
 									value={customerEmail}
 									onChange={(e) => handleEmailChange(e.target.value)}
 									onBlur={handleEmailBlur}
@@ -351,7 +354,7 @@ function CheckoutPageContent() {
 									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand text-base p-3 border"
 								/>
 								{emailTouched && emailError && (
-									<p id="email-error" className="text-red-500 text-sm mt-1">{emailError}</p>
+									<p id="checkout-email-error" className="text-red-500 text-sm mt-1" role="alert">{emailError}</p>
 								)}
 							</div>
 							<button

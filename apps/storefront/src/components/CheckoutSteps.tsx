@@ -19,7 +19,7 @@ function DesktopSteps({ currentStep }: CheckoutStepsProps) {
         const isCurrent = index === currentIndex;
 
         return (
-          <li key={step} className="flex items-center">
+          <li key={step} className="flex items-center" {...(isCurrent ? { 'aria-current': 'step' as const } : {})}>
             {index > 0 && (
               <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-brand' : 'bg-[#d2d2d7]'}`} />
             )}
@@ -76,7 +76,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
           const isCurrent = index === currentIndex;
 
           return (
-            <li key={step} className="flex items-center">
+            <li key={step} className="flex items-center" {...(isCurrent ? { 'aria-current': 'step' as const } : {})}>
               {index > 0 && (
                 <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-brand' : 'bg-[#d2d2d7]'}`} />
               )}

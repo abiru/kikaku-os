@@ -26,6 +26,17 @@ const i18n = {
 	errorGenericDesc: i18nEl?.dataset.errorGenericDesc || 'カタログを読み込めませんでした。しばらくしてからもう一度お試しください。',
 };
 
+// Create aria-live region for announcing product count changes
+const liveRegion = document.createElement('div');
+liveRegion.setAttribute('aria-live', 'polite');
+liveRegion.setAttribute('role', 'status');
+liveRegion.className = 'sr-only';
+document.body.appendChild(liveRegion);
+
+const announceProductCount = (count: number) => {
+	liveRegion.textContent = `${count}件の商品が見つかりました`;
+};
+
 const showError = (title: string, description: string) => {
 	const errorTitle = document.getElementById('error-title');
 	const errorDesc = document.getElementById('error-description');
@@ -162,6 +173,7 @@ const renderProducts = (products: ProductListItem[]) => {
 		} else {
 			const imgPlaceholder = document.createElement('div');
 			imgPlaceholder.className = 'w-full h-full flex items-center justify-center';
+			imgPlaceholder.setAttribute('aria-hidden', 'true');
 			imgPlaceholder.innerHTML = `<svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`;
 			imgContainer.appendChild(imgPlaceholder);
 		}
@@ -308,6 +320,7 @@ const loadProducts = async () => {
 		renderProducts(products);
 		renderPagination(data?.meta);
 		setState('loaded');
+		announceProductCount(products.length);
 	} catch (err) {
 		const status = (err as { status?: number }).status;
 		if (status === 404) {

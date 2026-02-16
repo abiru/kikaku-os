@@ -73,7 +73,8 @@
     "showingCount": "{start}〜{end}件目（全{total}件）",
     "pageInfo": "ページ {page} / {totalPages}",
     "priceAbove": "{min}円以上",
-    "priceUpTo": "{max}円以下"
+    "priceUpTo": "{max}円以下",
+    "pagination": "ページネーション"
   },
   "cart": {
     "title": "ショッピングカート",
@@ -101,7 +102,8 @@
     "processing": "処理中...",
     "returnToCart": "カートに戻る",
     "createQuotation": "見積書を作成",
-    "itemCount": "カートに{count}件の商品"
+    "itemCount": "カートに{count}件の商品",
+    "quantityLabel": "{title}の数量"
   },
   "checkout": {
     "pageTitle": "チェックアウト - Led Kikaku",
