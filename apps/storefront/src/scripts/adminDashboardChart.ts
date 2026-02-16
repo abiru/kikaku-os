@@ -1,6 +1,5 @@
-import Chart from 'chart.js/auto';
-
-function initChart() {
+async function initChart() {
+	const { default: Chart } = await import('chart.js/auto');
 	const dataElement = document.getElementById('analytics-data');
 	const chartData = dataElement ? JSON.parse(dataElement.textContent || 'null') : null;
 

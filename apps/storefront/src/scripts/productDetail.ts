@@ -50,6 +50,8 @@ if (page) {
 	const productForm = document.getElementById('product-form');
 
 	const getSelectedQuantity = (): number => {
+		const select = productForm?.querySelector('select[name="quantity"]') as HTMLSelectElement | null;
+		if (select) return Number(select.value);
 		const selectedRadio = productForm?.querySelector('input[name="quantity"]:checked') as HTMLInputElement | null;
 		return selectedRadio ? Number(selectedRadio.value) : 1;
 	};

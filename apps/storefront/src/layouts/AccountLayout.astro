@@ -2,6 +2,7 @@
 import Container from '../components/Container.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SearchModal from '../components/SearchModal';
+import CookieConsent from '../components/CookieConsent';
 import { t } from '../i18n';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -82,5 +83,6 @@ const navItems = [
 		</div>
 
 		<SearchModal client:only="react" />
+		<CookieConsent client:only="react" />
 	</body>
 </html>

@@ -36,8 +36,10 @@ describe('productDetail script', () => {
 				data-tax-rate="0.1"
 				data-product-image="https://example.com/p.png"></div>
 			<form id="product-form">
-				<input type="radio" name="quantity" value="1" />
-				<input type="radio" name="quantity" value="3" checked />
+				<select name="quantity">
+					<option value="1">1</option>
+					<option value="3" selected>3</option>
+				</select>
 			</form>
 			<button id="buy-button" data-added-label="Added!"></button>
 			<span id="buy-label">Add to cart</span>
