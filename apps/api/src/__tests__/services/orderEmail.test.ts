@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   sendOrderConfirmationEmail,
   sendShippingNotificationEmail,
+  sendPaymentFailedEmail,
   getOrderWithCustomer,
   getOrderItems,
   buildOrderItemsHtml,
@@ -502,5 +503,156 @@ describe('sendShippingNotificationEmail', () => {
         tracking_number: '1234-5678-9012',
       })
     );
+  });
+});
+
+describe('sendPaymentFailedEmail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns error when order is not found', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB, STOREFRONT_BASE_URL: 'http://localhost:4321' };
+
+    const result = await sendPaymentFailedEmail(env as any, 999);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Order not found');
+  });
+
+  it('returns error when customer email is missing', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB, STOREFRONT_BASE_URL: 'http://localhost:4321' };
+
+    const result = await sendPaymentFailedEmail(env as any, 2);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Customer email not found');
+  });
+
+  it('sends payment failed email with fallback template', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB, STOREFRONT_BASE_URL: 'http://localhost:4321' };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_fail' });
+
+    const result = await sendPaymentFailedEmail(env as any, 1);
+
+    expect(result.success).toBe(true);
+    expect(sendEmail).toHaveBeenCalledWith(
+      env,
+      expect.objectContaining({
+        to: 'tanaka@example.com',
+        subject: expect.stringContaining('#1'),
+        html: expect.stringContaining('お支払いに関するお知らせ'),
+        text: expect.stringContaining('お支払いに関するお知らせ'),
+      })
+    );
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    expect(callArgs.html).toContain('http://localhost:4321/checkout');
+    expect(callArgs.html).toContain('お支払いをやり直す');
+    expect(callArgs.text).toContain('http://localhost:4321/checkout');
+  });
+
+  it('does not expose raw Stripe error details to customers', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB, STOREFRONT_BASE_URL: 'http://localhost:4321' };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_safe' });
+
+    await sendPaymentFailedEmail(env as any, 1);
+
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    // Should NOT contain technical Stripe error info
+    expect(callArgs.html).not.toContain('card_declined');
+    expect(callArgs.html).not.toContain('insufficient_funds');
+    expect(callArgs.html).not.toContain('stripe');
+    expect(callArgs.text).not.toContain('card_declined');
+    expect(callArgs.text).not.toContain('insufficient_funds');
+  });
+
+  it('sends email with DB template when available', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB, STOREFRONT_BASE_URL: 'https://shop.example.com' };
+
+    const mockTemplate = {
+      id: 3,
+      slug: 'payment-failure-notification',
+      name: 'Payment Failure',
+      subject: 'お支払いに関するお知らせ（注文 #{{order_number}}）',
+      body_html: '<p>{{customer_name}}様、お支払いに失敗しました。<a href="{{retry_url}}">再試行</a></p>',
+      body_text: '{{customer_name}}様、お支払いに失敗しました。再試行: {{retry_url}}',
+      variables: '["customer_name", "order_number", "total_amount", "retry_url"]',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+    };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(mockTemplate);
+    vi.mocked(renderTemplate).mockReturnValue({
+      subject: 'お支払いに関するお知らせ（注文 #1）',
+      html: '<p>田中太郎様、お支払いに失敗しました。<a href="https://shop.example.com/checkout">再試行</a></p>',
+      text: '田中太郎様、お支払いに失敗しました。再試行: https://shop.example.com/checkout',
+    });
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_tmpl_fail' });
+
+    const result = await sendPaymentFailedEmail(env as any, 1);
+
+    expect(result.success).toBe(true);
+    expect(getEmailTemplate).toHaveBeenCalledWith(env, 'payment-failure-notification');
+    expect(renderTemplate).toHaveBeenCalledWith(
+      mockTemplate,
+      expect.objectContaining({
+        customer_name: '田中太郎',
+        order_number: '1',
+        retry_url: 'https://shop.example.com/checkout',
+      })
+    );
+  });
+
+  it('uses default customer name when not available', async () => {
+    const mockDB = createMockDB();
+    // Order ID 2 has no customer_name but also no email, so we need a custom setup
+    // We'll use order 1 with mocked null name
+    const customOrders: Record<number, any> = {
+      3: {
+        id: 3,
+        status: 'payment_failed',
+        total_net: 8000,
+        currency: 'JPY',
+        created_at: '2025-01-17T10:00:00Z',
+        customer_id: 3,
+        customer_name: null,
+        customer_email: 'noname@example.com',
+        metadata: null,
+      },
+    };
+
+    const customMockDB = {
+      prepare: vi.fn((sql: string) => ({
+        bind: vi.fn((...args: any[]) => ({
+          first: vi.fn(async () => {
+            if (sql.includes('FROM orders o')) {
+              return customOrders[args[0]] || null;
+            }
+            return null;
+          }),
+          all: vi.fn(async () => ({ results: [] })),
+        })),
+      })),
+    };
+
+    const env = { DB: customMockDB, STOREFRONT_BASE_URL: 'http://localhost:4321' };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_default' });
+
+    await sendPaymentFailedEmail(env as any, 3);
+
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    expect(callArgs.html).toContain('お客様');
+    expect(callArgs.text).toContain('お客様');
   });
 });
