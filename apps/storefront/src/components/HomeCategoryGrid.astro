@@ -23,7 +23,7 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
   {products.length > 0 ? (
     products.map((product) => {
       const bgImage = product.image || placeholderBg;
-      const categoryName = product.category || 'Products';
+      const categoryName = product.category || t('nav.products');
       const description = product.description || t('home.exploreProducts');
 
       return (
