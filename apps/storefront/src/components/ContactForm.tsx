@@ -144,8 +144,11 @@ function ContactFormContent() {
           onChange={(e) => handleChange('name', e.target.value)}
           placeholder={t('contact.namePlaceholder')}
           invalid={!!errors.name}
+          aria-required="true"
+          aria-invalid={!!errors.name}
+          aria-describedby={errors.name ? 'contact-name-error' : undefined}
         />
-        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+        {errors.name && <p id="contact-name-error" className="mt-1 text-sm text-red-600" role="alert">{errors.name}</p>}
       </Field>
 
       <Field>
@@ -157,8 +160,11 @@ function ContactFormContent() {
           onChange={(e) => handleChange('email', e.target.value)}
           placeholder={t('contact.emailPlaceholder')}
           invalid={!!errors.email}
+          aria-required="true"
+          aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? 'contact-email-error' : undefined}
         />
-        {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+        {errors.email && <p id="contact-email-error" className="mt-1 text-sm text-red-600" role="alert">{errors.email}</p>}
       </Field>
 
       <Field>
@@ -169,8 +175,11 @@ function ContactFormContent() {
           onChange={(e) => handleChange('subject', e.target.value)}
           placeholder={t('contact.subjectPlaceholder')}
           invalid={!!errors.subject}
+          aria-required="true"
+          aria-invalid={!!errors.subject}
+          aria-describedby={errors.subject ? 'contact-subject-error' : undefined}
         />
-        {errors.subject && <p className="mt-1 text-sm text-red-600">{errors.subject}</p>}
+        {errors.subject && <p id="contact-subject-error" className="mt-1 text-sm text-red-600" role="alert">{errors.subject}</p>}
       </Field>
 
       <Field>
@@ -182,8 +191,11 @@ function ContactFormContent() {
           placeholder={t('contact.bodyPlaceholder')}
           rows={6}
           invalid={!!errors.body}
+          aria-required="true"
+          aria-invalid={!!errors.body}
+          aria-describedby={errors.body ? 'contact-body-error' : undefined}
         />
-        {errors.body && <p className="mt-1 text-sm text-red-600">{errors.body}</p>}
+        {errors.body && <p id="contact-body-error" className="mt-1 text-sm text-red-600" role="alert">{errors.body}</p>}
       </Field>
 
       <Button type="submit" color="dark/zinc" className="w-full" disabled={submitting}>

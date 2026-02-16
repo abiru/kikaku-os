@@ -69,6 +69,7 @@ export function TableHeader({ className, ...props }: React.ComponentPropsWithout
  let { bleed, grid } = useContext(TableContext)
  return (
  <th
+ scope="col"
  {...props}
  className={clsx(
  className,

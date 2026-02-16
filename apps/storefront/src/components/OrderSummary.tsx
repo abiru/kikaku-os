@@ -104,7 +104,7 @@ export default function OrderSummary({ items, breakdown, onCouponApply }: OrderS
 							</button>
 						</div>
 						{couponError && (
-							<p className="text-sm text-red-600">{couponError}</p>
+							<p className="text-sm text-red-600" role="alert">{couponError}</p>
 						)}
 						<button
 							type="button"

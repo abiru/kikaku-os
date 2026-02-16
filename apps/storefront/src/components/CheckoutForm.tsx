@@ -133,7 +133,7 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-6">
+		<form onSubmit={handleSubmit} className="space-y-6" aria-busy={isProcessing}>
 			{/* Express Checkout (Apple Pay / Google Pay) */}
 			<div>
 				<ExpressCheckoutElement
@@ -159,13 +159,14 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 
 			{/* Email input */}
 			<div>
-				<label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+				<label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
 					{t('checkout.email')}
 				</label>
 				<input
 					type="email"
-					id="email"
+					id="checkout-email"
 					required
+					aria-required="true"
 					value={email}
 					onChange={(e) => onEmailChange(e.target.value)}
 					className="block w-full rounded-[5px] border border-[#e6e6e6] shadow-sm focus:border-brand focus:ring-brand text-base px-3 py-3"
@@ -201,7 +202,7 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 			{/* Error message */}
 			<div aria-live="assertive">
 				{errorMessage && (
-					<div className="rounded-md bg-red-50 p-4">
+					<div className="rounded-md bg-red-50 p-4" role="alert">
 						<p className="text-sm text-red-800">{errorMessage}</p>
 					</div>
 				)}
