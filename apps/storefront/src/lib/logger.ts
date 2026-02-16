@@ -6,9 +6,12 @@ type LogContext = {
 
 export function logError(message: string, error: unknown, context?: LogContext): void {
 	const errorMessage = error instanceof Error ? error.message : String(error);
+	const stack = error instanceof Error ? error.stack : undefined;
 	const entry = {
+		level: 'error',
 		message,
 		error: errorMessage,
+		...(stack && { stack }),
 		...context,
 		timestamp: new Date().toISOString(),
 	};
