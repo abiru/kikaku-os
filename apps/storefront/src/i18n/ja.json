@@ -27,6 +27,9 @@
   "signIn": {
     "pageTitle": "ログイン - Led Kikaku Store"
   },
+  "signUp": {
+    "pageTitle": "新規登録 - Led Kikaku Store"
+  },
   "nav": {
     "store": "ストア",
     "products": "製品",
@@ -755,6 +758,8 @@
     "unavailable": "商品を表示できません",
     "unavailableDescription": "この商品を読み込めませんでした。しばらくしてからもう一度お試しください。",
     "retry": "再試行",
+    "noDescription": "詳細は準備中です。",
+    "categoryLabel": "カテゴリー",
     "backToProducts": "商品一覧に戻る",
     "defaultDetail1": "高品質な素材",
     "defaultDetail2": "プロ仕様",
@@ -900,7 +905,12 @@
       "login": "ログイン",
       "needHelp": "お困りですか？",
       "needHelpDescription": "ご不明な点がございましたら、お気軽にお問い合わせください。",
-      "contactLink": "お問い合わせ →"
+      "contactLink": "お問い合わせ →",
+      "searchByToken": "注文番号で確認",
+      "searchByTokenDescription": "ご注文時に発行された注文番号を入力して、注文状況をご確認ください。",
+      "orderTokenLabel": "注文番号",
+      "orderTokenPlaceholder": "注文番号を入力してください",
+      "searchButton": "注文状況を確認"
     },
     "social": {
       "pageTitle": "SNS - Led Kikaku",
@@ -957,6 +967,9 @@
     "viewProducts": "商品を見る",
     "viewDetails": "詳細を見る",
     "configureFeatured": "フィーチャー製品を設定してください",
+    "heroCopy1": "Better Light.",
+    "heroCopy2": "Better Grow.",
+    "exploreProducts": "商品を探す",
     "heroTagline": "最新テクノロジーで、栽培パフォーマンスを最大化。",
     "heroSubtagline": "大学・研究機関が採用する、プロ仕様の植物育成ライト。",
     "learnMore": "詳しく見る",

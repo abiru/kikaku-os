@@ -191,7 +191,7 @@ const renderProducts = (products: ProductListItem[]) => {
 		priceEl.textContent = price ? `${i18n.from} ${price.amount.toLocaleString()} ${price.currency}` : '';
 
 		const buyBtn = document.createElement('span');
-		buyBtn.className = 'rounded-full bg-[#0071e3] px-4 py-1.5 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100';
+		buyBtn.className = 'rounded-full bg-brand px-4 py-1.5 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100';
 		buyBtn.textContent = i18n.buy;
 
 		footer.appendChild(priceEl);
