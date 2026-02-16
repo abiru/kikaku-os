@@ -808,9 +808,15 @@
   },
   "cookie": {
     "title": "Cookieの使用について",
-    "message": "当サイトでは、サービス向上のためにCookieを使用しています。サイトの利用を続けることで、Cookieの使用に同意したものとみなされます。",
+    "message": "当サイトでは、サービス向上のためにCookieを使用しています。",
     "accept": "同意する",
-    "learnMore": "詳細を見る"
+    "reject": "拒否する",
+    "manage": "設定",
+    "learnMore": "詳細を見る",
+    "preferencesTitle": "Cookie設定",
+    "essential": "必須Cookie（常に有効）",
+    "analytics": "分析・トラッキングCookie",
+    "savePreferences": "設定を保存"
   },
   "accessibility": {
     "skipToContent": "メインコンテンツへ"
