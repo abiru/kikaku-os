@@ -117,7 +117,7 @@ describe('SearchModal', () => {
 		});
 
 		await waitFor(() => {
-			expect(screen.getByText('common.noResults')).toBeInTheDocument();
+			expect(screen.getByText('common.noResults', { selector: 'p' })).toBeInTheDocument();
 			expect(screen.getByText('search.tryDifferent')).toBeInTheDocument();
 		});
 	});
