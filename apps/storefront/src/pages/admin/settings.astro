@@ -6,16 +6,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Button } from '../../components/catalyst/button';
 import { Badge } from '../../components/catalyst/badge';
 import { Heading, Subheading } from '../../components/catalyst/heading';
-import { getApiBase } from '../../lib/api';
+import { adminFetchOne, adminPost } from '../../lib/admin/fetchAdmin';
 import { Input } from '../../components/catalyst/input';
 import { Textarea } from '../../components/catalyst/textarea';
 import { Checkbox } from '../../components/catalyst/checkbox';
 import { Field } from '../../components/catalyst/fieldset';
 import { t } from '../../i18n';
 import { logError } from '../../utils/logger';
-
-const apiBase = getApiBase();
-const apiKey = import.meta.env.ADMIN_API_KEY;
 
 type Setting = {
   id: number;
@@ -37,24 +34,11 @@ let error: string | null = null;
 let success: string | null = null;
 
 // Fetch settings
-if (!apiKey) {
-  error = t('errors.adminKeyMissing');
+const { data: settingsData, error: fetchError } = await adminFetchOne<{ grouped: GroupedSettings }>('/admin/settings');
+if (fetchError) {
+  error = t('errors.failedToLoadSettingsGeneric');
 } else {
-  try {
-    const res = await fetch(`${apiBase}/admin/settings`, {
-      headers: { 'x-admin-key': apiKey }
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      grouped = data.grouped || {};
-    } else {
-      error = t('errors.failedToLoadSettingsStatus', { status: res.status });
-    }
-  } catch (e) {
-    logError({ page: 'admin/settings' }, e);
-    error = t('errors.failedToLoadSettingsGeneric');
-  }
+  grouped = settingsData?.grouped || {};
 }
 
 // Handle POST submission
@@ -80,33 +64,21 @@ if (Astro.request.method === 'POST') {
     }
 
     if (updates.length > 0) {
-      const res = await fetch(`${apiBase}/admin/settings/bulk`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': apiKey!
-        },
-        body: JSON.stringify({ settings: updates })
-      });
+      const { data: postData, error: postError } = await adminPost<{ results?: unknown[]; errors?: { key: string }[]; message?: string }>('/admin/settings/bulk', { settings: updates });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        success = t('admin.settingsUpdated', { count: data.results?.length || 0 });
-        if (data.errors && data.errors.length > 0) {
-          error = t('admin.settingsPartialFail', { keys: data.errors.map((e: any) => e.key).join(', ') });
+      if (postError) {
+        error = t('errors.failedToUpdateSettings');
+      } else if (postData) {
+        success = t('admin.settingsUpdated', { count: postData.results?.length || 0 });
+        if (postData.errors && postData.errors.length > 0) {
+          error = t('admin.settingsPartialFail', { keys: postData.errors.map((e) => e.key).join(', ') });
         }
 
         // Refresh settings
-        const refreshRes = await fetch(`${apiBase}/admin/settings`, {
-          headers: { 'x-admin-key': apiKey! }
-        });
-        if (refreshRes.ok) {
-          const refreshData = await refreshRes.json();
+        const { data: refreshData } = await adminFetchOne<{ grouped: GroupedSettings }>('/admin/settings');
+        if (refreshData) {
           grouped = refreshData.grouped || {};
         }
-      } else {
-        error = data.message || t('errors.failedToUpdateSettings');
       }
     }
   } catch (e) {

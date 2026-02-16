@@ -5,36 +5,19 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
 import InquiriesTable from '../../../components/admin/InquiriesTable';
 import { Heading } from '../../../components/catalyst/heading';
-import { getApiBase } from '../../../lib/api';
+import { adminFetchList } from '../../../lib/admin/fetchAdmin';
 import type { ContactInquiry } from '../../../lib/types';
 
-const apiBase = getApiBase();
-const apiKey = import.meta.env.ADMIN_API_KEY;
 const status = Astro.url.searchParams.get('status') || 'open';
 const offset = Number(Astro.url.searchParams.get('offset') || '0');
 const limit = 20;
 
-let inquiries: ContactInquiry[] = [];
-let meta = { total: 0, limit, offset };
-let error = null;
+const query = new URLSearchParams({ status, limit: limit.toString(), offset: offset.toString() });
 
-if (apiKey) {
-	try {
-		const query = new URLSearchParams({ status, limit: limit.toString(), offset: offset.toString() });
-		const res = await fetch(`${apiBase}/admin/inquiries?${query}`, {
-			headers: { 'x-admin-key': apiKey },
-		});
-		if (!res.ok) throw new Error(`API Error: ${res.status}`);
-		const data = await res.json();
-		inquiries = data.inquiries || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		console.error(e);
-		error = 'お問い合わせの読み込みに失敗しました。';
-	}
-} else {
-	error = 'ADMIN_API_KEY is missing.';
-}
+const { data, error: fetchError } = await adminFetchList<{ inquiries: ContactInquiry[]; meta: { total: number; limit: number; offset: number } }>('/admin/inquiries', query);
+const inquiries = data?.inquiries || [];
+const meta = data?.meta || { total: 0, limit, offset };
+const error = fetchError ? 'お問い合わせの読み込みに失敗しました。' : null;
 ---
 
 <AdminLayout title="お問い合わせ - Admin">

@@ -3,13 +3,10 @@ export const prerender = false;
 
 import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { Heading } from '../../components/catalyst/heading';
 import ShippingPage from '../../components/admin/ShippingPage';
 import { t } from '../../i18n';
-import { logError } from '../../utils/logger';
-
-const apiBase = getApiBase();
 
 type ReadyToShipOrder = {
 	order_id: number;
@@ -20,26 +17,9 @@ type ReadyToShipOrder = {
 	fulfillment_status: string | null;
 };
 
-let orders: ReadyToShipOrder[] = [];
-let error: string | null = null;
-
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const res = await fetch(`${apiBase}/admin/orders/ready-to-ship`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
-		});
-
-		if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-		const data = await res.json();
-		orders = data.orders || [];
-	} catch (e) {
-		logError({ page: 'admin/shipping' }, e);
-		error = t('errors.failedToLoadShipping');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ orders: ReadyToShipOrder[] }>('/admin/orders/ready-to-ship');
+const orders = data?.orders || [];
+const error: string | null = fetchError ? t('errors.failedToLoadShipping') : null;
 
 ---
 

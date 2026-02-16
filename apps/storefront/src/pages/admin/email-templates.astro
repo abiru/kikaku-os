@@ -5,11 +5,9 @@ import { Alert } from'../../components/catalyst/alert-banner';
 import { Badge } from'../../components/catalyst/badge';
 import { Heading } from'../../components/catalyst/heading';
 import AdminLayout from'../../layouts/AdminLayout.astro';
-import { getApiBase } from'../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
-
-const apiBase = getApiBase();
 
 type EmailTemplate = {
 	id: number;
@@ -23,30 +21,9 @@ type EmailTemplate = {
 	updated_at: string;
 };
 
-let templates: EmailTemplate[] = [];
-let error = null;
-
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const res = await fetch(`${apiBase}/admin/email-templates`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		templates = data.templates || [];
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadEmailTemplates');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ templates: EmailTemplate[] }>('/admin/email-templates');
+const templates = data?.templates || [];
+const error = fetchError ? t('errors.failedToLoadEmailTemplates') : null;
 
 const templateLabels: Record<string, string> = {
 	'order-confirmation': t('admin.orderConfirmation'),

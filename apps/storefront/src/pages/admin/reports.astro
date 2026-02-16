@@ -5,7 +5,7 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Heading } from '../../components/catalyst/heading';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
-import { getApiBase } from '../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import ReportsTable from '../../components/admin/ReportsTable';
 import { t } from '../../i18n';
 
@@ -16,47 +16,25 @@ type Report = {
 	downloadUrl?: string;
 };
 
-const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const dateFrom = Astro.url.searchParams.get('from') || '';
 const dateTo = Astro.url.searchParams.get('to') || '';
 const perPage = 20;
 
-let reports: Report[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error = null;
+const query = new URLSearchParams({
+	page: page.toString(),
+	perPage: perPage.toString()
+});
+if (dateFrom) query.set('from', dateFrom);
+if (dateTo) query.set('to', dateTo);
 
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-		if (dateFrom) query.set('from', dateFrom);
-		if (dateTo) query.set('to', dateTo);
-
-		const res = await fetch(`${apiBase}/admin/reports?${query}`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
-		});
-
-		if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-		const data = await res.json();
-		reports = data.reports || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadReports');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ reports: Report[]; meta: { totalCount: number; totalPages: number } }>('/admin/reports', query);
+const reports = data?.reports || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error = fetchError ? t('errors.failedToLoadReports') : null;
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
-
-// Helper to construct secure download link (via document ID)
-const apiKey = import.meta.env.ADMIN_API_KEY;
 const getReportLink = (id: number) => {
 	return `/api/admin/documents/${id}/download`;
 };

@@ -8,11 +8,9 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import { Badge } from '../../components/catalyst/badge';
 import { Button } from '../../components/catalyst/button';
 import { Heading, Subheading } from '../../components/catalyst/heading';
-import { getApiBase } from '../../lib/api';
+import { adminFetch } from '../../lib/admin/fetchAdmin';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
-
-const apiBase = getApiBase();
 
 type DashboardData = {
 	today: { orders: number; revenue: number; refunds: number };
@@ -72,43 +70,29 @@ const periodLabels: Record<number, string> = {
 	90: t('admin.nDays', { n: '90' }),
 };
 
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		// Fetch dashboard data, analytics, and low stock in parallel
-		const [dashboardRes, analyticsRes, lowStockRes] = await Promise.all([
-			fetch(`${apiBase}/admin/dashboard`, {
-				headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
-			}),
-			fetch(`${apiBase}/admin/analytics?from=${fromStr}&to=${todayStr}`, {
-				headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
-			}),
-			fetch(`${apiBase}/inventory/low?limit=10`, {
-				headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
-			})
-		]);
+const analyticsQuery = new URLSearchParams({ from: fromStr, to: todayStr });
+const lowStockQuery = new URLSearchParams({ limit: '10' });
 
-		if (!dashboardRes.ok) throw new Error(`Dashboard API Error: ${dashboardRes.status}`);
-		if (!analyticsRes.ok) throw new Error(`Analytics API Error: ${analyticsRes.status}`);
+// Fetch dashboard data, analytics, and low stock in parallel
+const [dashboardResult, analyticsResult, lowStockResult] = await Promise.all([
+	adminFetch<DashboardData>('/admin/dashboard'),
+	adminFetch<AnalyticsData>('/admin/analytics', { query: analyticsQuery }),
+	adminFetch<{ items?: LowStockItem[] }>('/inventory/low', { query: lowStockQuery })
+]);
 
-		const dashboardJson = await dashboardRes.json();
-		const analyticsJson = await analyticsRes.json();
-
-		data = dashboardJson as DashboardData;
-		if (analyticsJson.ok) {
-			analyticsData = analyticsJson as AnalyticsData;
-		}
-
-		if (lowStockRes.ok) {
-			const lowStockJson = await lowStockRes.json() as { items?: LowStockItem[] };
-			lowStockItems = lowStockJson.items || [];
-			lowStockCount = lowStockItems.length;
-		}
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadDashboard');
-	}
+if (dashboardResult.error) {
+	error = t('errors.failedToLoadDashboard');
 } else {
-	error = t('errors.adminKeyMissing');
+	data = dashboardResult.data;
+}
+
+if (!analyticsResult.error && analyticsResult.data) {
+	analyticsData = analyticsResult.data;
+}
+
+if (!lowStockResult.error && lowStockResult.data) {
+	lowStockItems = lowStockResult.data.items || [];
+	lowStockCount = lowStockItems.length;
 }
 
 const formatCurrency = (amount: number, currency = 'JPY') => {

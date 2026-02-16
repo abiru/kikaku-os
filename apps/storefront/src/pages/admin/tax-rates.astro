@@ -7,12 +7,9 @@ import { Button } from'../../components/catalyst/button';
 import { Heading } from'../../components/catalyst/heading';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from'../../components/catalyst/table';
 import AdminLayout from'../../layouts/AdminLayout.astro';
-import { getApiBase } from'../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
-import { logError } from '../../utils/logger';
-
-const apiBase = getApiBase();
 
 type TaxRate = {
 	id: number;
@@ -26,30 +23,9 @@ type TaxRate = {
 	updated_at: string;
 };
 
-let taxRates: TaxRate[] = [];
-let error = null;
-
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const res = await fetch(`${apiBase}/admin/tax-rates`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		taxRates = data || [];
-	} catch (e) {
-		logError({ page: 'admin/tax-rates' }, e);
-		error = t('errors.failedToLoadTaxRates');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<TaxRate[]>('/admin/tax-rates');
+const taxRates = data || [];
+const error = fetchError ? t('errors.failedToLoadTaxRates') : null;
 
 const formatRate = (rate: number) => {
 	return `${(rate * 100).toFixed(1)}%`;

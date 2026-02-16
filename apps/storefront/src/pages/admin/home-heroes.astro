@@ -5,49 +5,25 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import HomeHeroesPage from '../../components/admin/HomeHeroesPage';
 import { t } from '../../i18n';
 import type { HeroSection } from '../../lib/types';
 
-const apiBase = getApiBase();
 const status = Astro.url.searchParams.get('status') || 'all';
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
-let heroes: HeroSection[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error = null;
+const query = new URLSearchParams({
+	status,
+	page: page.toString(),
+	perPage: perPage.toString()
+});
 
-// SSR Data Fetching
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			status,
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-
-		const res = await fetch(`${apiBase}/admin/home/heroes?${query}`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		heroes = data.heroes || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadHeroes');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ heroes: HeroSection[]; meta: { totalCount: number; totalPages: number } }>('/admin/home/heroes', query);
+const heroes = data?.heroes || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error = fetchError ? t('errors.failedToLoadHeroes') : null;
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;

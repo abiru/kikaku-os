@@ -6,11 +6,10 @@ import { Button } from '../../components/catalyst/button';
 import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
-import { getApiBase } from '../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import PagesTable from '../../components/admin/PagesTable';
 import { t } from '../../i18n';
 
-const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
 const status = Astro.url.searchParams.get('status') || 'all';
 const page = Number(Astro.url.searchParams.get('page') || '1');
@@ -28,39 +27,17 @@ type Page = {
 	updated_at: string;
 };
 
-let pages: Page[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error = null;
+const query = new URLSearchParams({
+	q,
+	status,
+	page: page.toString(),
+	perPage: perPage.toString()
+});
 
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			q,
-			status,
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-
-		const res = await fetch(`${apiBase}/admin/pages?${query}`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		pages = data.pages || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadPages');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ pages: Page[]; meta: { totalCount: number; totalPages: number } }>('/admin/pages', query);
+const pages = data?.pages || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error = fetchError ? t('errors.failedToLoadPages') : null;
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;

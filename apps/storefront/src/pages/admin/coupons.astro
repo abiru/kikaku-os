@@ -7,12 +7,10 @@ import { Heading } from '../../components/catalyst/heading';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
-import { getApiBase } from '../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import CouponsTable from '../../components/admin/CouponsTable';
 import { t } from '../../i18n';
-import { logError } from '../../utils/logger';
 
-const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
 const status = Astro.url.searchParams.get('status') || 'all';
 const page = Number(Astro.url.searchParams.get('page') || '1');
@@ -35,39 +33,17 @@ type Coupon = {
 	updated_at: string;
 };
 
-let coupons: Coupon[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error = null;
+const query = new URLSearchParams({
+	q,
+	status,
+	page: page.toString(),
+	perPage: perPage.toString()
+});
 
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			q,
-			status,
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-
-		const res = await fetch(`${apiBase}/admin/coupons?${query}`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		coupons = data.coupons || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		logError({ page: 'admin/coupons' }, e);
-		error = t('errors.failedToLoadCoupons');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ coupons: Coupon[]; meta: { totalCount: number; totalPages: number } }>('/admin/coupons', query);
+const coupons = data?.coupons || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error = fetchError ? t('errors.failedToLoadCoupons') : null;
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
