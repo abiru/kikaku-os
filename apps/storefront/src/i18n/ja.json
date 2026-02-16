@@ -580,7 +580,8 @@
     "emptyShipping": "出荷待ちの注文はありません",
     "emptyShippingDesc": "支払い済みの注文が入ると出荷待ちとして表示されます。",
     "emptyNewsletter": "登録者がまだいません",
-    "emptyNewsletterDesc": "ニュースレターに登録があるとここに表示されます。"
+    "emptyNewsletterDesc": "ニュースレターに登録があるとここに表示されます。",
+    "pageUpdated": "ページが更新されました"
   },
   "wishlist": {
     "title": "お気に入り",
@@ -924,7 +925,11 @@
     "failedToLoadSettingsStatus": "設定の読み込みに失敗しました: {status}",
     "failedToLoadSettingsGeneric": "設定の読み込みに失敗しました",
     "failedToUpdateSettings": "設定の更新に失敗しました",
-    "failedToSaveSettings": "設定の保存に失敗しました"
+    "failedToSaveSettings": "設定の保存に失敗しました",
+    "slugRequired": "スラッグは必須です。",
+    "slugFormat": "スラッグには小文字の英数字とハイフンのみ使用できます。",
+    "titleRequired": "タイトルは必須です。",
+    "failedToUpdatePage": "ページの更新に失敗しました。"
   },
   "pages": {
     "orderStatus": {

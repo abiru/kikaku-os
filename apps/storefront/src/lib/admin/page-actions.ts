@@ -1,3 +1,5 @@
+import { logError } from '../logger';
+
 type Page = {
 	id: number;
 	slug: string;
@@ -65,7 +67,7 @@ export async function handlePageUpdate(
 
 		return { page: data.page, error: null, successMessage: t('admin.pageUpdated') };
 	} catch (e) {
-		console.error(e);
+		logError('Failed to update page', e, { page: 'page-actions', action: 'handlePageUpdate', resourceId: id });
 		return { page: null, error: t('errors.failedToUpdatePage'), successMessage: null };
 	}
 }

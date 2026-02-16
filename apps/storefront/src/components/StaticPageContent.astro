@@ -5,6 +5,7 @@ import { getApiBase } from '../lib/api';
 import { parseMarkdown } from '../utils/markdown';
 import { formatDate } from '../lib/format';
 import { t } from '../i18n';
+import { logError } from '../lib/logger';
 import type { StaticPage } from '../lib/types';
 
 interface Props {
@@ -26,7 +27,7 @@ try {
 		page = data.page;
 	}
 } catch (e) {
-	console.error('Failed to fetch page:', e);
+	logError('Failed to fetch page', e, { page: 'StaticPageContent', action: 'fetchPage', resourceId: slug });
 	error = t('cms.loadError');
 }
 
