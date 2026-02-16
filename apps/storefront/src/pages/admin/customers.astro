@@ -7,7 +7,6 @@ import { Heading } from '../../components/catalyst/heading';
 import CustomersTable from '../../components/admin/CustomersTable';
 import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { t } from '../../i18n';
-import { logError } from '../../utils/logger';
 
 const q = Astro.url.searchParams.get('q') || '';
 const page = Number(Astro.url.searchParams.get('page') || '1');

@@ -11,6 +11,7 @@ import { Textarea } from '../../../components/catalyst/textarea';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { t } from '../../../i18n';
+import { logError } from '../../../lib/logger';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -97,7 +98,7 @@ if (Astro.request.method === 'POST') {
 			}
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to create product', e, { page: 'admin/products/new', action: 'createProduct' });
 		error = 'Failed to create product. Please check your connection.';
 	}
 }

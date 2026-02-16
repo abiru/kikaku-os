@@ -7,6 +7,7 @@ import { Fieldset, Field } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { logError } from '../../../lib/logger';
 
 const apiBase = getApiBase();
 
@@ -61,7 +62,7 @@ if (Astro.request.method === 'POST') {
 			return Astro.redirect(`/admin/home-heroes/${createdId}`);
 		}
 	} catch (e: unknown) {
-		console.error(e);
+		logError('Failed to create hero section', e, { page: 'admin/home-heroes/new', action: 'createHero' });
 		error = e instanceof Error ? e.message : 'Failed to create hero section';
 	}
 }

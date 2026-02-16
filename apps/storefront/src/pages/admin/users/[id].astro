@@ -11,6 +11,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
+import { logError } from '../../../lib/logger';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -102,7 +103,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 			}
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to update user', e, { page: 'admin/users/[id]', action: 'updateUser', resourceId: id });
 		error = 'Failed to update user. Please check your connection.';
 	}
 }
@@ -118,7 +119,7 @@ if (apiKey) {
 			roles = rolesData.roles || [];
 		}
 	} catch (e) {
-		console.error('Failed to fetch roles:', e);
+		logError('Failed to fetch roles', e, { page: 'admin/users/[id]', action: 'fetchRoles', resourceId: id });
 	}
 }
 
@@ -142,7 +143,7 @@ if (!user && apiKey) {
 			permissions = data.permissions || [];
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to load user', e, { page: 'admin/users/[id]', action: 'fetchUser', resourceId: id });
 		error = error || 'Failed to load user. Please check your connection.';
 	}
 } else if (!apiKey) {
@@ -160,7 +161,7 @@ if (user && successMessage && apiKey) {
 			permissions = data.permissions || [];
 		}
 	} catch (e) {
-		console.error('Failed to re-fetch permissions:', e);
+		logError('Failed to re-fetch permissions', e, { page: 'admin/users/[id]', action: 'refetchPermissions', resourceId: id });
 	}
 }
 

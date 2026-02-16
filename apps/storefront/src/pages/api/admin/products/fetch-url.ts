@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { logError } from '../../../../lib/logger';
 
 export const prerender = false;
 
@@ -426,7 +427,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
   } catch (error) {
-    console.error('Fetch URL error:', error);
+    logError('Fetch URL error', error, { page: 'api/admin/products/fetch-url', action: 'fetchUrl' });
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

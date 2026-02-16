@@ -13,6 +13,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 import { t } from '../../../i18n';
+import { logError } from '../../../lib/logger';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -79,7 +80,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 			}
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to update customer', e, { page: 'admin/customers/[id]', action: 'updateCustomer', resourceId: id });
 		error = t('errors.failedToUpdateCustomer');
 	}
 }
@@ -105,7 +106,7 @@ if (!customer && apiKey) {
 			stats = data.stats || { total_orders: 0, total_spent: 0, avg_order_value: 0 };
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to load customer', e, { page: 'admin/customers/[id]', action: 'fetchCustomer', resourceId: id });
 		error = error || t('errors.failedToLoadCustomer');
 	}
 } else if (!apiKey) {
@@ -124,7 +125,7 @@ if (customer && successMessage && apiKey) {
 			stats = data.stats || { total_orders: 0, total_spent: 0, avg_order_value: 0 };
 		}
 	} catch (e) {
-		console.error('Failed to re-fetch orders:', e);
+		logError('Failed to re-fetch orders', e, { page: 'admin/customers/[id]', action: 'refetchOrders', resourceId: id });
 	}
 }
 

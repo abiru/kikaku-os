@@ -6,6 +6,7 @@ import { isPublicToken } from '../../lib/publicToken';
 import { fetchQuotation } from '../../lib/quotationApi';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
+import { logError } from '../../lib/logger';
 
 type QuotationRecord = {
   quotation_number: string;
@@ -51,7 +52,7 @@ let error: string | null = null;
 try {
   quotationData = await fetchQuotation(apiUrl, quotationToken) as QuotationResponse;
 } catch (err) {
-  console.error('Error fetching quotation:', err);
+  logError('Failed to fetch quotation', err, { page: 'quotations/[id]', action: 'fetchQuotation' });
   error = err instanceof Error ? err.message : t('quotation.fetchError');
 }
 

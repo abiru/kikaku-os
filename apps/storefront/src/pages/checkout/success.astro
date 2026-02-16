@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import { t } from '../../i18n';
 import { buildStoreOrderUrl, resolveCheckoutOrderToken } from '../../lib/checkoutSuccess';
 import { formatPrice } from '../../lib/format';
+import { logError } from '../../lib/logger';
 
 const apiBase = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 const orderToken = resolveCheckoutOrderToken(Astro.url.searchParams.get('order_id'));
@@ -18,7 +19,7 @@ if (orderToken) {
 			order = data.order || null;
 		}
 	} catch (e) {
-		console.error('Failed to fetch order:', e);
+		logError('Failed to fetch order', e, { page: 'checkout/success', action: 'fetchOrder' });
 	}
 }
 

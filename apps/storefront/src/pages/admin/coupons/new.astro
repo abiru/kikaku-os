@@ -9,6 +9,7 @@ import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { t } from '../../../i18n';
+import { logError } from '../../../lib/logger';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -96,7 +97,7 @@ if (Astro.request.method === 'POST') {
 			}
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to create coupon', e, { page: 'admin/coupons/new', action: 'createCoupon' });
 		error = t('errors.failedToCreateCoupon');
 	}
 }

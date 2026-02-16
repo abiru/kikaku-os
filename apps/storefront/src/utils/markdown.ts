@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import DOMPurify from 'isomorphic-dompurify';
+import { logError } from '../lib/logger';
 
 /**
  * Configure marked options for secure markdown parsing
@@ -65,7 +66,7 @@ export function parseMarkdown(content: string | null | undefined): string {
 
     return sanitized;
   } catch (error) {
-    console.error('Failed to parse markdown:', error);
+    logError('Failed to parse markdown', error, { page: 'utils/markdown', action: 'parseMarkdown' });
     // Fallback to escaped content wrapped in paragraph
     return `<p>${escapeHtml(content)}</p>`;
   }

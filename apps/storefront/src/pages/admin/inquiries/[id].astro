@@ -5,6 +5,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
 import InquiryDetail from '../../../components/admin/InquiryDetail';
 import { getApiBase } from '../../../lib/api';
+import { logError } from '../../../lib/logger';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -22,7 +23,7 @@ if (apiKey && id) {
 		const data = await res.json();
 		inquiry = data.inquiry || null;
 	} catch (e) {
-		console.error(e);
+		logError('Failed to fetch inquiry', e, { page: 'admin/inquiries/[id]', action: 'fetchInquiry', resourceId: id });
 		error = 'お問い合わせの読み込みに失敗しました。';
 	}
 } else if (!apiKey) {

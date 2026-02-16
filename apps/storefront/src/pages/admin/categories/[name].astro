@@ -10,6 +10,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 import { t } from '../../../i18n';
+import { logError } from '../../../lib/logger';
 
 const { name } = Astro.params;
 const categoryName = decodeURIComponent(name || '');
@@ -61,7 +62,7 @@ if (apiKey) {
 			meta = data.meta || meta;
 		}
 	} catch (e) {
-		console.error(e);
+		logError('Failed to load category products', e, { page: 'admin/categories/[name]', action: 'fetchProducts' });
 		error = error || t('errors.failedToLoadCategoryProducts');
 	}
 } else {

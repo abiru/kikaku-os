@@ -1,4 +1,5 @@
 import { getApiBase } from '../api'
+import { logError } from '../logger'
 
 type AdminFetchResult<T> = {
   data: T | null
@@ -44,7 +45,7 @@ export async function adminFetch<T>(
     return { data, error: null }
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error'
-    console.error(`Admin fetch failed [${path}]:`, message)
+    logError('Admin fetch failed', e, { page: 'lib/admin/fetchAdmin', action: path })
     return { data: null, error: message }
   }
 }

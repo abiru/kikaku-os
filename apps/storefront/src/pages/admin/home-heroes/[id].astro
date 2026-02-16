@@ -10,6 +10,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { handleHeroPost, type HeroDetail } from '../../../lib/admin/hero-actions';
+import { logError } from '../../../lib/logger';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -34,7 +35,7 @@ try {
 	const data = await res.json();
 	hero = data.hero;
 } catch (e: unknown) {
-	console.error(e);
+	logError('Failed to load hero section', e, { page: 'admin/home-heroes/[id]', action: 'fetchHero', resourceId: id });
 	error = e instanceof Error ? e.message : 'Failed to load hero section';
 }
 
