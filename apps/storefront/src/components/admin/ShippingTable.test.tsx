@@ -182,4 +182,28 @@ describe('ShippingTable', () => {
 		expect(screen.getByText('JPY 12000')).toBeDefined()
 		expect(screen.getByText('JPY 3000')).toBeDefined()
 	})
+
+	it('renders all table headers', () => {
+		const onShipClick = vi.fn()
+		render(<ShippingTable orders={mockOrders} onShipClick={onShipClick} />)
+
+		expect(screen.getByText('admin.order')).toBeDefined()
+		expect(screen.getByText('admin.customer')).toBeDefined()
+		expect(screen.getByText('admin.paidAt')).toBeDefined()
+		expect(screen.getByText('admin.status')).toBeDefined()
+		expect(screen.getByText('admin.shippingInfo')).toBeDefined()
+		expect(screen.getByText('admin.total')).toBeDefined()
+		expect(screen.getByText('admin.actions')).toBeDefined()
+	})
+
+	it('links order IDs to order detail pages', () => {
+		const onShipClick = vi.fn()
+		render(<ShippingTable orders={mockOrders} onShipClick={onShipClick} />)
+
+		const link = screen.getByText('#101').closest('a')
+		expect(link?.getAttribute('href')).toBe('/admin/orders/101')
+
+		const link2 = screen.getByText('#102').closest('a')
+		expect(link2?.getAttribute('href')).toBe('/admin/orders/102')
+	})
 })
