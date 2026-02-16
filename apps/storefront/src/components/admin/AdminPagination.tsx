@@ -1,4 +1,5 @@
 import { Pagination, PaginationPrevious, PaginationNext, PaginationList, PaginationPage } from '../catalyst/pagination'
+import { t } from '../../i18n'
 
 type Props = {
   currentPage: number
@@ -12,7 +13,7 @@ export default function AdminPagination({ currentPage, totalPages, buildHref }: 
   return (
     <div className="mt-4 flex items-center justify-between">
       <div className="text-sm text-zinc-500">
-        Page {currentPage} of {totalPages}
+        {t('admin.pageOf', { page: currentPage, totalPages })}
       </div>
       <Pagination>
         {currentPage > 1 && (

@@ -34,7 +34,8 @@ liveRegion.className = 'sr-only';
 document.body.appendChild(liveRegion);
 
 const announceProductCount = (count: number) => {
-	liveRegion.textContent = `${count}件の商品が見つかりました`;
+	const template = i18nEl?.dataset.announceCount || '{count}件の商品が見つかりました';
+	liveRegion.textContent = template.replace('{count}', String(count));
 };
 
 const showError = (title: string, description: string) => {
@@ -83,7 +84,7 @@ const createWishlistHeart = (product: ProductListItem, variant: VariantListItem 
 	const btn = document.createElement('button');
 	btn.type = 'button';
 	btn.className = 'absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200 hover:scale-110 active:scale-95';
-	btn.setAttribute('aria-label', 'お気に入り');
+	btn.setAttribute('aria-label', i18nEl?.dataset.wishlistLabel || 'お気に入り');
 
 	const productId = Number(product.id);
 	const wishlistItem: Omit<WishlistItem, 'addedAt'> = {

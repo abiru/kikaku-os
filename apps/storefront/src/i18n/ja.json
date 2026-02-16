@@ -82,7 +82,8 @@
     "pageInfo": "ページ {page} / {totalPages}",
     "priceAbove": "{min}円以上",
     "priceUpTo": "{max}円以下",
-    "pagination": "ページネーション"
+    "pagination": "ページネーション",
+    "announceCount": "{count}件の商品が見つかりました"
   },
   "cart": {
     "title": "ショッピングカート",
@@ -112,6 +113,7 @@
     "createQuotation": "見積書を作成",
     "itemCount": "カートに{count}件の商品",
     "quantity": "数量",
+    "cartWithCount": "カート（{count}点）",
     "quantityLabel": "{title}の数量",
     "shippingConfigLoading": "配送設定を読み込み中...",
     "shippingConfigError": "配送設定の読み込みに失敗しました",
@@ -440,6 +442,8 @@
     "newPage": "+ 新しいページ",
     "searchByTitleOrSlug": "タイトルまたはスラッグで検索...",
     "published": "公開済み",
+    "publish": "公開する",
+    "unpublish": "非公開にする",
     "manageAdDrafts": "広告ドラフトとAI生成コピーを管理",
     "newAdDraft": "+ 新しい広告ドラフト",
     "searchCampaign": "キャンペーン名または商品で検索...",
