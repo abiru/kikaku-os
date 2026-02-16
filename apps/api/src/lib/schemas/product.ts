@@ -95,6 +95,7 @@ export const storefrontProductsQuerySchema = z.object({
   category: z.string().max(50).optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
+  sort: z.enum(['newest', 'price_asc', 'price_desc']).optional().default('newest'),
   page: z
     .string()
     .regex(/^\d+$/)

@@ -173,7 +173,7 @@ const baseQuery = `
 const groupByClause = `GROUP BY p.id, v.id, pr.id, pi.id, tr.id`;
 
 storefront.get('/products', zValidator('query', storefrontProductsQuerySchema), async (c) => {
-  const { q, category, minPrice, maxPrice, page, perPage } = c.req.valid('query');
+  const { q, category, minPrice, maxPrice, sort, page, perPage } = c.req.valid('query');
 
   const whereConditions: string[] = [];
   const bindings: (string | number)[] = [];
@@ -228,14 +228,34 @@ storefront.get('/products', zValidator('query', storefrontProductsQuerySchema), 
   // Then we'll filter to only the products for this page
   const offset = (page - 1) * perPage;
 
+  // Determine sort order
+  const sortOrderMap: Record<string, string> = {
+    newest: 'p.created_at DESC',
+    price_asc: 'MIN(pr.amount) ASC',
+    price_desc: 'MAX(pr.amount) DESC',
+  };
+  const sortOrder = sortOrderMap[sort] || 'p.created_at DESC';
+  const needsGroup = sort === 'price_asc' || sort === 'price_desc';
+
   // First, get the product IDs for this page
-  const productIdsSql = `
+  const productIdsSql = needsGroup
+    ? `
+    SELECT p.id
+    FROM products p
+    JOIN variants v ON v.product_id = p.id
+    JOIN prices pr ON pr.variant_id = v.id
+    ${whereClause}
+    GROUP BY p.id
+    ORDER BY ${sortOrder}
+    LIMIT ? OFFSET ?
+  `
+    : `
     SELECT DISTINCT p.id
     FROM products p
     JOIN variants v ON v.product_id = p.id
     JOIN prices pr ON pr.variant_id = v.id
     ${whereClause}
-    ORDER BY p.created_at DESC
+    ORDER BY ${sortOrder}
     LIMIT ? OFFSET ?
   `;
 
@@ -270,7 +290,11 @@ storefront.get('/products', zValidator('query', storefrontProductsQuerySchema), 
   const res = await c.env.DB.prepare(sql).bind(...productIds).all<StorefrontRow>();
 
   const baseUrl = new URL(c.req.url).origin;
-  const products = rowsToProducts(res.results || [], baseUrl);
+  let products = rowsToProducts(res.results || [], baseUrl);
+
+  // Re-sort products to match the order from productIds query
+  const idOrder = new Map(productIds.map((id, idx) => [id, idx]));
+  products = [...products].sort((a, b) => (idOrder.get(a.id) ?? 0) - (idOrder.get(b.id) ?? 0));
 
   return jsonOk(c, {
     products,
@@ -280,6 +304,7 @@ storefront.get('/products', zValidator('query', storefrontProductsQuerySchema), 
       minPrice: minPrice ?? null,
       maxPrice: maxPrice ?? null
     },
+    sort,
     meta: {
       page,
       perPage,

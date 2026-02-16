@@ -82,7 +82,11 @@
     "pageInfo": "ページ {page} / {totalPages}",
     "priceAbove": "{min}円以上",
     "priceUpTo": "{max}円以下",
-    "pagination": "ページネーション"
+    "pagination": "ページネーション",
+    "sortLabel": "並び替え",
+    "sortNewest": "新着順",
+    "sortPriceAsc": "価格が安い順",
+    "sortPriceDesc": "価格が高い順"
   },
   "cart": {
     "title": "ショッピングカート",
@@ -800,7 +804,16 @@
     "learnMore": "詳細を見る"
   },
   "accessibility": {
-    "skipToContent": "メインコンテンツへ"
+    "skipToContent": "メインコンテンツへ",
+    "backToTop": "ページの先頭へ戻る"
+  },
+  "share": {
+    "title": "この商品を共有",
+    "twitter": "Xで共有",
+    "line": "LINEで共有",
+    "facebook": "Facebookで共有",
+    "copyUrl": "URLをコピー",
+    "copied": "コピーしました"
   },
   "newsletter": {
     "title": "ニュースレター",

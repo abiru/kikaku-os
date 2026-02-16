@@ -35,6 +35,10 @@ type ProductListResponse = {
   };
 };
 
+type FiltersResponse = {
+  categories?: string[];
+};
+
 export const GET: APIRoute = async () => {
   const today = new Date().toISOString().slice(0, 10);
 
@@ -72,6 +76,19 @@ export const GET: APIRoute = async () => {
     // If API is unavailable, generate sitemap with static pages only
   }
 
+  // Fetch categories
+  let categories: string[] = [];
+  try {
+    const apiBase = getApiBase();
+    const filtersRes = await fetch(`${apiBase}/store/products/filters`);
+    if (filtersRes.ok) {
+      const filtersData = await filtersRes.json() as FiltersResponse;
+      categories = filtersData.categories || [];
+    }
+  } catch {
+    // If API is unavailable, skip categories
+  }
+
   const urls = STATIC_PAGES.map(
     (page) =>
       `  <url>
@@ -81,6 +98,17 @@ export const GET: APIRoute = async () => {
     <priority>${page.priority}</priority>
   </url>`
   );
+
+  for (const cat of categories) {
+    urls.push(
+      `  <url>
+    <loc>${SITE_URL}/categories/${encodeURIComponent(cat)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`
+    );
+  }
 
   for (const product of products) {
     const lastmod = product.updated_at ? product.updated_at.slice(0, 10) : today;

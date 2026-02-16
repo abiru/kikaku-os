@@ -263,6 +263,7 @@ const loadProducts = async () => {
 	const category = urlParams.get('category') || '';
 	const minPrice = urlParams.get('minPrice') || '';
 	const maxPrice = urlParams.get('maxPrice') || '';
+	const sort = urlParams.get('sort') || '';
 	const page = urlParams.get('page') || '1';
 
 	// Update UI for search
@@ -305,6 +306,7 @@ const loadProducts = async () => {
 		if (category) params.set('category', category);
 		if (minPrice) params.set('minPrice', minPrice);
 		if (maxPrice) params.set('maxPrice', maxPrice);
+		if (sort) params.set('sort', sort);
 		params.set('page', page);
 
 		const queryString = params.toString();
@@ -337,6 +339,26 @@ const loadProducts = async () => {
 };
 
 loadProducts();
+
+// Sort select
+const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
+if (sortSelect) {
+	const currentSort = new URLSearchParams(window.location.search).get('sort') || 'newest';
+	sortSelect.value = currentSort;
+	sortSelect.addEventListener('change', () => {
+		const params = new URLSearchParams(window.location.search);
+		if (sortSelect.value && sortSelect.value !== 'newest') {
+			params.set('sort', sortSelect.value);
+		} else {
+			params.delete('sort');
+		}
+		params.delete('page');
+		const newUrl = params.toString()
+			? `${window.location.pathname}?${params.toString()}`
+			: window.location.pathname;
+		window.location.href = newUrl;
+	});
+}
 
 // Mobile filter bottom sheet
 const mobileFilterBtn = document.getElementById('mobile-filter-btn');
