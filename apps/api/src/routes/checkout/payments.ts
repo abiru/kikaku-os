@@ -360,10 +360,15 @@ payments.post('/payments/intent', async (c) => {
   } else if (paymentMethod === 'card') {
     params.append('payment_method_types[]', 'card');
   } else {
-    params.set('automatic_payment_methods[enabled]', 'true');
-    params.set('automatic_payment_methods[allow_redirects]', 'never');
-    params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
-    params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
+    if (stripeCustomerId) {
+      params.append('payment_method_types[]', 'card');
+      params.append('payment_method_types[]', 'customer_balance');
+      params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
+      params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
+    } else {
+      params.set('automatic_payment_methods[enabled]', 'true');
+      params.set('automatic_payment_methods[allow_redirects]', 'never');
+    }
   }
 
   // Store coupon metadata for webhook handler

@@ -143,6 +143,7 @@ function CheckoutPageContent() {
 					headers: { 'content-type': 'application/json' },
 					body: JSON.stringify({
 						quoteId: quoteData.quoteId,
+						email: 'customer@checkout.pending',
 						paymentMethod: 'auto'
 					})
 				}

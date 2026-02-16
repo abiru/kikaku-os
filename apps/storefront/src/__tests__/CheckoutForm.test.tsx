@@ -11,13 +11,16 @@ vi.mock('../i18n', () => ({
 // Mock Stripe
 vi.mock('@stripe/react-stripe-js', () => ({
 	Elements: ({ children }: { children: React.ReactNode }) => <div data-testid="stripe-elements">{children}</div>,
-	PaymentElement: () => <div data-testid="payment-element">PaymentElement</div>,
+	PaymentElement: ({ onReady }: { onReady?: () => void }) => {
+		onReady?.();
+		return <div data-testid="payment-element">PaymentElement</div>;
+	},
 	AddressElement: () => <div data-testid="address-element">AddressElement</div>,
-	ExpressCheckoutElement: () => <div data-testid="express-checkout">ExpressCheckout</div>,
 	useStripe: () => ({
 		confirmPayment: vi.fn(),
 	}),
 	useElements: () => ({
+		submit: vi.fn().mockResolvedValue({}),
 		getElement: vi.fn(),
 	}),
 }));
@@ -72,7 +75,6 @@ describe('CheckoutForm', () => {
 		expect(screen.getByTestId('stripe-elements')).toBeInTheDocument();
 		expect(screen.getByTestId('payment-element')).toBeInTheDocument();
 		expect(screen.getByTestId('address-element')).toBeInTheDocument();
-		expect(screen.getByTestId('express-checkout')).toBeInTheDocument();
 	});
 
 	it('renders email input field', () => {

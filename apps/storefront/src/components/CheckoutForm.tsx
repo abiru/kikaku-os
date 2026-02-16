@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, PaymentElement, AddressElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { useTranslation } from '../i18n';
 
@@ -42,6 +42,7 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [paymentElementReady, setPaymentElementReady] = useState(false);
+	const [email, setEmail] = useState('');
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -65,7 +66,8 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 			const confirmPromise = stripe.confirmPayment({
 				elements,
 				confirmParams: {
-					return_url: `${window.location.origin}/checkout/success?order_id=${orderToken}`
+					return_url: `${window.location.origin}/checkout/success?order_id=${orderToken}`,
+					...(email ? { receipt_email: email } : {})
 				}
 			});
 
@@ -93,10 +95,39 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 	return (
 		<form onSubmit={handleSubmit} className="space-y-6" aria-busy={isProcessing}>
 			<div>
+				<label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
+					{t('checkout.email')}
+				</label>
+				<input
+					id="checkout-email"
+					type="email"
+					autoComplete="email"
+					required
+					value={email}
+					onChange={(e) => setEmail(e.target.value)}
+					placeholder="your@email.com"
+					className="block w-full rounded-md border border-gray-300 px-3 py-3 text-base shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand"
+				/>
+			</div>
+
+			<div>
+				<label className="block text-sm font-medium text-gray-700 mb-2">
+					{t('checkout.shippingAddress')}
+				</label>
+				<AddressElement
+					options={{
+						mode: 'shipping',
+						allowedCountries: ['JP']
+					}}
+				/>
+			</div>
+
+			<div>
 				<label className="block text-sm font-medium text-gray-700 mb-2">
 					{t('checkout.paymentDetails')}
 				</label>
 				<PaymentElement
+					options={{ layout: 'tabs' }}
 					onReady={() => {
 						setPaymentElementReady(true);
 					}}

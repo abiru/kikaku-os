@@ -297,8 +297,8 @@ describe('POST /payments/intent', () => {
     expect(params.get('currency')).toBe('jpy');
     expect(params.get('customer')).toBe('cus_existing');
     expect(params.get('metadata[paymentMethod]')).toBe('auto');
-    expect(params.get('automatic_payment_methods[enabled]')).toBe('true');
-    expect(params.get('payment_method_types[]')).toBeNull();
+    expect(params.get('automatic_payment_methods[enabled]')).toBeNull();
+    expect(params.getAll('payment_method_types[]')).toEqual(['card', 'customer_balance']);
   });
 
   it('creates bank transfer payment intent when paymentMethod=bank_transfer', async () => {
