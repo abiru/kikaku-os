@@ -276,6 +276,7 @@ storefront.get('/products', zValidator('query', storefrontProductsQuerySchema), 
         minPrice: minPrice ?? null,
         maxPrice: maxPrice ?? null
       },
+      sort,
       meta: {
         page,
         perPage,

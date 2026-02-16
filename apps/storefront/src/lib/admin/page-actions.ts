@@ -21,6 +21,7 @@ export async function handlePageUpdate(
 	apiBase: string,
 	apiKey: string,
 	id: string,
+	t: (key: string) => string,
 ): Promise<PageUpdateResult> {
 	const slug = formData.get('slug')?.toString().trim().toLowerCase() || '';
 	const title = formData.get('title')?.toString().trim() || '';
@@ -30,13 +31,13 @@ export async function handlePageUpdate(
 	const status = formData.get('status')?.toString() || 'draft';
 
 	if (!slug) {
-		return { page: null, error: 'Slug is required', successMessage: null };
+		return { page: null, error: t('errors.slugRequired'), successMessage: null };
 	}
 	if (!/^[a-z0-9-]+$/.test(slug)) {
-		return { page: null, error: 'Slug must contain only lowercase letters, numbers, and hyphens', successMessage: null };
+		return { page: null, error: t('errors.slugInvalid'), successMessage: null };
 	}
 	if (!title) {
-		return { page: null, error: 'Title is required', successMessage: null };
+		return { page: null, error: t('errors.titleRequired'), successMessage: null };
 	}
 
 	try {
@@ -59,12 +60,12 @@ export async function handlePageUpdate(
 		const data = await res.json();
 
 		if (!res.ok) {
-			return { page: null, error: data.message || 'Failed to update page', successMessage: null };
+			return { page: null, error: data.message || t('errors.failedToUpdatePage'), successMessage: null };
 		}
 
-		return { page: data.page, error: null, successMessage: 'Page updated successfully' };
+		return { page: data.page, error: null, successMessage: t('admin.pageUpdated') };
 	} catch (e) {
 		console.error(e);
-		return { page: null, error: 'Failed to update page. Please check your connection.', successMessage: null };
+		return { page: null, error: t('errors.failedToUpdatePage'), successMessage: null };
 	}
 }
