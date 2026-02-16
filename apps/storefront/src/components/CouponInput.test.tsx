@@ -9,8 +9,10 @@ vi.mock('../lib/format', () => ({
   formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
 }))
 
+type AppliedCoupon = { code: string; discountAmount: number }
+
 const { mockApplyCoupon, mockRemoveCoupon, mockAppliedCouponGet, mockCartTotalGet } = vi.hoisted(() => {
-  const mockAppliedCouponGet = vi.fn(() => null)
+  const mockAppliedCouponGet = vi.fn((): AppliedCoupon | null => null)
   const mockCartTotalGet = vi.fn(() => 5000)
   return {
     mockApplyCoupon: vi.fn(),

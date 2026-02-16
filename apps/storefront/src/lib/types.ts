@@ -12,7 +12,9 @@ export type HeroSection = {
   cta_secondary_text?: string | null;
   cta_secondary_url?: string | null;
   sort_order: number;
+  position: number;
   status: string;
+  updated_at: string;
 };
 
 export type ProductVariant = {
