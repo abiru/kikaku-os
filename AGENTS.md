@@ -16,6 +16,7 @@ Codex / Cline / 自動エージェントによる編集・実装・テストは�
 - 作業開始前に worktree と branch を検証する
 - 作業ディレクトリは `.worktrees/*` 配下を使用する
 - 1タスク = 1 worktree / 1ブランチを原則にする
+- worktree が未作成の場合、エージェントが `git worktree add .worktrees/<task-name> -b codex/<task-name>` を実行して作成してから開始する
 
 ### 作業開始チェック（必須）
 ```bash
