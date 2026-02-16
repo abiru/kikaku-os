@@ -220,4 +220,69 @@ describe('ReviewsTable', () => {
 		render(<ReviewsTable apiBase="http://localhost:8787" />)
 		expect(screen.getByTestId('table-skeleton')).toBeDefined()
 	})
+
+	it('displays error message on fetch failure', async () => {
+		global.fetch = vi.fn().mockResolvedValue({
+			json: () => Promise.resolve({ ok: false, message: 'Server error' }),
+		})
+		render(<ReviewsTable apiBase="http://localhost:8787" />)
+		await waitFor(() => {
+			expect(screen.getByText('Server error')).toBeDefined()
+		})
+	})
+
+	it('calls approve API when approve button is clicked', async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			json: () => Promise.resolve({ ok: true, reviews: mockReviews, total: mockReviews.length }),
+		})
+		global.fetch = fetchMock
+		render(<ReviewsTable apiBase="http://localhost:8787" />)
+		await waitForReviewsToLoad()
+
+		fetchMock.mockClear()
+		fetchMock.mockResolvedValue({
+			json: () => Promise.resolve({ ok: true }),
+		})
+
+		fireEvent.click(screen.getByText('reviews.approve'))
+
+		await waitFor(() => {
+			expect(fetchMock).toHaveBeenCalledWith(
+				'http://localhost:8787/admin/reviews/1/approve',
+				{ method: 'POST' }
+			)
+		})
+	})
+
+	it('calls reject API when reject button is clicked', async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			json: () => Promise.resolve({ ok: true, reviews: mockReviews, total: mockReviews.length }),
+		})
+		global.fetch = fetchMock
+		render(<ReviewsTable apiBase="http://localhost:8787" />)
+		await waitForReviewsToLoad()
+
+		fetchMock.mockClear()
+		fetchMock.mockResolvedValue({
+			json: () => Promise.resolve({ ok: true }),
+		})
+
+		fireEvent.click(screen.getByText('reviews.reject'))
+
+		await waitFor(() => {
+			expect(fetchMock).toHaveBeenCalledWith(
+				'http://localhost:8787/admin/reviews/1/reject',
+				{ method: 'POST' }
+			)
+		})
+	})
+
+	it('links product names to product detail pages', async () => {
+		render(<ReviewsTable apiBase="http://localhost:8787" />)
+		await waitForReviewsToLoad()
+
+		const productLinks = screen.getAllByText('LED Light A')
+		const link = productLinks.find((el) => el.closest('a'))?.closest('a')
+		expect(link?.getAttribute('href')).toBe('/admin/products/10')
+	})
 })
