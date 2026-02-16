@@ -51,10 +51,16 @@ describe('NewsletterForm', () => {
   })
 
   it('submits valid email and shows success', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ ok: true }),
-    })
+    // First call: CSRF token fetch, second call: subscribe
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ token: 'csrf-token' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      })
 
     render(<NewsletterForm />)
     const input = screen.getByPlaceholderText('newsletter.placeholder')
@@ -69,10 +75,15 @@ describe('NewsletterForm', () => {
   })
 
   it('shows error message on API failure', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ ok: false, message: 'Server error' }),
-    })
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ token: 'csrf-token' }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ ok: false, message: 'Server error' }),
+      })
 
     render(<NewsletterForm />)
     const input = screen.getByPlaceholderText('newsletter.placeholder')
@@ -118,7 +129,7 @@ describe('NewsletterForm', () => {
 
     resolvePromise!({
       ok: true,
-      json: async () => ({ ok: true }),
+      json: async () => ({ token: 'csrf-token' }),
     })
   })
 

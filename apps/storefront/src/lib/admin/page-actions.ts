@@ -36,7 +36,7 @@ export async function handlePageUpdate(
 		return { page: null, error: t('errors.slugRequired'), successMessage: null };
 	}
 	if (!/^[a-z0-9-]+$/.test(slug)) {
-		return { page: null, error: t('errors.slugFormat'), successMessage: null };
+		return { page: null, error: t('errors.slugInvalid'), successMessage: null };
 	}
 	if (!title) {
 		return { page: null, error: t('errors.titleRequired'), successMessage: null };
