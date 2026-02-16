@@ -23,6 +23,8 @@ import {
   UserGroupIcon,
   StarIcon,
   ChatBubbleLeftRightIcon,
+  NewspaperIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline'
 import { t } from '../../i18n'
 import { SidebarLayout } from '../catalyst/sidebar-layout'
@@ -78,10 +80,12 @@ const navigation: NavigationItem[] = [
   { name: 'admin.inquiries', href: '/admin/inquiries', icon: ChatBubbleLeftRightIcon, permission: 'inbox:read' },
   { name: 'admin.pages', href: '/admin/pages', icon: DocumentDuplicateIcon, permission: 'settings:write' },
   { name: 'admin.emailTemplates', href: '/admin/email-templates', icon: EnvelopeIcon, permission: 'settings:write' },
+  { name: 'admin.newsletter', href: '/admin/newsletter', icon: NewspaperIcon, permission: 'customers:read' },
   { name: 'admin.googleAds', href: '/admin/ads', icon: MegaphoneIcon, permission: 'settings:write' },
   { name: 'admin.reports', href: '/admin/reports', icon: ChartBarIcon, permission: 'reports:read' },
   { name: 'admin.ledger', href: '/admin/ledger', icon: DocumentTextIcon, permission: 'ledger:read' },
   { name: 'admin.users', href: '/admin/users', icon: UserGroupIcon, permission: 'users:read' },
+  { name: 'admin.auditLogs', href: '/admin/audit-logs', icon: ClipboardDocumentListIcon, permission: 'settings:read' },
 ]
 
 // Settings requires settings:read permission

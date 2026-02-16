@@ -1,0 +1,99 @@
+---
+export const prerender = false;
+
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Alert } from '../../components/catalyst/alert-banner';
+import { getApiBase } from '../../lib/api';
+import { Heading } from '../../components/catalyst/heading';
+import AuditLogsTable from '../../components/admin/AuditLogsTable';
+import { t } from '../../i18n';
+
+const apiBase = getApiBase();
+const action = Astro.url.searchParams.get('action') || '';
+const target = Astro.url.searchParams.get('target') || '';
+const dateFrom = Astro.url.searchParams.get('date_from') || '';
+const dateTo = Astro.url.searchParams.get('date_to') || '';
+const page = Number(Astro.url.searchParams.get('page') || '1');
+const perPage = 50;
+
+type AuditLog = {
+	id: number;
+	actor: string | null;
+	action: string;
+	target: string | null;
+	metadata: string | null;
+	created_at: string;
+};
+
+let logs: AuditLog[] = [];
+let total = 0;
+let availableActions: string[] = [];
+let availableTargets: string[] = [];
+let error: string | null = null;
+
+// SSR Data Fetching
+if (import.meta.env.ADMIN_API_KEY) {
+	try {
+		const query = new URLSearchParams({
+			limit: perPage.toString(),
+			offset: ((page - 1) * perPage).toString(),
+		});
+		if (action) query.set('action', action);
+		if (target) query.set('target', target);
+		if (dateFrom) query.set('date_from', dateFrom);
+		if (dateTo) query.set('date_to', dateTo);
+
+		const res = await fetch(`${apiBase}/admin/audit-logs?${query}`, {
+			headers: {
+				'x-admin-key': import.meta.env.ADMIN_API_KEY,
+			},
+		});
+
+		if (!res.ok) {
+			throw new Error(`API Error: ${res.status}`);
+		}
+
+		const data = await res.json();
+		logs = data.logs || [];
+		total = data.total || 0;
+		availableActions = data.filters?.actions || [];
+		availableTargets = data.filters?.targets || [];
+	} catch (e) {
+		console.error(e);
+		error = t('errors.failedToLoadAuditLogs');
+	}
+} else {
+	error = t('errors.adminKeyMissing');
+}
+
+const totalPages = Math.max(1, Math.ceil(total / perPage));
+---
+
+<AdminLayout title={`${t('admin.auditLogs')} - Admin`}>
+	<div class="space-y-6">
+		<div class="flex items-center gap-4">
+			<Heading>{t('admin.auditLogs')}</Heading>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{total} {t('admin.entries')}</span>
+		</div>
+
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
+
+		<AuditLogsTable
+			logs={logs}
+			total={total}
+			currentPage={page}
+			totalPages={totalPages}
+			actionFilter={action}
+			targetFilter={target}
+			dateFrom={dateFrom}
+			dateTo={dateTo}
+			availableActions={availableActions}
+			availableTargets={availableTargets}
+			client:visible
+		/>
+	</div>
+</AdminLayout>

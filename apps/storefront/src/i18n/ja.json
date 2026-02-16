@@ -280,7 +280,24 @@
     "nDays": "{n}日間",
     "allWithCount": "すべて ({count})",
     "lowStockWithCount": "低在庫 ({count})",
-    "outOfStockWithCount": "在庫切れ ({count})"
+    "outOfStockWithCount": "在庫切れ ({count})",
+    "newsletter": "ニュースレター",
+    "newsletterSubscribers": "登録者",
+    "newsletterSubscribed": "登録中",
+    "newsletterUnsubscribed": "解除済み",
+    "newsletterEmail": "メールアドレス",
+    "newsletterSubscribedAt": "登録日",
+    "newsletterExportCsv": "CSV エクスポート",
+    "newsletterNoSubscribers": "登録者が見つかりません。",
+    "auditLogs": "監査ログ",
+    "auditAction": "アクション",
+    "auditTarget": "対象",
+    "auditActor": "実行者",
+    "auditTimestamp": "日時",
+    "auditDetails": "詳細",
+    "auditDateFrom": "開始日",
+    "auditDateTo": "終了日",
+    "auditNoLogs": "監査ログが見つかりません。"
   },
   "wishlist": {
     "title": "お気に入り",
@@ -548,7 +565,9 @@
     "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
     "reload": "再読み込み",
     "componentError": "表示中にエラーが発生しました。ページを再読み込みしてください。",
-    "error": "エラー"
+    "error": "エラー",
+    "failedToLoadNewsletter": "ニュースレター登録者の読み込みに失敗しました。",
+    "failedToLoadAuditLogs": "監査ログの読み込みに失敗しました。"
   },
   "pages": {
     "orderStatus": {
