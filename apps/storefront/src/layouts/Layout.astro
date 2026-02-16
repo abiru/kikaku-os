@@ -92,8 +92,8 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 							<h3 class="font-semibold text-primary">{t('footer.shopAndLearn')}</h3>
 							<ul class="space-y-0">
 								<li><a href="/products" class="inline-block py-1.5 hover:underline">{t('footer.store')}</a></li>
-								<li><a href="/products" class="inline-block py-1.5 hover:underline">{t('footer.newProducts')}</a></li>
-								<li><a href="/products" class="inline-block py-1.5 hover:underline">{t('footer.categories')}</a></li>
+								<li><a href="/products?sort=newest" class="inline-block py-1.5 hover:underline">{t('footer.newProducts')}</a></li>
+								<li><a href="/categories" class="inline-block py-1.5 hover:underline">{t('footer.categories')}</a></li>
 							</ul>
 						</div>
 						<div class="space-y-3">
@@ -114,11 +114,10 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 							</ul>
 						</div>
 						<div class="space-y-3">
-							<h3 class="font-semibold text-primary">{t('footer.followUs')}</h3>
+							<h3 class="font-semibold text-primary">{t('footer.business')}</h3>
 							<ul class="space-y-0">
-								<li><a href="/social#x" class="inline-block py-1.5 hover:underline" aria-label="X (旧Twitter)">{t('footer.twitter')}</a></li>
-								<li><a href="/social#instagram" class="inline-block py-1.5 hover:underline" aria-label="Instagram">{t('footer.instagram')}</a></li>
-								<li><a href="/social#facebook" class="inline-block py-1.5 hover:underline" aria-label="Facebook">{t('footer.facebook')}</a></li>
+								<li><a href="/quotations/new" class="inline-block py-1.5 hover:underline">{t('footer.quotation')}</a></li>
+								<li><a href="/faq" class="inline-block py-1.5 hover:underline">{t('footer.faq')}</a></li>
 							</ul>
 						</div>
 						<div class="space-y-3 col-span-2 md:col-span-1">

@@ -45,7 +45,10 @@ const {
 		<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-primary/80 overflow-x-auto whitespace-nowrap">
 			<a href="/" class={`transition-colors hover:text-primary ${currentPath === '/' ? 'text-primary font-medium' : ''}`}>{t('nav.store')}</a>
 			<a href="/products" class={`transition-colors hover:text-primary ${currentPath.startsWith('/products') ? 'text-primary font-medium' : ''}`}>{t('nav.products')}</a>
+			<a href="/categories" class={`transition-colors hover:text-primary ${currentPath.startsWith('/categories') ? 'text-primary font-medium' : ''}`}>{t('nav.categories')}</a>
+			<a href="/faq" class={`transition-colors hover:text-primary ${currentPath === '/faq' ? 'text-primary font-medium' : ''}`}>{t('nav.faq')}</a>
 			<a href="/contact" class={`transition-colors hover:text-primary ${currentPath === '/contact' ? 'text-primary font-medium' : ''}`}>{t('nav.support')}</a>
+			<a href="/quotations/new" class={`transition-colors hover:text-primary ${currentPath.startsWith('/quotations') ? 'text-primary font-medium' : ''}`}>{t('nav.quotation')}</a>
 		</nav>
 
 		{/* Utilities: Search, Wishlist, Cart & Account */}
@@ -122,7 +125,10 @@ const {
 			<div class="px-6 py-4 space-y-1">
 				<a href="/" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.store')}</a>
 				<a href="/products" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/products') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.products')}</a>
+				<a href="/categories" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/categories') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.categories')}</a>
+				<a href="/faq" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/faq' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.faq')}</a>
 				<a href="/contact" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/contact' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.support')}</a>
+				<a href="/quotations/new" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/quotations') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.quotation')}</a>
 				<a href="/wishlist" class="block py-3 text-[15px] border-b border-gray-100 text-primary transition-colors hover:text-brand">{t('wishlist.openWishlist')}</a>
 				<a href="/cart" class="block py-3 text-[15px] border-b border-gray-100 text-primary transition-colors hover:text-brand">{t('nav.openCart')}</a>
 			</div>
