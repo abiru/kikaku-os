@@ -2,6 +2,8 @@
 export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import AdminKpiCards from '../../components/admin/AdminKpiCards.astro';
+import AdminRecentOrders from '../../components/admin/AdminRecentOrders.astro';
 import { Alert } from '../../components/catalyst/alert-banner';
 import { Badge } from '../../components/catalyst/badge';
 import { Button } from '../../components/catalyst/button';
@@ -33,23 +35,10 @@ type DashboardData = {
 	}>;
 };
 
-type DailySale = {
-	date: string;
-	orders: number;
-	revenue: number;
-};
-
 type AnalyticsData = {
-	dailySales: DailySale[];
-	customerBreakdown: {
-		newCustomers: number;
-		returningCustomers: number;
-	};
-	summary: {
-		totalRevenue: number;
-		totalOrders: number;
-		averageOrderValue: number;
-	};
+	dailySales: Array<{ date: string; orders: number; revenue: number }>;
+	customerBreakdown: { newCustomers: number; returningCustomers: number };
+	summary: { totalRevenue: number; totalOrders: number; averageOrderValue: number };
 };
 
 type LowStockItem = {
@@ -133,16 +122,6 @@ const getSeverityColor = (severity: string) => {
 		default: return 'blue' as const;
 	}
 };
-
-const getStatusColor = (status: string) => {
-	switch (status) {
-		case 'paid': return 'lime' as const;
-		case 'fulfilled': return 'lime' as const;
-		case 'partial_refunded': return 'amber' as const;
-		case 'refunded': return 'red' as const;
-		default: return 'zinc' as const;
-	}
-};
 ---
 
 <AdminLayout title={`${t('admin.dashboard')} - Admin`}>
@@ -160,55 +139,13 @@ const getStatusColor = (status: string) => {
 			{data && (
 				<>
 					{/* KPI Cards */}
-					<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-						<div class="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm">
-							<div class="flex items-center gap-3 mb-2">
-								<div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center">
-									<svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-									</svg>
-								</div>
-								<span class="text-xs text-zinc-500 font-medium">{t('admin.todaysOrders')}</span>
-							</div>
-							<p class="text-2xl font-semibold text-zinc-950 tabular-nums">{data.today.orders}</p>
-						</div>
-
-						<div class="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm">
-							<div class="flex items-center gap-3 mb-2">
-								<div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
-									<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-								</div>
-								<span class="text-xs text-zinc-500 font-medium">{t('admin.todaysRevenue')}</span>
-							</div>
-							<p class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(data.today.revenue)}</p>
-						</div>
-
-						<div class="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm">
-							<div class="flex items-center gap-3 mb-2">
-								<div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
-									<svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-									</svg>
-								</div>
-								<span class="text-xs text-zinc-500 font-medium">{t('admin.pendingInbox')}</span>
-							</div>
-							<p class="text-2xl font-semibold text-zinc-950 tabular-nums">{data.pending.inbox}</p>
-						</div>
-
-						<div class="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm">
-							<div class="flex items-center gap-3 mb-2">
-								<div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
-									<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-									</svg>
-								</div>
-								<span class="text-xs text-zinc-500 font-medium">{t('admin.unfulfilled')}</span>
-							</div>
-							<p class="text-2xl font-semibold text-zinc-950 tabular-nums">{data.pending.unfulfilled}</p>
-						</div>
-					</div>
+					<AdminKpiCards
+						todayOrders={data.today.orders}
+						todayRevenue={data.today.revenue}
+						pendingInbox={data.pending.inbox}
+						unfulfilled={data.pending.unfulfilled}
+						formatCurrency={formatCurrency}
+					/>
 
 					{/* Sales Chart */}
 					{analyticsData && (
@@ -276,38 +213,7 @@ const getStatusColor = (status: string) => {
 					{/* Recent Activity */}
 					<div class="grid lg:grid-cols-2 gap-6">
 						{/* Recent Orders */}
-						<div>
-							<div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
-								<Subheading>{t('admin.recentOrders')}</Subheading>
-								<Button client:load href="/admin/orders" plain>{t('admin.viewAll')}</Button>
-							</div>
-							<div class="divide-y divide-zinc-100">
-								{data.recentOrders.length > 0 ? (
-									data.recentOrders.map((order) => (
-										<a href={`/admin/orders/${order.id}`} class="flex items-center justify-between px-6 py-3 hover:bg-zinc-50 transition-colors">
-											<div class="flex items-center gap-3">
-												<span class="text-sm font-medium text-zinc-950">#{order.id}</span>
-												<span class="text-xs text-zinc-500 truncate max-w-[120px]">
-													{order.customer_email || t('admin.noEmail')}
-												</span>
-											</div>
-											<div class="flex items-center gap-3">
-												<span class="text-sm font-medium text-zinc-950 tabular-nums">
-													{formatCurrency(order.total_net, order.currency)}
-												</span>
-												<Badge client:load color={getStatusColor(order.status)}>
-													{order.status}
-												</Badge>
-											</div>
-										</a>
-									))
-								) : (
-									<div class="px-6 py-8 text-center text-sm text-zinc-500">
-										{t('admin.noRecentOrders')}
-									</div>
-								)}
-							</div>
-						</div>
+						<AdminRecentOrders orders={data.recentOrders} formatCurrency={formatCurrency} />
 
 						{/* Recent Inbox */}
 						<div>
@@ -388,125 +294,5 @@ const getStatusColor = (status: string) => {
 <script id="analytics-data" type="application/json" set:html={JSON.stringify(analyticsData)}></script>
 
 <script>
-	import Chart from 'chart.js/auto';
-
-	function initChart() {
-		const dataElement = document.getElementById('analytics-data');
-		const chartData = dataElement ? JSON.parse(dataElement.textContent || 'null') : null;
-
-		if (!chartData || !chartData.dailySales || chartData.dailySales.length === 0) {
-			return; // No data to display
-		}
-
-		const salesCtx = document.getElementById('salesChart') as HTMLCanvasElement | null;
-
-		// If canvas doesn't exist yet (React still loading), retry
-		if (!salesCtx) {
-			setTimeout(initChart, 100);
-			return;
-		}
-
-		const labels = chartData.dailySales.map((d: { date: string }) => {
-			const date = new Date(d.date);
-			return `${date.getMonth() + 1}/${date.getDate()}`;
-		});
-		const revenues = chartData.dailySales.map((d: { revenue: number }) => d.revenue);
-		const orders = chartData.dailySales.map((d: { orders: number }) => d.orders);
-
-		new Chart(salesCtx, {
-			type: 'bar',
-			data: {
-				labels,
-				datasets: [
-					{
-						type: 'line',
-						label: 'Revenue',
-						data: revenues,
-						borderColor: 'rgb(79, 70, 229)',
-						backgroundColor: 'rgba(79, 70, 229, 0.1)',
-						fill: true,
-						tension: 0.3,
-						yAxisID: 'y'
-					},
-					{
-						type: 'bar',
-						label: 'Orders',
-						data: orders,
-						backgroundColor: 'rgba(16, 185, 129, 0.8)',
-						borderColor: 'rgb(16, 185, 129)',
-						borderWidth: 1,
-						yAxisID: 'y1'
-					}
-				]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				interaction: {
-					mode: 'index',
-					intersect: false
-				},
-				plugins: {
-					legend: {
-						display: false
-					},
-					tooltip: {
-						callbacks: {
-							label: (context) => {
-								const value = context.raw as number;
-								if (context.dataset.label === 'Revenue') {
-									return `Revenue: ${new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(value)}`;
-								}
-								return `Orders: ${value}`;
-							}
-						}
-					}
-				},
-				scales: {
-					y: {
-						type: 'linear',
-						display: true,
-						position: 'left',
-						beginAtZero: true,
-						ticks: {
-							callback: (value) => {
-								const numValue = Number(value);
-								if (numValue >= 10000) {
-									return `${numValue / 10000}万`;
-								}
-								return numValue.toLocaleString();
-							}
-						},
-						grid: {
-							color: 'rgba(0, 0, 0, 0.05)'
-						}
-					},
-					y1: {
-						type: 'linear',
-						display: true,
-						position: 'right',
-						beginAtZero: true,
-						ticks: {
-							stepSize: 1
-						},
-						grid: {
-							drawOnChartArea: false
-						}
-					},
-					x: {
-						grid: {
-							display: false
-						}
-					}
-				}
-			}
-		});
-	}
-
-	// Start initialization
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', initChart);
-	} else {
-		initChart();
-	}
+	import '../../scripts/adminDashboardChart';
 </script>

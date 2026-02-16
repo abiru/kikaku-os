@@ -3,7 +3,8 @@ import { handleStripeEvent } from '../../services/stripeEventHandlers';
 import { createMockDb } from '../routes/webhooks/stripe.test.utils';
 
 vi.mock('../../services/orderEmail', () => ({
-  sendOrderConfirmationEmail: vi.fn().mockResolvedValue(undefined)
+  sendOrderConfirmationEmail: vi.fn().mockResolvedValue(undefined),
+  sendPaymentFailedEmail: vi.fn().mockResolvedValue({ success: true })
 }));
 
 vi.mock('../../services/inventoryCheck', () => ({
