@@ -12,6 +12,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
+import { t } from '../../../i18n';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -189,9 +190,9 @@ const canDelete = page && !isCorePage;
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
 							{page.status === 'published' ? (
-								<Badge color="blue" client:load>Published</Badge>
+								<Badge color="blue" client:load data-status-badge>{t('admin.published')}</Badge>
 							) : (
-								<Badge color="zinc" client:load>Draft</Badge>
+								<Badge color="zinc" client:load data-status-badge>{t('admin.draft')}</Badge>
 							)}
 							{isCorePage && (
 								<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded">Core page</span>
@@ -203,7 +204,7 @@ const canDelete = page && !isCorePage;
 								id="publish-btn"
 								class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${page.status === 'published' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
 							>
-								{page.status === 'published' ? 'Unpublish' : 'Publish'}
+								{page.status === 'published' ? t('admin.unpublish') : t('admin.publish')}
 							</button>
 						</div>
 					</div>
@@ -257,8 +258,8 @@ const canDelete = page && !isCorePage;
 								name="status"
 								client:load
 							>
-								<option value="draft" selected={page.status === 'draft'}>Draft</option>
-								<option value="published" selected={page.status === 'published'}>Published</option>
+								<option value="draft" selected={page.status === 'draft'}>{t('admin.draft')}</option>
+								<option value="published" selected={page.status === 'published'}>{t('admin.published')}</option>
 							</Select>
 						</Field>
 					</div>
@@ -393,16 +394,16 @@ Code block
 	<ConfirmDialog />
 </AdminLayout>
 
-<script define:vars={{ pageId: id, canDelete, currentStatus: page?.status, pageTitle: page?.title }}>
+<script define:vars={{ pageId: id, canDelete, currentStatus: page?.status, pageTitle: page?.title, i18nPublish: t('admin.publish'), i18nUnpublish: t('admin.unpublish'), i18nPublished: t('admin.published'), i18nDraft: t('admin.draft') }}>
 	// Store server variables in window for module script access
-	window.__PAGE_CONFIG__ = { pageId, canDelete, currentStatus, pageTitle };
+	window.__PAGE_CONFIG__ = { pageId, canDelete, currentStatus, pageTitle, i18nPublish, i18nUnpublish, i18nPublished, i18nDraft };
 </script>
 
 <script type="module">
 	import { marked } from 'marked';
 	import DOMPurify from 'isomorphic-dompurify';
 
-	const { pageId, canDelete, currentStatus, pageTitle } = window.__PAGE_CONFIG__;
+	const { pageId, canDelete, currentStatus, pageTitle, i18nPublish, i18nUnpublish, i18nPublished, i18nDraft } = window.__PAGE_CONFIG__;
 
 	const deleteBtn = document.getElementById('delete-btn');
 	const publishBtn = document.getElementById('publish-btn');
@@ -491,15 +492,15 @@ Code block
 					const newStatus = action === 'publish' ? 'published' : 'draft';
 					window.__PAGE_CONFIG__.currentStatus = newStatus;
 
-					publishBtn.textContent = newStatus === 'published' ? 'Unpublish' : 'Publish';
+					publishBtn.textContent = newStatus === 'published' ? i18nUnpublish : i18nPublish;
 					publishBtn.className = newStatus === 'published'
 						? 'px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
 						: 'px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-green-100 text-green-700 hover:bg-green-200';
 
 					const statusCard = publishBtn.closest('.bg-white');
-					const badge = statusCard?.querySelector('.rounded-md.font-medium');
+					const badge = statusCard?.querySelector('[data-status-badge]');
 					if (badge) {
-						badge.textContent = newStatus === 'published' ? 'Published' : 'Draft';
+						badge.textContent = newStatus === 'published' ? i18nPublished : i18nDraft;
 						badge.className = 'inline-flex items-center gap-x-1.5 rounded-md px-1.5 py-0.5 text-sm/5 font-medium sm:text-xs/5 forced-colors:outline '
 							+ (newStatus === 'published'
 								? 'bg-blue-500/15 text-blue-700 group-data-hover:bg-blue-500/25'
