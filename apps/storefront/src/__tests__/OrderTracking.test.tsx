@@ -161,13 +161,13 @@ describe('OrderTracking', () => {
 		const steps = nav.querySelectorAll('li');
 		expect(steps).toHaveLength(4);
 
-		// First step (received) should be current - has a circle with border-2 border-indigo-600
+		// First step (received) should be current - has a circle with border-2 border-brand
 			const firstStep = steps.item(0);
 			expect(firstStep).toBeTruthy();
 			if (!firstStep) throw new Error('Missing first progress step');
 			const firstStepDivs = firstStep.querySelectorAll('div');
 		const currentCircle = Array.from(firstStepDivs).find((d) =>
-			d.className.includes('border-indigo-600')
+			d.className.includes('border-brand')
 		);
 		expect(currentCircle).toBeDefined();
 
@@ -183,24 +183,24 @@ describe('OrderTracking', () => {
 		const nav = container.querySelector('nav[aria-label="Progress"]')!;
 		const steps = nav.querySelectorAll('li');
 
-		// First step (received) should be completed - has bg-indigo-600 with checkmark svg
+		// First step (received) should be completed - has bg-brand with checkmark svg
 			const firstStep = steps.item(0);
 			expect(firstStep).toBeTruthy();
 			if (!firstStep) throw new Error('Missing first progress step');
 			const firstStepDivs = firstStep.querySelectorAll('div');
 		const completedCircle = Array.from(firstStepDivs).find((d) =>
-			d.className.includes('bg-indigo-600')
+			d.className.includes('bg-brand')
 		);
 		expect(completedCircle).toBeDefined();
 			expect(firstStep.querySelector('svg')).not.toBeNull();
 
-		// Second step (paid) should be current - has border-indigo-600
+		// Second step (paid) should be current - has border-brand
 			const secondStep = steps.item(1);
 			expect(secondStep).toBeTruthy();
 			if (!secondStep) throw new Error('Missing second progress step');
 			const secondStepDivs = secondStep.querySelectorAll('div');
 		const currentCircle = Array.from(secondStepDivs).find((d) =>
-			d.className.includes('border-indigo-600')
+			d.className.includes('border-brand')
 		);
 		expect(currentCircle).toBeDefined();
 	});
@@ -233,7 +233,7 @@ describe('OrderTracking', () => {
 			if (!thirdStep) throw new Error('Missing third progress step');
 			const thirdStepDivs = thirdStep.querySelectorAll('div');
 		const currentCircle = Array.from(thirdStepDivs).find((d) =>
-			d.className.includes('border-indigo-600')
+			d.className.includes('border-brand')
 		);
 		expect(currentCircle).toBeDefined();
 	});
@@ -266,7 +266,7 @@ describe('OrderTracking', () => {
 			if (!fourthStep) throw new Error('Missing fourth progress step');
 			const fourthStepDivs = fourthStep.querySelectorAll('div');
 		const currentCircle = Array.from(fourthStepDivs).find((d) =>
-			d.className.includes('border-indigo-600')
+			d.className.includes('border-brand')
 		);
 		expect(currentCircle).toBeDefined();
 	});

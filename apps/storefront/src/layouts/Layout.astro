@@ -85,7 +85,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 				<slot />
 			</main>
 
-			<footer class="bg-subtle border-t border-gray-200 py-10 text-[11px] text-secondary" role="contentinfo">
+			<footer class="bg-subtle border-t border-gray-200 py-10 text-xs text-secondary" role="contentinfo">
 				<Container>
 					<div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5 mb-8">
 						<div class="space-y-3">
@@ -123,7 +123,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 						</div>
 						<div class="space-y-3 col-span-2 md:col-span-1">
 							<h3 class="font-semibold text-primary">{t('newsletter.title')}</h3>
-							<p class="text-[11px] text-secondary">{t('newsletter.description')}</p>
+							<p class="text-xs text-secondary">{t('newsletter.description')}</p>
 							<NewsletterForm client:idle />
 						</div>
 					</div>

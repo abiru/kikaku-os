@@ -43,7 +43,7 @@ export default function NewsletterForm() {
 
   if (status === 'success') {
     return (
-      <p className="text-[11px] text-green-600 font-medium">
+      <p className="text-xs text-green-600 font-medium">
         {t('newsletter.success')}
       </p>
     );
@@ -52,7 +52,9 @@ export default function NewsletterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
       <div className="flex gap-2">
+        <label htmlFor="newsletter-email" className="sr-only">{t('newsletter.placeholder')}</label>
         <input
+          id="newsletter-email"
           type="email"
           value={email}
           onChange={(e) => {
@@ -61,19 +63,20 @@ export default function NewsletterForm() {
             if (status === 'error') setStatus('idle');
           }}
           placeholder={t('newsletter.placeholder')}
-          className="flex-1 min-w-0 px-3 py-1.5 text-[11px] bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
+          aria-label={t('newsletter.placeholder')}
+          className="flex-1 min-w-0 px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
           disabled={status === 'submitting'}
         />
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="px-4 py-1.5 text-[11px] font-medium text-white bg-primary rounded-md hover:bg-[#333] transition-colors disabled:opacity-50 whitespace-nowrap"
+          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-[#333] transition-colors disabled:opacity-50 whitespace-nowrap"
         >
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </button>
       </div>
       {errorMessage && (
-        <p className="text-[11px] text-red-500">{errorMessage}</p>
+        <p className="text-xs text-red-500">{errorMessage}</p>
       )}
     </form>
   );

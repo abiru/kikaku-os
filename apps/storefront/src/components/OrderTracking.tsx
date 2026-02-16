@@ -130,7 +130,7 @@ function OrderSteps({ steps }: { steps: Step[] }) {
               <div
                 className={`absolute left-0 right-1/2 top-4 h-0.5 -translate-x-1/2 ${
                   step.status === 'completed' || step.status === 'current'
-                    ? 'bg-indigo-600'
+                    ? 'bg-brand'
                     : 'bg-gray-200'
                 }`}
                 style={{ left: '-50%', right: '50%', width: '100%' }}
@@ -138,14 +138,14 @@ function OrderSteps({ steps }: { steps: Step[] }) {
             )}
             <div className="relative flex flex-col items-center gap-2">
               {step.status === 'completed' ? (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand">
                   <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               ) : step.status === 'current' ? (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-indigo-600 bg-white">
-                  <div className="h-3 w-3 rounded-full bg-indigo-600" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-brand bg-white">
+                  <div className="h-3 w-3 rounded-full bg-brand" />
                 </div>
               ) : (
                 <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-200 bg-white">
@@ -185,7 +185,7 @@ function FulfillmentInfo({ fulfillment, t }: { fulfillment: Fulfillment; t: (key
   return (
     <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
       <div className="flex items-center gap-2 mb-3">
-        <svg className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="h-5 w-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
         </svg>
         <span className="text-sm font-medium text-gray-900">
@@ -211,7 +211,7 @@ function FulfillmentInfo({ fulfillment, t }: { fulfillment: Fulfillment; t: (key
               href={trackingUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-indigo-600 hover:text-indigo-500 font-medium"
+              className="inline-flex items-center gap-1.5 text-brand hover:text-brand-hover font-medium"
             >
               {t('orderTracking.trackTracking')}
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -3,13 +3,12 @@ export const prerender = false;
 
 import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import { Input } from '../../components/catalyst/input';
 import CategoriesPage from '../../components/admin/CategoriesPage';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { t } from '../../i18n';
 
-const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
 
 type Category = {
@@ -17,33 +16,10 @@ type Category = {
 	product_count: number;
 };
 
-let categories: Category[] = [];
-let error = null;
-
-// SSR Data Fetching
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({ q });
-
-		const res = await fetch(`${apiBase}/admin/categories?${query}`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		categories = data.categories || [];
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadCategories');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const query = new URLSearchParams({ q });
+const { data, error: fetchError } = await adminFetchList<{ categories: Category[] }>('/admin/categories', query);
+const categories = data?.categories || [];
+const error = fetchError ? t('errors.failedToLoadCategories') : null;
 
 ---
 

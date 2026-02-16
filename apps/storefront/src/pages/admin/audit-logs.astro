@@ -3,12 +3,11 @@ export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Alert } from '../../components/catalyst/alert-banner';
-import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import AuditLogsTable from '../../components/admin/AuditLogsTable';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { t } from '../../i18n';
 
-const apiBase = getApiBase();
 const action = Astro.url.searchParams.get('action') || '';
 const target = Astro.url.searchParams.get('target') || '';
 const dateFrom = Astro.url.searchParams.get('date_from') || '';
@@ -25,46 +24,22 @@ type AuditLog = {
 	created_at: string;
 };
 
-let logs: AuditLog[] = [];
-let total = 0;
-let availableActions: string[] = [];
-let availableTargets: string[] = [];
-let error: string | null = null;
+const query = new URLSearchParams({
+	limit: perPage.toString(),
+	offset: ((page - 1) * perPage).toString(),
+});
+if (action) query.set('action', action);
+if (target) query.set('target', target);
+if (dateFrom) query.set('date_from', dateFrom);
+if (dateTo) query.set('date_to', dateTo);
 
-// SSR Data Fetching
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			limit: perPage.toString(),
-			offset: ((page - 1) * perPage).toString(),
-		});
-		if (action) query.set('action', action);
-		if (target) query.set('target', target);
-		if (dateFrom) query.set('date_from', dateFrom);
-		if (dateTo) query.set('date_to', dateTo);
-
-		const res = await fetch(`${apiBase}/admin/audit-logs?${query}`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY,
-			},
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		logs = data.logs || [];
-		total = data.total || 0;
-		availableActions = data.filters?.actions || [];
-		availableTargets = data.filters?.targets || [];
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadAuditLogs');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+type AuditLogsResponse = { logs: AuditLog[]; total: number; filters?: { actions: string[]; targets: string[] } };
+const { data, error: fetchError } = await adminFetchList<AuditLogsResponse>('/admin/audit-logs', query);
+const logs = data?.logs || [];
+const total = data?.total || 0;
+const availableActions = data?.filters?.actions || [];
+const availableTargets = data?.filters?.targets || [];
+const error: string | null = fetchError ? t('errors.failedToLoadAuditLogs') : null;
 
 const totalPages = Math.max(1, Math.ceil(total / perPage));
 ---
