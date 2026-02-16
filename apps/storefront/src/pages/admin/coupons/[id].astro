@@ -13,6 +13,7 @@ import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../../lib/csrf';
 import { t } from '../../../i18n';
+import { logError } from '../../../utils/logger';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -133,7 +134,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 			}
 		}
 	} catch (e) {
-		console.error(e);
+		logError({ page: 'admin/coupons/[id]' }, e);
 		error = t('errors.failedToUpdateCoupon');
 	}
 }
@@ -158,7 +159,7 @@ if (!coupon && apiKey) {
 			stats = data.stats || stats;
 		}
 	} catch (e) {
-		console.error(e);
+		logError({ page: 'admin/coupons/[id]' }, e);
 		error = error || t('errors.failedToLoadCoupons');
 	}
 } else if (!apiKey) {
@@ -176,7 +177,7 @@ if (coupon && apiKey && successMessage) {
 			stats = data.stats || stats;
 		}
 	} catch (e) {
-		console.error('Failed to fetch stats:', e);
+		logError({ page: 'admin/coupons/[id]', action: 'Failed to fetch stats' }, e);
 	}
 }
 
@@ -466,8 +467,17 @@ if (csrfCookieHeader) {
 	const deleteForm = document.getElementById('delete-form') as HTMLFormElement | null;
 
 	if (deleteTrigger && deleteForm) {
-		deleteTrigger.addEventListener('click', () => {
-			if (confirm('Are you sure you want to delete this coupon? This action cannot be undone.')) {
+		deleteTrigger.addEventListener('click', async () => {
+			const confirmDialog = (window as any).__confirmDialog;
+			const confirmed = confirmDialog
+				? await confirmDialog({
+						title: 'Delete Coupon',
+						message: 'Are you sure you want to delete this coupon? This action cannot be undone.',
+						confirmLabel: 'Delete',
+						danger: true,
+					})
+				: confirm('Are you sure you want to delete this coupon? This action cannot be undone.');
+			if (confirmed) {
 				deleteForm.submit();
 			}
 		});
