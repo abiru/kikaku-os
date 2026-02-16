@@ -73,10 +73,10 @@ const statusLabels: Record<string, string> = {
     <div class="max-w-4xl mx-auto">
       {/* Welcome Section */}
       <div class="mb-8">
-        <h1 class="text-2xl font-semibold text-[#1d1d1f]">
+        <h1 class="text-2xl font-semibold text-primary">
           {t('account.welcome')}、{account?.name || 'お客様'}
         </h1>
-        <p class="text-[#6e6e73] mt-1">
+        <p class="text-secondary mt-1">
           {account?.email}
         </p>
       </div>
@@ -84,18 +84,18 @@ const statusLabels: Record<string, string> = {
       {/* Stats Cards */}
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div class="text-[#6e6e73] text-sm font-medium mb-1">
+          <div class="text-secondary text-sm font-medium mb-1">
             {t('account.totalOrders')}
           </div>
-          <div class="text-3xl font-semibold text-[#1d1d1f]">
+          <div class="text-3xl font-semibold text-primary">
             {stats?.total_orders || 0}
           </div>
         </div>
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div class="text-[#6e6e73] text-sm font-medium mb-1">
+          <div class="text-secondary text-sm font-medium mb-1">
             {t('account.totalSpent')}
           </div>
-          <div class="text-3xl font-semibold text-[#1d1d1f]">
+          <div class="text-3xl font-semibold text-primary">
             {formatCurrency(stats?.total_spent || 0)}
           </div>
         </div>
@@ -104,11 +104,11 @@ const statusLabels: Record<string, string> = {
       {/* Recent Orders */}
       <div class="bg-white rounded-xl shadow-sm border border-gray-200">
         <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 class="text-lg font-semibold text-[#1d1d1f]">
+          <h2 class="text-lg font-semibold text-primary">
             {t('account.recentOrders')}
           </h2>
           {recentOrders.length > 0 && (
-            <a href="/account/orders" class="text-sm text-[#0071e3] hover:underline">
+            <a href="/account/orders" class="text-sm text-brand hover:underline">
               {t('account.viewAllOrders')}
             </a>
           )}
@@ -116,10 +116,10 @@ const statusLabels: Record<string, string> = {
 
         {recentOrders.length === 0 ? (
           <div class="p-8 text-center">
-            <div class="text-[#6e6e73] mb-4">{t('account.noOrders')}</div>
+            <div class="text-secondary mb-4">{t('account.noOrders')}</div>
             <a
               href="/products"
-              class="inline-flex items-center justify-center px-6 py-2.5 bg-[#0071e3] text-white rounded-full text-sm font-medium hover:bg-[#0077ed] transition-colors"
+              class="inline-flex items-center justify-center px-6 py-2.5 bg-brand text-white rounded-full text-sm font-medium hover:bg-brand-hover transition-colors"
             >
               {t('account.startShopping')}
             </a>
@@ -132,15 +132,15 @@ const statusLabels: Record<string, string> = {
                 class="flex items-center justify-between p-6 hover:bg-gray-50 transition-colors"
               >
                 <div>
-                  <div class="font-medium text-[#1d1d1f]">
+                  <div class="font-medium text-primary">
                     {t('account.orderNumber')} #{order.id}
                   </div>
-                  <div class="text-sm text-[#6e6e73] mt-1">
+                  <div class="text-sm text-secondary mt-1">
                     {formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
                   </div>
                 </div>
                 <div class="text-right">
-                  <div class="font-medium text-[#1d1d1f]">
+                  <div class="font-medium text-primary">
                     {formatCurrency(order.total_amount, order.currency)}
                   </div>
                   <div class={`text-sm mt-1 ${

@@ -27,7 +27,7 @@ export default function MarkdownPreview({
           onClick={() => setActiveTab('edit')}
           className={`px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'edit'
-              ? 'border-b-2 border-[#0071e3] text-[#0071e3]'
+              ? 'border-b-2 border-brand text-brand'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -38,7 +38,7 @@ export default function MarkdownPreview({
           onClick={() => setActiveTab('preview')}
           className={`px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === 'preview'
-              ? 'border-b-2 border-[#0071e3] text-[#0071e3]'
+              ? 'border-b-2 border-brand text-brand'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -62,7 +62,7 @@ export default function MarkdownPreview({
           onChange={handleChange}
           placeholder={placeholder}
           rows={10}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/20 focus:border-[#0071e3] transition-all resize-vertical font-mono"
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all resize-vertical font-mono"
         />
       )}
 

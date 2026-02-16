@@ -95,7 +95,7 @@ const statusLabels: Record<string, string> = {
       {/* Back Link */}
       <a
         href="/account/orders"
-        class="inline-flex items-center gap-1 text-sm text-[#0071e3] hover:underline mb-6"
+        class="inline-flex items-center gap-1 text-sm text-brand hover:underline mb-6"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         {t('account.backToOrders')}
@@ -104,10 +104,10 @@ const statusLabels: Record<string, string> = {
       {/* Order Header */}
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 class="text-2xl font-semibold text-[#1d1d1f]">
+          <h1 class="text-2xl font-semibold text-primary">
             {t('account.orderNumber')} #{order.id}
           </h1>
-          <p class="text-[#6e6e73] mt-1">
+          <p class="text-secondary mt-1">
             {formatDate(order.created_at, dateTimeLongOpts)}
           </p>
         </div>
@@ -125,18 +125,18 @@ const statusLabels: Record<string, string> = {
         <div class="lg:col-span-2">
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="p-4 border-b border-gray-200">
-              <h2 class="font-semibold text-[#1d1d1f]">{t('account.items')}</h2>
+              <h2 class="font-semibold text-primary">{t('account.items')}</h2>
             </div>
             <div class="divide-y divide-gray-200">
               {order.items.map((item) => (
                 <div class="p-4 flex justify-between items-start">
                   <div>
-                    <div class="font-medium text-[#1d1d1f]">{item.title}</div>
-                    <div class="text-sm text-[#6e6e73] mt-1">
+                    <div class="font-medium text-primary">{item.title}</div>
+                    <div class="text-sm text-secondary mt-1">
                       {t('account.quantity')}: {item.quantity} x {formatCurrency(item.unit_price, order.currency)}
                     </div>
                   </div>
-                  <div class="font-medium text-[#1d1d1f]">
+                  <div class="font-medium text-primary">
                     {formatCurrency(item.unit_price * item.quantity, order.currency)}
                   </div>
                 </div>
@@ -148,14 +148,14 @@ const statusLabels: Record<string, string> = {
           {order.shipping && (
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
               <div class="p-4 border-b border-gray-200">
-                <h2 class="font-semibold text-[#1d1d1f]">{t('account.shippingAddress')}</h2>
+                <h2 class="font-semibold text-primary">{t('account.shippingAddress')}</h2>
               </div>
-              <div class="p-4 text-[#1d1d1f]">
+              <div class="p-4 text-primary">
                 {order.shipping.name && (
                   <div class="font-medium mb-2">{order.shipping.name}</div>
                 )}
                 {order.shipping.address && (
-                  <div class="text-sm text-[#6e6e73] space-y-1">
+                  <div class="text-sm text-secondary space-y-1">
                     {order.shipping.address.postal_code && (
                       <div>{order.shipping.address.postal_code}</div>
                     )}
@@ -179,43 +179,43 @@ const statusLabels: Record<string, string> = {
         <div class="lg:col-span-1">
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-20">
             <div class="p-4 border-b border-gray-200">
-              <h2 class="font-semibold text-[#1d1d1f]">{t('checkout.orderSummary')}</h2>
+              <h2 class="font-semibold text-primary">{t('checkout.orderSummary')}</h2>
             </div>
             <div class="p-4 space-y-3">
               <div class="flex justify-between text-sm">
-                <span class="text-[#6e6e73]">{t('account.subtotal')}</span>
-                <span class="text-[#1d1d1f]">{formatCurrency(order.subtotal, order.currency)}</span>
+                <span class="text-secondary">{t('account.subtotal')}</span>
+                <span class="text-primary">{formatCurrency(order.subtotal, order.currency)}</span>
               </div>
 
               <div class="flex justify-between text-sm">
-                <span class="text-[#6e6e73]">{t('account.tax')}</span>
-                <span class="text-[#1d1d1f]">{formatCurrency(order.tax_amount, order.currency)}</span>
+                <span class="text-secondary">{t('account.tax')}</span>
+                <span class="text-primary">{formatCurrency(order.tax_amount, order.currency)}</span>
               </div>
 
               {order.shipping_fee > 0 && (
                 <div class="flex justify-between text-sm">
-                  <span class="text-[#6e6e73]">{t('account.shipping')}</span>
-                  <span class="text-[#1d1d1f]">{formatCurrency(order.shipping_fee, order.currency)}</span>
+                  <span class="text-secondary">{t('account.shipping')}</span>
+                  <span class="text-primary">{formatCurrency(order.shipping_fee, order.currency)}</span>
                 </div>
               )}
 
               {order.total_discount > 0 && (
                 <div class="flex justify-between text-sm">
-                  <span class="text-[#6e6e73]">{t('account.discount')}</span>
+                  <span class="text-secondary">{t('account.discount')}</span>
                   <span class="text-green-600">-{formatCurrency(order.total_discount, order.currency)}</span>
                 </div>
               )}
 
               <div class="pt-3 border-t border-gray-200">
                 <div class="flex justify-between">
-                  <span class="font-semibold text-[#1d1d1f]">{t('account.total')}</span>
-                  <span class="font-semibold text-[#1d1d1f]">{formatCurrency(order.total_amount, order.currency)}</span>
+                  <span class="font-semibold text-primary">{t('account.total')}</span>
+                  <span class="font-semibold text-primary">{formatCurrency(order.total_amount, order.currency)}</span>
                 </div>
               </div>
 
               {order.paid_at && (
                 <div class="pt-3 border-t border-gray-200 text-sm">
-                  <span class="text-[#6e6e73]">{t('account.paymentStatus')}: </span>
+                  <span class="text-secondary">{t('account.paymentStatus')}: </span>
                   <span class="text-green-600">{t('account.paid')}</span>
                 </div>
               )}

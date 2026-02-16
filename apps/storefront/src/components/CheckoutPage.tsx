@@ -244,7 +244,7 @@ function CheckoutPageContent() {
 						</svg>
 					</div>
 					<p className="text-lg text-gray-900 font-medium">{error}</p>
-					<a href="/cart" className="mt-6 inline-block text-[#0071e3] hover:text-[#005bb5] min-h-[44px] flex items-center justify-center">
+					<a href="/cart" className="mt-6 inline-block text-brand hover:text-brand-active min-h-[44px] flex items-center justify-center">
 						{t('checkout.returnToCart')}
 					</a>
 				</div>
@@ -257,7 +257,7 @@ function CheckoutPageContent() {
 			<div className="flex items-center justify-center min-h-[60vh]">
 				<div className="text-center">
 					<p className="text-lg text-gray-900">{t('cart.empty')}</p>
-					<a href="/products" className="mt-4 inline-block text-[#0071e3] hover:text-[#005bb5] min-h-[44px] flex items-center justify-center">
+					<a href="/products" className="mt-4 inline-block text-brand hover:text-brand-active min-h-[44px] flex items-center justify-center">
 						{t('cart.continueShopping')}
 					</a>
 				</div>
@@ -279,7 +279,7 @@ function CheckoutPageContent() {
 					<button
 						type="button"
 						onClick={handleGoBack}
-						className="inline-flex items-center gap-1 text-sm font-medium text-[#0071e3] hover:text-[#005bb5] min-h-[44px] touch-manipulation"
+						className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:text-brand-active min-h-[44px] touch-manipulation"
 					>
 						<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
 							<path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -313,7 +313,7 @@ function CheckoutPageContent() {
 									onChange={(e) => handleEmailChange(e.target.value)}
 									onBlur={handleEmailBlur}
 									placeholder={t('checkout.emailPlaceholder') || 'your@email.com'}
-									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#0071e3] focus:ring-[#0071e3] text-base p-3 border"
+									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand text-base p-3 border"
 								/>
 								{emailTouched && emailError && (
 									<p id="email-error" className="text-red-500 text-sm mt-1">{emailError}</p>
@@ -322,7 +322,7 @@ function CheckoutPageContent() {
 							<button
 								type="submit"
 								disabled={loading || !customerEmail.includes('@')}
-								className="w-full bg-[#0071e3] text-white py-3 px-4 rounded-md hover:bg-[#005bb5] disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] text-base font-medium touch-manipulation"
+								className="w-full bg-brand text-white py-3 px-4 rounded-md hover:bg-brand-active disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] text-base font-medium touch-manipulation"
 							>
 								{loading ? (t('checkout.loading') || 'Loading...') : (t('checkout.proceedToPayment') || 'Proceed to Payment')}
 							</button>

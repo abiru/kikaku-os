@@ -19,7 +19,7 @@ export const GeneratedCandidates: FC<GeneratedCandidatesProps> = ({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-[#1d1d1f]">AI Generated Candidates</h3>
+      <h3 className="text-lg font-semibold text-primary">AI Generated Candidates</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {candidates.map((candidate, index) => (
           <div
@@ -98,7 +98,7 @@ export const GeneratedCandidates: FC<GeneratedCandidatesProps> = ({
             <button
               type="button"
               onClick={() => onSelect(candidate)}
-              className="w-full mt-2 px-4 py-2 bg-[#0071e3] text-white rounded-lg text-sm font-medium hover:bg-[#0077ed] transition-colors"
+              className="w-full mt-2 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-hover transition-colors"
             >
               Use This Candidate
             </button>

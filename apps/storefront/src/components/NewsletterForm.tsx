@@ -61,13 +61,13 @@ export default function NewsletterForm() {
             if (status === 'error') setStatus('idle');
           }}
           placeholder={t('newsletter.placeholder')}
-          className="flex-1 min-w-0 px-3 py-1.5 text-[11px] bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3] text-[#1d1d1f] placeholder-[#86868b]"
+          className="flex-1 min-w-0 px-3 py-1.5 text-[11px] bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
           disabled={status === 'submitting'}
         />
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="px-4 py-1.5 text-[11px] font-medium text-white bg-[#1d1d1f] rounded-md hover:bg-[#333] transition-colors disabled:opacity-50 whitespace-nowrap"
+          className="px-4 py-1.5 text-[11px] font-medium text-white bg-primary rounded-md hover:bg-[#333] transition-colors disabled:opacity-50 whitespace-nowrap"
         >
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </button>

@@ -46,11 +46,11 @@ const metaDescription = page?.meta_description || '';
 		{/* Header */}
 		<section class="pt-24 pb-16 md:pt-32 md:pb-24">
 			<Container>
-				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-center text-[#1d1d1f]">
+				<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-center text-primary">
 					{page?.title || '返品・返金について'}
 				</h1>
 				{page && (
-					<p class="mt-6 text-center text-[#6e6e73] text-lg font-medium">
+					<p class="mt-6 text-center text-secondary text-lg font-medium">
 						最終更新日：{formatDate(page.updated_at, { year: 'numeric', month: 'long', day: 'numeric' })}
 					</p>
 				)}
@@ -64,11 +64,11 @@ const metaDescription = page?.meta_description || '';
 					<div class="prose prose-lg max-w-none" set:html={parseMarkdown(page.body)} />
 				) : error ? (
 					<div class="text-center py-12">
-						<p class="text-[#6e6e73]">{error}</p>
+						<p class="text-secondary">{error}</p>
 					</div>
 				) : (
 					<div class="text-center py-12">
-						<p class="text-[#6e6e73]">このページは現在準備中です。</p>
+						<p class="text-secondary">このページは現在準備中です。</p>
 					</div>
 				)}
 			</Container>

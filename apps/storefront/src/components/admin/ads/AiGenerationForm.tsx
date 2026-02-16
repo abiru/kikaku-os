@@ -175,7 +175,7 @@ export function AiGenerationForm() {
 
       {isLoading && (
         <div className="mt-6 text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0071e3]"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
           <p className="mt-4 text-sm text-gray-600">Generating ad variations with AI...</p>
           <p className="mt-2 text-xs text-gray-500">Results will be sent to inbox for review.</p>
         </div>

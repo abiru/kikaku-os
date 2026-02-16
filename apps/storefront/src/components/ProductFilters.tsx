@@ -115,7 +115,7 @@ export default function ProductFilters() {
 			{/* Category Filter */}
 			{options && options.categories.length > 0 && (
 				<div>
-					<h3 className="text-sm font-semibold text-[#1d1d1f] mb-3">{t('filters.category')}</h3>
+					<h3 className="text-sm font-semibold text-primary mb-3">{t('filters.category')}</h3>
 					<div className="space-y-2">
 						{options.categories.map((cat) => (
 							<div key={cat} className="flex items-center justify-between group">
@@ -125,15 +125,15 @@ export default function ProductFilters() {
 										name="category"
 										checked={filters.category === cat}
 										onChange={() => setFilters((prev) => ({ ...prev, category: cat }))}
-										className="h-4 w-4 text-[#0071e3] border-gray-300 focus:ring-[#0071e3]"
+										className="h-4 w-4 text-brand border-gray-300 focus:ring-brand"
 									/>
-									<span className="text-sm text-[#1d1d1f]/80 group-hover:text-[#1d1d1f] capitalize">
+									<span className="text-sm text-primary/80 group-hover:text-primary capitalize">
 										{cat}
 									</span>
 								</label>
 								<a
 									href={`/categories/${encodeURIComponent(cat)}`}
-									className="text-[10px] text-[#6e6e73] opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#0071e3]"
+									className="text-[10px] text-secondary opacity-0 group-hover:opacity-100 transition-opacity hover:text-brand"
 								>
 									&#8594;
 								</a>
@@ -143,7 +143,7 @@ export default function ProductFilters() {
 							<button
 								type="button"
 								onClick={() => setFilters((prev) => ({ ...prev, category: null }))}
-								className="text-xs text-[#0071e3] hover:underline mt-1"
+								className="text-xs text-brand hover:underline mt-1"
 							>
 								{t('filters.clearCategory')}
 							</button>
@@ -155,7 +155,7 @@ export default function ProductFilters() {
 			{/* Price Range Filter */}
 			{options && (
 				<div>
-					<h3 className="text-sm font-semibold text-[#1d1d1f] mb-3">{t('filters.priceRange')}</h3>
+					<h3 className="text-sm font-semibold text-primary mb-3">{t('filters.priceRange')}</h3>
 					<div className="space-y-3">
 						<div className="flex items-center gap-2">
 							<div className="w-full">
@@ -166,7 +166,7 @@ export default function ProductFilters() {
 									placeholder={String(options.priceRange.min)}
 									value={minPriceInput}
 									onChange={(e) => setMinPriceInput(e.target.value)}
-									className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3]"
+									className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
 								/>
 							</div>
 							<span className="text-gray-500" aria-hidden="true">-</span>
@@ -178,7 +178,7 @@ export default function ProductFilters() {
 									placeholder={String(options.priceRange.max)}
 									value={maxPriceInput}
 									onChange={(e) => setMaxPriceInput(e.target.value)}
-									className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0071e3] focus:border-[#0071e3]"
+									className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
 								/>
 							</div>
 						</div>
@@ -197,7 +197,7 @@ export default function ProductFilters() {
 				<button
 					type="button"
 					onClick={applyFilters}
-					className="w-full px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ed] transition-colors"
+					className="w-full px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors"
 				>
 					{t('filters.applyFilters')}
 				</button>
@@ -205,7 +205,7 @@ export default function ProductFilters() {
 					<button
 						type="button"
 						onClick={clearFilters}
-						className="w-full px-4 py-2 text-sm font-medium text-[#0071e3] bg-white border border-[#0071e3] rounded-lg hover:bg-[#f5f5f7] transition-colors"
+						className="w-full px-4 py-2 text-sm font-medium text-brand bg-white border border-brand rounded-lg hover:bg-subtle transition-colors"
 					>
 						{t('filters.clearAll')}
 					</button>

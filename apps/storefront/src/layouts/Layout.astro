@@ -70,12 +70,12 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 
 		<slot name="head" />
 	</head>
-	<body class="font-sans text-[#1d1d1f] antialiased bg-[#f5f5f7]">
+	<body class="font-sans text-primary antialiased bg-subtle">
 		{/* Google Tag Manager (noscript) */}
 		{gtmId && (
 			<noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`} height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 		)}
-		<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#0071e3] focus:text-white focus:rounded-lg focus:text-sm focus:font-medium">
+		<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand focus:text-white focus:rounded-lg focus:text-sm focus:font-medium">
 			{t('accessibility.skipToContent')}
 		</a>
 		<div class="min-h-screen flex flex-col">
@@ -85,11 +85,11 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 				<slot />
 			</main>
 
-			<footer class="bg-[#f5f5f7] border-t border-gray-200 py-10 text-[11px] text-[#6e6e73]" role="contentinfo">
+			<footer class="bg-subtle border-t border-gray-200 py-10 text-[11px] text-secondary" role="contentinfo">
 				<Container>
 					<div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5 mb-8">
 						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.shopAndLearn')}</h3>
+							<h3 class="font-semibold text-primary">{t('footer.shopAndLearn')}</h3>
 							<ul class="space-y-0">
 								<li><a href="/products" class="inline-block py-1.5 hover:underline">{t('footer.store')}</a></li>
 								<li><a href="/products" class="inline-block py-1.5 hover:underline">{t('footer.newProducts')}</a></li>
@@ -97,7 +97,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 							</ul>
 						</div>
 						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.support')}</h3>
+							<h3 class="font-semibold text-primary">{t('footer.support')}</h3>
 							<ul class="space-y-0">
 								<li><a href="/contact" class="inline-block py-1.5 hover:underline">{t('footer.contact')}</a></li>
 								<li><a href="/order-status" class="inline-block py-1.5 hover:underline">{t('footer.orderStatus')}</a></li>
@@ -105,7 +105,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 							</ul>
 						</div>
 						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.about')}</h3>
+							<h3 class="font-semibold text-primary">{t('footer.about')}</h3>
 							<ul class="space-y-0">
 								<li><a href="/about" class="inline-block py-1.5 hover:underline">{t('footer.aboutCompany')}</a></li>
 								<li><a href="/legal" class="inline-block py-1.5 hover:underline">{t('footer.legalNotice')}</a></li>
@@ -113,7 +113,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 							</ul>
 						</div>
 						<div class="space-y-3">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('footer.followUs')}</h3>
+							<h3 class="font-semibold text-primary">{t('footer.followUs')}</h3>
 							<ul class="space-y-0">
 								<li><a href="/social#x" class="inline-block py-1.5 hover:underline" aria-label="X (旧Twitter)">{t('footer.twitter')}</a></li>
 								<li><a href="/social#instagram" class="inline-block py-1.5 hover:underline" aria-label="Instagram">{t('footer.instagram')}</a></li>
@@ -121,8 +121,8 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 							</ul>
 						</div>
 						<div class="space-y-3 col-span-2 md:col-span-1">
-							<h3 class="font-semibold text-[#1d1d1f]">{t('newsletter.title')}</h3>
-							<p class="text-[11px] text-[#6e6e73]">{t('newsletter.description')}</p>
+							<h3 class="font-semibold text-primary">{t('newsletter.title')}</h3>
+							<p class="text-[11px] text-secondary">{t('newsletter.description')}</p>
 							<NewsletterForm client:idle />
 						</div>
 					</div>

@@ -168,7 +168,7 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 					required
 					value={email}
 					onChange={(e) => onEmailChange(e.target.value)}
-					className="block w-full rounded-[5px] border border-[#e6e6e6] shadow-sm focus:border-[#0071e3] focus:ring-[#0071e3] text-base px-3 py-3"
+					className="block w-full rounded-[5px] border border-[#e6e6e6] shadow-sm focus:border-brand focus:ring-brand text-base px-3 py-3"
 					placeholder="your@email.com"
 				/>
 			</div>
@@ -211,7 +211,7 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 			<button
 				type="submit"
 				disabled={!stripe || isProcessing}
-				className="w-full rounded-md bg-[#0071e3] px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-[#005bb5] focus:outline-none focus:ring-2 focus:ring-[#0071e3] focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+				className="w-full rounded-md bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 			>
 				{isProcessing ? (
 					<span className="inline-flex items-center gap-2">

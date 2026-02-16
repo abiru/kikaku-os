@@ -306,7 +306,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									ホームページに表示（Featured）
 								</label>
 							</div>
-							<p class="text-xs text-[#6e6e73] mt-1">チェックするとホームページのカテゴリグリッドに表示されます</p>
+							<p class="text-xs text-secondary mt-1">チェックするとホームページのカテゴリグリッドに表示されます</p>
 						</Field>
 
 						<Field>
@@ -317,7 +317,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									<option value={cat.category} />
 								))}
 							</datalist>
-							<p class="text-xs text-[#6e6e73] mt-1">Type to create a new category or select from existing ones.</p>
+							<p class="text-xs text-secondary mt-1">Type to create a new category or select from existing ones.</p>
 						</Field>
 
 						<Field>
@@ -330,18 +330,18 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 									</option>
 								))}
 							</Select>
-							<p class="text-xs text-[#6e6e73] mt-1">All prices are tax-inclusive (税込)</p>
+							<p class="text-xs text-secondary mt-1">All prices are tax-inclusive (税込)</p>
 						</Field>
 					</Fieldset>
 
 					<div class="pt-4 border-t border-gray-100">
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
-								<dt class="text-[#6e6e73]">Created</dt>
+								<dt class="text-secondary">Created</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(product.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#6e6e73]">Updated</dt>
+								<dt class="text-secondary">Updated</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(product.updated_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
@@ -393,7 +393,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 										class="w-32 h-32 object-contain rounded-lg bg-gray-50"
 									/>
 									<div class="flex-1 min-w-0">
-										<p class="text-xs text-[#6e6e73] mb-1">Image URL (from web search)</p>
+										<p class="text-xs text-secondary mb-1">Image URL (from web search)</p>
 										<p class="text-sm text-zinc-950 break-all font-mono">{externalImageUrl}</p>
 									</div>
 								</div>

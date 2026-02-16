@@ -25,7 +25,7 @@ if (orderToken) {
 ---
 
 <Layout title={t('checkout.successPageTitle')}>
-	<div class="min-h-screen bg-[#f5f5f7] flex items-center">
+	<div class="min-h-screen bg-subtle flex items-center">
 		<Container class="py-16">
 			<div class="mx-auto w-full max-w-xl text-center">
 				{/* Success Icon with Animation */}
@@ -35,10 +35,10 @@ if (orderToken) {
 					</svg>
 				</div>
 
-				<h1 class="mt-8 text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
+				<h1 class="mt-8 text-4xl font-semibold tracking-tight text-primary md:text-5xl">
 					{t('checkout.thankYou')}
 				</h1>
-				<p class="mt-4 text-xl text-[#6e6e73]">
+				<p class="mt-4 text-xl text-secondary">
 					{t('checkout.orderConfirmed')}
 				</p>
 
@@ -46,7 +46,7 @@ if (orderToken) {
 				{order ? (
 					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm" data-order-container data-order-status={order.status}>
 						<div class="flex items-center justify-between mb-6">
-							<p class="text-sm text-[#6e6e73]">{t('admin.order')} #{order.id}</p>
+							<p class="text-sm text-secondary">{t('admin.order')} #{order.id}</p>
 							<span class={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
 								order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
 							}`}>
@@ -59,10 +59,10 @@ if (orderToken) {
 							{order.items.map((item: { title: string; quantity: number; unit_price: number }) => (
 								<div class="flex justify-between">
 									<div>
-										<p class="font-medium text-[#1d1d1f]">{item.title}</p>
-										<p class="text-sm text-[#6e6e73]">{t('checkout.quantity')}: {item.quantity}</p>
+										<p class="font-medium text-primary">{item.title}</p>
+										<p class="text-sm text-secondary">{t('checkout.quantity')}: {item.quantity}</p>
 									</div>
-									<p class="font-medium text-[#1d1d1f]">
+									<p class="font-medium text-primary">
 										{formatPrice(item.unit_price * item.quantity, order.currency)}
 									</p>
 								</div>
@@ -80,8 +80,8 @@ if (orderToken) {
 						{/* Email */}
 						{order.customer_email && (
 							<div class="mt-6 border-t border-gray-100 pt-6">
-								<p class="text-sm text-[#6e6e73]">
-									{t('checkout.confirmationSentTo')}: <span class="text-[#1d1d1f]">{order.customer_email}</span>
+								<p class="text-sm text-secondary">
+									{t('checkout.confirmationSentTo')}: <span class="text-primary">{order.customer_email}</span>
 								</p>
 							</div>
 						)}
@@ -89,8 +89,8 @@ if (orderToken) {
 						{/* Shipping Address */}
 						{order.shipping && (
 							<div class="mt-6 border-t border-gray-100 pt-6">
-								<p class="text-sm font-medium text-[#1d1d1f] mb-2">{t('checkout.shippingAddress')}</p>
-								<div class="text-sm text-[#6e6e73]">
+								<p class="text-sm font-medium text-primary mb-2">{t('checkout.shippingAddress')}</p>
+								<div class="text-sm text-secondary">
 									{order.shipping.name && <p>{order.shipping.name}</p>}
 									{order.shipping.address && (
 										<>
@@ -109,8 +109,8 @@ if (orderToken) {
 					</div>
 				) : (
 					<div class="mt-10 rounded-3xl bg-white p-8 text-left shadow-sm">
-						<p class="mb-2 text-sm text-[#6e6e73]">{t('checkout.orderConfirmation')}</p>
-						<p class="text-lg text-[#1d1d1f]">
+						<p class="mb-2 text-sm text-secondary">{t('checkout.orderConfirmation')}</p>
+						<p class="text-lg text-primary">
 							{t('checkout.confirmationEmailSent')}
 						</p>
 					</div>

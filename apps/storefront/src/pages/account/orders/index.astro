@@ -61,16 +61,16 @@ const statusLabels: Record<string, string> = {
 <AccountLayout title="注文履歴 - Led Kikaku Store" activeTab="orders">
   <Container class="py-8">
     <div class="max-w-4xl mx-auto">
-      <h1 class="text-2xl font-semibold text-[#1d1d1f] mb-6">
+      <h1 class="text-2xl font-semibold text-primary mb-6">
         {t('account.orders')}
       </h1>
 
       {orders.length === 0 ? (
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div class="text-[#6e6e73] mb-4">{t('account.noOrders')}</div>
+          <div class="text-secondary mb-4">{t('account.noOrders')}</div>
           <a
             href="/products"
-            class="inline-flex items-center justify-center px-6 py-2.5 bg-[#0071e3] text-white rounded-full text-sm font-medium hover:bg-[#0077ed] transition-colors"
+            class="inline-flex items-center justify-center px-6 py-2.5 bg-brand text-white rounded-full text-sm font-medium hover:bg-brand-hover transition-colors"
           >
             {t('account.startShopping')}
           </a>
@@ -78,7 +78,7 @@ const statusLabels: Record<string, string> = {
       ) : (
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           {/* Desktop Table Header */}
-          <div class="hidden md:grid md:grid-cols-4 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-[#6e6e73]">
+          <div class="hidden md:grid md:grid-cols-4 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-secondary">
             <div>{t('account.orderNumber')}</div>
             <div>{t('account.orderDate')}</div>
             <div>{t('account.orderStatus')}</div>
@@ -95,7 +95,7 @@ const statusLabels: Record<string, string> = {
                 {/* Mobile Layout */}
                 <div class="md:hidden">
                   <div class="flex justify-between items-start mb-2">
-                    <div class="font-medium text-[#1d1d1f]">#{order.id}</div>
+                    <div class="font-medium text-primary">#{order.id}</div>
                     <div class={`text-sm px-2 py-0.5 rounded-full ${
                       order.status === 'completed' || order.status === 'paid'
                         ? 'bg-green-100 text-green-700'
@@ -104,9 +104,9 @@ const statusLabels: Record<string, string> = {
                       {statusLabels[order.status] || order.status}
                     </div>
                   </div>
-                  <div class="flex justify-between text-sm text-[#6e6e73]">
+                  <div class="flex justify-between text-sm text-secondary">
                     <div>{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                    <div class="font-medium text-[#1d1d1f]">
+                    <div class="font-medium text-primary">
                       {formatCurrency(order.total_amount, order.currency)}
                     </div>
                   </div>
@@ -114,8 +114,8 @@ const statusLabels: Record<string, string> = {
 
                 {/* Desktop Layout */}
                 <div class="hidden md:grid md:grid-cols-4 gap-4 items-center">
-                  <div class="font-medium text-[#1d1d1f]">#{order.id}</div>
-                  <div class="text-[#6e6e73]">{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                  <div class="font-medium text-primary">#{order.id}</div>
+                  <div class="text-secondary">{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                   <div>
                     <span class={`text-sm px-2 py-0.5 rounded-full ${
                       order.status === 'completed' || order.status === 'paid'
@@ -125,7 +125,7 @@ const statusLabels: Record<string, string> = {
                       {statusLabels[order.status] || order.status}
                     </span>
                   </div>
-                  <div class="text-right font-medium text-[#1d1d1f]">
+                  <div class="text-right font-medium text-primary">
                     {formatCurrency(order.total_amount, order.currency)}
                   </div>
                 </div>
@@ -139,20 +139,20 @@ const statusLabels: Record<string, string> = {
               {page > 1 && (
                 <a
                   href={`/account/orders?page=${page - 1}`}
-                  class="px-4 py-2 text-sm font-medium text-[#0071e3] hover:bg-gray-100 rounded-lg transition-colors"
+                  class="px-4 py-2 text-sm font-medium text-brand hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   前へ
                 </a>
               )}
 
-              <span class="px-4 py-2 text-sm text-[#6e6e73]">
+              <span class="px-4 py-2 text-sm text-secondary">
                 {meta.page} / {meta.totalPages}
               </span>
 
               {page < meta.totalPages && (
                 <a
                   href={`/account/orders?page=${page + 1}`}
-                  class="px-4 py-2 text-sm font-medium text-[#0071e3] hover:bg-gray-100 rounded-lg transition-colors"
+                  class="px-4 py-2 text-sm font-medium text-brand hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   次へ
                 </a>

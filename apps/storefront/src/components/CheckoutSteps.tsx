@@ -21,16 +21,16 @@ function DesktopSteps({ currentStep }: CheckoutStepsProps) {
         return (
           <li key={step} className="flex items-center">
             {index > 0 && (
-              <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-[#0071e3]' : 'bg-[#d2d2d7]'}`} />
+              <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-brand' : 'bg-[#d2d2d7]'}`} />
             )}
             <div className="flex items-center gap-2">
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
                   isCompleted
-                    ? 'bg-[#0071e3] text-white'
+                    ? 'bg-brand text-white'
                     : isCurrent
-                      ? 'border-2 border-[#0071e3] text-[#0071e3]'
-                      : 'border-2 border-[#d2d2d7] text-[#86868b]'
+                      ? 'border-2 border-brand text-brand'
+                      : 'border-2 border-[#d2d2d7] text-muted'
                 }`}
               >
                 {isCompleted ? (
@@ -43,7 +43,7 @@ function DesktopSteps({ currentStep }: CheckoutStepsProps) {
               </span>
               <span
                 className={`text-sm font-medium ${
-                  isCurrent ? 'text-[#1d1d1f]' : isCompleted ? 'text-[#0071e3]' : 'text-[#86868b]'
+                  isCurrent ? 'text-primary' : isCompleted ? 'text-brand' : 'text-muted'
                 }`}
               >
                 {t(`checkout.steps.${step}`)}
@@ -63,7 +63,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
   return (
     <div className="flex flex-col items-center gap-2">
       {/* Step name */}
-      <span className="text-sm font-semibold text-[#1d1d1f]">
+      <span className="text-sm font-semibold text-primary">
         {t('checkout.stepOf', { current: String(currentIndex + 1), total: String(steps.length) })}
         {' — '}
         {t(`checkout.steps.${currentStep}`)}
@@ -78,16 +78,16 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
           return (
             <li key={step} className="flex items-center">
               {index > 0 && (
-                <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-[#0071e3]' : 'bg-[#d2d2d7]'}`} />
+                <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-brand' : 'bg-[#d2d2d7]'}`} />
               )}
               <div className="flex items-center gap-2">
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
                     isCompleted
-                      ? 'bg-[#0071e3] text-white'
+                      ? 'bg-brand text-white'
                       : isCurrent
-                        ? 'border-2 border-[#0071e3] text-[#0071e3]'
-                        : 'border-2 border-[#d2d2d7] text-[#6e6e73]'
+                        ? 'border-2 border-brand text-brand'
+                        : 'border-2 border-[#d2d2d7] text-secondary'
                   }`}
                 >
                   {isCompleted ? (
@@ -100,7 +100,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
                 </span>
                 <span
                   className={`text-xs sm:text-sm font-medium ${
-                    isCurrent ? 'text-[#1d1d1f]' : isCompleted ? 'text-[#0071e3]' : 'text-[#6e6e73]'
+                    isCurrent ? 'text-primary' : isCompleted ? 'text-brand' : 'text-secondary'
                   }`}
                 >
                   {t(`checkout.steps.${step}`)}

@@ -86,7 +86,7 @@ if (!apiKey) {
 <AdminLayout title="New Page - Admin">
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center gap-4">
-			<a href="/admin/pages" class="text-[#0071e3] hover:underline text-sm flex items-center gap-1">
+			<a href="/admin/pages" class="text-brand hover:underline text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
@@ -103,7 +103,7 @@ if (!apiKey) {
 			<form method="POST" class="space-y-6">
 				{/* Basic Info */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-					<h2 class="text-sm font-medium text-[#6e6e73]">Basic Information</h2>
+					<h2 class="text-sm font-medium text-secondary">Basic Information</h2>
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<Fieldset client:load>
@@ -127,7 +127,7 @@ if (!apiKey) {
 									Slug <span class="text-red-500">*</span>
 								</Label>
 								<div class="flex items-center gap-2">
-									<span class="text-sm text-[#6e6e73]">/</span>
+									<span class="text-sm text-secondary">/</span>
 									<Input
 										type="text"
 										id="slug"
@@ -159,7 +159,7 @@ if (!apiKey) {
 
 				{/* SEO */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-					<h2 class="text-sm font-medium text-[#6e6e73]">SEO Settings</h2>
+					<h2 class="text-sm font-medium text-secondary">SEO Settings</h2>
 
 					<div class="space-y-6">
 						<Field>
@@ -193,11 +193,11 @@ if (!apiKey) {
 				{/* Content */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 					<div class="flex items-center justify-between">
-						<h2 class="text-sm font-medium text-[#6e6e73]">Page Content (Markdown)</h2>
+						<h2 class="text-sm font-medium text-secondary">Page Content (Markdown)</h2>
 						<button
 							type="button"
 							id="preview-toggle"
-							class="text-sm text-[#0071e3] hover:underline"
+							class="text-sm text-brand hover:underline"
 						>
 							Toggle Preview
 						</button>
@@ -237,7 +237,7 @@ Code block
 
 					<div id="preview-container" class="hidden">
 						<div id="preview-content" class="min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white prose prose-sm max-w-none">
-							<p class="text-[#6e6e73]">Preview will appear here...</p>
+							<p class="text-secondary">Preview will appear here...</p>
 						</div>
 					</div>
 				</div>
@@ -276,7 +276,7 @@ Code block
 			if (previewContent && bodyTextarea) {
 				const markdown = bodyTextarea.value;
 				if (!markdown || markdown.trim() === '') {
-					previewContent.innerHTML = '<p class="text-[#6e6e73]">No content to preview...</p>';
+					previewContent.innerHTML = '<p class="text-secondary">No content to preview...</p>';
 				} else {
 					try {
 						const html = await marked.parse(markdown);

@@ -193,15 +193,15 @@ const getStatusBadge = (status: string) => {
 					{/* Stats Cards */}
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-							<div class="text-sm text-[#6e6e73] mb-1">Total Orders</div>
+							<div class="text-sm text-secondary mb-1">Total Orders</div>
 							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{stats.total_orders}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-							<div class="text-sm text-[#6e6e73] mb-1">Total Spent</div>
+							<div class="text-sm text-secondary mb-1">Total Spent</div>
 							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(stats.total_spent)}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-							<div class="text-sm text-[#6e6e73] mb-1">Avg. Order Value</div>
+							<div class="text-sm text-secondary mb-1">Avg. Order Value</div>
 							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(Math.round(stats.avg_order_value))}</div>
 						</div>
 					</div>
@@ -235,11 +235,11 @@ const getStatusBadge = (status: string) => {
 						<div class="pt-4 border-t border-gray-100">
 							<dl class="grid grid-cols-2 gap-4 text-sm">
 								<div>
-									<dt class="text-[#6e6e73]">Created</dt>
+									<dt class="text-secondary">Created</dt>
 									<dd class="text-zinc-950 tabular-nums">{formatDate(customer.created_at, dateTimeOpts)}</dd>
 								</div>
 								<div>
-									<dt class="text-[#6e6e73]">Updated</dt>
+									<dt class="text-secondary">Updated</dt>
 									<dd class="text-zinc-950 tabular-nums">{formatDate(customer.updated_at, dateTimeOpts)}</dd>
 								</div>
 							</dl>
@@ -261,7 +261,7 @@ const getStatusBadge = (status: string) => {
 
 						{orders.length === 0 ? (
 							<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-								<p class="text-[#6e6e73] text-sm">No orders yet.</p>
+								<p class="text-secondary text-sm">No orders yet.</p>
 							</div>
 						) : (
 							<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -291,14 +291,14 @@ const getStatusBadge = (status: string) => {
 														<TableCell className="tabular-nums">
 															{formatCurrency(order.total_net, order.currency)}
 														</TableCell>
-														<TableCell className="text-[#6e6e73] tabular-nums">
+														<TableCell className="text-secondary tabular-nums">
 															{formatDate(order.created_at, dateTimeOpts)}
 														</TableCell>
-														<TableCell className="text-[#6e6e73] tabular-nums">
+														<TableCell className="text-secondary tabular-nums">
 															{formatDate(order.paid_at, dateTimeOpts)}
 														</TableCell>
 														<TableCell>
-															<a href={`/admin/orders/${order.id}`} class="text-[#0071e3] hover:underline font-medium">View</a>
+															<a href={`/admin/orders/${order.id}`} class="text-brand hover:underline font-medium">View</a>
 														</TableCell>
 													</TableRow>
 												);
