@@ -10,6 +10,7 @@ import { Field, Label } from '../../catalyst/fieldset'
 export function AiGenerationForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const [productName, setProductName] = useState('')
   const [finalUrl, setFinalUrl] = useState('')
@@ -32,6 +33,7 @@ export function AiGenerationForm() {
 
     setIsLoading(true)
     setError(null)
+    setSuccess(null)
 
     try {
       const response = await fetch(`/api/admin/ads/generate`, {
@@ -57,8 +59,10 @@ export function AiGenerationForm() {
         throw new Error(data.message || 'Failed to generate ad copy')
       }
 
-      alert('Ad copy generated successfully! Redirecting to inbox for review...')
-      window.location.href = '/admin/inbox'
+      setSuccess('Ad copy generated successfully! Redirecting to inbox for review...')
+      setTimeout(() => {
+        window.location.href = '/admin/inbox'
+      }, 1500)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -168,8 +172,14 @@ export function AiGenerationForm() {
       </form>
 
       {error && (
-        <div className="mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+        <div role="alert" className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
           {error}
+        </div>
+      )}
+
+      {success && (
+        <div role="alert" className="mt-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+          {success}
         </div>
       )}
 

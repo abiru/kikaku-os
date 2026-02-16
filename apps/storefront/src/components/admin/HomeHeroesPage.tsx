@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import HomeHeroesTable from './HomeHeroesTable'
 
 type Hero = {
@@ -14,9 +15,12 @@ type Props = {
 }
 
 export default function HomeHeroesPage({ heroes }: Props) {
+  const [error, setError] = useState<string | null>(null)
+
   const handleArchive = async (id: number) => {
     if (!confirm('Archive this hero section?')) return
 
+    setError(null)
     try {
       const res = await fetch(`/api/admin/home/heroes/${id}`, {
         method: 'DELETE',
@@ -25,14 +29,15 @@ export default function HomeHeroesPage({ heroes }: Props) {
       if (res.ok) {
         window.location.reload()
       } else {
-        alert('Failed to archive hero section')
+        setError('Failed to archive hero section')
       }
-    } catch (error) {
-      alert('Error: ' + (error as Error).message)
+    } catch (err) {
+      setError('Error: ' + (err as Error).message)
     }
   }
 
   const handleRestore = async (id: number) => {
+    setError(null)
     try {
       const res = await fetch(`/api/admin/home/heroes/${id}/restore`, {
         method: 'POST',
@@ -41,18 +46,25 @@ export default function HomeHeroesPage({ heroes }: Props) {
       if (res.ok) {
         window.location.reload()
       } else {
-        alert('Failed to restore hero section')
+        setError('Failed to restore hero section')
       }
-    } catch (error) {
-      alert('Error: ' + (error as Error).message)
+    } catch (err) {
+      setError('Error: ' + (err as Error).message)
     }
   }
 
   return (
-    <HomeHeroesTable
-      heroes={heroes}
-      onArchive={handleArchive}
-      onRestore={handleRestore}
-    />
+    <div>
+      {error && (
+        <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      <HomeHeroesTable
+        heroes={heroes}
+        onArchive={handleArchive}
+        onRestore={handleRestore}
+      />
+    </div>
   )
 }
