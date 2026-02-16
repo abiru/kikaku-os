@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
-import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
 import { Button } from '../catalyst/button';
+import AdminPagination from './AdminPagination';
 import { formatDate } from '../../lib/format';
 import TableEmptyState from './TableEmptyState';
 import { t } from '../../i18n';
@@ -42,9 +42,6 @@ const getStatusLabel = (status: string): string => {
 export default function NewsletterTable({ subscribers, total, currentPage, totalPages, statusFilter }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
-
-  const hasPrev = currentPage > 1;
-  const hasNext = currentPage < totalPages;
 
   const buildPaginationUrl = (page: number) => {
     const params = new URLSearchParams();
@@ -192,18 +189,11 @@ export default function NewsletterTable({ subscribers, total, currentPage, total
         </TableBody>
       </Table>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-zinc-500">
-            {t('admin.total')} {total} {t('admin.entries')} — {t('admin.pageOf', { page: currentPage, totalPages })}
-          </div>
-          <Pagination>
-            <PaginationPrevious href={hasPrev ? buildPaginationUrl(currentPage - 1) : null} />
-            <PaginationNext href={hasNext ? buildPaginationUrl(currentPage + 1) : null} />
-          </Pagination>
-        </div>
-      )}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        buildHref={buildPaginationUrl}
+      />
     </>
   );
 }
