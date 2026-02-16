@@ -87,3 +87,5 @@ shopify/
 # --- External UI kit (used components copied to apps/storefront/src/components/catalyst/) ---
 catalyst-ui-kit/
 
+
+.worktrees/
