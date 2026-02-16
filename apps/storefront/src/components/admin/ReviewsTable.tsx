@@ -25,7 +25,7 @@ type Review = {
   updated_at: string;
 };
 
-import { getReviewBadgeColor } from '../../lib/adminUtils';
+import { getReviewBadgeColor, getReviewStatusLabel } from '../../lib/adminUtils';
 
 export default function ReviewsTable({ apiBase }: { apiBase: string }) {
   const { t } = useTranslation();
@@ -131,15 +131,6 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
     } else {
       setSelectedIds(new Set(filteredReviews.map((r) => r.id)));
     }
-  };
-
-  const statusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: t('reviews.pendingReview'),
-      approved: t('reviews.approved'),
-      rejected: t('reviews.rejected'),
-    };
-    return labels[status] || status;
   };
 
   const pendingSelected = filteredReviews.filter(
@@ -278,7 +269,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
                 </TableCell>
                 <TableCell>
                   <Badge color={getReviewBadgeColor(review.status)}>
-                    {statusLabel(review.status)}
+                    {getReviewStatusLabel(review.status)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-zinc-500 whitespace-nowrap tabular-nums">

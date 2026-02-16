@@ -2,6 +2,7 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '.
 import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
 import { formatDate, formatPrice } from '../../lib/format'
+import { getShippingBadgeColor, getShippingStatusLabel } from '../../lib/adminUtils'
 import TableEmptyState from './TableEmptyState'
 import { t } from '../../i18n'
 
@@ -21,19 +22,6 @@ type Props = {
   onShipClick: (orderId: number, fulfillmentId: number | null) => void
 }
 
-const getStatusBadge = (status: string | null): { label: string; color: 'zinc' | 'yellow' | 'blue' | 'green' } => {
-  switch (status) {
-    case 'shipped':
-      return { label: t('admin.shippingStatusShipped'), color: 'blue' }
-    case 'processing':
-      return { label: t('admin.shippingStatusProcessing'), color: 'yellow' }
-    case 'delivered':
-      return { label: t('admin.shippingStatusDelivered'), color: 'green' }
-    default:
-      return { label: t('admin.shippingStatusUnfulfilled'), color: 'zinc' }
-  }
-}
-
 export default function ShippingTable({ orders, onShipClick }: Props) {
   return (
     <Table>
@@ -50,9 +38,7 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
       </TableHead>
       <TableBody>
         {orders.length > 0 ? (
-          orders.map((order) => {
-            const badge = getStatusBadge(order.fulfillment_status)
-            return (
+          orders.map((order) => (
               <TableRow key={order.order_id}>
                 <TableCell className="font-medium">
                   <a href={`/admin/orders/${order.order_id}`} className="text-indigo-600 hover:underline">
@@ -66,8 +52,8 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
                   {formatDate(order.paid_at, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </TableCell>
                 <TableCell>
-                  <Badge color={badge.color}>
-                    {badge.label}
+                  <Badge color={getShippingBadgeColor(order.fulfillment_status)}>
+                    {getShippingStatusLabel(order.fulfillment_status)}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -94,8 +80,7 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
                   </Button>
                 </TableCell>
               </TableRow>
-            )
-          })
+          ))
         ) : (
           <TableRow>
             <TableCell colSpan={7}>
