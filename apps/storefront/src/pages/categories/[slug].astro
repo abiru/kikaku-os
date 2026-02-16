@@ -109,7 +109,7 @@ const buildPageUrl = (newPage: number): string => {
 				</h1>
 				{meta.totalCount > 0 && (
 					<p class="mt-2 text-secondary">
-						{meta.totalCount}{t('category.itemCount')}
+						{t('category.itemCount', { count: meta.totalCount })}
 					</p>
 				)}
 			</Container>
@@ -195,7 +195,7 @@ const buildPageUrl = (newPage: number): string => {
 						{meta.totalPages > 1 && (
 							<div class="mt-12 flex items-center justify-between border-t border-gray-200 pt-6">
 								<div class="text-sm text-gray-600">
-									{((meta.page - 1) * meta.perPage + 1)}-{Math.min(meta.page * meta.perPage, meta.totalCount)} / {meta.totalCount}{t('category.itemCount')}
+									{((meta.page - 1) * meta.perPage + 1)}-{Math.min(meta.page * meta.perPage, meta.totalCount)} / {t('category.itemCount', { count: meta.totalCount })}
 								</div>
 								<div class="flex gap-2">
 									{meta.page > 1 && (
@@ -203,18 +203,18 @@ const buildPageUrl = (newPage: number): string => {
 											href={buildPageUrl(meta.page - 1)}
 											class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
 										>
-											&larr; {t('admin.previous')}
+											&larr; {t('common.previous')}
 										</a>
 									)}
 									<span class="px-4 py-2 text-sm font-medium text-gray-900">
-										{t('admin.page')} {meta.page} / {meta.totalPages}
+										{t('common.page')} {meta.page} / {meta.totalPages}
 									</span>
 									{meta.page < meta.totalPages && (
 										<a
 											href={buildPageUrl(meta.page + 1)}
 											class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
 										>
-											{t('admin.next')} &rarr;
+											{t('common.next')} &rarr;
 										</a>
 									)}
 								</div>

@@ -45,7 +45,7 @@ try {
       <Copy />
 
     <LogoGrid />
-    {heroes.length > 0 ? (
+    {heroes.length > 0 && (
       heroes.map((hero) => (
         <HomeHero
           title={hero.title}
@@ -58,10 +58,6 @@ try {
           ctaSecondaryUrl={hero.cta_secondary_url}
         />
       ))
-    ) : (
-      <div class="text-center py-16 bg-subtle">
-        <p class="text-sm text-neutral-400">{t('home.heroFallback')}</p>
-      </div>
     )}
 
       <HomeCategoryGrid products={featuredProducts} />

@@ -4,9 +4,35 @@ import Container from '../../components/Container.astro';
 import EmptyState from '../../components/EmptyState.astro';
 import Layout from '../../layouts/Layout.astro';
 import ProductFilters from '../../components/ProductFilters';
+import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
+import { formatPrice } from '../../lib/format';
 import { t } from '../../i18n';
 
+export const prerender = false;
+
 const skeletonCards = Array.from({ length: 6 });
+
+// SSR: Fetch initial products for SEO
+type SSRProduct = {
+	id: number;
+	title: string;
+	description: string | null;
+	image: string | null;
+	variants: Array<{
+		id: number;
+		title: string;
+		price: { amount: number; currency: string } | null;
+		stock: number | null;
+	}>;
+};
+let ssrProducts: SSRProduct[] = [];
+try {
+	const apiBase = getApiBase();
+	const data = await fetchJson<{ products: SSRProduct[] }>(buildStoreUrl('/products?perPage=20', apiBase));
+	ssrProducts = data?.products ?? [];
+} catch {
+	// SSR fetch failed - client-side will retry
+}
 ---
 
 <Layout title="Store - Led Kikaku">
@@ -176,11 +202,11 @@ const skeletonCards = Array.from({ length: 6 });
 							</div>
 							<div class="flex gap-2">
 								<a id="prev-page" href="#" class="hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-									← {t('admin.previous')}
+									← {t('common.previous')}
 								</a>
 								<span id="current-page" class="px-4 py-2 text-sm font-medium text-gray-900" aria-current="page"></span>
 								<a id="next-page" href="#" class="hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-									{t('admin.next')} →
+									{t('common.next')} →
 								</a>
 							</div>
 						</nav>
@@ -189,6 +215,27 @@ const skeletonCards = Array.from({ length: 6 });
 			</Container>
 		</section>
 	</div>
+
+	{/* SSR product data for SEO crawlers */}
+	{ssrProducts.length > 0 && (
+		<noscript>
+			<div class="max-w-7xl mx-auto px-4 py-8">
+				<ul>
+					{ssrProducts.map((product) => {
+						const variant = product.variants?.[0];
+						return (
+							<li>
+								<a href={`/products/${product.id}`}>
+									{product.title}
+									{variant?.price && ` - ${formatPrice(variant.price.amount, variant.price.currency)}`}
+								</a>
+							</li>
+						);
+					})}
+				</ul>
+			</div>
+		</noscript>
+	)}
 
 	<script>
 		import '../../scripts/productList';

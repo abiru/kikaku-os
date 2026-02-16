@@ -1,66 +1,67 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { t } from '../../i18n';
 
 const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 ---
 
-<Layout title="見積書作成">
+<Layout title={t('quotation.createTitle')}>
   <div class="container">
-    <h1>見積書作成</h1>
-    <p class="subtitle">カート内の商品から見積書を作成します</p>
+    <h1>{t('quotation.createTitle')}</h1>
+    <p class="subtitle">{t('quotation.createSubtitle')}</p>
 
     <div id="cart-summary" class="card">
-      <h2>カート内容</h2>
+      <h2>{t('quotation.cartContents')}</h2>
       <div id="cart-items"></div>
       <div class="summary">
         <div class="summary-row">
-          <span>小計（税抜）</span>
+          <span>{t('quotation.subtotalExclTax')}</span>
           <span id="subtotal">¥0</span>
         </div>
         <div class="summary-row">
-          <span>消費税（10%）</span>
+          <span>{t('quotation.tax')}</span>
           <span id="tax">¥0</span>
         </div>
         <div class="summary-row total">
-          <span>合計</span>
+          <span>{t('quotation.total')}</span>
           <span id="total">¥0</span>
         </div>
       </div>
     </div>
 
     <form id="quotation-form" class="card">
-      <h2>お客様情報</h2>
+      <h2>{t('quotation.customerInfo')}</h2>
 
       <div class="form-group">
-        <label for="customerCompany">会社名 <span class="required">*</span></label>
+        <label for="customerCompany">{t('quotation.companyName')} <span class="required">*</span></label>
         <input type="text" id="customerCompany" name="customerCompany" required aria-required="true" />
       </div>
 
       <div class="form-group">
-        <label for="customerName">担当者名 <span class="required">*</span></label>
+        <label for="customerName">{t('quotation.contactPerson')} <span class="required">*</span></label>
         <input type="text" id="customerName" name="customerName" required aria-required="true" />
       </div>
 
       <div class="form-group">
-        <label for="customerEmail">メールアドレス</label>
+        <label for="customerEmail">{t('quotation.email')}</label>
         <input type="email" id="customerEmail" name="customerEmail" />
-        <small>承認時の連絡先として使用されます（任意）</small>
+        <small>{t('quotation.emailNote')}</small>
       </div>
 
       <div class="form-group">
-        <label for="customerPhone">電話番号</label>
+        <label for="customerPhone">{t('quotation.phone')}</label>
         <input type="tel" id="customerPhone" name="customerPhone" />
-        <small>例: 03-1234-5678</small>
+        <small>{t('quotation.phoneExample')}</small>
       </div>
 
       <div class="form-group">
-        <label for="notes">備考</label>
+        <label for="notes">{t('quotation.notes')}</label>
         <textarea id="notes" name="notes" rows="4"></textarea>
       </div>
 
       <div class="form-actions">
-        <a href="/products" class="btn btn-secondary">戻る</a>
-        <button type="submit" class="btn btn-primary" id="submit-btn">見積書を作成</button>
+        <a href="/products" class="btn btn-secondary">{t('quotation.back')}</a>
+        <button type="submit" class="btn btn-primary" id="submit-btn">{t('quotation.createButton')}</button>
       </div>
 
       <div id="error-message" role="alert" class="error-message" style="display: none;"></div>
@@ -260,9 +261,9 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
   }
 </style>
 
-<script define:vars={{ apiUrl }}>
-  // API URL is injected from server
+<script define:vars={{ apiUrl, i18nEmptyCart: t('quotation.emptyCart'), i18nViewProducts: t('quotation.viewProducts'), i18nQuantity: t('quotation.quantity'), i18nCreating: t('quotation.creating'), i18nCreateButton: t('quotation.createButton'), i18nCreateError: t('quotation.createError'), i18nTokenError: t('quotation.tokenError') }}>
   window.__QUOTATION_API_URL__ = apiUrl;
+  window.__QUOTATION_I18N__ = { emptyCart: i18nEmptyCart, viewProducts: i18nViewProducts, quantity: i18nQuantity, creating: i18nCreating, createButton: i18nCreateButton, createError: i18nCreateError, tokenError: i18nTokenError };
 </script>
 
 <script>
@@ -274,10 +275,20 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
   declare global {
     interface Window {
       __QUOTATION_API_URL__: string;
+      __QUOTATION_I18N__: {
+        emptyCart: string;
+        viewProducts: string;
+        quantity: string;
+        creating: string;
+        createButton: string;
+        createError: string;
+        tokenError: string;
+      };
     }
   }
 
   const apiUrl = window.__QUOTATION_API_URL__;
+  const i18n = window.__QUOTATION_I18N__;
 
   const escapeHtml = (str: string | null | undefined) => {
     if (!str) return '';
@@ -302,8 +313,8 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
       cartItemsEl.innerHTML = DOMPurify.sanitize(`
         <div class="empty-cart">
           <div class="empty-cart-icon">🛒</div>
-          <p>カートが空です</p>
-          <p><a href="/products">商品を見る</a></p>
+          <p>${escapeHtml(i18n.emptyCart)}</p>
+          <p><a href="/products">${escapeHtml(i18n.viewProducts)}</a></p>
         </div>
       `);
       const formEl = document.getElementById('quotation-form');
@@ -319,7 +330,7 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
           <div class="item-variant">${escapeHtml(item.variantTitle)}</div>
         </div>
         <div style="display: flex; align-items: center;">
-          <span class="item-quantity">数量: ${item.quantity}</span>
+          <span class="item-quantity">${escapeHtml(i18n.quantity)}: ${item.quantity}</span>
           <span class="item-price">${formatPrice(item.price * item.quantity, item.currency)}</span>
         </div>
       </div>
@@ -340,7 +351,7 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
     const items = getCartItems();
     if (items.length === 0) {
-      alert('カートが空です');
+      alert(i18n.emptyCart);
       return;
     }
 
@@ -350,7 +361,7 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
     if (!submitBtn || !errorMessageEl) return;
 
     submitBtn.disabled = true;
-    submitBtn.textContent = '作成中...';
+    submitBtn.textContent = i18n.creating;
     errorMessageEl.style.display = 'none';
 
     const formData = new FormData(e.target as HTMLFormElement);
@@ -376,7 +387,7 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
       });
 
       if (!data.publicToken || typeof data.publicToken !== 'string') {
-        throw new Error('公開用トークンの取得に失敗しました');
+        throw new Error(i18n.tokenError);
       }
 
       // Clear cart and redirect to quotation page
@@ -384,11 +395,11 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
       window.location.href = `/quotations/${data.publicToken}`;
     } catch (error) {
       console.error('Error creating quotation:', error);
-      const errorMessage = error instanceof Error ? error.message : '見積書の作成に失敗しました。もう一度お試しください。';
+      const errorMessage = error instanceof Error ? error.message : i18n.createError;
       errorMessageEl.textContent = errorMessage;
       errorMessageEl.style.display = 'block';
       submitBtn.disabled = false;
-      submitBtn.textContent = '見積書を作成';
+      submitBtn.textContent = i18n.createButton;
     }
   };
 

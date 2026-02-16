@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import { isPublicToken } from '../../lib/publicToken';
 import { fetchQuotation } from '../../lib/quotationApi';
 import { formatDate } from '../../lib/format';
+import { t } from '../../i18n';
 
 type QuotationRecord = {
   quotation_number: string;
@@ -51,7 +52,7 @@ try {
   quotationData = await fetchQuotation(apiUrl, quotationToken) as QuotationResponse;
 } catch (err) {
   console.error('Error fetching quotation:', err);
-  error = err instanceof Error ? err.message : '見積書の取得に失敗しました';
+  error = err instanceof Error ? err.message : t('quotation.fetchError');
 }
 
 if (error || !quotationData) {
@@ -69,24 +70,24 @@ const formatCurrency = (amount: number, currency: string = 'JPY') => {
 
 const getStatusBadge = (status: string) => {
   const badges: Record<string, { label: string; class: string }> = {
-    draft: { label: '下書き', class: 'bg-gray-100 text-gray-800' },
-    sent: { label: '送信済み', class: 'bg-blue-100 text-blue-800' },
-    accepted: { label: '承認済み', class: 'bg-green-100 text-green-800' },
-    expired: { label: '期限切れ', class: 'bg-red-100 text-red-800' },
-    cancelled: { label: 'キャンセル', class: 'bg-gray-100 text-gray-800' }
+    draft: { label: t('quotation.statusDraft'), class: 'bg-gray-100 text-gray-800' },
+    sent: { label: t('quotation.statusSent'), class: 'bg-blue-100 text-blue-800' },
+    accepted: { label: t('quotation.statusAccepted'), class: 'bg-green-100 text-green-800' },
+    expired: { label: t('quotation.statusExpired'), class: 'bg-red-100 text-red-800' },
+    cancelled: { label: t('quotation.statusCancelled'), class: 'bg-gray-100 text-gray-800' }
   };
-  return badges[status] ?? { label: '下書き', class: 'bg-gray-100 text-gray-800' };
+  return badges[status] ?? { label: t('quotation.statusDraft'), class: 'bg-gray-100 text-gray-800' };
 };
 
 const statusBadge = getStatusBadge(quotation.status);
 const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 ---
 
-<Layout title={`見積書 - ${quotation.quotation_number}`}>
+<Layout title={`${t('quotation.title')} - ${quotation.quotation_number}`}>
   <div class="container">
     <div class="header">
       <div class="header-left">
-        <h1>見積書</h1>
+        <h1>{t('quotation.title')}</h1>
         <p class="quotation-number">{quotation.quotation_number}</p>
       </div>
       <div class="header-right">
@@ -96,7 +97,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 
     <div class="info-cards">
       <div class="info-card">
-        <h2>お客様情報</h2>
+        <h2>{t('quotation.customerInfo')}</h2>
         <p><strong>{quotation.customer_company}</strong></p>
         <p>{quotation.customer_name} 様</p>
         {quotation.customer_email && <p>Email: {quotation.customer_email}</p>}
@@ -104,24 +105,24 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
       </div>
 
       <div class="info-card">
-        <h2>見積情報</h2>
-        <p><strong>発行日:</strong> {formatDate(quotation.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        <p><strong>有効期限:</strong> {formatDate(quotation.valid_until, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        <p><strong>通貨:</strong> {quotation.currency}</p>
+        <h2>{t('quotation.quotationInfo')}</h2>
+        <p><strong>{t('quotation.issueDate')}:</strong> {formatDate(quotation.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <p><strong>{t('quotation.validUntil')}:</strong> {formatDate(quotation.valid_until, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <p><strong>{t('quotation.currency')}:</strong> {quotation.currency}</p>
       </div>
     </div>
 
     <div class="card">
-      <h2>明細</h2>
+      <h2>{t('quotation.details')}</h2>
       <div class="overflow-x-auto">
         <table class="items-table">
           <thead>
             <tr>
-              <th>No.</th>
-              <th>品名</th>
-              <th>数量</th>
-              <th>単価</th>
-              <th>小計</th>
+              <th>{t('quotation.no')}</th>
+              <th>{t('quotation.productName')}</th>
+              <th>{t('quotation.quantity')}</th>
+              <th>{t('quotation.unitPrice')}</th>
+              <th>{t('quotation.subtotal')}</th>
             </tr>
           </thead>
           <tbody>
@@ -143,15 +144,15 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 
       <div class="summary">
         <div class="summary-row">
-          <span>小計</span>
+          <span>{t('quotation.subtotal')}</span>
           <span>{formatCurrency(quotation.subtotal, quotation.currency)}</span>
         </div>
         <div class="summary-row">
-          <span>消費税 (10%)</span>
+          <span>{t('quotation.taxLabel')}</span>
           <span>{formatCurrency(quotation.tax_amount, quotation.currency)}</span>
         </div>
         <div class="summary-row total">
-          <span>合計金額</span>
+          <span>{t('quotation.totalAmount')}</span>
           <span>{formatCurrency(quotation.total_amount, quotation.currency)}</span>
         </div>
       </div>
@@ -159,24 +160,19 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 
     {quotation.notes && (
       <div class="card notes">
-        <h2>備考</h2>
+        <h2>{t('quotation.notes')}</h2>
         <p>{quotation.notes}</p>
       </div>
     )}
 
     <div class="actions">
       <button id="download-pdf-btn" class="btn btn-secondary">
-        PDFダウンロード
+        {t('quotation.downloadPdf')}
       </button>
       {canAccept && (
         <button id="accept-btn" class="btn btn-primary">
-          この見積で注文する
+          {t('quotation.orderFromQuotation')}
         </button>
-      )}
-      {quotation.status === 'accepted' && quotation.converted_order_id && (
-        <a href={`/admin/orders/${quotation.converted_order_id}`} class="btn btn-secondary">
-          注文を表示
-        </a>
       )}
     </div>
 
@@ -374,8 +370,8 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
   }
 </style>
 
-<script define:vars={{ apiUrl, quotationToken, quotationNumber: quotation.quotation_number }}>
-  window.__QUOTATION_PAGE__ = { apiUrl, quotationToken, quotationNumber };
+<script define:vars={{ apiUrl, quotationToken, quotationNumber: quotation.quotation_number, i18nPdf: t('quotation.downloadPdf'), i18nGeneratingPdf: t('quotation.generatingPdf'), i18nPdfLoadError: t('quotation.pdfLoadError'), i18nPdfDownloadError: t('quotation.pdfDownloadError'), i18nOrderFromQuotation: t('quotation.orderFromQuotation'), i18nProcessing: t('quotation.processing'), i18nCheckoutUrlError: t('quotation.checkoutUrlError'), i18nAcceptError: t('quotation.acceptError'), i18nConfirmOrder: t('quotation.confirmOrder') }}>
+  window.__QUOTATION_PAGE__ = { apiUrl, quotationToken, quotationNumber, i18n: { pdf: i18nPdf, generatingPdf: i18nGeneratingPdf, pdfLoadError: i18nPdfLoadError, pdfDownloadError: i18nPdfDownloadError, orderFromQuotation: i18nOrderFromQuotation, processing: i18nProcessing, checkoutUrlError: i18nCheckoutUrlError, acceptError: i18nAcceptError, confirmOrder: i18nConfirmOrder } };
 </script>
 
 <script>
@@ -388,6 +384,17 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
         apiUrl: string;
         quotationToken: string;
         quotationNumber: string;
+        i18n: {
+          pdf: string;
+          generatingPdf: string;
+          pdfLoadError: string;
+          pdfDownloadError: string;
+          orderFromQuotation: string;
+          processing: string;
+          checkoutUrlError: string;
+          acceptError: string;
+          confirmOrder: string;
+        };
       };
       html2pdf?: () => {
         set: (options: unknown) => {
@@ -399,7 +406,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
     }
   }
 
-  const { apiUrl, quotationToken, quotationNumber } = window.__QUOTATION_PAGE__;
+  const { apiUrl, quotationToken, quotationNumber, i18n } = window.__QUOTATION_PAGE__;
 
   const handleDownloadPDF = async () => {
     const btn = document.getElementById('download-pdf-btn') as HTMLButtonElement | null;
@@ -408,7 +415,7 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
     if (!btn || !errorMessageEl) return;
 
     btn.disabled = true;
-    btn.textContent = 'PDF生成中...';
+    btn.textContent = i18n.generatingPdf;
     errorMessageEl.style.display = 'none';
 
     try {
@@ -435,25 +442,25 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
         };
 
         if (!window.html2pdf) {
-          throw new Error('PDFライブラリの読み込みに失敗しました');
+          throw new Error(i18n.pdfLoadError);
         }
 
         window.html2pdf().set(opt).from(container).save().then(() => {
           document.body.removeChild(container);
           btn.disabled = false;
-          btn.textContent = 'PDFダウンロード';
+          btn.textContent = i18n.pdf;
         });
       };
       script.onerror = () => {
-        throw new Error('PDFライブラリの読み込みに失敗しました');
+        throw new Error(i18n.pdfLoadError);
       };
       document.head.appendChild(script);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      errorMessageEl.textContent = error instanceof Error ? error.message : 'PDFのダウンロードに失敗しました';
+      errorMessageEl.textContent = error instanceof Error ? error.message : i18n.pdfDownloadError;
       errorMessageEl.style.display = 'block';
       btn.disabled = false;
-      btn.textContent = 'PDFダウンロード';
+      btn.textContent = i18n.pdf;
     }
   };
 
@@ -461,10 +468,10 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
     const btn = document.getElementById('accept-btn') as HTMLButtonElement | null;
     const errorMessageEl = document.getElementById('error-message');
 
-    if (!btn || !errorMessageEl || !confirm('この見積で注文を作成しますか？')) return;
+    if (!btn || !errorMessageEl || !confirm(i18n.confirmOrder)) return;
 
     btn.disabled = true;
-    btn.textContent = '処理中...';
+    btn.textContent = i18n.processing;
     errorMessageEl.style.display = 'none';
 
     try {
@@ -474,14 +481,14 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
       if (data.checkoutUrl) {
         window.location.href = String(data.checkoutUrl);
       } else {
-        throw new Error('チェックアウトURLが取得できませんでした');
+        throw new Error(i18n.checkoutUrlError);
       }
     } catch (error) {
       console.error('Error accepting quotation:', error);
-      errorMessageEl.textContent = error instanceof Error ? error.message : '見積の承認に失敗しました';
+      errorMessageEl.textContent = error instanceof Error ? error.message : i18n.acceptError;
       errorMessageEl.style.display = 'block';
       btn.disabled = false;
-      btn.textContent = 'この見積で注文する';
+      btn.textContent = i18n.orderFromQuotation;
     }
   };
 
