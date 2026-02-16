@@ -15,14 +15,15 @@ import '../styles/global.css';
 
 const { title = 'Admin - Led Kikaku OS' } = Astro.props;
 const currentPath = Astro.url.pathname;
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
 
 // Fetch low stock count for sidebar badge
 let lowStockCount = 0;
-if (import.meta.env.ADMIN_API_KEY) {
+if (apiKey) {
 	try {
-		const apiBase = getApiBase();
 		const res = await fetch(`${apiBase}/inventory/low?limit=200`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
+			headers: { 'x-admin-key': apiKey }
 		});
 		if (res.ok) {
 			const data = await res.json() as { items?: unknown[] };
@@ -30,6 +31,28 @@ if (import.meta.env.ADMIN_API_KEY) {
 		}
 	} catch {
 		// Non-critical: silently fail
+	}
+}
+
+// Fetch RBAC user info for sidebar permission filtering
+type RbacUserInfo = {
+	role: string;
+	permissions: string[];
+};
+let rbacUser: RbacUserInfo | null = null;
+if (apiKey) {
+	try {
+		const res = await fetch(`${apiBase}/admin/users/me`, {
+			headers: { 'x-admin-key': apiKey }
+		});
+		if (res.ok) {
+			const data = await res.json() as { role?: string; permissions?: string[] };
+			if (data.role && data.permissions) {
+				rbacUser = { role: data.role, permissions: data.permissions };
+			}
+		}
+	} catch {
+		// Non-critical: silently fail, sidebar shows all items as fallback
 	}
 }
 ---
@@ -45,7 +68,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		<meta name="robots" content="noindex, nofollow" />
 	</head>
 	<body class="h-full font-sans antialiased bg-white text-zinc-950">
-		<AdminLayoutComponent client:load currentPath={currentPath} lowStockCount={lowStockCount}>
+		<AdminLayoutComponent client:load currentPath={currentPath} lowStockCount={lowStockCount} rbacUser={rbacUser}>
 			<slot />
 		</AdminLayoutComponent>
 	</body>
