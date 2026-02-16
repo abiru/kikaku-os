@@ -11,6 +11,7 @@ import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
 import { Field, Label } from '../../../components/catalyst/fieldset';
 import { Button as CatalystButton } from '../../../components/catalyst/button';
+import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../../lib/csrf';
 
 const { slug } = Astro.params;
 const apiBase = getApiBase();
@@ -36,33 +37,38 @@ let successMessage: string | null = null;
 if (Astro.request.method === 'POST' && apiKey) {
 	try {
 		const formData = await Astro.request.formData();
-		const subject = formData.get('subject')?.toString().trim() || '';
-		const body_html = formData.get('body_html')?.toString() || '';
-		const body_text = formData.get('body_text')?.toString() || '';
 
-		if (!subject) {
-			error = 'Subject is required';
+		if (!validateCsrfToken(Astro.request, formData)) {
+			error = 'Invalid CSRF token. Please reload and try again.';
 		} else {
-			const res = await fetch(`${apiBase}/admin/email-templates/${slug}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
-				},
-				body: JSON.stringify({
-					subject,
-					body_html,
-					body_text
-				})
-			});
+			const subject = formData.get('subject')?.toString().trim() || '';
+			const body_html = formData.get('body_html')?.toString() || '';
+			const body_text = formData.get('body_text')?.toString() || '';
 
-			const data = await res.json();
-
-			if (!res.ok) {
-				error = data.message || 'Failed to update template';
+			if (!subject) {
+				error = 'Subject is required';
 			} else {
-				template = data.template;
-				successMessage = 'Template updated successfully';
+				const res = await fetch(`${apiBase}/admin/email-templates/${slug}`, {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-admin-key': apiKey
+					},
+					body: JSON.stringify({
+						subject,
+						body_html,
+						body_text
+					})
+				});
+
+				const data = await res.json();
+
+				if (!res.ok) {
+					error = data.message || 'Failed to update template';
+				} else {
+					template = data.template;
+					successMessage = 'Template updated successfully';
+				}
 			}
 		}
 	} catch (e) {
@@ -104,6 +110,11 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 	hour: '2-digit',
 	minute: '2-digit'
 };
+
+const { token: csrfToken, cookieHeader: csrfCookieHeader } = getCsrfToken(Astro.request);
+if (csrfCookieHeader) {
+	Astro.response.headers.append('Set-Cookie', csrfCookieHeader);
+}
 ---
 
 <AdminLayout title={template ? `${template.name} - Admin` : 'Email Template - Admin'}>
@@ -143,6 +154,7 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 
 		{template && (
 			<form method="POST" class="space-y-6">
+				<input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} />
 				{/* Variables Info */}
 				<div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
 					<h3 class="text-sm font-medium text-blue-900 mb-2">Available Variables</h3>
@@ -289,6 +301,7 @@ const dateTimeOpts: Intl.DateTimeFormatOptions = {
 				iframe.style.width = '100%';
 				iframe.style.minHeight = '400px';
 				iframe.style.border = 'none';
+				iframe.setAttribute('sandbox', '');
 				htmlPreviewContent.innerHTML = '';
 				htmlPreviewContent.appendChild(iframe);
 
