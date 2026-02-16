@@ -158,6 +158,9 @@
     },
     "paymentProcessing": "お支払い処理中",
     "paymentProcessingDescription": "お支払いを処理しています。確認メールが間もなく届きます。",
+    "stripeLoadFailed": "決済サービスの読み込みに失敗しました",
+    "stripeLoadFailedDescription": "ページを再読み込みしてください。問題が続く場合はサポートにお問い合わせください。",
+    "paymentTimeout": "決済処理がタイムアウトしました。もう一度お試しください。",
     "stripeErrors": {
       "card_declined": "カードが拒否されました。別のカードをお試しください。",
       "insufficient_funds": "残高不足です。別のカードをお試しください。",

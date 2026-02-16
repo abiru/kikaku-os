@@ -176,14 +176,20 @@ if (orderToken) {
 		});
 	}
 
-	// Clear cart after successful payment
-	if (typeof localStorage !== 'undefined') {
-		localStorage.removeItem('led-kikaku-cart');
+	// Clear cart only after payment confirmation (not immediately)
+	function clearCartStorage() {
+		if (typeof localStorage !== 'undefined') {
+			localStorage.removeItem('led-kikaku-cart');
+		}
+		if (typeof sessionStorage !== 'undefined') {
+			sessionStorage.removeItem('led-kikaku-cart-backup');
+		}
 	}
 
-	// Clear sessionStorage backup
-	if (typeof sessionStorage !== 'undefined') {
-		sessionStorage.removeItem('led-kikaku-cart-backup');
+	// Only clear cart when order is confirmed as paid
+	const currentOrderStatus = document.querySelector('[data-order-status]')?.getAttribute('data-order-status');
+	if (currentOrderStatus === 'paid') {
+		clearCartStorage();
 	}
 
 	// Polling logic for payment intent flow
@@ -195,15 +201,18 @@ if (orderToken) {
 
 		if (orderStatus === 'pending') {
 			let attempts = 0;
-			const maxAttempts = 6; // 1s, 2s, 4s, 8s, 16s, 32s ≈ 63s total
+			const MAX_POLL_TIME_MS = 5 * 60 * 1000; // 5 minutes
+			const MAX_DELAY_MS = 30_000; // Max 30s between polls
+			const pollStartTime = Date.now();
 
 			const pollOrder = async () => {
-				if (attempts >= maxAttempts) {
-					// Show processing message
+				const elapsed = Date.now() - pollStartTime;
+				if (elapsed >= MAX_POLL_TIME_MS) {
+					// Show timeout message after 5 minutes
 					const container = document.querySelector('[data-order-container]');
 					if (container) {
 						container.innerHTML = DOMPurify.sanitize(`
-							<div class="mt-10 rounded-3xl bg-white p-8 text-center shadow-sm">
+							<div class="text-center py-4">
 								<div class="mx-auto h-12 w-12 text-yellow-500 mb-4">
 									<svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -217,7 +226,7 @@ if (orderToken) {
 					return;
 				}
 
-				const delay = Math.min(1000 * Math.pow(2, attempts), 32000);
+				const delay = Math.min(1000 * Math.pow(2, attempts), MAX_DELAY_MS);
 				await new Promise(resolve => setTimeout(resolve, delay));
 
 				try {
@@ -230,17 +239,18 @@ if (orderToken) {
 						attempts++;
 						pollOrder();
 					} else if (res.ok) {
-						// Order updated, reload page to show updated status
+						// Payment confirmed - clear cart then reload
+						clearCartStorage();
 						window.location.reload();
 					} else {
-						console.error('Failed to fetch order status');
-					}
-				} catch (err) {
-					console.error('Polling error:', err);
-					attempts++;
-					if (attempts < maxAttempts) {
+						// Non-retriable server error, retry with backoff
+						attempts++;
 						pollOrder();
 					}
+				} catch (err) {
+					// Network error - retry with backoff
+					attempts++;
+					pollOrder();
 				}
 			};
 
