@@ -9,11 +9,23 @@ import { getApiBase } from '../../lib/api';
 import LedgerTable from '../../components/admin/LedgerTable';
 import { t } from '../../i18n';
 
+type LedgerEntry = {
+	id: number;
+	ref_type: string;
+	ref_id: string;
+	account_name: string;
+	memo: string | null;
+	debit: number;
+	credit: number;
+	currency: string;
+	created_at: string;
+};
+
 const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 50;
 
-let entries: any[] = [];
+let entries: LedgerEntry[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
 let error = null;
 
@@ -35,7 +47,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = t('errors.failedToLoadOrders');
+		error = t('errors.failedToLoadLedger');
 	}
 } else {
 	error = t('errors.adminKeyMissing');

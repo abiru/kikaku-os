@@ -8,6 +8,7 @@ import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { t } from '../../../i18n';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -56,13 +57,13 @@ if (Astro.request.method === 'POST') {
 		const uses_per_customer = parseInt(usesPerCustomerStr, 10) || 1;
 
 		if (!code) {
-			error = 'Code is required';
+			error = t('errors.codeRequired');
 		} else if (isNaN(value) || value <= 0) {
-			error = 'Value must be a positive number';
+			error = t('errors.valuePositive');
 		} else if (type === 'percentage' && value > 100) {
-			error = 'Percentage value cannot exceed 100';
+			error = t('errors.percentageMax');
 		} else if (!apiKey) {
-			error = 'ADMIN_API_KEY is missing in server environment';
+			error = t('errors.adminKeyMissing');
 		} else {
 			const res = await fetch(`${apiBase}/admin/coupons`, {
 				method: 'POST',
@@ -87,30 +88,30 @@ if (Astro.request.method === 'POST') {
 			const data = await res.json();
 
 			if (!res.ok) {
-				error = data.message || 'Failed to create coupon';
+				error = data.message || t('errors.failedToCreateCoupon');
 			} else if (data.coupon?.id) {
 				return Astro.redirect(`/admin/coupons/${data.coupon.id}`);
 			} else {
-				error = 'Failed to create coupon';
+				error = t('errors.failedToCreateCoupon');
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to create coupon. Please check your connection.';
+		error = t('errors.failedToCreateCoupon');
 	}
 }
 ---
 
-<AdminLayout title="New Coupon - Admin">
+<AdminLayout title={`${t('admin.coupons')} - Admin`}>
 	<div class="space-y-6 max-w-2xl">
 		<div class="flex items-center gap-4">
 			<a href="/admin/coupons" class="text-indigo-600 hover:text-indigo-500 text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Coupons
+				{t('admin.coupons')}
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">New Coupon</h1>
+			<h1 class="text-2xl font-semibold text-gray-900">{t('admin.newCoupon')}</h1>
 		</div>
 		{error && (
 			<div role="alert" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
@@ -124,7 +125,7 @@ if (Astro.request.method === 'POST') {
 				<Fieldset client:load>
 					<Field>
 						<Label>
-							Coupon Code <span class="text-red-500">*</span>
+							{t('admin.couponCode')} <span class="text-red-500">*</span>
 						</Label>
 						<Input
 							type="text"
@@ -136,27 +137,27 @@ if (Astro.request.method === 'POST') {
 							placeholder="SUMMER2024"
 							client:load
 						/>
-						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Will be converted to uppercase</p>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.convertedToUppercase')}</p>
 					</Field>
 				</div>
 
 				<Field>
 					<Label>
-						Discount Type <span class="text-red-500">*</span>
+						{t('admin.discountType')} <span class="text-red-500">*</span>
 					</Label>
 					<Select
 						id="type"
 						name="type"
 						client:load
 					>
-						<option value="percentage" selected={formValues.type === 'percentage'}>Percentage (%)</option>
-						<option value="fixed" selected={formValues.type === 'fixed'}>Fixed Amount (JPY)</option>
+						<option value="percentage" selected={formValues.type === 'percentage'}>{t('admin.percentage')}</option>
+						<option value="fixed" selected={formValues.type === 'fixed'}>{t('admin.fixedAmount')}</option>
 					</Select>
 				</Field>
 
 				<Field>
 					<Label>
-						Value <span class="text-red-500">*</span>
+						{t('admin.valueLabel')} <span class="text-red-500">*</span>
 					</Label>
 					<Input
 						type="number"
@@ -169,11 +170,11 @@ if (Astro.request.method === 'POST') {
 						placeholder="10"
 						client:load
 					/>
-					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">For percentage, enter 10 for 10% off</p>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.forPercentage')}</p>
 				</Field>
 
 				<Field>
-					<Label>Minimum Order Amount (JPY)</Label>
+					<Label>{t('admin.minOrderAmount')}</Label>
 					<Input
 						type="number"
 						id="min_order_amount"
@@ -187,7 +188,7 @@ if (Astro.request.method === 'POST') {
 				</Field>
 
 				<Field>
-					<Label>Max Total Uses</Label>
+					<Label>{t('admin.maxTotalUses')}</Label>
 					<Input
 						type="number"
 						id="max_uses"
@@ -195,14 +196,14 @@ if (Astro.request.method === 'POST') {
 						min="1"
 						value={formValues.max_uses}
 						className="tabular-nums"
-						placeholder="Unlimited"
+						placeholder={t('admin.unlimited')}
 						client:load
 					/>
-					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for unlimited</p>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.leaveEmptyUnlimited')}</p>
 				</Field>
 
 				<Field>
-					<Label>Uses Per Customer</Label>
+					<Label>{t('admin.usesPerCustomer')}</Label>
 					<Input
 						type="number"
 						id="uses_per_customer"
@@ -216,19 +217,19 @@ if (Astro.request.method === 'POST') {
 				</Field>
 
 				<Field>
-					<Label>Status</Label>
+					<Label>{t('admin.status')}</Label>
 					<Select
 						id="status"
 						name="status"
 						client:load
 					>
-						<option value="active" selected={formValues.status === 'active'}>Active</option>
-						<option value="inactive" selected={formValues.status === 'inactive'}>Inactive</option>
+						<option value="active" selected={formValues.status === 'active'}>{t('admin.active')}</option>
+						<option value="inactive" selected={formValues.status === 'inactive'}>{t('admin.inactive')}</option>
 					</Select>
 				</Field>
 
 				<Field>
-					<Label>Start Date</Label>
+					<Label>{t('admin.startDate')}</Label>
 					<Input
 						type="datetime-local"
 						id="starts_at"
@@ -236,11 +237,11 @@ if (Astro.request.method === 'POST') {
 						value={formValues.starts_at}
 						client:load
 					/>
-					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for immediate</p>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.leaveEmptyImmediate')}</p>
 				</Field>
 
 				<Field>
-					<Label>Expiration Date</Label>
+					<Label>{t('admin.expirationDate')}</Label>
 					<Input
 						type="datetime-local"
 						id="expires_at"
@@ -248,17 +249,17 @@ if (Astro.request.method === 'POST') {
 						value={formValues.expires_at}
 						client:load
 					/>
-					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for no expiration</p>
+					<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.leaveEmptyNoExpiration')}</p>
 				</Field>
 				</Fieldset>
 			</div>
 
 			<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
 				<Button href="/admin/coupons" color="zinc" client:load>
-					Cancel
+					{t('common.cancel')}
 				</Button>
 				<Button type="submit" color="indigo" client:load>
-					Create Coupon
+					{t('admin.createCoupon')}
 				</Button>
 			</div>
 		</form>

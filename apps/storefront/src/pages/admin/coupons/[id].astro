@@ -12,6 +12,7 @@ import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../../lib/csrf';
+import { t } from '../../../i18n';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -64,7 +65,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 					return Astro.redirect('/admin/coupons');
 				}
 				const data = await res.json();
-				error = data.message || 'Failed to delete coupon';
+				error = data.message || t('errors.failedToUpdateCoupon');
 			} else if (action === 'toggle') {
 				const res = await fetch(`${apiBase}/admin/coupons/${id}/toggle`, {
 					method: 'POST',
@@ -73,7 +74,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 
 				if (!res.ok) {
 					const data = await res.json();
-					error = data.message || 'Failed to toggle coupon status';
+					error = data.message || t('errors.failedToUpdateCoupon');
 				}
 				// Reload will pick up the updated coupon below
 			} else {
@@ -94,11 +95,11 @@ if (Astro.request.method === 'POST' && apiKey) {
 				const uses_per_customer = parseInt(usesPerCustomerStr, 10) || 1;
 
 				if (!code) {
-					error = 'Code is required';
+					error = t('errors.codeRequired');
 				} else if (isNaN(value) || value <= 0) {
-					error = 'Value must be a positive number';
+					error = t('errors.valuePositive');
 				} else if (type === 'percentage' && value > 100) {
-					error = 'Percentage value cannot exceed 100';
+					error = t('errors.percentageMax');
 				} else {
 					const res = await fetch(`${apiBase}/admin/coupons/${id}`, {
 						method: 'PUT',
@@ -123,17 +124,17 @@ if (Astro.request.method === 'POST' && apiKey) {
 					const data = await res.json();
 
 					if (!res.ok) {
-						error = data.message || 'Failed to update coupon';
+						error = data.message || t('errors.failedToUpdateCoupon');
 					} else {
 						coupon = data.coupon;
-						successMessage = 'Coupon updated successfully';
+						successMessage = t('admin.couponUpdated');
 					}
 				}
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to update coupon. Please check your connection.';
+		error = t('errors.failedToUpdateCoupon');
 	}
 }
 
@@ -146,7 +147,7 @@ if (!coupon && apiKey) {
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error = 'Coupon not found';
+				error = t('errors.couponNotFound');
 			} else {
 				const data = await res.json();
 				error = data.message || `API Error: ${res.status}`;
@@ -158,10 +159,10 @@ if (!coupon && apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error || 'Failed to load coupon. Please check your connection.';
+		error = error || t('errors.failedToLoadCoupons');
 	}
 } else if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing in server environment';
+	error = t('errors.adminKeyMissing');
 }
 
 // Fetch stats again after update
@@ -221,10 +222,10 @@ if (csrfCookieHeader) {
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Coupons
+				{t('admin.coupons')}
 			</a>
 			<h1 class="text-2xl font-semibold text-gray-900">
-				{coupon ? `Edit: ${coupon.code}` : 'Coupon'}
+				{coupon ? `${t('common.edit')}: ${coupon.code}` : t('admin.coupons')}
 			</h1>
 		</div>
 		{successMessage && (
@@ -237,7 +238,7 @@ if (csrfCookieHeader) {
 			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
 				<div class="text-red-600 mb-4">{error}</div>
 				<Button href="/admin/coupons" color="zinc" client:load>
-					Back to Coupons
+					{t('admin.backToCoupons')}
 				</Button>
 			</div>
 		)}
@@ -252,27 +253,27 @@ if (csrfCookieHeader) {
 			<>
 				{/* Stats Card */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
-					<h2 class="text-sm font-medium text-secondary mb-4">Usage Statistics</h2>
+					<h2 class="text-sm font-medium text-secondary mb-4">{t('admin.usageStatistics')}</h2>
 					<div class="grid grid-cols-3 gap-6">
 						<div>
 							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{stats.totalUsages}</div>
-							<div class="text-xs text-secondary">Total Uses</div>
+							<div class="text-xs text-secondary">{t('admin.totalUses')}</div>
 						</div>
 						<div>
 							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(stats.totalDiscount, coupon.currency)}</div>
-							<div class="text-xs text-secondary">Total Discount</div>
+							<div class="text-xs text-secondary">{t('admin.totalDiscount')}</div>
 						</div>
 						<div>
 							<div class="flex items-center gap-2">
 								{isExpired(coupon) ? (
-									<Badge color="amber" client:load>Expired</Badge>
+									<Badge color="amber" client:load>{t('admin.expired')}</Badge>
 								) : coupon.status === 'active' ? (
-									<Badge color="blue" client:load>Active</Badge>
+									<Badge color="blue" client:load>{t('admin.active')}</Badge>
 								) : (
-									<Badge color="zinc" client:load>Inactive</Badge>
+									<Badge color="zinc" client:load>{t('admin.inactive')}</Badge>
 								)}
 							</div>
-							<div class="text-xs text-secondary mt-1">Current Status</div>
+							<div class="text-xs text-secondary mt-1">{t('admin.currentStatus')}</div>
 						</div>
 					</div>
 				</div>
@@ -285,7 +286,7 @@ if (csrfCookieHeader) {
 				<Fieldset client:load>
 							<Field>
 								<Label>
-									Coupon Code <span class="text-red-500">*</span>
+									{t('admin.couponCode')} <span class="text-red-500">*</span>
 								</Label>
 								<Input
 									type="text"
@@ -301,21 +302,21 @@ if (csrfCookieHeader) {
 
 						<Field>
 							<Label>
-								Discount Type <span class="text-red-500">*</span>
+								{t('admin.discountType')} <span class="text-red-500">*</span>
 							</Label>
 							<Select
 								id="type"
 								name="type"
 								client:load
 							>
-								<option value="percentage" selected={coupon.type === 'percentage'}>Percentage (%)</option>
-								<option value="fixed" selected={coupon.type === 'fixed'}>Fixed Amount (JPY)</option>
+								<option value="percentage" selected={coupon.type === 'percentage'}>{t('admin.percentage')}</option>
+								<option value="fixed" selected={coupon.type === 'fixed'}>{t('admin.fixedAmount')}</option>
 							</Select>
 						</Field>
 
 						<Field>
 							<Label>
-								Value <span class="text-red-500">*</span>
+								{t('admin.valueLabel')} <span class="text-red-500">*</span>
 							</Label>
 							<Input
 								type="number"
@@ -330,7 +331,7 @@ if (csrfCookieHeader) {
 						</Field>
 
 						<Field>
-							<Label>Minimum Order Amount (JPY)</Label>
+							<Label>{t('admin.minOrderAmount')}</Label>
 							<Input
 								type="number"
 								id="min_order_amount"
@@ -343,7 +344,7 @@ if (csrfCookieHeader) {
 						</Field>
 
 						<Field>
-							<Label>Max Total Uses</Label>
+							<Label>{t('admin.maxTotalUses')}</Label>
 							<Input
 								type="number"
 								id="max_uses"
@@ -351,13 +352,13 @@ if (csrfCookieHeader) {
 								min="1"
 								value={coupon.max_uses || ''}
 								className="tabular-nums"
-								placeholder="Unlimited"
+								placeholder={t('admin.unlimited')}
 								client:load
 							/>
 						</Field>
 
 						<Field>
-							<Label>Uses Per Customer</Label>
+							<Label>{t('admin.usesPerCustomer')}</Label>
 							<Input
 								type="number"
 								id="uses_per_customer"
@@ -370,19 +371,19 @@ if (csrfCookieHeader) {
 						</Field>
 
 						<Field>
-							<Label>Status</Label>
+							<Label>{t('admin.status')}</Label>
 							<Select
 								id="status"
 								name="status"
 								client:load
 							>
-								<option value="active" selected={coupon.status === 'active'}>Active</option>
-								<option value="inactive" selected={coupon.status === 'inactive'}>Inactive</option>
+								<option value="active" selected={coupon.status === 'active'}>{t('admin.active')}</option>
+								<option value="inactive" selected={coupon.status === 'inactive'}>{t('admin.inactive')}</option>
 							</Select>
 						</Field>
 
 						<Field>
-							<Label>Start Date</Label>
+							<Label>{t('admin.startDate')}</Label>
 							<Input
 								type="datetime-local"
 								id="starts_at"
@@ -393,7 +394,7 @@ if (csrfCookieHeader) {
 						</Field>
 
 						<Field>
-							<Label>Expiration Date</Label>
+							<Label>{t('admin.expirationDate')}</Label>
 							<Input
 								type="datetime-local"
 								id="expires_at"
@@ -408,11 +409,11 @@ if (csrfCookieHeader) {
 					<div class="pt-4 border-t border-gray-100">
 						<dl class="grid grid-cols-2 gap-4 text-sm">
 							<div>
-								<dt class="text-secondary">Created</dt>
+								<dt class="text-secondary">{t('admin.created')}</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
-								<dt class="text-secondary">Updated</dt>
+								<dt class="text-secondary">{t('admin.updated')}</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(coupon.updated_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
@@ -425,7 +426,7 @@ if (csrfCookieHeader) {
 									Delete Coupon
 								</span>
 							) : (
-								<span class="text-sm text-secondary">Cannot delete used coupons</span>
+								<span class="text-sm text-secondary">	{t('admin.cannotDeleteUsed')}</span>
 							)}
 						</div>
 						<div class="flex gap-3">
@@ -438,7 +439,7 @@ if (csrfCookieHeader) {
 								value="toggle"
 								class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${coupon.status === 'active' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
 							>
-								{coupon.status === 'active' ? 'Deactivate' : 'Activate'}
+								{coupon.status === 'active' ? t('admin.deactivateLabel') : t('admin.activateLabel')}
 							</button>
 							<Button type="submit" color="indigo" client:load>
 								Save Changes

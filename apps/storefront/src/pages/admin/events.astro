@@ -8,13 +8,22 @@ import { Heading } from '../../components/catalyst/heading';
 import EventsTable from '../../components/admin/EventsTable';
 import { t } from '../../i18n';
 
+type StripeEvent = {
+	event_id: string;
+	event_type: string;
+	processing_status: string;
+	error: string | null;
+	received_at: string;
+	processed_at: string | null;
+};
+
 const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 50;
 const status = Astro.url.searchParams.get('status') || '';
 const type = Astro.url.searchParams.get('type') || '';
 
-let events: any[] = [];
+let events: StripeEvent[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
 let error: string | null = null;
 
@@ -38,7 +47,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = t('errors.failedToLoadOrders');
+		error = t('errors.failedToLoadEvents');
 	}
 } else {
 	error = t('errors.adminKeyMissing');

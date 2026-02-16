@@ -10,6 +10,7 @@ import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import FulfillmentModals from '../../../components/admin/FulfillmentModals.astro';
 import RefundModals from '../../../components/admin/RefundModals.astro';
+import { t } from '../../../i18n';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -22,10 +23,54 @@ type Fulfillment = {
 	updated_at: string;
 };
 
-let order: any = null;
-let payments: any[] = [];
-let refunds: any[] = [];
-let stripeEvents: any[] = [];
+type OrderDetail = {
+	id: number;
+	status: string;
+	customer_email: string | null;
+	total_amount: number;
+	total_net: number;
+	currency: string;
+	created_at: string;
+	paid_at: string | null;
+	subtotal?: number;
+	tax_amount?: number;
+	total_discount: number;
+	shipping_fee: number;
+	provider_checkout_session_id?: string;
+	provider_payment_intent_id?: string;
+};
+
+type Payment = {
+	id: number;
+	status: string;
+	amount: number;
+	currency: string;
+	provider_payment_id: string | null;
+	created_at: string;
+};
+
+type Refund = {
+	id: number;
+	status: string;
+	amount: number;
+	currency: string;
+	provider_refund_id: string | null;
+	reason: string | null;
+	created_at: string;
+};
+
+type StripeEvent = {
+	event_id: string;
+	event_type: string;
+	processing_status: string;
+	error: string | null;
+	received_at: string;
+};
+
+let order: OrderDetail | null = null;
+let payments: Payment[] = [];
+let refunds: Refund[] = [];
+let stripeEvents: StripeEvent[] = [];
 let fulfillments: Fulfillment[] = [];
 let error: string | null = null;
 
@@ -37,7 +82,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error = 'Order not found.';
+				error = t('errors.orderNotFound');
 			} else {
 				throw new Error(`API Error: ${res.status}`);
 			}
@@ -51,10 +96,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load order details.';
+		error = t('errors.failedToLoadOrderDetails');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing.';
+	error = t('errors.adminKeyMissing');
 }
 
 const formatCurrency = (amount: number, currency: string) => {
@@ -105,16 +150,16 @@ const getFulfillmentStatusColor = (status: string) => {
 const apiKey = import.meta.env.ADMIN_API_KEY;
 ---
 
-<AdminLayout title={`Order #${id} - Admin`}>
+<AdminLayout title={`${t('admin.order')} #${id} - Admin`}>
 	<div class="space-y-6" data-order-id={id} data-payments={JSON.stringify(payments)} data-refunds={JSON.stringify(refunds)}>
 		<div class="flex items-center gap-4">
 			<a href="/admin/orders" class="text-indigo-600 hover:underline text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Orders
+				{t('admin.orders')}
 			</a>
-			<Heading>Order #{id}</Heading>
+			<Heading>{t('admin.order')} #{id}</Heading>
 			{order && <Badge color={getStatusColor(order.status)} client:load>{order.status}</Badge>}
 		</div>
 			{error && (
@@ -127,22 +172,22 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 				<div class="space-y-6">
 					{/* Order Summary */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-						<Subheading>Order Summary</Subheading>
+						<Subheading>{t('admin.orderSummary')}</Subheading>
 						<dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 							<div>
-								<dt class="text-secondary">Total</dt>
+								<dt class="text-secondary">{t('admin.total')}</dt>
 								<dd class="font-semibold text-zinc-950 text-lg">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 							</div>
 							<div>
-								<dt class="text-secondary">Customer</dt>
-								<dd class="text-zinc-950">{order.customer_email || 'Guest'}</dd>
+								<dt class="text-secondary">{t('admin.customer')}</dt>
+								<dd class="text-zinc-950">{order.customer_email || t('admin.guest')}</dd>
 							</div>
 							<div>
-								<dt class="text-secondary">Created</dt>
+								<dt class="text-secondary">{t('admin.created')}</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(order.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
-								<dt class="text-secondary">Paid At</dt>
+								<dt class="text-secondary">{t('admin.paidAt')}</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(order.paid_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
@@ -150,34 +195,34 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						{/* Tax Breakdown */}
 						{(order.subtotal !== undefined || order.tax_amount !== undefined) && (
 							<div class="mt-4 pt-4 border-t border-gray-100">
-								<h3 class="text-xs font-medium text-secondary uppercase tracking-wider mb-3">Price Breakdown</h3>
+								<h3 class="text-xs font-medium text-secondary uppercase tracking-wider mb-3">{t('admin.priceBreakdown')}</h3>
 								<dl class="space-y-2 text-sm">
 									{order.subtotal !== undefined && (
 										<div class="flex justify-between">
-											<dt class="text-secondary">Subtotal (税抜)</dt>
+											<dt class="text-secondary">{t('admin.subtotalExTax')}</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.subtotal, order.currency)}</dd>
 										</div>
 									)}
 									{order.tax_amount !== undefined && (
 										<div class="flex justify-between">
-											<dt class="text-secondary">Tax (消費税)</dt>
+											<dt class="text-secondary">{t('admin.taxConsumption')}</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.tax_amount, order.currency)}</dd>
 										</div>
 									)}
 									{order.total_discount > 0 && (
 										<div class="flex justify-between">
-											<dt class="text-secondary">Discount</dt>
+											<dt class="text-secondary">{t('admin.discount')}</dt>
 											<dd class="font-medium text-red-600 tabular-nums">-{formatCurrency(order.total_discount, order.currency)}</dd>
 										</div>
 									)}
 									{order.shipping_fee > 0 && (
 										<div class="flex justify-between">
-											<dt class="text-secondary">Shipping</dt>
+											<dt class="text-secondary">{t('admin.shippingFee')}</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.shipping_fee, order.currency)}</dd>
 										</div>
 									)}
 									<div class="flex justify-between pt-2 border-t border-gray-100">
-										<dt class="text-zinc-950 font-semibold">Total (税込)</dt>
+										<dt class="text-zinc-950 font-semibold">{t('admin.totalInclTax')}</dt>
 										<dd class="font-bold text-zinc-950 text-lg tabular-nums">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 									</div>
 								</dl>
@@ -186,7 +231,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 
 						{(order.provider_checkout_session_id || order.provider_payment_intent_id) && (
 							<div class="mt-4 pt-4 border-t border-gray-100">
-								<h3 class="text-xs font-medium text-secondary uppercase tracking-wider mb-2">Stripe IDs</h3>
+								<h3 class="text-xs font-medium text-secondary uppercase tracking-wider mb-2">{t('admin.stripeIds')}</h3>
 								<div class="text-xs text-zinc-950 font-mono space-y-1">
 									{order.provider_checkout_session_id && (
 										<div>Checkout: <span class="bg-gray-100 px-1 py-0.5 rounded">{order.provider_checkout_session_id}</span></div>
@@ -203,7 +248,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<div class="flex items-center gap-2">
-								<Subheading>Fulfillments</Subheading>
+								<Subheading>{t('admin.fulfillments')}</Subheading>
 								<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded-full">{fulfillments.length}</span>
 							</div>
 							{order.status === 'paid' && (
@@ -215,7 +260,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 									</svg>
-									Create Fulfillment
+									{t('admin.createFulfillment')}
 								</button>
 							)}
 						</div>
@@ -224,10 +269,10 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
-										<TableHeader>Status</TableHeader>
-										<TableHeader>Tracking Number</TableHeader>
-										<TableHeader>Created</TableHeader>
-										<TableHeader>Actions</TableHeader>
+										<TableHeader>{t('admin.status')}</TableHeader>
+										<TableHeader>{t('admin.trackingNumber')}</TableHeader>
+										<TableHeader>{t('admin.created')}</TableHeader>
+										<TableHeader>{t('admin.actions')}</TableHeader>
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -244,13 +289,13 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 														class="edit-fulfillment-btn text-sm text-brand hover:underline"
 														data-fulfillment={JSON.stringify(f)}
 													>
-														Edit
+														{t('common.edit')}
 													</button>
 												</TableCell>
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-secondary">No fulfillments</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-secondary">{t('admin.noFulfillments')}</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -260,7 +305,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					{/* Payments */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-							<Subheading>Payments</Subheading>
+							<Subheading>{t('admin.payments')}</Subheading>
 							<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
 						</div>
 						<div class="overflow-x-auto">
@@ -268,10 +313,10 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
-										<TableHeader>Status</TableHeader>
-										<TableHeader>Amount</TableHeader>
-										<TableHeader>Provider ID</TableHeader>
-										<TableHeader>Date</TableHeader>
+										<TableHeader>{t('admin.status')}</TableHeader>
+										<TableHeader>{t('admin.amount')}</TableHeader>
+										<TableHeader>{t('admin.providerId')}</TableHeader>
+										<TableHeader>{t('admin.date')}</TableHeader>
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -286,7 +331,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-secondary">No payments</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-secondary">{t('admin.noPayments')}</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -297,7 +342,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<div class="flex items-center gap-2">
-								<Subheading>Refunds</Subheading>
+								<Subheading>{t('admin.refunds')}</Subheading>
 								<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
 							</div>
 							{(order.status === 'paid' || order.status === 'partially_refunded') && (
@@ -309,7 +354,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 									</svg>
-									Create Refund
+									{t('admin.createRefund')}
 								</button>
 							)}
 						</div>
@@ -318,11 +363,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 								<TableHead>
 									<TableRow>
 										<TableHeader>ID</TableHeader>
-										<TableHeader>Status</TableHeader>
-										<TableHeader>Amount</TableHeader>
-										<TableHeader>Provider ID</TableHeader>
-										<TableHeader>Reason</TableHeader>
-										<TableHeader>Date</TableHeader>
+										<TableHeader>{t('admin.status')}</TableHeader>
+										<TableHeader>{t('admin.amount')}</TableHeader>
+										<TableHeader>{t('admin.providerId')}</TableHeader>
+										<TableHeader>{t('admin.reason')}</TableHeader>
+										<TableHeader>{t('admin.date')}</TableHeader>
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -338,7 +383,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={6} className="text-center text-secondary">No refunds</TableCell></TableRow>
+										<TableRow><TableCell colSpan={6} className="text-center text-secondary">{t('admin.noRefunds')}</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -348,18 +393,18 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					{/* Stripe Events */}
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-							<Subheading>Stripe Events</Subheading>
+							<Subheading>{t('admin.stripeEvents')}</Subheading>
 							<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
 						</div>
 						<div class="overflow-x-auto">
 							<Table client:only="react">
 								<TableHead>
 									<TableRow>
-										<TableHeader>Event ID</TableHeader>
-										<TableHeader>Type</TableHeader>
-										<TableHeader>Status</TableHeader>
-										<TableHeader>Error</TableHeader>
-										<TableHeader>Received</TableHeader>
+										<TableHeader>{t('admin.eventId')}</TableHeader>
+										<TableHeader>{t('admin.type')}</TableHeader>
+										<TableHeader>{t('admin.status')}</TableHeader>
+										<TableHeader>{t('admin.errorLabel')}</TableHeader>
+										<TableHeader>{t('admin.received')}</TableHeader>
 									</TableRow>
 								</TableHead>
 								<TableBody>
@@ -374,7 +419,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-secondary">No related events</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-secondary">{t('admin.noRelatedEvents')}</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>

@@ -9,6 +9,7 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from'..
 import AdminLayout from'../../layouts/AdminLayout.astro';
 import { getApiBase } from'../../lib/api';
 import { formatDate } from '../../lib/format';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 
@@ -43,10 +44,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		taxRates = data || [];
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load tax rates. Please check your admin key.';
+		error = t('errors.failedToLoadTaxRates');
 	}
 } else {
-	error ='ADMIN_API_KEY is missing in server environment.';
+	error = t('errors.adminKeyMissing');
 }
 
 const formatRate = (rate: number) => {
@@ -66,15 +67,15 @@ const isActive = (taxRate: TaxRate) => {
 };
 ---
 
-<AdminLayout title="Tax Rates - Admin">
+<AdminLayout title={`${t('admin.taxRates')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<Heading>Tax Rates</Heading>
-				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{taxRates.length} items</span>
+				<Heading>{t('admin.taxRates')}</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{taxRates.length} {t('admin.items')}</span>
 			</div>
 			<Button href="/admin/tax-rates/new" color="indigo" client:load>
-				+ New Tax Rate
+				+ {t('admin.newTaxRate')}
 			</Button>
 		</div>
 
@@ -88,12 +89,12 @@ const isActive = (taxRate: TaxRate) => {
 		<Table client:only="react">
 					<TableHead>
 						<TableRow>
-							<TableHeader>Name</TableHeader>
-							<TableHeader>Rate</TableHeader>
-							<TableHeader>Status</TableHeader>
-							<TableHeader>Applicable From</TableHeader>
-							<TableHeader>Applicable To</TableHeader>
-							<TableHeader>Action</TableHeader>
+							<TableHeader>{t('admin.name')}</TableHeader>
+							<TableHeader>{t('admin.rate')}</TableHeader>
+							<TableHeader>{t('admin.status')}</TableHeader>
+							<TableHeader>{t('admin.applicableFrom')}</TableHeader>
+							<TableHeader>{t('admin.applicableTo')}</TableHeader>
+							<TableHeader>{t('admin.action')}</TableHeader>
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -113,11 +114,11 @@ const isActive = (taxRate: TaxRate) => {
 									</TableCell>
 									<TableCell>
 										{isActive(taxRate) ? (
-											<Badge color="lime" client:only="react">Active</Badge>
+											<Badge color="lime" client:only="react">{t('admin.active')}</Badge>
 										) : taxRate.is_active ? (
-											<Badge color="amber" client:only="react">Scheduled</Badge>
+											<Badge color="amber" client:only="react">{t('admin.scheduled')}</Badge>
 										) : (
-											<Badge color="zinc" client:only="react">Inactive</Badge>
+											<Badge color="zinc" client:only="react">{t('admin.inactive')}</Badge>
 										)}
 									</TableCell>
 									<TableCell className="text-zinc-500 tabular-nums">
@@ -127,14 +128,14 @@ const isActive = (taxRate: TaxRate) => {
 										{formatDate(taxRate.applicable_to)}
 									</TableCell>
 									<TableCell>
-										<a href={`/admin/tax-rates/${taxRate.id}`} class="text-indigo-600 hover:underline font-medium">Edit</a>
+										<a href={`/admin/tax-rates/${taxRate.id}`} class="text-indigo-600 hover:underline font-medium">{t('common.edit')}</a>
 									</TableCell>
 								</TableRow>
 							))
 						) : (
 							<TableRow>
 								<TableCell colSpan={6} className="text-center text-zinc-500">
-									No tax rates found.
+									{t('admin.noTaxRates')}
 								</TableCell>
 							</TableRow>
 						)}
@@ -142,10 +143,10 @@ const isActive = (taxRate: TaxRate) => {
 		</Table>
 
 		<Alert color="blue" client:load>
-			<strong>Note:</strong> Tax rates are applied to products at checkout time. The current Japanese consumption tax rates are:
+			{t('admin.taxRatesNote')}
 			<ul class="mt-2 ml-4 list-disc">
-				<li>Standard Rate: 10% (since October 1, 2019)</li>
-				<li>Reduced Rate: 8% (for food and beverages)</li>
+				<li>{t('admin.standardRate')}</li>
+				<li>{t('admin.reducedRate')}</li>
 			</ul>
 		</Alert>
 	</div>

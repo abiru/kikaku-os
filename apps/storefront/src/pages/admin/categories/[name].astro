@@ -9,6 +9,7 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '.
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
+import { t } from '../../../i18n';
 
 const { name } = Astro.params;
 const categoryName = decodeURIComponent(name || '');
@@ -50,7 +51,7 @@ if (apiKey) {
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error = 'Category not found';
+				error = t('errors.categoryNotFound');
 			} else {
 				throw new Error(`API Error: ${res.status}`);
 			}
@@ -61,10 +62,10 @@ if (apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error || 'Failed to load category products. Please check your connection.';
+		error = error || t('errors.failedToLoadCategoryProducts');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error = t('errors.adminKeyMissing');
 }
 
 const hasNext = page < meta.totalPages;
@@ -79,22 +80,22 @@ const hasPrev = page > 1;
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Categories
+				{t('admin.categories')}
 			</a>
 			<Heading>{categoryName}</Heading>
-			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} products</span>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{t('admin.productsCount', { count: meta.totalCount })}</span>
 		</div>
 
 		{/* Search Bar */}
 		<div class="mb-6">
 			<form method="get" class="relative max-w-md">
-				<label for="category-product-search" class="sr-only">Search products in this category</label>
+				<label for="category-product-search" class="sr-only">{t('admin.searchProductsInCategory')}</label>
 				<input
 					type="search"
 					id="category-product-search"
 					name="q"
 					value={q}
-					placeholder="Search products in this category..."
+					placeholder={t('admin.searchProductsInCategory')}
 					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
 				/>
 				<svg
@@ -113,7 +114,7 @@ const hasPrev = page > 1;
 				<Alert color="red" client:load>{error}</Alert>
 				<div class="mt-4">
 					<Button href="/admin/categories" outline client:load>
-						Back to Categories
+						{t('admin.backToCategories')}
 					</Button>
 				</div>
 			</div>
@@ -124,10 +125,10 @@ const hasPrev = page > 1;
 				<Table client:only="react">
 						<TableHead>
 							<TableRow>
-								<TableHeader>Title</TableHeader>
-								<TableHeader>Status</TableHeader>
-								<TableHeader>Updated</TableHeader>
-								<TableHeader className="text-right">Action</TableHeader>
+								<TableHeader>{t('admin.title')}</TableHeader>
+								<TableHeader>{t('admin.status')}</TableHeader>
+								<TableHeader>{t('admin.updated')}</TableHeader>
+								<TableHeader className="text-right">{t('admin.action')}</TableHeader>
 							</TableRow>
 						</TableHead>
 						<TableBody>
@@ -140,23 +141,23 @@ const hasPrev = page > 1;
 										</TableCell>
 										<TableCell>
 											{product.status === 'draft' ? (
-												<Badge color="zinc" client:only="react">Draft</Badge>
+												<Badge color="zinc" client:only="react">{t('admin.draft')}</Badge>
 											) : (
-												<Badge color="blue" client:only="react">Active</Badge>
+												<Badge color="blue" client:only="react">{t('admin.active')}</Badge>
 											)}
 										</TableCell>
 										<TableCell className="text-zinc-500 tabular-nums">
 											{formatDate(product.updated_at)}
 										</TableCell>
 										<TableCell className="text-right">
-											<a href={`/admin/products/${product.id}`} class="text-indigo-600 hover:underline font-medium">Edit</a>
+											<a href={`/admin/products/${product.id}`} class="text-indigo-600 hover:underline font-medium">{t('common.edit')}</a>
 										</TableCell>
 									</TableRow>
 								))
 							) : (
 								<TableRow>
 									<TableCell colSpan={4} className="text-center text-zinc-500">
-										No products found in this category.
+										{t('admin.noProductsInCategory')}
 									</TableCell>
 								</TableRow>
 							)}
@@ -167,7 +168,7 @@ const hasPrev = page > 1;
 				{meta.totalPages > 1 && (
 					<div class="flex items-center justify-between mt-4">
 						<div class="text-xs text-zinc-500">
-							Page {page} of {meta.totalPages}
+							{t('admin.pageOf', { page, totalPages: meta.totalPages })}
 						</div>
 						<div class="flex gap-2">
 							{hasPrev ? (
@@ -176,11 +177,11 @@ const hasPrev = page > 1;
 									outline
 									client:load
 								>
-									Previous
+									{t('admin.previous')}
 								</Button>
 							) : (
 								<Button plain disabled client:load>
-									Previous
+									{t('admin.previous')}
 								</Button>
 							)}
 							{hasNext ? (
@@ -189,11 +190,11 @@ const hasPrev = page > 1;
 									outline
 									client:load
 								>
-									Next
+									{t('admin.next')}
 								</Button>
 							) : (
 								<Button plain disabled client:load>
-									Next
+									{t('admin.next')}
 								</Button>
 							)}
 						</div>

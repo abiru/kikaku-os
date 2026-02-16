@@ -6,6 +6,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import ShippingPage from '../../components/admin/ShippingPage';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 
@@ -33,19 +34,19 @@ if (import.meta.env.ADMIN_API_KEY) {
 		orders = data.orders || [];
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load orders ready to ship.';
+		error = t('errors.failedToLoadShipping');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing.';
+	error = t('errors.adminKeyMissing');
 }
 
 ---
 
-<AdminLayout title="Shipping - Admin">
+<AdminLayout title={`${t('admin.shipping')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center gap-4">
-			<Heading>Shipping</Heading>
-			<span class="text-xs text-white bg-indigo-600 px-2 py-1 rounded-full font-medium">{orders.length} ready</span>
+			<Heading>{t('admin.shipping')}</Heading>
+			<span class="text-xs text-white bg-indigo-600 px-2 py-1 rounded-full font-medium">{t('admin.readyCount', { count: orders.length })}</span>
 		</div>
 		{error && (
 			<Alert color="red" client:load>

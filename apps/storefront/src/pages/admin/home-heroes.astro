@@ -7,6 +7,7 @@ import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 import HomeHeroesPage from '../../components/admin/HomeHeroesPage';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const status = Astro.url.searchParams.get('status') || 'all';
@@ -41,25 +42,25 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load hero sections. Please check your admin key.';
+		error = t('errors.failedToLoadHeroes');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error = t('errors.adminKeyMissing');
 }
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;
 ---
 
-<AdminLayout title="Home Heroes - Admin">
+<AdminLayout title={`${t('admin.homeHeroes')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<Heading>Home Hero Sections</Heading>
-				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				<Heading>{t('admin.homeHeroSections')}</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.items')}</span>
 			</div>
 			<Button href="/admin/home-heroes/new" color="indigo" client:load>
-				+ New Hero Section
+				{t('admin.newHeroSection')}
 			</Button>
 		</div>
 
@@ -69,25 +70,25 @@ const hasPrev = page > 1;
 				href="?status=all"
 				class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 			>
-				All
+				{t('common.all')}
 			</a>
 			<a
 				href="?status=active"
 				class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'active' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 			>
-				Active
+				{t('admin.active')}
 			</a>
 			<a
 				href="?status=draft"
 				class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 			>
-				Draft
+				{t('admin.draft')}
 			</a>
 			<a
 				href="?status=archived"
 				class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'archived' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 			>
-				Archived
+				{t('admin.archived')}
 			</a>
 		</div>
 
@@ -106,7 +107,7 @@ const hasPrev = page > 1;
 		{meta.totalPages > 1 && (
 			<div class="flex items-center justify-between">
 				<div class="text-sm text-zinc-500">
-					Page {page} of {meta.totalPages}
+					{t('admin.pageOf', { page, totalPages: meta.totalPages })}
 				</div>
 				<div class="flex gap-2">
 					{hasPrev ? (
@@ -115,11 +116,11 @@ const hasPrev = page > 1;
 							outline
 							client:load
 						>
-							Previous
+							{t('admin.previous')}
 						</Button>
 					) : (
 						<Button plain disabled client:load>
-							Previous
+							{t('admin.previous')}
 						</Button>
 					)}
 					{hasNext ? (
@@ -128,11 +129,11 @@ const hasPrev = page > 1;
 							outline
 							client:load
 						>
-							Next
+							{t('admin.next')}
 						</Button>
 					) : (
 						<Button plain disabled client:load>
-							Next
+							{t('admin.next')}
 						</Button>
 					)}
 				</div>
