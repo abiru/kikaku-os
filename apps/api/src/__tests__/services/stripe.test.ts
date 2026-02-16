@@ -281,6 +281,207 @@ describe('stripe service', () => {
         ensureStripeProduct(mockDb, 'sk_invalid', product)
       ).rejects.toThrow('Stripe API error');
     });
+
+    // --- stripHtml edge cases (tested indirectly via ensureStripeProduct) ---
+
+    it('should handle empty string description (no description param sent)', async () => {
+      const mockDb = createMockDb();
+      const product = {
+        id: 9,
+        title: 'Empty Desc',
+        description: '',
+        provider_product_id: null
+      };
+
+      mockDb._mocks.mockRun.mockResolvedValueOnce({ success: true });
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'prod_empty', object: 'product' })
+      });
+
+      await ensureStripeProduct(mockDb, 'sk_test_xxx', product);
+
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      const body = fetchCall[1].body as string;
+      expect(body).not.toContain('description=');
+    });
+
+    it('should handle HTML-only description that becomes empty after stripping', async () => {
+      const mockDb = createMockDb();
+      const product = {
+        id: 10,
+        title: 'HTML Only',
+        description: '<br><br><hr>',
+        provider_product_id: null
+      };
+
+      mockDb._mocks.mockRun.mockResolvedValueOnce({ success: true });
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'prod_htmlonly', object: 'product' })
+      });
+
+      await ensureStripeProduct(mockDb, 'sk_test_xxx', product);
+
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      const body = fetchCall[1].body as string;
+      // After stripping tags and trimming whitespace, result is empty -> null -> no description param
+      expect(body).not.toContain('description=');
+    });
+
+    it('should handle deeply nested HTML tags', async () => {
+      const mockDb = createMockDb();
+      const product = {
+        id: 11,
+        title: 'Nested HTML',
+        description: '<div><p><span><strong>Deep</strong> text</span></p></div>',
+        provider_product_id: null
+      };
+
+      mockDb._mocks.mockRun.mockResolvedValueOnce({ success: true });
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'prod_nested', object: 'product' })
+      });
+
+      await ensureStripeProduct(mockDb, 'sk_test_xxx', product);
+
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      const body = fetchCall[1].body as string;
+      expect(body).toContain('description=Deep+text');
+    });
+
+    it('should handle description with exactly 500 chars (no truncation)', async () => {
+      const mockDb = createMockDb();
+      const desc = 'A'.repeat(500);
+      const product = {
+        id: 12,
+        title: 'Exact 500',
+        description: desc,
+        provider_product_id: null
+      };
+
+      mockDb._mocks.mockRun.mockResolvedValueOnce({ success: true });
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'prod_500', object: 'product' })
+      });
+
+      await ensureStripeProduct(mockDb, 'sk_test_xxx', product);
+
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      const body = fetchCall[1].body as string;
+      const descMatch = body.match(/description=([^&]*)/);
+      if (descMatch) {
+        const decoded = decodeURIComponent(descMatch[1]);
+        expect(decoded).toBe(desc);
+        expect(decoded).not.toContain('...');
+      }
+    });
+
+    it('should truncate description with 501 chars to 500 (497 + ...)', async () => {
+      const mockDb = createMockDb();
+      const desc = 'B'.repeat(501);
+      const product = {
+        id: 13,
+        title: 'Over 500',
+        description: desc,
+        provider_product_id: null
+      };
+
+      mockDb._mocks.mockRun.mockResolvedValueOnce({ success: true });
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'prod_501', object: 'product' })
+      });
+
+      await ensureStripeProduct(mockDb, 'sk_test_xxx', product);
+
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      const body = fetchCall[1].body as string;
+      const descMatch = body.match(/description=([^&]*)/);
+      if (descMatch) {
+        const decoded = decodeURIComponent(descMatch[1]);
+        expect(decoded.length).toBe(500);
+        expect(decoded.endsWith('...')).toBe(true);
+      }
+    });
+
+    it('should handle undefined description (no description param)', async () => {
+      const mockDb = createMockDb();
+      const product = {
+        id: 14,
+        title: 'Undefined Desc',
+        description: undefined as unknown as string | null,
+        provider_product_id: null
+      };
+
+      mockDb._mocks.mockRun.mockResolvedValueOnce({ success: true });
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'prod_undef', object: 'product' })
+      });
+
+      await ensureStripeProduct(mockDb, 'sk_test_xxx', product);
+
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      const body = fetchCall[1].body as string;
+      expect(body).not.toContain('description=');
+    });
+
+    it('should set status code to 502 for Stripe 5xx errors', async () => {
+      const mockDb = createMockDb();
+      const product = {
+        id: 15,
+        title: 'Server Error',
+        description: null,
+        provider_product_id: null
+      };
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        text: async () => 'Service Unavailable'
+      });
+
+      try {
+        await ensureStripeProduct(mockDb, 'sk_test_xxx', product);
+        expect.fail('Should have thrown');
+      } catch (err: any) {
+        expect(err.statusCode).toBe(502);
+        expect(err.code).toBe('STRIPE_API_ERROR');
+      }
+    });
+
+    it('should set status code to 400 for Stripe 4xx errors', async () => {
+      const mockDb = createMockDb();
+      const product = {
+        id: 16,
+        title: 'Client Error',
+        description: null,
+        provider_product_id: null
+      };
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 422,
+        text: async () => 'Unprocessable Entity'
+      });
+
+      try {
+        await ensureStripeProduct(mockDb, 'sk_test_xxx', product);
+        expect.fail('Should have thrown');
+      } catch (err: any) {
+        expect(err.statusCode).toBe(400);
+        expect(err.code).toBe('STRIPE_API_ERROR');
+      }
+    });
   });
 
   describe('ensureStripePrice', () => {
