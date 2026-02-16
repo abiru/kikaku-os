@@ -1,0 +1,65 @@
+---
+import { Badge } from '../catalyst/badge';
+import { Button } from '../catalyst/button';
+import { Subheading } from '../catalyst/heading';
+import { t } from '../../i18n';
+
+interface Order {
+	id: number;
+	customer_email: string | null;
+	total_net: number;
+	currency: string;
+	status: string;
+	created_at: string;
+}
+
+interface Props {
+	orders: Order[];
+	formatCurrency: (amount: number, currency?: string) => string;
+}
+
+const { orders, formatCurrency } = Astro.props;
+
+const getStatusColor = (status: string) => {
+	switch (status) {
+		case 'paid': return 'lime' as const;
+		case 'fulfilled': return 'lime' as const;
+		case 'partial_refunded': return 'amber' as const;
+		case 'refunded': return 'red' as const;
+		default: return 'zinc' as const;
+	}
+};
+---
+
+<div>
+	<div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+		<Subheading>{t('admin.recentOrders')}</Subheading>
+		<Button client:load href="/admin/orders" plain>{t('admin.viewAll')}</Button>
+	</div>
+	<div class="divide-y divide-zinc-100">
+		{orders.length > 0 ? (
+			orders.map((order) => (
+				<a href={`/admin/orders/${order.id}`} class="flex items-center justify-between px-6 py-3 hover:bg-zinc-50 transition-colors">
+					<div class="flex items-center gap-3">
+						<span class="text-sm font-medium text-zinc-950">#{order.id}</span>
+						<span class="text-xs text-zinc-500 truncate max-w-[120px]">
+							{order.customer_email || t('admin.noEmail')}
+						</span>
+					</div>
+					<div class="flex items-center gap-3">
+						<span class="text-sm font-medium text-zinc-950 tabular-nums">
+							{formatCurrency(order.total_net, order.currency)}
+						</span>
+						<Badge client:load color={getStatusColor(order.status)}>
+							{order.status}
+						</Badge>
+					</div>
+				</a>
+			))
+		) : (
+			<div class="px-6 py-8 text-center text-sm text-zinc-500">
+				{t('admin.noRecentOrders')}
+			</div>
+		)}
+	</div>
+</div>

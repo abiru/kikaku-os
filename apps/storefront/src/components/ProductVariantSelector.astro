@@ -1,0 +1,62 @@
+---
+import Alert from './Alert.astro';
+import { t } from '../i18n';
+
+interface Props {
+	variantId: number | null;
+	addedToCartLabel: string;
+}
+
+const { variantId, addedToCartLabel } = Astro.props;
+---
+
+<form id="product-form">
+	{/* Quantity picker */}
+	<div>
+		<h2 class="text-sm font-medium text-gray-900">{t('cart.quantity')}</h2>
+
+		<fieldset aria-label="Choose quantity" class="mt-2">
+			<div class="grid grid-cols-6 gap-3">
+				{[1, 2, 3, 4, 5, 6].map((qty) => (
+					<label
+						class="group relative flex items-center justify-center rounded-md border border-gray-300 bg-white p-3 cursor-pointer hover:bg-gray-50 has-[:checked]:border-[#0071e3] has-[:checked]:bg-[#0071e3] focus-within:ring-2 focus-within:ring-[#0071e3] focus-within:ring-offset-2"
+					>
+						<input
+							type="radio"
+							name="quantity"
+							value={qty}
+							checked={qty === 1}
+							class="sr-only"
+						/>
+						<span class="text-sm font-medium text-gray-900 group-has-[:checked]:text-white">
+							{qty}
+						</span>
+					</label>
+				))}
+			</div>
+		</fieldset>
+	</div>
+
+	<button
+		type="button"
+		id="buy-button"
+		data-added-label={addedToCartLabel}
+		disabled={!variantId}
+		class="mt-8 flex w-full items-center justify-center rounded-md border border-transparent bg-[#0071e3] px-8 py-3 text-base font-medium text-white hover:bg-[#005bb5] focus:ring-2 focus:ring-[#0071e3] focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+	>
+		<span id="buy-label">{t('product.addToCart')}</span>
+		<span id="buy-spinner" class="hidden ml-2 animate-spin">
+			<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+				<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+				<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+			</svg>
+		</span>
+	</button>
+</form>
+
+{/* Error message */}
+<div id="checkout-error" class="hidden mt-4">
+	<Alert severity="critical" title={t('errors.error')}>
+		<p id="checkout-error-message" class="text-sm"></p>
+	</Alert>
+</div>
