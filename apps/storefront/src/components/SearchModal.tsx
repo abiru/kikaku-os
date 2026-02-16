@@ -7,6 +7,7 @@ type SearchResult = {
 	id: number;
 	title: string;
 	description: string | null;
+	image: string | null;
 	variants: Array<{
 		id: number;
 		title: string;
@@ -207,11 +208,19 @@ export default function SearchModal() {
 													index === selectedIndex ? 'bg-gray-100' : 'hover:bg-gray-50'
 												}`}
 											>
-												<div className="h-12 w-12 flex-shrink-0 rounded-lg bg-gray-100 flex items-center justify-center">
-													<svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-														<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-													</svg>
+												<div className="h-12 w-12 flex-shrink-0 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+													{product.image ? (
+														<img
+															src={product.image}
+															alt={product.title}
+															className="h-full w-full object-cover"
+														/>
+													) : (
+														<svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+															<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+														</svg>
+													)}
 												</div>
 												<div className="flex-1 min-w-0">
 													<p className="text-sm font-medium text-gray-900 truncate">

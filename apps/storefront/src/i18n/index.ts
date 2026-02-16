@@ -12,12 +12,18 @@ export function t(key: TranslationKey, params?: Record<string, string | number>)
     if (value && typeof value === 'object' && k in value) {
       value = (value as Record<string, unknown>)[k];
     } else {
-      return key;
+      if (import.meta.env.DEV) {
+        console.warn(`[i18n] Missing translation key: "${key}"`);
+      }
+      return '';
     }
   }
 
   if (typeof value !== 'string') {
-    return key;
+    if (import.meta.env.DEV) {
+      console.warn(`[i18n] Translation key "${key}" is not a string`);
+    }
+    return '';
   }
 
   // パラメータ置換（例: "送料無料まであと{amount}"）
