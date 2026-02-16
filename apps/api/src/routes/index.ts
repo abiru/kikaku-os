@@ -23,6 +23,7 @@ import adminUsers from './admin/adminUsers';
 import adminInquiries from './admin/adminInquiries';
 import adminReviews from './admin/adminReviews';
 import adminNewsletter from './admin/adminNewsletter';
+import adminAuditLogs from './admin/adminAuditLogs';
 import adminOrderExport from './admin/adminOrderExport';
 
 // Webhooks
@@ -90,6 +91,7 @@ export function registerRoutes(app: Hono<Env>) {
   app.route('/admin', adminInquiries);
   app.route('/admin', adminReviews);
   app.route('/admin/newsletter', adminNewsletter);
+  app.route('/admin/audit-logs', adminAuditLogs);
 
   // Webhooks (public, signature-verified)
   app.route('/', stripe);
@@ -150,6 +152,7 @@ export {
   adminInquiries,
   adminReviews,
   adminNewsletter,
+  adminAuditLogs,
   adminOrderExport,
   // Webhooks
   stripe,
