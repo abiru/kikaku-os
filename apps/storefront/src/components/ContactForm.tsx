@@ -72,10 +72,18 @@ function ContactFormContent() {
 
     setSubmitting(true);
     try {
-      const url = buildStoreUrl('/contact', getApiBase());
+      const base = getApiBase();
+      const csrfRes = await fetch(`${base}/csrf-token`, { credentials: 'include' });
+      const { token: csrfToken } = await csrfRes.json();
+
+      const url = buildStoreUrl('/contact', base);
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        credentials: 'include',
         body: JSON.stringify(form),
       });
 
