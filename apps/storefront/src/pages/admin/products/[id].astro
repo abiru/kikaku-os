@@ -9,6 +9,7 @@ import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 import MarkdownPreview from '../../../components/MarkdownPreview';
@@ -405,6 +406,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 					<ProductVariants variants={variants} />
 				)}
 	</div>
+	<ConfirmDialog />
 </AdminLayout>
 
 <script>

@@ -4,6 +4,7 @@ export const prerender = false;
 import { Alert } from '../../../components/catalyst/alert-banner';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
@@ -247,7 +248,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 					</div>
 				</form>
 
-				<form method="POST" class="bg-white rounded-xl border border-red-200 shadow-sm p-6">
+				<form method="POST" id="tax-rate-delete-form" class="bg-white rounded-xl border border-red-200 shadow-sm p-6">
 					<h3 class="text-lg font-semibold text-red-600 mb-3">Danger Zone</h3>
 					<p class="text-sm text-secondary mb-4">
 						Deactivate this tax rate. It will no longer be assignable to products.
@@ -255,7 +256,6 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 						<input type="hidden" name="action" value="delete" />
 						<button
 							type="submit"
-							onclick="return confirm('Are you sure you want to deactivate this tax rate?')"
 							class="relative isolate inline-flex items-baseline justify-center gap-x-2 rounded-lg border text-base/6 font-semibold px-[calc(var(--spacing)*3.5-1px)] py-[calc(var(--spacing)*2.5-1px)] sm:px-[calc(var(--spacing)*3-1px)] sm:py-[calc(var(--spacing)*1.5-1px)] sm:text-sm/6 border-transparent text-white cursor-default [--btn-bg:var(--color-red-600)] [--btn-border:var(--color-red-700)]/90 bg-[--btn-border] before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-[--btn-bg] before:shadow-sm"
 						>
 							Deactivate Tax Rate
@@ -277,4 +277,25 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 			</>
 		)}
 	</div>
+	<ConfirmDialog />
 </AdminLayout>
+
+<script define:vars={{ taxRateName: taxRate?.name }}>
+	window.__taxRateConfig = { taxRateName };
+</script>
+<script type="module">
+	const { taxRateName } = window.__taxRateConfig;
+	const deleteForm = document.getElementById('tax-rate-delete-form');
+	deleteForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const confirmed = await window.__confirmDialog({
+			title: 'Deactivate Tax Rate',
+			message: `Are you sure you want to deactivate "${taxRateName}"? It will no longer be assignable to products.`,
+			confirmLabel: 'Deactivate',
+			danger: true,
+		});
+		if (confirmed) {
+			deleteForm.submit();
+		}
+	});
+</script>

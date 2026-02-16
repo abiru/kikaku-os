@@ -12,6 +12,10 @@ import { t } from '../../i18n';
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') ||'';
 const page = Number(Astro.url.searchParams.get('page') ||'1');
+const paymentStatus = Astro.url.searchParams.get('payment') || '';
+const fulfillmentStatus = Astro.url.searchParams.get('fulfillment') || '';
+const dateFrom = Astro.url.searchParams.get('from') || '';
+const dateTo = Astro.url.searchParams.get('to') || '';
 const perPage = 20;
 
 let orders: Order[] = [];
@@ -25,6 +29,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 			page: page.toString(),
 			perPage: perPage.toString()
 		});
+		if (paymentStatus) query.set('status', paymentStatus);
+		if (fulfillmentStatus) query.set('fulfillment', fulfillmentStatus);
+		if (dateFrom) query.set('from', dateFrom);
+		if (dateTo) query.set('to', dateTo);
 
 		const res = await fetch(`${apiBase}/admin/orders?${query}`, {
 			headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
@@ -42,6 +50,8 @@ if (import.meta.env.ADMIN_API_KEY) {
 } else {
 	error = t('errors.adminKeyMissing');
 }
+
+const hasFilters = paymentStatus || fulfillmentStatus || dateFrom || dateTo;
 ---
 
 <AdminLayout title={`${t('admin.orders')} - Admin`}>
@@ -71,8 +81,61 @@ if (import.meta.env.ADMIN_API_KEY) {
 				>
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 				</svg>
+				{/* Preserve filter values */}
+				{paymentStatus && <input type="hidden" name="payment" value={paymentStatus} />}
+				{fulfillmentStatus && <input type="hidden" name="fulfillment" value={fulfillmentStatus} />}
+				{dateFrom && <input type="hidden" name="from" value={dateFrom} />}
+				{dateTo && <input type="hidden" name="to" value={dateTo} />}
 			</form>
 		</div>
+
+		{/* Advanced Filters */}
+		<details class={`bg-white rounded-xl border border-gray-200 shadow-sm ${hasFilters ? '' : ''}`} open={!!hasFilters}>
+			<summary class="px-4 py-3 text-sm font-medium text-zinc-700 cursor-pointer hover:text-indigo-600">
+				Filters
+				{hasFilters && <span class="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Active</span>}
+			</summary>
+			<form method="get" class="px-4 pb-4 pt-2">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+					<div>
+						<label for="filter-payment" class="block text-xs font-medium text-zinc-600 mb-1">Payment Status</label>
+						<select id="filter-payment" name="payment" class="w-full rounded-md border-zinc-200 text-sm py-1.5">
+							<option value="">All</option>
+							<option value="paid" selected={paymentStatus === 'paid'}>Paid</option>
+							<option value="pending" selected={paymentStatus === 'pending'}>Pending</option>
+							<option value="refunded" selected={paymentStatus === 'refunded'}>Refunded</option>
+						</select>
+					</div>
+					<div>
+						<label for="filter-fulfillment" class="block text-xs font-medium text-zinc-600 mb-1">Fulfillment</label>
+						<select id="filter-fulfillment" name="fulfillment" class="w-full rounded-md border-zinc-200 text-sm py-1.5">
+							<option value="">All</option>
+							<option value="shipped" selected={fulfillmentStatus === 'shipped'}>Shipped</option>
+							<option value="unfulfilled" selected={fulfillmentStatus === 'unfulfilled'}>Unfulfilled</option>
+						</select>
+					</div>
+					<div>
+						<label for="filter-from" class="block text-xs font-medium text-zinc-600 mb-1">Date From</label>
+						<input type="date" id="filter-from" name="from" value={dateFrom} class="w-full rounded-md border-zinc-200 text-sm py-1.5" />
+					</div>
+					<div>
+						<label for="filter-to" class="block text-xs font-medium text-zinc-600 mb-1">Date To</label>
+						<input type="date" id="filter-to" name="to" value={dateTo} class="w-full rounded-md border-zinc-200 text-sm py-1.5" />
+					</div>
+				</div>
+				{q && <input type="hidden" name="q" value={q} />}
+				<div class="flex gap-2 mt-4">
+					<button type="submit" class="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+						Apply Filters
+					</button>
+					{hasFilters && (
+						<a href={q ? `?q=${q}` : '?'} class="px-4 py-1.5 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200">
+							Clear Filters
+						</a>
+					)}
+				</div>
+			</form>
+		</details>
 
 		{error && (
 			<Alert color="red" client:load>

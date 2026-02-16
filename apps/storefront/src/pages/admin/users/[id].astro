@@ -8,6 +8,7 @@ import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Input } from '../../../components/catalyst/input';
 import { Select } from '../../../components/catalyst/select';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 
@@ -330,15 +331,6 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 					</div>
 				</form>
 
-				<script>
-					const deleteForm = document.getElementById('delete-form');
-					deleteForm?.addEventListener('submit', (e) => {
-						if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-							e.preventDefault();
-						}
-					});
-				</script>
-
 				{/* Permissions */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 					<Subheading>Permissions</Subheading>
@@ -364,4 +356,25 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 			</>
 		)}
 	</div>
+	<ConfirmDialog />
 </AdminLayout>
+
+<script define:vars={{ userName: user?.name || user?.email }}>
+	window.__userConfig = { userName };
+</script>
+<script type="module">
+	const { userName } = window.__userConfig;
+	const deleteForm = document.getElementById('delete-form');
+	deleteForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const confirmed = await window.__confirmDialog({
+			title: 'Delete User',
+			message: `Are you sure you want to delete "${userName}"? This action cannot be undone.`,
+			confirmLabel: 'Delete',
+			danger: true,
+		});
+		if (confirmed) {
+			deleteForm.submit();
+		}
+	});
+</script>

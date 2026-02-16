@@ -8,6 +8,7 @@ import { Select } from '../../../components/catalyst/select';
 import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 
@@ -412,17 +413,26 @@ const canDelete = coupon && coupon.current_uses === 0;
 			</>
 		)}
 	</div>
+	<ConfirmDialog />
 </AdminLayout>
 
-<script define:vars={{ couponId: id, canDelete }}>
+<script define:vars={{ couponId: id, canDelete, couponCode: coupon?.code }}>
+	window.__couponConfig = { couponId, canDelete, couponCode };
+</script>
+<script type="module">
+	const { couponId, canDelete, couponCode } = window.__couponConfig;
 	const deleteBtn = document.getElementById('delete-btn');
 	const toggleBtn = document.getElementById('toggle-btn');
 
 	if (deleteBtn && canDelete) {
 		deleteBtn.addEventListener('click', async () => {
-			if (!confirm('Are you sure you want to delete this coupon? This action cannot be undone.')) {
-				return;
-			}
+			const confirmed = await window.__confirmDialog({
+				title: 'Delete Coupon',
+				message: `Are you sure you want to delete coupon "${couponCode}"? This action cannot be undone.`,
+				confirmLabel: 'Delete',
+				danger: true,
+			});
+			if (!confirmed) return;
 
 			try {
 				const res = await fetch(`/api/admin/coupons/${couponId}`, {
