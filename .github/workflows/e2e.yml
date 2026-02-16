@@ -1,0 +1,89 @@
+# .github/workflows/e2e.yml
+name: E2E
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: E2E - Playwright Tests
+    # Toggle: self-hosted ↔ ubuntu-latest
+    runs-on: self-hosted
+    timeout-minutes: 25
+    steps:
+      - name: Clean workspace
+        run: git clean -ffdx || true
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.dir }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+        # NOTE: 理想は Playwright バージョンベースのキーだが今週は許容
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Create .dev.vars for Wrangler
+        run: |
+          cat > .dev.vars <<'EOF'
+          ADMIN_API_KEY=CHANGE_ME
+          DEV_MODE=true
+          STRIPE_SECRET_KEY=sk_test_dummy
+          STRIPE_WEBHOOK_SECRET=whsec_dummy
+          STOREFRONT_BASE_URL=http://localhost:4321
+          EOF
+
+      - name: Apply D1 migrations (local)
+        # 元コマンド: pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
+        run: pnpm db:migrate
+
+      - name: Create storefront .env for Astro
+        run: |
+          cat > apps/storefront/.env <<'EOF'
+          PUBLIC_API_BASE=http://localhost:8787
+          PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_dummy_for_ci
+          CLERK_SECRET_KEY=sk_test_dummy_for_ci
+          EOF
+
+      - name: Run Playwright E2E tests
+        run: pnpm test:e2e:seed-ui
+        env:
+          CI: 'true'
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: codex-runs/playwright-report/
+          retention-days: 7
