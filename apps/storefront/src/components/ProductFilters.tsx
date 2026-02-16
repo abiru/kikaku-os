@@ -109,6 +109,9 @@ export default function ProductFilters() {
 
 	return (
 		<div className="space-y-6">
+			<div aria-live="polite" className="sr-only">
+				{hasActiveFilters && t('filters.activeFilters')}
+			</div>
 			{/* Category Filter */}
 			{options && options.categories.length > 0 && (
 				<div>

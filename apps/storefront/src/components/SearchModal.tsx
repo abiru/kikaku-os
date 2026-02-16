@@ -153,6 +153,13 @@ export default function SearchModal() {
 					</div>
 
 					{/* Results */}
+					<div aria-live="polite" className="sr-only">
+						{query.length >= 2 && !loading && (
+							results.length > 0
+								? t('search.resultCount', { count: results.length })
+								: t('common.noResults')
+						)}
+					</div>
 					{query.length >= 2 && (
 						<div className="border-t border-gray-100">
 							{results.length > 0 ? (

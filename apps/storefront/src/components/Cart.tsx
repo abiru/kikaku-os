@@ -360,6 +360,9 @@ function CartContent() {
 
 	return (
 		<div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
+			<div aria-live="polite" className="sr-only">
+				{t('cart.itemCount', { count: items.length })}
+			</div>
 			<section aria-labelledby="cart-heading" className="lg:col-span-7">
 				<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
 				<ul role="list" className="divide-y divide-gray-200 border-t border-b border-gray-200">
