@@ -10,6 +10,7 @@ import { Heading } from '../../components/catalyst/heading';
 import { getApiBase } from '../../lib/api';
 import type { Product } from '../../lib/types';
 import { t } from '../../i18n';
+import { logError } from '../../utils/logger';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -45,7 +46,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		products = data.products || [];
 		meta = data.meta || meta;
 	} catch (e) {
-		console.error(e);
+		logError({ page: 'admin/products' }, e);
 		error = t('errors.failedToLoadProducts');
 	}
 } else {

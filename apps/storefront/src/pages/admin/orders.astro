@@ -8,6 +8,7 @@ import { Heading } from'../../components/catalyst/heading';
 import { getApiBase } from'../../lib/api';
 import type { Order } from'../../lib/types';
 import { t } from '../../i18n';
+import { logError } from '../../utils/logger';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') ||'';
@@ -44,7 +45,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		orders = data.orders || [];
 		meta = data.meta || meta;
 	} catch (e) {
-		console.error(e);
+		logError({ page: 'admin/orders' }, e);
 		error = t('errors.failedToLoadOrders');
 	}
 } else {

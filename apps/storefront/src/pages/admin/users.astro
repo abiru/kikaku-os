@@ -7,6 +7,7 @@ import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import UsersTable from '../../components/admin/UsersTable';
 import { t } from '../../i18n';
+import { logError } from '../../utils/logger';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -82,7 +83,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		users = data.users || [];
 		meta = data.meta || meta;
 	} catch (e) {
-		console.error(e);
+		logError({ page: 'admin/users' }, e);
 		error = e instanceof Error ? e.message : t('errors.failedToLoadUsers');
 	}
 } else {
