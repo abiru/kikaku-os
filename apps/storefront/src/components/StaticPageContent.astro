@@ -33,6 +33,21 @@ try {
 
 const metaTitle = page?.meta_title || defaultMetaTitle;
 const metaDescription = page?.meta_description || '';
+
+const fallbackText = t(`cms.fallback.${slug}` as Parameters<typeof t>[0]);
+const isLegalSlug = slug === 'legal';
+
+const legalNoticeRows = isLegalSlug ? [
+	{ label: t('pages.legalNotice.seller'), value: t('pages.legalNotice.sellerValue') },
+	{ label: t('pages.legalNotice.representative'), value: t('pages.legalNotice.representativeValue') },
+	{ label: t('pages.legalNotice.addressPhone'), value: t('pages.legalNotice.addressPhoneValue') },
+	{ label: t('pages.legalNotice.email'), value: t('pages.legalNotice.emailValue'), href: '/contact' },
+	{ label: t('pages.legalNotice.price'), value: t('pages.legalNotice.priceValue') },
+	{ label: t('pages.legalNotice.additionalFees'), value: t('pages.legalNotice.additionalFeesValue') },
+	{ label: t('pages.legalNotice.paymentMethod'), value: t('pages.legalNotice.paymentMethodValue') },
+	{ label: t('pages.legalNotice.deliveryTime'), value: t('pages.legalNotice.deliveryTimeValue') },
+	{ label: t('pages.legalNotice.returnPolicy'), value: t('pages.legalNotice.returnPolicyValue', { link: '' }), linkText: t('pages.legalNotice.returnPolicyLink'), href: '/refund' },
+] : [];
 ---
 
 <Layout title={metaTitle}>
@@ -60,6 +75,41 @@ const metaDescription = page?.meta_description || '';
 				) : error ? (
 					<div class="text-center py-12">
 						<p class="text-secondary">{error}</p>
+					</div>
+				) : isLegalSlug && legalNoticeRows.length > 0 ? (
+					<div>
+						<table class="w-full border-collapse">
+							<tbody>
+								{legalNoticeRows.map((row) => (
+									<tr class="border-b border-gray-200">
+										<th class="py-4 pr-6 text-left align-top font-semibold text-primary whitespace-nowrap w-1/3">
+											{row.label}
+										</th>
+										<td class="py-4 text-secondary">
+											{row.href && row.linkText ? (
+												<>
+													{row.value}<a href={row.href} class="text-accent hover:underline">{row.linkText}</a>
+												</>
+											) : row.href ? (
+												<a href={row.href} class="text-accent hover:underline">{row.value}</a>
+											) : (
+												row.value
+											)}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+						<p class="mt-8 text-sm text-secondary">
+							ご不明な点がございましたら、<a href="/contact" class="text-accent hover:underline">お問い合わせページ</a>よりご連絡ください。
+						</p>
+					</div>
+				) : fallbackText ? (
+					<div>
+						<p class="text-lg leading-relaxed text-secondary">{fallbackText}</p>
+						<p class="mt-8 text-sm text-secondary">
+							ご不明な点がございましたら、<a href="/contact" class="text-accent hover:underline">お問い合わせページ</a>よりご連絡ください。
+						</p>
 					</div>
 				) : (
 					<div class="text-center py-12">
