@@ -2,13 +2,18 @@ import { Hono } from 'hono';
 import { ensureDate } from '../../lib/date';
 import { jsonError, jsonOk } from '../../lib/http';
 import { createLogger } from '../../lib/logger';
+import { PERMISSIONS } from '../../lib/schemas';
 import { generateDailyReport } from '../../services/dailyReport';
 import type { Env } from '../../env';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 
 const logger = createLogger('reports');
 const reports = new Hono<Env>();
 
-reports.get('/daily', async (c) => {
+// Apply RBAC middleware to all routes in this file
+reports.use('*', loadRbac);
+
+reports.get('/daily', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const date = ensureDate(c.req.query('date') || '');
   if (!date) return jsonError(c, 'Invalid date', 400);
   try {

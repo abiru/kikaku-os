@@ -1,6 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
 import inbox from '../../../routes/system/inbox';
+
+vi.mock('../../../middleware/clerkAuth', () => ({
+  getActor: () => 'test-admin',
+}));
+
+vi.mock('../../../middleware/rbac', () => ({
+  loadRbac: async (_c: any, next: any) => next(),
+  requirePermission: () => async (_c: any, next: any) => next(),
+}));
 
 const createMockDb = (items: Array<Record<string, unknown>>) => {
   const calls: { sql: string; bind: unknown[] }[] = [];
@@ -12,6 +21,12 @@ const createMockDb = (items: Array<Record<string, unknown>>) => {
         return {
           all: async () => ({ results: items }),
           run: async () => ({ meta: { last_row_id: 1 } }),
+          first: async () => {
+            if (sql.includes('FROM inbox_items')) {
+              return items[0] ?? null;
+            }
+            return null;
+          },
         };
       }
     })

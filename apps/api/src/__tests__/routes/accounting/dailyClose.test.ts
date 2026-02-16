@@ -4,6 +4,11 @@ import dailyCloseArtifacts from '../../../routes/accounting/dailyCloseArtifacts'
 import type { DailyReport } from '../../../services/dailyReport';
 import type { StripeEvidence } from '../../../services/stripeEvidence';
 
+vi.mock('../../../middleware/rbac', () => ({
+  loadRbac: async (_c: any, next: any) => next(),
+  requirePermission: () => async (_c: any, next: any) => next(),
+}));
+
 // Mock services
 vi.mock('../../../services/dailyReport', () => ({
   generateDailyReport: vi.fn()

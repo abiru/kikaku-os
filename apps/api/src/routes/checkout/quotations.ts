@@ -3,11 +3,12 @@ import type { Env } from '../../env';
 import { jsonError, jsonOk } from '../../lib/http';
 import { createLogger } from '../../lib/logger';
 import { getCompanyInfo } from '../../lib/company';
+import { PERMISSIONS } from '../../lib/schemas';
 import { renderQuotationHtml, QuotationData } from '../../services/renderQuotationHtml';
 import { putText } from '../../lib/r2';
 import { upsertDocument } from '../../services/documents';
 import { validateItem, type CheckoutItem } from '../../lib/schemas/checkout';
-import { timingSafeCompare } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import {
   createQuotation,
   acceptQuotation,
@@ -182,12 +183,7 @@ quotations.post('/quotations/:token/accept', async (c) => {
 });
 
 // DELETE /quotations/:id - Delete quotation (admin only, guarded)
-quotations.delete('/quotations/:id', async (c) => {
-  const adminKey = c.req.header('x-admin-key');
-  if (!adminKey || !c.env.ADMIN_API_KEY || !timingSafeCompare(adminKey, c.env.ADMIN_API_KEY)) {
-    return jsonError(c, 'Unauthorized', 401);
-  }
-
+quotations.delete('/quotations/:id', loadRbac, requirePermission(PERMISSIONS.ORDERS_WRITE), async (c) => {
   const id = Number(c.req.param('id'));
   if (!Number.isInteger(id) || id <= 0) return jsonError(c, 'Invalid quotation ID', 400);
 
@@ -222,7 +218,7 @@ quotations.delete('/quotations/:id', async (c) => {
 });
 
 // GET /quotations - List quotations (for admin)
-quotations.get('/quotations', async (c) => {
+quotations.get('/quotations', loadRbac, requirePermission(PERMISSIONS.ORDERS_READ), async (c) => {
   const status = c.req.query('status');
   const page = parseInt(c.req.query('page') || '1');
   const perPage = parseInt(c.req.query('perPage') || '20');

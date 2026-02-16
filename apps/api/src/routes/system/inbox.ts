@@ -1,15 +1,19 @@
 import { Hono } from 'hono';
 import { jsonError, jsonOk } from '../../lib/http';
 import { createLogger } from '../../lib/logger';
-import { createInboxSchema } from '../../lib/schemas';
+import { createInboxSchema, PERMISSIONS } from '../../lib/schemas';
 import type { Env } from '../../env';
 import { getActor } from '../../middleware/clerkAuth';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { dispatchApproval } from '../../services/inboxHandlers';
 
 const logger = createLogger('inbox');
 const inbox = new Hono<Env>();
 
-inbox.get('/inbox', async (c) => {
+// Apply RBAC middleware to all routes in this file
+inbox.use('*', loadRbac);
+
+inbox.get('/inbox', requirePermission(PERMISSIONS.INBOX_READ), async (c) => {
   const status = c.req.query('status') || 'open';
   const kind = c.req.query('kind');
   const date = c.req.query('date');
@@ -46,7 +50,7 @@ inbox.get('/inbox', async (c) => {
 });
 
 // Create new inbox item
-inbox.post('/inbox', async (c) => {
+inbox.post('/inbox', requirePermission(PERMISSIONS.INBOX_APPROVE), async (c) => {
   try {
     const raw = await c.req.json();
     const parsed = createInboxSchema.safeParse(raw);
@@ -83,7 +87,7 @@ type InboxItem = {
   metadata: string | null;
 };
 
-inbox.post('/inbox/:id/approve', async (c) => {
+inbox.post('/inbox/:id/approve', requirePermission(PERMISSIONS.INBOX_APPROVE), async (c) => {
   const id = Number(c.req.param('id'));
   try {
     const item = await c.env.DB.prepare(
@@ -114,7 +118,7 @@ inbox.post('/inbox/:id/approve', async (c) => {
   }
 });
 
-inbox.post('/inbox/:id/reject', async (c) => {
+inbox.post('/inbox/:id/reject', requirePermission(PERMISSIONS.INBOX_APPROVE), async (c) => {
   const id = Number(c.req.param('id'));
   try {
     await c.env.DB.prepare(

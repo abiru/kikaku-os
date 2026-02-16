@@ -3,7 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
-import { requirePermission } from '../../middleware/rbac';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import {
   adDraftIdParamSchema,
@@ -14,6 +14,9 @@ import { createLogger } from '../../lib/logger';
 
 const logger = createLogger('admin-ads-history');
 const app = new Hono<Env>();
+
+// Apply RBAC middleware independently (defense-in-depth)
+app.use('*', loadRbac);
 
 // GET /admin/ads/drafts/:id/history - Get generation history for a draft
 app.get(
