@@ -6,7 +6,12 @@ vi.mock('../../services/inventoryCheck', () => ({
   releaseStockReservationForOrder: vi.fn()
 }));
 
+vi.mock('../../services/orderEmail', () => ({
+  sendPaymentFailedEmail: vi.fn().mockResolvedValue({ success: true })
+}));
+
 import { releaseStockReservationForOrder } from '../../services/inventoryCheck';
+import { sendPaymentFailedEmail } from '../../services/orderEmail';
 
 const createMockEnv = () => {
   const calls: { sql: string; bind: unknown[] }[] = [];
@@ -314,6 +319,52 @@ describe('failureHandler - handlePaymentIntentFailedOrCanceled', () => {
     );
     expect(inboxInsert).toBeDefined();
     expect(inboxInsert?.bind[0]).toContain('Order #700');
+  });
+
+  it('sends payment failed email to customer', async () => {
+    const { db } = createMockEnv();
+    db._orders.set(750, { id: 750, status: 'pending' });
+    vi.mocked(releaseStockReservationForOrder).mockResolvedValue(undefined);
+    vi.mocked(sendPaymentFailedEmail).mockResolvedValue({ success: true });
+
+    const event: StripeEvent = {
+      id: 'evt_email',
+      type: 'payment_intent.payment_failed',
+      data: { object: { id: 'pi_email', metadata: { orderId: '750' } } }
+    };
+
+    await handlePaymentIntentFailedOrCanceled(
+      { DB: db } as any,
+      event,
+      { id: 'pi_email', metadata: { orderId: '750' } }
+    );
+
+    expect(sendPaymentFailedEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ DB: db }),
+      750
+    );
+  });
+
+  it('does not throw when payment failed email fails', async () => {
+    const { db } = createMockEnv();
+    db._orders.set(760, { id: 760, status: 'pending' });
+    vi.mocked(releaseStockReservationForOrder).mockResolvedValue(undefined);
+    vi.mocked(sendPaymentFailedEmail).mockRejectedValue(new Error('email error'));
+
+    const event: StripeEvent = {
+      id: 'evt_email_fail',
+      type: 'payment_intent.payment_failed',
+      data: { object: { id: 'pi_email_fail', metadata: { orderId: '760' } } }
+    };
+
+    // Should not throw even when email fails
+    const result = await handlePaymentIntentFailedOrCanceled(
+      { DB: db } as any,
+      event,
+      { id: 'pi_email_fail', metadata: { orderId: '760' } }
+    );
+
+    expect(result).toEqual({ received: true });
   });
 
   it('supports snake_case order_id in metadata', async () => {

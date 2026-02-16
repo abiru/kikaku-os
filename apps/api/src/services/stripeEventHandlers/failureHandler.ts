@@ -9,6 +9,7 @@ import type { HandlerResult } from './shared';
 import { runStatements } from './shared';
 import { type StripeEvent, type StripeDataObject, extractOrderId } from '../../lib/stripeData';
 import { releaseStockReservationForOrder } from '../inventoryCheck';
+import { sendPaymentFailedEmail } from '../orderEmail';
 import { createLogger } from '../../lib/logger';
 
 const logger = createLogger('stripe-failure-handler');
@@ -91,6 +92,11 @@ export const handlePaymentIntentFailedOrCanceled = async (
        VALUES (?, ?, 'high', 'open', 'payment_failed', datetime('now'), datetime('now'))`
     ).bind(`Payment Failed: Order #${orderId}`, JSON.stringify(failurePayload))
   ]);
+
+  // Send payment failure notification email to customer (non-blocking)
+  sendPaymentFailedEmail(env, orderId).catch((err) => {
+    logger.error('Failed to send payment failed email', { orderId, error: String(err) });
+  });
 
   return { received: true };
 };
