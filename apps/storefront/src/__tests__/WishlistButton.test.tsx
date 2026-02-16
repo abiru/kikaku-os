@@ -47,11 +47,13 @@ describe('WishlistButton', () => {
 		const button = screen.getByRole('button');
 		expect(button).toHaveAttribute('aria-label', 'wishlist.addToWishlist');
 
-		fireEvent.click(button);
+			fireEvent.click(button);
 
-		expect(button).toHaveAttribute('aria-label', 'wishlist.removeFromWishlist');
-		expect($wishlistItems.get()['42']).toBeDefined();
-		expect($wishlistItems.get()['42'].title).toBe('LED Panel');
+			expect(button).toHaveAttribute('aria-label', 'wishlist.removeFromWishlist');
+			const addedItem = $wishlistItems.get()['42'];
+			expect(addedItem).toBeDefined();
+			if (!addedItem) throw new Error('Wishlist item was not added');
+			expect(addedItem.title).toBe('LED Panel');
 	});
 
 	it('removes product from wishlist on second click', () => {
@@ -118,13 +120,15 @@ describe('WishlistButton', () => {
 	it('persists to localStorage via nanostores', () => {
 		render(<WishlistButton product={mockProduct} />);
 
-		fireEvent.click(screen.getByRole('button'));
+			fireEvent.click(screen.getByRole('button'));
 
-		const state = $wishlistItems.get();
-		expect(state['42']).toBeDefined();
-		expect(state['42'].productId).toBe(42);
-		expect(state['42'].price).toBe(3000);
-		expect(state['42'].addedAt).toBeGreaterThan(0);
+			const state = $wishlistItems.get();
+			const item = state['42'];
+			expect(item).toBeDefined();
+			if (!item) throw new Error('Wishlist item was not persisted');
+			expect(item.productId).toBe(42);
+			expect(item.price).toBe(3000);
+			expect(item.addedAt).toBeGreaterThan(0);
 	});
 
 	it('prevents event propagation on click', () => {

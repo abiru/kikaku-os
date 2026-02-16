@@ -162,14 +162,17 @@ describe('OrderTracking', () => {
 		expect(steps).toHaveLength(4);
 
 		// First step (received) should be current - has a circle with border-2 border-indigo-600
-		const firstStepDivs = steps[0].querySelectorAll('div');
+			const firstStep = steps.item(0);
+			expect(firstStep).toBeTruthy();
+			if (!firstStep) throw new Error('Missing first progress step');
+			const firstStepDivs = firstStep.querySelectorAll('div');
 		const currentCircle = Array.from(firstStepDivs).find((d) =>
 			d.className.includes('border-indigo-600')
 		);
 		expect(currentCircle).toBeDefined();
 
 		// No completed checkmark svg in first step
-		expect(steps[0].querySelector('svg')).toBeNull();
+			expect(firstStep.querySelector('svg')).toBeNull();
 	});
 
 	it('shows paid as current step for paid order', () => {
@@ -181,15 +184,21 @@ describe('OrderTracking', () => {
 		const steps = nav.querySelectorAll('li');
 
 		// First step (received) should be completed - has bg-indigo-600 with checkmark svg
-		const firstStepDivs = steps[0].querySelectorAll('div');
+			const firstStep = steps.item(0);
+			expect(firstStep).toBeTruthy();
+			if (!firstStep) throw new Error('Missing first progress step');
+			const firstStepDivs = firstStep.querySelectorAll('div');
 		const completedCircle = Array.from(firstStepDivs).find((d) =>
 			d.className.includes('bg-indigo-600')
 		);
 		expect(completedCircle).toBeDefined();
-		expect(steps[0].querySelector('svg')).not.toBeNull();
+			expect(firstStep.querySelector('svg')).not.toBeNull();
 
 		// Second step (paid) should be current - has border-indigo-600
-		const secondStepDivs = steps[1].querySelectorAll('div');
+			const secondStep = steps.item(1);
+			expect(secondStep).toBeTruthy();
+			if (!secondStep) throw new Error('Missing second progress step');
+			const secondStepDivs = secondStep.querySelectorAll('div');
 		const currentCircle = Array.from(secondStepDivs).find((d) =>
 			d.className.includes('border-indigo-600')
 		);
@@ -219,7 +228,10 @@ describe('OrderTracking', () => {
 		const steps = nav.querySelectorAll('li');
 
 		// Third step (preparing) should be current
-		const thirdStepDivs = steps[2].querySelectorAll('div');
+			const thirdStep = steps.item(2);
+			expect(thirdStep).toBeTruthy();
+			if (!thirdStep) throw new Error('Missing third progress step');
+			const thirdStepDivs = thirdStep.querySelectorAll('div');
 		const currentCircle = Array.from(thirdStepDivs).find((d) =>
 			d.className.includes('border-indigo-600')
 		);
@@ -249,7 +261,10 @@ describe('OrderTracking', () => {
 		const steps = nav.querySelectorAll('li');
 
 		// Fourth step (shipped) should be current
-		const fourthStepDivs = steps[3].querySelectorAll('div');
+			const fourthStep = steps.item(3);
+			expect(fourthStep).toBeTruthy();
+			if (!fourthStep) throw new Error('Missing fourth progress step');
+			const fourthStepDivs = fourthStep.querySelectorAll('div');
 		const currentCircle = Array.from(fourthStepDivs).find((d) =>
 			d.className.includes('border-indigo-600')
 		);

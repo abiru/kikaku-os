@@ -202,10 +202,13 @@ describe('ReviewSection', () => {
 		fireEvent.click(screen.getByText('reviews.beFirstToReview'));
 
 		// Click a star to enable submit
-		const starButtons = screen.getAllByRole('button').filter((b) =>
-			b.getAttribute('aria-label')?.includes('reviews.stars')
-		);
-		fireEvent.click(starButtons[4]); // 5 stars
+			const starButtons = screen.getAllByRole('button').filter((b) =>
+				b.getAttribute('aria-label')?.includes('reviews.stars')
+			);
+			const fifthStar = starButtons.at(4);
+			expect(fifthStar).toBeTruthy();
+			if (!fifthStar) throw new Error('Missing 5-star button');
+			fireEvent.click(fifthStar); // 5 stars
 
 		const form = screen.getByText('reviews.submit').closest('form')!;
 		fireEvent.submit(form);
@@ -241,10 +244,13 @@ describe('ReviewSection', () => {
 		fireEvent.click(screen.getByText('reviews.beFirstToReview'));
 
 		// Click 5 stars
-		const starButtons = screen.getAllByRole('button').filter((b) =>
-			b.getAttribute('aria-label')?.includes('reviews.stars')
-		);
-		fireEvent.click(starButtons[4]);
+			const starButtons = screen.getAllByRole('button').filter((b) =>
+				b.getAttribute('aria-label')?.includes('reviews.stars')
+			);
+			const fifthStar = starButtons.at(4);
+			expect(fifthStar).toBeTruthy();
+			if (!fifthStar) throw new Error('Missing 5-star button');
+			fireEvent.click(fifthStar);
 
 		// Fill in required fields
 		fireEvent.change(screen.getByLabelText('reviews.yourName'), {
@@ -289,10 +295,13 @@ describe('ReviewSection', () => {
 		fireEvent.click(screen.getByText('reviews.beFirstToReview'));
 
 		// Click 5 stars
-		const starButtons = screen.getAllByRole('button').filter((b) =>
-			b.getAttribute('aria-label')?.includes('reviews.stars')
-		);
-		fireEvent.click(starButtons[4]);
+			const starButtons = screen.getAllByRole('button').filter((b) =>
+				b.getAttribute('aria-label')?.includes('reviews.stars')
+			);
+			const fifthStar = starButtons.at(4);
+			expect(fifthStar).toBeTruthy();
+			if (!fifthStar) throw new Error('Missing 5-star button');
+			fireEvent.click(fifthStar);
 
 		// Fill in all fields
 		fireEvent.change(screen.getByLabelText('reviews.yourName'), {
