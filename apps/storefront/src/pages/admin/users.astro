@@ -3,13 +3,11 @@ export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Alert } from '../../components/catalyst/alert-banner';
-import { getApiBase } from '../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { Heading } from '../../components/catalyst/heading';
 import UsersTable from '../../components/admin/UsersTable';
 import { t } from '../../i18n';
-import { logError } from '../../utils/logger';
 
-const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
 const roleFilter = Astro.url.searchParams.get('role') || '';
 const activeFilter = Astro.url.searchParams.get('active') || 'all';
@@ -37,58 +35,25 @@ type Role = {
 	priority: number;
 };
 
-let users: AdminUser[] = [];
-let roles: Role[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error: string | null = null;
+// Fetch roles for filter dropdown
+const { data: rolesData } = await adminFetchList<{ roles: Role[] }>('/admin/roles');
+const roles = rolesData?.roles || [];
 
-// SSR Data Fetching
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		// Fetch roles for filter dropdown
-		const rolesRes = await fetch(`${apiBase}/admin/roles`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (rolesRes.ok) {
-			const rolesData = await rolesRes.json();
-			roles = rolesData.roles || [];
-		}
-
-		// Fetch users
-		const query = new URLSearchParams({
-			q,
-			page: page.toString(),
-			perPage: perPage.toString(),
-			active: activeFilter
-		});
-		if (roleFilter) {
-			query.set('role', roleFilter);
-		}
-
-		const res = await fetch(`${apiBase}/admin/users?${query}`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			const errorData = await res.json().catch(() => ({}));
-			throw new Error(errorData.error || `API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		users = data.users || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		logError({ page: 'admin/users' }, e);
-		error = e instanceof Error ? e.message : t('errors.failedToLoadUsers');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
+// Fetch users
+const query = new URLSearchParams({
+	q,
+	page: page.toString(),
+	perPage: perPage.toString(),
+	active: activeFilter
+});
+if (roleFilter) {
+	query.set('role', roleFilter);
 }
+
+const { data, error: fetchError } = await adminFetchList<{ users: AdminUser[]; meta: { totalCount: number; totalPages: number } }>('/admin/users', query);
+const users = data?.users || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error: string | null = fetchError ? t('errors.failedToLoadUsers') : null;
 ---
 
 <AdminLayout title={`${t('admin.users')} - Admin`}>

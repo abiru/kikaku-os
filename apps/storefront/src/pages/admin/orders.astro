@@ -6,12 +6,10 @@ import { Alert } from'../../components/catalyst/alert-banner';
 import OrdersTable from'../../components/admin/OrdersTable';
 import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { Heading } from'../../components/catalyst/heading';
-import { getApiBase } from'../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import type { Order } from'../../lib/types';
 import { t } from '../../i18n';
-import { logError } from '../../utils/logger';
 
-const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') ||'';
 const page = Number(Astro.url.searchParams.get('page') ||'1');
 const paymentStatus = Astro.url.searchParams.get('payment') || '';
@@ -20,38 +18,20 @@ const dateFrom = Astro.url.searchParams.get('from') || '';
 const dateTo = Astro.url.searchParams.get('to') || '';
 const perPage = Number(Astro.url.searchParams.get('perPage') || '20');
 
-let orders: Order[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error = null;
+const query = new URLSearchParams({
+	q,
+	page: page.toString(),
+	perPage: perPage.toString()
+});
+if (paymentStatus) query.set('status', paymentStatus);
+if (fulfillmentStatus) query.set('fulfillment', fulfillmentStatus);
+if (dateFrom) query.set('from', dateFrom);
+if (dateTo) query.set('to', dateTo);
 
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			q,
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-		if (paymentStatus) query.set('status', paymentStatus);
-		if (fulfillmentStatus) query.set('fulfillment', fulfillmentStatus);
-		if (dateFrom) query.set('from', dateFrom);
-		if (dateTo) query.set('to', dateTo);
-
-		const res = await fetch(`${apiBase}/admin/orders?${query}`, {
-			headers: {'x-admin-key': import.meta.env.ADMIN_API_KEY }
-		});
-
-		if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-		const data = await res.json();
-		orders = data.orders || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		logError({ page: 'admin/orders' }, e);
-		error = t('errors.failedToLoadOrders');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ orders: Order[]; meta: { totalCount: number; totalPages: number } }>('/admin/orders', query);
+const orders = data?.orders || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error = fetchError ? t('errors.failedToLoadOrders') : null;
 
 const hasFilters = paymentStatus || fulfillmentStatus || dateFrom || dateTo;
 ---

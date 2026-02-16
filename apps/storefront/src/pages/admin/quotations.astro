@@ -7,12 +7,10 @@ import { Heading } from '../../components/catalyst/heading';
 import { Badge } from '../../components/catalyst/badge';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
-import { getApiBase } from '../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
 
-const apiBase = getApiBase();
-const apiKey = import.meta.env.ADMIN_API_KEY;
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const statusFilter = Astro.url.searchParams.get('status') || '';
 const perPage = 20;
@@ -31,34 +29,16 @@ type Quotation = {
 	created_at: string;
 };
 
-let quotations: Quotation[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error: string | null = null;
+const query = new URLSearchParams({
+	page: page.toString(),
+	perPage: perPage.toString(),
+});
+if (statusFilter) query.set('status', statusFilter);
 
-if (apiKey) {
-	try {
-		const query = new URLSearchParams({
-			page: page.toString(),
-			perPage: perPage.toString(),
-		});
-		if (statusFilter) query.set('status', statusFilter);
-
-		const res = await fetch(`${apiBase}/quotations?${query}`, {
-			headers: { 'x-admin-key': apiKey },
-		});
-
-		if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-		const data = await res.json();
-		quotations = data.quotations || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadQuotations');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ quotations: Quotation[]; meta: { totalCount: number; totalPages: number } }>('/quotations', query);
+const quotations = data?.quotations || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error: string | null = fetchError ? t('errors.failedToLoadQuotations') : null;
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;

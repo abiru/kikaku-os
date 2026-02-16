@@ -8,51 +8,26 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { Button } from '../../components/catalyst/button';
 import { Input } from '../../components/catalyst/input';
 import { Heading } from '../../components/catalyst/heading';
-import { getApiBase } from '../../lib/api';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import type { Product } from '../../lib/types';
 import { t } from '../../i18n';
-import { logError } from '../../utils/logger';
 
-const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
 const status = Astro.url.searchParams.get('status') || 'all';
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = Number(Astro.url.searchParams.get('perPage') || '20');
 
-let products: Product[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error = null;
+const query = new URLSearchParams({
+	q,
+	status,
+	page: page.toString(),
+	perPage: perPage.toString()
+});
 
-// SSR Data Fetching
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			q,
-			status,
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-
-		const res = await fetch(`${apiBase}/admin/products?${query}`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		products = data.products || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		logError({ page: 'admin/products' }, e);
-		error = t('errors.failedToLoadProducts');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ products: Product[]; meta: { totalCount: number; totalPages: number } }>('/admin/products', query);
+const products = data?.products || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error = fetchError ? t('errors.failedToLoadProducts') : null;
 ---
 
 <AdminLayout title={`${t('admin.products')} - Admin`}>
