@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Elements, PaymentElement, AddressElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe, type StripeExpressCheckoutElementConfirmEvent } from '@stripe/stripe-js';
 import { useTranslation } from '../i18n';
@@ -26,6 +26,8 @@ const getStripeErrorMessage = (error: { type?: string; code?: string; decline_co
 	}
 	return t('checkout.stripeErrors.default');
 };
+
+const PAYMENT_TIMEOUT_MS = 30_000;
 
 type CheckoutFormProps = {
 	clientSecret: string | null;
@@ -73,7 +75,7 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 				}
 			}
 
-			const { error } = await stripe.confirmPayment({
+			const confirmPromise = stripe.confirmPayment({
 				elements,
 				confirmParams: {
 					return_url: `${window.location.origin}/checkout/success?order_id=${orderToken}`,
@@ -82,15 +84,23 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 				}
 			});
 
+			const timeoutPromise = new Promise<never>((_, reject) =>
+				setTimeout(() => reject(new Error('PAYMENT_TIMEOUT')), PAYMENT_TIMEOUT_MS)
+			);
+
+			const { error } = await Promise.race([confirmPromise, timeoutPromise]);
+
 			if (error) {
 				setErrorMessage(getStripeErrorMessage(error, t));
 				setIsProcessing(false);
 			}
 			// If successful, user will be redirected by Stripe
 		} catch (err) {
-			console.error('Payment error:', err);
-			const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred';
-			setErrorMessage(errorMsg);
+			if (err instanceof Error && err.message === 'PAYMENT_TIMEOUT') {
+				setErrorMessage(t('checkout.paymentTimeout'));
+			} else {
+				setErrorMessage(err instanceof Error ? err.message : t('checkout.stripeErrors.default'));
+			}
 			setIsProcessing(false);
 		}
 	};
@@ -125,10 +135,10 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 			});
 
 			if (error) {
-				console.error('[Express Checkout] Error:', error);
+				setErrorMessage(getStripeErrorMessage(error, t));
 			}
 		} catch (err) {
-			console.error('[Express Checkout] Exception:', err);
+			setErrorMessage(t('checkout.stripeErrors.default'));
 		}
 	};
 
@@ -234,8 +244,41 @@ export default function CheckoutForm({
 }: CheckoutFormProps) {
 	const { t } = useTranslation();
 	const [email, setEmail] = useState('');
+	const [stripeLoadError, setStripeLoadError] = useState(false);
 
 	const stripePromise = publishableKey ? getStripePromise(publishableKey) : null;
+
+	useEffect(() => {
+		if (!stripePromise) return;
+		stripePromise
+			.then((stripe) => {
+				if (!stripe) setStripeLoadError(true);
+			})
+			.catch(() => {
+				setStripeLoadError(true);
+			});
+	}, [stripePromise]);
+
+	if (stripeLoadError) {
+		return (
+			<div className="bg-white rounded-lg shadow-sm p-6 text-center">
+				<div className="text-red-600 mb-4">
+					<svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+					</svg>
+				</div>
+				<p className="text-lg font-medium text-gray-900 mb-2">{t('checkout.stripeLoadFailed')}</p>
+				<p className="text-sm text-gray-600 mb-4">{t('checkout.stripeLoadFailedDescription')}</p>
+				<button
+					type="button"
+					onClick={() => window.location.reload()}
+					className="text-brand hover:text-brand-active font-medium min-h-[44px]"
+				>
+					{t('errors.reload')}
+				</button>
+			</div>
+		);
+	}
 
 	if (!clientSecret || !stripePromise) {
 		return (

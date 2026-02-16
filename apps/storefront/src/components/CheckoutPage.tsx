@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
 	$cartArray,
 	$appliedCoupon
@@ -36,6 +36,14 @@ type PaymentIntentResponse = {
 	orderId: number;
 	orderPublicToken: string;
 	publishableKey: string;
+};
+
+type CheckoutStep = 'cart' | 'email' | 'payment';
+
+const computeStep = (breakdown: QuoteBreakdown | null, emailSubmitted: boolean): CheckoutStep => {
+	if (!breakdown) return 'cart';
+	if (!emailSubmitted) return 'email';
+	return 'payment';
 };
 
 function CheckoutSkeleton() {
@@ -99,9 +107,19 @@ function CheckoutPageContent() {
 	const [error, setError] = useState<string | null>(null);
 	const emailInputRef = useRef<HTMLInputElement>(null);
 
+	// Fix 1: Stable fingerprint of cart contents for dependency tracking
+	const cartFingerprint = useMemo(
+		() => cartItems.map(i => `${i.variantId}:${i.quantity}`).sort().join(','),
+		[cartItems]
+	);
+
 	useEffect(() => {
+		// Reset payment state when cart changes
+		setEmailSubmitted(false);
+		setClientSecret(null);
+		setOrderToken(null);
 		createQuoteOnly();
-	}, []);
+	}, [cartFingerprint]);
 
 	const createQuoteOnly = async (couponCode?: string) => {
 		try {
@@ -157,7 +175,11 @@ function CheckoutPageContent() {
 
 	const handleEmailChange = useCallback((value: string) => {
 		setCustomerEmail(value);
-		if (emailTouched) {
+		// Real-time validation: validate whenever value is non-empty
+		if (value.length > 0) {
+			setEmailError(validateEmail(value));
+			setEmailTouched(true);
+		} else if (emailTouched) {
 			setEmailError(validateEmail(value));
 		}
 	}, [emailTouched, validateEmail]);
@@ -208,7 +230,11 @@ function CheckoutPageContent() {
 			setEmailSubmitted(true);
 			setLoading(false);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Failed to create payment');
+			if (err instanceof TypeError && err.message.includes('fetch')) {
+				setError(t('errors.networkError'));
+			} else {
+				setError(err instanceof Error ? err.message : t('errors.checkoutFailed'));
+			}
 			setLoading(false);
 		}
 	};
@@ -227,7 +253,7 @@ function CheckoutPageContent() {
 		await createQuoteOnly(couponCode);
 	};
 
-	const currentStep = !breakdown ? 'cart' as const : !emailSubmitted ? 'email' as const : 'payment' as const;
+	const currentStep = computeStep(breakdown, emailSubmitted);
 	const canGoBack = emailSubmitted;
 
 	if (loading) {
@@ -244,9 +270,18 @@ function CheckoutPageContent() {
 						</svg>
 					</div>
 					<p className="text-lg text-gray-900 font-medium">{error}</p>
-					<a href="/cart" className="mt-6 inline-block text-brand hover:text-brand-active min-h-[44px] flex items-center justify-center">
-						{t('checkout.returnToCart')}
-					</a>
+					<div className="mt-6 flex flex-col items-center gap-3">
+						<button
+							type="button"
+							onClick={() => createQuoteOnly()}
+							className="text-brand hover:text-brand-active font-medium min-h-[44px] flex items-center justify-center"
+						>
+							{t('errors.retry')}
+						</button>
+						<a href="/cart" className="text-sm text-gray-500 hover:text-gray-700 min-h-[44px] flex items-center justify-center">
+							{t('checkout.returnToCart')}
+						</a>
+					</div>
 				</div>
 			</div>
 		);
