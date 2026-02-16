@@ -74,9 +74,76 @@ try {
 const buildPageUrl = (newPage: number): string => {
 	return `/categories/${encodeURIComponent(decodedSlug)}?page=${newPage}`;
 };
+
+// CollectionPage JSON-LD for SEO
+const siteUrl = 'https://led-kikaku.com';
+const categoryDescription = t('seo.categoryDescription', { category: categoryDisplayName });
+const jsonLdCollectionPage = {
+	'@context': 'https://schema.org',
+	'@type': 'CollectionPage',
+	name: categoryDisplayName,
+	description: categoryDescription,
+	url: `${siteUrl}/categories/${encodeURIComponent(decodedSlug)}`,
+	numberOfItems: meta.totalCount,
+	...(products.length > 0 ? {
+		mainEntity: {
+			'@type': 'ItemList',
+			numberOfItems: meta.totalCount,
+			itemListElement: products.map((product, index) => {
+				const variant = product.variants?.[0];
+				return {
+					'@type': 'ListItem',
+					position: (meta.page - 1) * meta.perPage + index + 1,
+					url: `${siteUrl}/products/${product.id}`,
+					name: product.title,
+					...(variant?.price ? {
+						item: {
+							'@type': 'Product',
+							name: product.title,
+							url: `${siteUrl}/products/${product.id}`,
+							...(product.image || product.mainImage ? { image: product.mainImage || product.image } : {}),
+							offers: {
+								'@type': 'Offer',
+								price: variant.price.amount,
+								priceCurrency: variant.price.currency || 'JPY',
+							},
+						},
+					} : {}),
+				};
+			}),
+		},
+	} : {}),
+};
+
+// BreadcrumbList JSON-LD for SEO
+const jsonLdBreadcrumb = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{
+			'@type': 'ListItem',
+			position: 1,
+			name: t('category.home'),
+			item: siteUrl,
+		},
+		{
+			'@type': 'ListItem',
+			position: 2,
+			name: t('nav.products'),
+			item: `${siteUrl}/products`,
+		},
+		{
+			'@type': 'ListItem',
+			position: 3,
+			name: categoryDisplayName,
+		},
+	],
+};
 ---
 
-<Layout title={`${categoryDisplayName} - Led Kikaku`}>
+<Layout title={`${categoryDisplayName} - Led Kikaku`} description={categoryDescription}>
+	<script type="application/ld+json" set:html={JSON.stringify(jsonLdCollectionPage)} />
+	<script type="application/ld+json" set:html={JSON.stringify(jsonLdBreadcrumb)} />
 	<div class="bg-white min-h-screen">
 		{/* Breadcrumb */}
 		<nav aria-label="Breadcrumb" class="pt-24 sm:pt-32">

@@ -33,9 +33,43 @@ try {
 } catch {
 	// SSR fetch failed - client-side will retry
 }
+
+// ItemList JSON-LD for SEO
+const siteUrl = 'https://led-kikaku.com';
+const jsonLdItemList = ssrProducts.length > 0 ? {
+	'@context': 'https://schema.org',
+	'@type': 'ItemList',
+	name: t('products.title'),
+	numberOfItems: ssrProducts.length,
+	itemListElement: ssrProducts.map((product, index) => {
+		const variant = product.variants?.[0];
+		return {
+			'@type': 'ListItem',
+			position: index + 1,
+			url: `${siteUrl}/products/${product.id}`,
+			name: product.title,
+			...(variant?.price ? {
+				item: {
+					'@type': 'Product',
+					name: product.title,
+					url: `${siteUrl}/products/${product.id}`,
+					...(product.image ? { image: product.image } : {}),
+					offers: {
+						'@type': 'Offer',
+						price: variant.price.amount,
+						priceCurrency: variant.price.currency || 'JPY',
+					},
+				},
+			} : {}),
+		};
+	}),
+} : null;
 ---
 
-<Layout title="Store - Led Kikaku">
+<Layout title="Store - Led Kikaku" description={t('seo.productsDescription')}>
+	{jsonLdItemList && (
+		<script type="application/ld+json" set:html={JSON.stringify(jsonLdItemList)} />
+	)}
 	<div class="bg-white min-h-screen">
 		<section class="pt-24 pb-12 sm:pt-32 border-b border-gray-200">
 			<Container>
