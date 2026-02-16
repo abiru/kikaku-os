@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
 import type { Env } from '../../env';
-import { jsonOk } from '../../lib/http';
+import { jsonOk, jsonError } from '../../lib/http';
 import { storefrontProductsQuerySchema } from '../../lib/schemas';
 
 const storefront = new Hono<Env>();
@@ -560,6 +561,34 @@ storefront.get('/home/featured-categories', async (c) => {
   }));
 
   return jsonOk(c, { products });
+});
+
+// POST /products/:id/notify - Subscribe to restock notifications
+const restockNotifySchema = z.object({
+  email: z.string().email(),
+});
+
+storefront.post('/products/:id/notify', zValidator('json', restockNotifySchema), async (c) => {
+  const productId = c.req.param('id');
+  const { email } = c.req.valid('json');
+
+  try {
+    const product = await c.env.DB.prepare(
+      'SELECT product_id FROM products WHERE product_id = ?'
+    ).bind(productId).first();
+    if (!product) {
+      return jsonError(c, 'Product not found', 404);
+    }
+
+    await c.env.DB.prepare(
+      'INSERT OR IGNORE INTO restock_notifications (product_id, email) VALUES (?, ?)'
+    ).bind(productId, email).run();
+
+    return jsonOk(c, { message: 'Subscribed to restock notifications' });
+  } catch (error) {
+    console.error('Restock notification subscription failed:', error);
+    return jsonError(c, 'Failed to subscribe to restock notifications', 500);
+  }
 });
 
 export default storefront;

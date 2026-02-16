@@ -4,6 +4,7 @@ export const prerender = false;
 import AccountLayout from '../../layouts/AccountLayout.astro';
 import Container from '../../components/Container.astro';
 import { t } from '../../i18n';
+import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../lib/csrf';
 
 const API_BASE = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
@@ -33,40 +34,45 @@ let success = false;
 if (Astro.request.method === 'POST') {
   try {
     const formData = await Astro.request.formData();
-    const name = formData.get('name') as string;
-    const postal_code = formData.get('postal_code') as string;
-    const prefecture = formData.get('prefecture') as string;
-    const city = formData.get('city') as string;
-    const address1 = formData.get('address1') as string;
-    const address2 = formData.get('address2') as string;
-    const phone = formData.get('phone') as string;
 
-    const response = await fetch(`${API_BASE}/store/account/profile`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': authHeader || '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name,
-        shipping_address: {
-          postal_code: postal_code || undefined,
-          prefecture: prefecture || undefined,
-          city: city || undefined,
-          address1: address1 || undefined,
-          address2: address2 || undefined,
-          phone: phone || undefined,
-        },
-      }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.ok) {
-        success = true;
-      }
+    if (!validateCsrfToken(Astro.request, formData)) {
+      error = 'Invalid CSRF token. Please reload the page and try again.';
     } else {
-      error = t('account.saveFailed');
+      const name = formData.get('name') as string;
+      const postal_code = formData.get('postal_code') as string;
+      const prefecture = formData.get('prefecture') as string;
+      const city = formData.get('city') as string;
+      const address1 = formData.get('address1') as string;
+      const address2 = formData.get('address2') as string;
+      const phone = formData.get('phone') as string;
+
+      const response = await fetch(`${API_BASE}/store/account/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': authHeader || '',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          shipping_address: {
+            postal_code: postal_code || undefined,
+            prefecture: prefecture || undefined,
+            city: city || undefined,
+            address1: address1 || undefined,
+            address2: address2 || undefined,
+            phone: phone || undefined,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.ok) {
+          success = true;
+        }
+      } else {
+        error = t('account.saveFailed');
+      }
     }
   } catch (e) {
     error = t('account.saveFailed');
@@ -90,6 +96,11 @@ try {
 } catch (e) {
   error = t('account.loadError');
 }
+
+const { token: csrfToken, cookieHeader: csrfCookieHeader } = getCsrfToken(Astro.request);
+if (csrfCookieHeader) {
+  Astro.response.headers.append('Set-Cookie', csrfCookieHeader);
+}
 ---
 
 <AccountLayout title={t('account.profilePageTitle')} activeTab="profile">
@@ -112,6 +123,7 @@ try {
       )}
 
       <form method="POST" class="space-y-6">
+        <input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} />
         {/* Basic Info */}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div class="p-4 border-b border-gray-200">

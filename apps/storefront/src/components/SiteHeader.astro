@@ -45,7 +45,10 @@ const {
 		<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-primary/80 overflow-x-auto whitespace-nowrap">
 			<a href="/" class={`transition-colors hover:text-primary ${currentPath === '/' ? 'text-primary font-medium' : ''}`}>{t('nav.store')}</a>
 			<a href="/products" class={`transition-colors hover:text-primary ${currentPath.startsWith('/products') ? 'text-primary font-medium' : ''}`}>{t('nav.products')}</a>
+			<a href="/categories" class={`transition-colors hover:text-primary ${currentPath.startsWith('/categories') ? 'text-primary font-medium' : ''}`}>{t('nav.categories')}</a>
+			<a href="/faq" class={`transition-colors hover:text-primary ${currentPath === '/faq' ? 'text-primary font-medium' : ''}`}>{t('nav.faq')}</a>
 			<a href="/contact" class={`transition-colors hover:text-primary ${currentPath === '/contact' ? 'text-primary font-medium' : ''}`}>{t('nav.support')}</a>
+			<a href="/quotations/new" class={`transition-colors hover:text-primary ${currentPath.startsWith('/quotations') ? 'text-primary font-medium' : ''}`}>{t('nav.quotation')}</a>
 		</nav>
 
 		{/* Utilities: Search, Wishlist, Cart & Account */}
@@ -62,7 +65,7 @@ const {
 				</a>
 			)}
 			<a href="/cart" id="cart-link" class="relative min-h-[44px] min-w-[44px] flex items-center justify-center text-primary/80 hover:text-primary transition-colors">
-				<span id="cart-sr-label" class="sr-only">{t('nav.openCart')}</span>
+				<span id="cart-sr-label" class="sr-only" data-cart-label={t('nav.openCart')} data-cart-label-with-count={t('cart.cartWithCount')}>{t('nav.openCart')}</span>
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
 				<span id="cart-badge" class="hidden absolute -top-1 -right-1 h-4 w-4 rounded-full bg-brand text-[10px] font-medium text-white flex items-center justify-center" aria-hidden="true">0</span>
 			</a>
@@ -122,7 +125,10 @@ const {
 			<div class="px-6 py-4 space-y-1">
 				<a href="/" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.store')}</a>
 				<a href="/products" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/products') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.products')}</a>
+				<a href="/categories" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/categories') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.categories')}</a>
+				<a href="/faq" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/faq' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.faq')}</a>
 				<a href="/contact" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/contact' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.support')}</a>
+				<a href="/quotations/new" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/quotations') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.quotation')}</a>
 				<a href="/wishlist" class="block py-3 text-[15px] border-b border-gray-100 text-primary transition-colors hover:text-brand">{t('wishlist.openWishlist')}</a>
 				<a href="/cart" class="block py-3 text-[15px] border-b border-gray-100 text-primary transition-colors hover:text-brand">{t('nav.openCart')}</a>
 			</div>
@@ -143,10 +149,11 @@ const {
 		if (count > 0) {
 			badge.textContent = String(count > 99 ? '99+' : count);
 			badge.classList.remove('hidden');
-			if (srLabel) srLabel.textContent = `カート（${count}点）`;
+			const withCountTemplate = srLabel?.dataset.cartLabelWithCount || 'カート（{count}点）';
+			if (srLabel) srLabel.textContent = withCountTemplate.replace('{count}', String(count));
 		} else {
 			badge.classList.add('hidden');
-			if (srLabel) srLabel.textContent = 'カートを開く';
+			if (srLabel) srLabel.textContent = srLabel?.dataset.cartLabel || 'カートを開く';
 		}
 	};
 

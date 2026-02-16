@@ -30,7 +30,7 @@ describe('AdminPagination', () => {
 		render(
 			<AdminPagination currentPage={2} totalPages={5} buildHref={buildHref} />
 		)
-		expect(screen.getByText('Page 2 of 5')).toBeDefined()
+		expect(screen.getByText('ページ 2 / 5')).toBeDefined()
 	})
 
 	it('renders previous button when not on first page', () => {

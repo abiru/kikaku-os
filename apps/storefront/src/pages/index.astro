@@ -56,7 +56,7 @@ const jsonLdOrganization = {
       <Copy />
 
     <LogoGrid />
-    {heroes.length > 0 && (
+    {heroes.length > 0 ? (
       heroes.map((hero) => (
         <HomeHero
           title={hero.title}
@@ -69,9 +69,35 @@ const jsonLdOrganization = {
           ctaSecondaryUrl={hero.cta_secondary_url}
         />
       ))
+    ) : (
+      <section class="py-16 text-center">
+        <div class="mx-auto max-w-2xl px-6">
+          <h2 class="text-3xl font-bold tracking-tight text-primary">{t('home.heroTagline')}</h2>
+          <p class="mt-4 text-lg text-secondary">{t('home.heroSubtagline')}</p>
+          <div class="mt-8">
+            <a href="/products" class="rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-active transition-colors">
+              {t('home.viewProducts')}
+            </a>
+          </div>
+        </div>
+      </section>
     )}
 
-      <HomeCategoryGrid products={featuredProducts} />
+      {featuredProducts.length > 0 ? (
+        <HomeCategoryGrid products={featuredProducts} />
+      ) : (
+        <section class="py-16 text-center bg-white">
+          <div class="mx-auto max-w-2xl px-6">
+            <h2 class="text-2xl font-bold tracking-tight text-primary">{t('home.viewProducts')}</h2>
+            <p class="mt-4 text-secondary">{t('home.heroSubtagline')}</p>
+            <div class="mt-6">
+              <a href="/products" class="rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-active transition-colors">
+                {t('home.viewProducts')}
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
       <Research />
     </div>
   </div>

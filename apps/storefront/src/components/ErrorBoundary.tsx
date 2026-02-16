@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <button
             type="button"
             className="mt-3 text-sm font-medium text-red-600 underline hover:text-red-800"
-            onClick={() => window.location.reload()}
+            onClick={() => this.setState({ hasError: false })}
           >
             {t('errors.reload')}
           </button>
