@@ -1,0 +1,188 @@
+---
+export const prerender = false;
+
+import { Alert } from '../../components/catalyst/alert-banner';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { Heading } from '../../components/catalyst/heading';
+import { Badge } from '../../components/catalyst/badge';
+import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../components/catalyst/table';
+import { getApiBase } from '../../lib/api';
+import { formatDate } from '../../lib/format';
+import { t } from '../../i18n';
+
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+const page = Number(Astro.url.searchParams.get('page') || '1');
+const statusFilter = Astro.url.searchParams.get('status') || '';
+const perPage = 20;
+
+type Quotation = {
+	id: number;
+	quotation_number: string;
+	customer_company: string;
+	customer_name: string;
+	customer_email: string | null;
+	total_amount: number;
+	currency: string;
+	valid_until: string;
+	status: string;
+	converted_order_id: number | null;
+	created_at: string;
+};
+
+let quotations: Quotation[] = [];
+let meta = { totalCount: 0, totalPages: 1 };
+let error: string | null = null;
+
+if (apiKey) {
+	try {
+		const query = new URLSearchParams({
+			page: page.toString(),
+			perPage: perPage.toString(),
+		});
+		if (statusFilter) query.set('status', statusFilter);
+
+		const res = await fetch(`${apiBase}/quotations?${query}`, {
+			headers: { 'x-admin-key': apiKey },
+		});
+
+		if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+		const data = await res.json();
+		quotations = data.quotations || [];
+		meta = data.meta || meta;
+	} catch (e) {
+		console.error(e);
+		error = t('errors.failedToLoadQuotations');
+	}
+} else {
+	error = t('errors.adminKeyMissing');
+}
+
+const hasNext = page < meta.totalPages;
+const hasPrev = page > 1;
+
+const getStatusBadge = (status: string) => {
+	const map: Record<string, { color: 'amber' | 'lime' | 'blue' | 'red' | 'zinc'; label: string }> = {
+		draft: { color: 'amber', label: t('quotation.statusDraft') },
+		sent: { color: 'blue', label: t('quotation.statusSent') },
+		accepted: { color: 'lime', label: t('quotation.statusAccepted') },
+		expired: { color: 'zinc', label: t('quotation.statusExpired') },
+		cancelled: { color: 'red', label: t('quotation.statusCancelled') },
+	};
+	return map[status] || { color: 'zinc' as const, label: status };
+};
+
+const formatCurrency = (amount: number, currency: string = 'JPY') => {
+	return new Intl.NumberFormat('ja-JP', {
+		style: 'currency',
+		currency,
+		minimumFractionDigits: 0,
+	}).format(amount);
+};
+
+const buildFilterUrl = (params: Record<string, string>) => {
+	const query = new URLSearchParams();
+	for (const [key, value] of Object.entries(params)) {
+		if (value) query.set(key, value);
+	}
+	const qs = query.toString();
+	return qs ? `?${qs}` : '?';
+};
+---
+
+<AdminLayout title={`${t('admin.quotations')} - Admin`}>
+	<div class="space-y-6">
+		<div class="flex items-center gap-4">
+			<Heading>{t('admin.quotations')}</Heading>
+			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.total')}</span>
+		</div>
+
+		{/* Status Filter */}
+		<div class="flex gap-2 flex-wrap">
+			<a
+				href={buildFilterUrl({})}
+				class={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${!statusFilter ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'}`}
+			>
+				{t('common.all')}
+			</a>
+			{['draft', 'sent', 'accepted', 'expired', 'cancelled'].map((s) => (
+				<a
+					href={buildFilterUrl({ status: s })}
+					class={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${statusFilter === s ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'}`}
+				>
+					{getStatusBadge(s).label}
+				</a>
+			))}
+		</div>
+
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
+
+		{quotations.length === 0 && !error ? (
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+				<p class="text-zinc-500 text-sm">{t('admin.noQuotations')}</p>
+			</div>
+		) : (
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+				<div class="overflow-x-auto">
+					<Table client:only="react">
+						<TableHead>
+							<TableRow>
+								<TableHeader>{t('admin.quotationNumber')}</TableHeader>
+								<TableHeader>{t('admin.customer')}</TableHeader>
+								<TableHeader>{t('admin.status')}</TableHeader>
+								<TableHeader>{t('quotation.totalAmount')}</TableHeader>
+								<TableHeader>{t('quotation.validUntil')}</TableHeader>
+								<TableHeader>{t('admin.date')}</TableHeader>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{quotations.map((q) => {
+								const badge = getStatusBadge(q.status);
+								return (
+									<TableRow href={`/admin/quotations/${q.id}`}>
+										<TableCell className="font-mono text-xs font-medium text-indigo-600">
+											{q.quotation_number}
+										</TableCell>
+										<TableCell>
+											<div class="font-medium text-zinc-950">{q.customer_company}</div>
+											<div class="text-zinc-500 text-xs">{q.customer_name}</div>
+										</TableCell>
+										<TableCell>
+											<Badge color={badge.color} client:load>{badge.label}</Badge>
+										</TableCell>
+										<TableCell className="tabular-nums">
+											{formatCurrency(q.total_amount, q.currency)}
+										</TableCell>
+										<TableCell className="text-zinc-500 tabular-nums whitespace-nowrap">
+											{formatDate(q.valid_until, { year: 'numeric', month: '2-digit', day: '2-digit' })}
+										</TableCell>
+										<TableCell className="text-zinc-500 tabular-nums whitespace-nowrap">
+											{formatDate(q.created_at, { year: 'numeric', month: '2-digit', day: '2-digit' })}
+										</TableCell>
+									</TableRow>
+								);
+							})}
+						</TableBody>
+					</Table>
+				</div>
+			</div>
+		)}
+
+		{/* Pagination */}
+		<div class="flex items-center justify-between">
+			<div class="text-xs text-zinc-500">
+				{t('admin.pageOf', { page, totalPages: meta.totalPages })}
+			</div>
+			<Pagination client:load>
+				<PaginationPrevious href={hasPrev ? `?page=${page - 1}${statusFilter ? `&status=${statusFilter}` : ''}` : null} />
+				<PaginationNext href={hasNext ? `?page=${page + 1}${statusFilter ? `&status=${statusFilter}` : ''}` : null} />
+			</Pagination>
+		</div>
+	</div>
+</AdminLayout>

@@ -465,7 +465,34 @@
     "email": "メールアドレス",
     "itemApproved": "項目が承認されました。",
     "itemRejected": "項目が却下されました。",
-    "nameLabel": "名前"
+    "nameLabel": "名前",
+    "quotations": "見積管理",
+    "quotationNumber": "見積番号",
+    "noQuotations": "見積がありません。",
+    "quotationNotFound": "見積が見つかりません。",
+    "quotationConvertedToOrder": "注文 #{orderId} に変換済み",
+    "viewOrder": "注文を表示",
+    "deleteQuotationFailed": "見積の削除に失敗しました。",
+    "exportOrders": "注文エクスポート",
+    "exportCsv": "CSVエクスポート",
+    "exportDateFrom": "開始日",
+    "exportDateTo": "終了日",
+    "exportButton": "エクスポート",
+    "exportNoDateRange": "日付範囲を指定してください。",
+    "bulkApprove": "一括承認",
+    "bulkReject": "一括却下",
+    "bulkDelete": "一括削除",
+    "selectAll": "すべて選択",
+    "selectedCount": "{count}件選択中",
+    "filterByProduct": "商品で絞り込み",
+    "filterBySeverity": "重要度で絞り込み",
+    "filterByKind": "種類で絞り込み",
+    "severity": "重要度",
+    "kind": "種類",
+    "category": "カテゴリー",
+    "taxRate": "税率",
+    "featuredProduct": "おすすめ商品",
+    "dateRange": "日付範囲"
   },
   "wishlist": {
     "title": "お気に入り",
@@ -778,7 +805,8 @@
     "percentageMax": "パーセンテージは100を超えることはできません。",
     "rateRange": "税率は0から1の間で指定してください（例：10%は0.10）。",
     "rateBetween": "税率は0から1の間で指定してください。",
-    "applicableFromRequired": "適用開始日は必須です。"
+    "applicableFromRequired": "適用開始日は必須です。",
+    "failedToLoadQuotations": "見積の読み込みに失敗しました。"
   },
   "pages": {
     "orderStatus": {

@@ -29,6 +29,9 @@ type BulkImageUploadMetadata = {
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
+const statusFilter = Astro.url.searchParams.get('status') || 'open';
+const severityFilter = Astro.url.searchParams.get('severity') || '';
+const kindFilter = Astro.url.searchParams.get('kind') || '';
 
 // Form Action Handling (SSR)
 let actionMessage = null;
@@ -59,7 +62,10 @@ let error = null;
 
 if (apiKey) {
 	try {
-		const res = await fetch(`${apiBase}/inbox?status=open&limit=50`, {
+		const query = new URLSearchParams({ status: statusFilter, limit: '50' });
+		if (severityFilter) query.set('severity', severityFilter);
+		if (kindFilter) query.set('kind', kindFilter);
+		const res = await fetch(`${apiBase}/inbox?${query}`, {
 			headers: { 'x-admin-key': apiKey }
 		});
 		if (!res.ok) throw new Error(`API Error: ${res.status}`);
@@ -135,6 +141,45 @@ const getBadgeColor = (severity: string) => {
 				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{items.length} {t('admin.pending')}</span>
 			</div>
 		</div>
+
+		{/* Filters */}
+		<form method="get" class="flex flex-wrap gap-3 items-end">
+			<div>
+				<label for="inbox-status" class="block text-xs font-medium text-zinc-600 mb-1">{t('admin.status')}</label>
+				<select id="inbox-status" name="status" class="rounded-md border-zinc-200 text-sm py-1.5">
+					<option value="open" selected={statusFilter === 'open'}>Open</option>
+					<option value="approved" selected={statusFilter === 'approved'}>Approved</option>
+					<option value="rejected" selected={statusFilter === 'rejected'}>Rejected</option>
+				</select>
+			</div>
+			<div>
+				<label for="inbox-severity" class="block text-xs font-medium text-zinc-600 mb-1">{t('admin.severity')}</label>
+				<select id="inbox-severity" name="severity" class="rounded-md border-zinc-200 text-sm py-1.5">
+					<option value="">{t('common.all')}</option>
+					<option value="critical" selected={severityFilter === 'critical'}>Critical</option>
+					<option value="warning" selected={severityFilter === 'warning'}>Warning</option>
+					<option value="info" selected={severityFilter === 'info'}>Info</option>
+				</select>
+			</div>
+			<div>
+				<label for="inbox-kind" class="block text-xs font-medium text-zinc-600 mb-1">{t('admin.kind')}</label>
+				<select id="inbox-kind" name="kind" class="rounded-md border-zinc-200 text-sm py-1.5">
+					<option value="">{t('common.all')}</option>
+					<option value="daily_close" selected={kindFilter === 'daily_close'}>Daily Close</option>
+					<option value="bulk_image_upload" selected={kindFilter === 'bulk_image_upload'}>Bulk Image Upload</option>
+					<option value="ai_triage" selected={kindFilter === 'ai_triage'}>AI Triage</option>
+					<option value="inventory_alert" selected={kindFilter === 'inventory_alert'}>Inventory Alert</option>
+				</select>
+			</div>
+			<button type="submit" class="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+				{t('common.apply')}
+			</button>
+			{(severityFilter || kindFilter || statusFilter !== 'open') && (
+				<a href="/admin/inbox" class="px-4 py-1.5 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200">
+					{t('common.clear')}
+				</a>
+			)}
+		</form>
 
 		{actionMessage && (
 			<Alert color={actionMessage.type === 'success' ? 'green' : 'red'} client:load>

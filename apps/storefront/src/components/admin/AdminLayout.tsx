@@ -25,6 +25,7 @@ import {
   ChatBubbleLeftRightIcon,
   NewspaperIcon,
   ClipboardDocumentListIcon,
+  DocumentChartBarIcon,
 } from '@heroicons/react/24/outline'
 import { t } from '../../i18n'
 import { SidebarLayout } from '../catalyst/sidebar-layout'
@@ -67,6 +68,7 @@ const navigation: NavigationItem[] = [
   { name: 'admin.dashboard', href: '/admin/', icon: HomeIcon, permission: 'dashboard:read' },
   { name: 'admin.inbox', href: '/admin/inbox', icon: InboxIcon, permission: 'inbox:read' },
   { name: 'admin.orders', href: '/admin/orders', icon: ShoppingCartIcon, permission: 'orders:read' },
+  { name: 'admin.quotations', href: '/admin/quotations', icon: DocumentChartBarIcon, permission: 'orders:read' },
   { name: 'admin.customers', href: '/admin/customers', icon: UsersIcon, permission: 'customers:read' },
   { name: 'admin.shipping', href: '/admin/shipping', icon: TruckIcon, permission: 'orders:read' },
   { name: 'admin.events', href: '/admin/events', icon: CalendarIcon, permission: 'orders:read' },

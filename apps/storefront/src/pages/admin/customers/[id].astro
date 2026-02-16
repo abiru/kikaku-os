@@ -7,6 +7,7 @@ import { Button } from '../../../components/catalyst/button';
 import { Fieldset, Field } from '../../../components/catalyst/fieldset';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Input } from '../../../components/catalyst/input';
+import { Pagination, PaginationPrevious, PaginationNext } from '../../../components/catalyst/pagination';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
@@ -16,6 +17,8 @@ import { t } from '../../../i18n';
 const { id } = Astro.params;
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
+const orderPage = Number(Astro.url.searchParams.get('orderPage') || '1');
+const ordersPerPage = 10;
 
 type Customer = {
 	id: number;
@@ -257,59 +260,90 @@ const getStatusBadge = (status: string) => {
 					</form>
 
 					{/* Order History */}
-					<div>
-						<Subheading>{t('admin.orderHistory')}</Subheading>
+					{(() => {
+						const totalOrders = orders.length;
+						const totalOrderPages = Math.max(1, Math.ceil(totalOrders / ordersPerPage));
+						const paginatedOrders = orders.slice(
+							(orderPage - 1) * ordersPerPage,
+							orderPage * ordersPerPage
+						);
+						const hasOrderPrev = orderPage > 1;
+						const hasOrderNext = orderPage < totalOrderPages;
 
-						{orders.length === 0 ? (
-							<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-								<p class="text-secondary text-sm">{t('admin.noOrdersYet')}</p>
-							</div>
-						) : (
-							<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-								<div class="overflow-x-auto">
-									<Table client:only="react">
-										<TableHead>
-											<TableRow>
-												<TableHeader>{t('admin.orderId')}</TableHeader>
-												<TableHeader>{t('admin.status')}</TableHeader>
-												<TableHeader>{t('admin.total')}</TableHeader>
-												<TableHeader>{t('admin.created')}</TableHeader>
-												<TableHeader>{t('admin.paid')}</TableHeader>
-												<TableHeader>{t('admin.action')}</TableHeader>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{orders.map((order) => {
-												const badge = getStatusBadge(order.status);
-												return (
-													<TableRow href={`/admin/orders/${order.id}`}>
-														<TableCell className="font-mono text-xs">
-															#{order.id}
-														</TableCell>
-														<TableCell>
-															<Badge color={badge.color} client:load>{badge.label}</Badge>
-														</TableCell>
-														<TableCell className="tabular-nums">
-															{formatCurrency(order.total_net, order.currency)}
-														</TableCell>
-														<TableCell className="text-secondary tabular-nums">
-															{formatDate(order.created_at, dateTimeOpts)}
-														</TableCell>
-														<TableCell className="text-secondary tabular-nums">
-															{formatDate(order.paid_at, dateTimeOpts)}
-														</TableCell>
-														<TableCell>
-															<a href={`/admin/orders/${order.id}`} class="text-brand hover:underline font-medium">{t('admin.view')}</a>
-														</TableCell>
-													</TableRow>
-												);
-											})}
-										</TableBody>
-									</Table>
+						return (
+							<div>
+								<div class="flex items-center justify-between mb-4">
+									<Subheading>{t('admin.orderHistory')}</Subheading>
+									{totalOrders > 0 && (
+										<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{totalOrders} {t('admin.orders')}</span>
+									)}
 								</div>
+
+								{orders.length === 0 ? (
+									<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+										<p class="text-secondary text-sm">{t('admin.noOrdersYet')}</p>
+									</div>
+								) : (
+									<>
+										<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+											<div class="overflow-x-auto">
+												<Table client:only="react">
+													<TableHead>
+														<TableRow>
+															<TableHeader>{t('admin.orderId')}</TableHeader>
+															<TableHeader>{t('admin.status')}</TableHeader>
+															<TableHeader>{t('admin.total')}</TableHeader>
+															<TableHeader>{t('admin.created')}</TableHeader>
+															<TableHeader>{t('admin.paid')}</TableHeader>
+															<TableHeader>{t('admin.action')}</TableHeader>
+														</TableRow>
+													</TableHead>
+													<TableBody>
+														{paginatedOrders.map((order) => {
+															const badge = getStatusBadge(order.status);
+															return (
+																<TableRow href={`/admin/orders/${order.id}`}>
+																	<TableCell className="font-mono text-xs">
+																		#{order.id}
+																	</TableCell>
+																	<TableCell>
+																		<Badge color={badge.color} client:load>{badge.label}</Badge>
+																	</TableCell>
+																	<TableCell className="tabular-nums">
+																		{formatCurrency(order.total_net, order.currency)}
+																	</TableCell>
+																	<TableCell className="text-secondary tabular-nums">
+																		{formatDate(order.created_at, dateTimeOpts)}
+																	</TableCell>
+																	<TableCell className="text-secondary tabular-nums">
+																		{formatDate(order.paid_at, dateTimeOpts)}
+																	</TableCell>
+																	<TableCell>
+																		<a href={`/admin/orders/${order.id}`} class="text-brand hover:underline font-medium">{t('admin.view')}</a>
+																	</TableCell>
+																</TableRow>
+															);
+														})}
+													</TableBody>
+												</Table>
+											</div>
+										</div>
+										{totalOrderPages > 1 && (
+											<div class="flex items-center justify-between mt-4">
+												<div class="text-xs text-zinc-500">
+													Page {orderPage} / {totalOrderPages}
+												</div>
+												<Pagination client:load>
+													<PaginationPrevious href={hasOrderPrev ? `?orderPage=${orderPage - 1}` : null} />
+													<PaginationNext href={hasOrderNext ? `?orderPage=${orderPage + 1}` : null} />
+												</Pagination>
+											</div>
+										)}
+									</>
+								)}
 							</div>
-						)}
-					</div>
+						);
+					})()}
 				</>
 			)}
 	</div>
