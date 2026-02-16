@@ -17,6 +17,7 @@ import {
   calculateOrderStatus,
   getStatusChangeReason
 } from '../orderStatus';
+import { sendRefundNotificationEmail } from '../orderEmail';
 import { createLogger } from '../../lib/logger';
 
 const logger = createLogger('stripe-refund-handler');
@@ -190,6 +191,13 @@ export const handleRefundEvents = async (
         refund.amount,
         event.id
       );
+
+      // Send refund notification email (non-blocking)
+      try {
+        await sendRefundNotificationEmail(env, resolvedOrderId, refund.amount, refund.currency);
+      } catch (emailErr) {
+        logger.error('Failed to send refund notification email', { orderId: resolvedOrderId, error: String(emailErr) });
+      }
     }
   }
 

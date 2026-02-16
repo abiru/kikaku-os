@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { cancelOrder } from '../../services/orderCancel';
 
+// Mock orderEmail to avoid DB calls for email
+vi.mock('../../services/orderEmail', () => ({
+  sendOrderCancellationEmail: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+import { sendOrderCancellationEmail } from '../../services/orderEmail';
+
 // Mock global fetch for Stripe API calls
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
@@ -86,6 +93,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 1,
       reason: 'Customer changed mind',
       actor: 'admin',
@@ -131,6 +139,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 2,
       reason: 'Defective product',
       actor: 'admin',
@@ -168,6 +177,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 3,
       reason: 'Customer request',
       actor: 'admin',
@@ -193,6 +203,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 999,
       reason: 'Test',
       actor: 'admin',
@@ -212,6 +223,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 4,
       reason: 'Test',
       actor: 'admin',
@@ -231,6 +243,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 5,
       reason: 'Test',
       actor: 'admin',
@@ -251,6 +264,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 6,
       reason: 'Test',
       actor: 'admin',
@@ -276,6 +290,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 7,
       reason: 'Test',
       actor: 'admin',
@@ -300,6 +315,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 8,
       reason: 'Test',
       actor: 'admin',
@@ -323,6 +339,7 @@ describe('cancelOrder service', () => {
 
     const result = await cancelOrder({
       db: db as unknown as D1Database,
+      env: { DB: db } as any,
       orderId: 9,
       reason: 'Test',
       actor: 'admin',

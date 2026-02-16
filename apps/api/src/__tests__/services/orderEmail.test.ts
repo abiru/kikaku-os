@@ -3,6 +3,8 @@ import {
   sendOrderConfirmationEmail,
   sendShippingNotificationEmail,
   sendPaymentFailedEmail,
+  sendOrderCancellationEmail,
+  sendRefundNotificationEmail,
   getOrderWithCustomer,
   getOrderItems,
   buildOrderItemsHtml,
@@ -91,6 +93,201 @@ describe('getOrderWithCustomer', () => {
     const result = await getOrderWithCustomer(env as any, 999);
 
     expect(result).toBeNull();
+  });
+});
+
+describe('sendOrderCancellationEmail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns error when order is not found', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB };
+
+    const result = await sendOrderCancellationEmail(env as any, 999, 'お客様都合');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Order not found');
+  });
+
+  it('returns error when customer email is missing', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB };
+
+    const result = await sendOrderCancellationEmail(env as any, 2, 'お客様都合');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Customer email not found');
+  });
+
+  it('sends cancellation email with fallback template', async () => {
+    const items: OrderItem[] = [
+      { product_title: 'LED照明', variant_title: 'Default', quantity: 1, unit_price: 10000 },
+    ];
+    const mockDB = createMockDB({ orderItems: items });
+    const env = { DB: mockDB };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_cancel' });
+
+    const result = await sendOrderCancellationEmail(env as any, 1, 'お客様都合');
+
+    expect(result.success).toBe(true);
+    expect(getEmailTemplate).toHaveBeenCalledWith(env, 'order-cancellation');
+    expect(sendEmail).toHaveBeenCalledWith(
+      env,
+      expect.objectContaining({
+        to: 'tanaka@example.com',
+        subject: 'ご注文キャンセルのお知らせ #1',
+        html: expect.stringContaining('ご注文キャンセルのお知らせ'),
+        text: expect.stringContaining('ご注文キャンセルのお知らせ'),
+      })
+    );
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    expect(callArgs.html).toContain('お客様都合');
+    expect(callArgs.html).toContain('LED照明');
+    expect(callArgs.text).toContain('お客様都合');
+  });
+
+  it('sends cancellation email with DB template when available', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB };
+
+    const mockTemplate = {
+      id: 1,
+      slug: 'order-cancellation',
+      name: 'Order Cancellation',
+      subject: 'キャンセル #{{order_number}}',
+      body_html: '<p>{{customer_name}}様、注文#{{order_number}}をキャンセルしました。理由: {{reason}}</p>',
+      body_text: '{{customer_name}}様、注文#{{order_number}}をキャンセルしました。理由: {{reason}}',
+      variables: '[]',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+    };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(mockTemplate);
+    vi.mocked(renderTemplate).mockReturnValue({
+      subject: 'キャンセル #1',
+      html: '<p>田中太郎様、注文#1をキャンセルしました。理由: お客様都合</p>',
+      text: '田中太郎様、注文#1をキャンセルしました。理由: お客様都合',
+    });
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_tmpl_cancel' });
+
+    const result = await sendOrderCancellationEmail(env as any, 1, 'お客様都合');
+
+    expect(result.success).toBe(true);
+    expect(renderTemplate).toHaveBeenCalledWith(
+      mockTemplate,
+      expect.objectContaining({
+        customer_name: '田中太郎',
+        order_number: '1',
+        reason: 'お客様都合',
+      })
+    );
+  });
+
+  it('includes custom refund amount when provided', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_partial' });
+
+    const result = await sendOrderCancellationEmail(env as any, 1, 'お客様都合', 5000);
+
+    expect(result.success).toBe(true);
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    expect(callArgs.html).toContain('5,000');
+    expect(callArgs.text).toContain('5,000');
+  });
+});
+
+describe('sendRefundNotificationEmail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns error when order is not found', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB };
+
+    const result = await sendRefundNotificationEmail(env as any, 999, 3000, 'JPY');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Order not found');
+  });
+
+  it('returns error when customer email is missing', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB };
+
+    const result = await sendRefundNotificationEmail(env as any, 2, 3000, 'JPY');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Customer email not found');
+  });
+
+  it('sends refund notification email with fallback template', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(null);
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_refund' });
+
+    const result = await sendRefundNotificationEmail(env as any, 1, 3000, 'JPY');
+
+    expect(result.success).toBe(true);
+    expect(getEmailTemplate).toHaveBeenCalledWith(env, 'refund-notification');
+    expect(sendEmail).toHaveBeenCalledWith(
+      env,
+      expect.objectContaining({
+        to: 'tanaka@example.com',
+        subject: 'ご返金のお知らせ #1',
+        html: expect.stringContaining('ご返金のお知らせ'),
+        text: expect.stringContaining('ご返金のお知らせ'),
+      })
+    );
+    const callArgs = vi.mocked(sendEmail).mock.calls[0][1];
+    expect(callArgs.html).toContain('3,000');
+    expect(callArgs.text).toContain('3,000');
+  });
+
+  it('sends refund notification with DB template when available', async () => {
+    const mockDB = createMockDB();
+    const env = { DB: mockDB };
+
+    const mockTemplate = {
+      id: 1,
+      slug: 'refund-notification',
+      name: 'Refund Notification',
+      subject: '返金 #{{order_number}}',
+      body_html: '<p>{{customer_name}}様、{{refund_amount}}円を返金しました。</p>',
+      body_text: '{{customer_name}}様、{{refund_amount}}円を返金しました。',
+      variables: '[]',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+    };
+
+    vi.mocked(getEmailTemplate).mockResolvedValue(mockTemplate);
+    vi.mocked(renderTemplate).mockReturnValue({
+      subject: '返金 #1',
+      html: '<p>田中太郎様、3,000円を返金しました。</p>',
+      text: '田中太郎様、3,000円を返金しました。',
+    });
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, messageId: 'msg_tmpl_refund' });
+
+    const result = await sendRefundNotificationEmail(env as any, 1, 3000, 'JPY');
+
+    expect(result.success).toBe(true);
+    expect(renderTemplate).toHaveBeenCalledWith(
+      mockTemplate,
+      expect.objectContaining({
+        customer_name: '田中太郎',
+        order_number: '1',
+        refund_amount: '3,000',
+      })
+    );
   });
 });
 

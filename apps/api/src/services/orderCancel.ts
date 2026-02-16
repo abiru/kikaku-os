@@ -7,6 +7,8 @@
 import { logAuditEvent } from '../lib/audit';
 import { CANCELLABLE_STATUSES } from '../lib/schemas/order';
 import { createLogger } from '../lib/logger';
+import { sendOrderCancellationEmail } from './orderEmail';
+import type { Env } from '../env';
 
 const logger = createLogger('order-cancel');
 
@@ -24,6 +26,7 @@ type OrderItemRow = {
 
 type CancelOrderParams = {
   db: D1Database;
+  env: Env['Bindings'];
   orderId: number;
   reason: string;
   actor: string;
@@ -43,7 +46,7 @@ type CancelOrderResult =
  * 5. Record status history and audit log
  */
 export async function cancelOrder(params: CancelOrderParams): Promise<CancelOrderResult> {
-  const { db, orderId, reason, actor, stripeSecretKey } = params;
+  const { db, env, orderId, reason, actor, stripeSecretKey } = params;
 
   // 1. Get order and validate
   const order = await db
@@ -148,6 +151,13 @@ export async function cancelOrder(params: CancelOrderParams): Promise<CancelOrde
       inventory_restored: inventoryRestored,
     },
   });
+
+  // 7. Send cancellation notification email (non-blocking)
+  try {
+    await sendOrderCancellationEmail(env, orderId, reason);
+  } catch (emailErr) {
+    logger.error('Failed to send cancellation email', { orderId, error: String(emailErr) });
+  }
 
   return {
     ok: true,
