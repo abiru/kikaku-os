@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Elements, PaymentElement, AddressElement, ExpressCheckoutElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { loadStripe, type Stripe, type StripeExpressCheckoutElementConfirmEvent } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { useTranslation } from '../i18n';
 
 // Singleton cache: loadStripe should only be called once per publishable key
@@ -35,7 +35,7 @@ type CheckoutFormProps = {
 	publishableKey: string;
 };
 
-function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: string | null; email: string; onEmailChange: (email: string) => void }) {
+function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 	const { t } = useTranslation();
 	const stripe = useStripe();
 	const elements = useElements();
@@ -53,34 +53,10 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 		setErrorMessage(null);
 
 		try {
-			// Get the address from AddressElement
-			const addressElement = elements.getElement('address');
-			let shippingData = null;
-
-			if (addressElement) {
-				const { complete, value } = await addressElement.getValue();
-				if (complete && value) {
-					shippingData = {
-						name: value.name,
-						address: {
-							line1: value.address.line1,
-							line2: value.address.line2 || undefined,
-							city: value.address.city,
-							state: value.address.state,
-							postal_code: value.address.postal_code,
-							country: value.address.country
-						},
-						phone: value.phone || undefined
-					};
-				}
-			}
-
 			const confirmPromise = stripe.confirmPayment({
 				elements,
 				confirmParams: {
-					return_url: `${window.location.origin}/checkout/success?order_id=${orderToken}`,
-					receipt_email: email,
-					...(shippingData ? { shipping: shippingData } : {})
+					return_url: `${window.location.origin}/checkout/success?order_id=${orderToken}`
 				}
 			});
 
@@ -105,108 +81,13 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 		}
 	};
 
-	const onExpressCheckoutConfirm = async (event: StripeExpressCheckoutElementConfirmEvent) => {
-		// Extract shipping address if available
-		let shippingData = null;
-		if (event.shippingAddress) {
-			shippingData = {
-				name: event.shippingAddress.name,
-				address: {
-					line1: event.shippingAddress.address.line1,
-					line2: event.shippingAddress.address.line2 || undefined,
-					city: event.shippingAddress.address.city,
-					state: event.shippingAddress.address.state,
-					postal_code: event.shippingAddress.address.postal_code,
-					country: event.shippingAddress.address.country
-				}
-			};
-		}
-
-		// Complete the payment
-		if (!stripe || !elements || !orderToken) return;
-
-		try {
-			const { error } = await stripe.confirmPayment({
-				elements,
-				confirmParams: {
-					return_url: `${window.location.origin}/checkout/success?order_id=${orderToken}`,
-					...(shippingData ? { shipping: shippingData } : {})
-				}
-			});
-
-			if (error) {
-				setErrorMessage(getStripeErrorMessage(error, t));
-			}
-		} catch (err) {
-			setErrorMessage(t('checkout.stripeErrors.default'));
-		}
-	};
-
 	return (
 		<form onSubmit={handleSubmit} className="space-y-6" aria-busy={isProcessing}>
-			{/* Express Checkout (Apple Pay / Google Pay) */}
-			<div>
-				<ExpressCheckoutElement
-					onConfirm={onExpressCheckoutConfirm}
-					options={{
-						buttonType: {
-							applePay: 'buy',
-							googlePay: 'buy'
-						}
-					}}
-				/>
-			</div>
-
-			{/* Divider */}
-			<div className="relative">
-				<div className="absolute inset-0 flex items-center">
-					<div className="w-full border-t border-gray-300"></div>
-				</div>
-				<div className="relative flex justify-center text-sm">
-					<span className="px-2 bg-white text-gray-500">{t('common.or')}</span>
-				</div>
-			</div>
-
-			{/* Email input */}
-			<div>
-				<label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
-					{t('checkout.email')}
-				</label>
-				<input
-					type="email"
-					id="checkout-email"
-					required
-					aria-required="true"
-					value={email}
-					onChange={(e) => onEmailChange(e.target.value)}
-					className="block w-full rounded-[5px] border border-[#e6e6e6] shadow-sm focus:border-brand focus:ring-brand text-base px-3 py-3"
-					placeholder="your@email.com"
-				/>
-			</div>
-
-			{/* Address Element - shipping address */}
-			<div>
-				<label className="block text-sm font-medium text-gray-700 mb-2">
-					{t('checkout.shippingAddress')}
-				</label>
-				<AddressElement
-					options={{
-						mode: 'shipping',
-						allowedCountries: ['JP']
-					}}
-				/>
-			</div>
-
-			{/* Payment Element */}
 			<div>
 				<label className="block text-sm font-medium text-gray-700 mb-2">
 					{t('checkout.paymentDetails')}
 				</label>
-				<PaymentElement
-					options={{
-						layout: 'tabs'
-					}}
-				/>
+				<PaymentElement />
 			</div>
 
 			{/* Error message */}
@@ -244,7 +125,6 @@ export default function CheckoutForm({
 	publishableKey
 }: CheckoutFormProps) {
 	const { t } = useTranslation();
-	const [email, setEmail] = useState('');
 	const [stripeLoadError, setStripeLoadError] = useState(false);
 
 	const stripePromise = publishableKey ? getStripePromise(publishableKey) : null;
@@ -312,7 +192,7 @@ export default function CheckoutForm({
 					locale: 'ja'
 				}}
 			>
-				<CheckoutFormInner orderToken={orderToken} email={email} onEmailChange={setEmail} />
+				<CheckoutFormInner orderToken={orderToken} />
 			</Elements>
 		</div>
 	);
