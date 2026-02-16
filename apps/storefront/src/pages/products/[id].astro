@@ -3,6 +3,7 @@ import EmptyState from '../../components/EmptyState.astro';
 import ProductImageGallery from '../../components/ProductImageGallery.astro';
 import ProductVariantSelector from '../../components/ProductVariantSelector.astro';
 import RelatedProducts from '../../components/RelatedProducts.astro';
+import ShareButtons from '../../components/ShareButtons.astro';
 import ShippingPolicy from '../../components/ShippingPolicy.astro';
 import WishlistButton from '../../components/WishlistButton';
 import RestockNotification from '../../components/RestockNotification';
@@ -32,6 +33,21 @@ try {
 	const status = typeof error === 'object' && error ? (error as { status?: number }).status : undefined;
 	loadState = status === 404 ? 'not-found' : 'unavailable';
 	product = null;
+}
+
+// Fetch review summary for AggregateRating
+let reviewSummary: { averageRating: number | null; reviewCount: number } = { averageRating: null, reviewCount: 0 };
+if (product) {
+	try {
+		const reviewData = await fetchJson<{ averageRating: number | null; reviewCount: number }>(
+			buildStoreUrl(`/products/${encodedId}/reviews`, apiBase)
+		);
+		if (reviewData) {
+			reviewSummary = { averageRating: reviewData.averageRating, reviewCount: reviewData.reviewCount };
+		}
+	} catch {
+		// Review data not critical
+	}
 }
 
 // Fetch related products (same category, exclude current product)
@@ -151,6 +167,15 @@ const jsonLdProduct = product && variant?.price ? {
 			name: 'Led Kikaku',
 		},
 	},
+	...(reviewSummary.averageRating !== null && reviewSummary.reviewCount > 0 ? {
+		aggregateRating: {
+			'@type': 'AggregateRating',
+			ratingValue: reviewSummary.averageRating,
+			reviewCount: reviewSummary.reviewCount,
+			bestRating: 5,
+			worstRating: 1,
+		},
+	} : {}),
 } : null;
 
 // BreadcrumbList JSON-LD for SEO
@@ -248,6 +273,9 @@ const jsonLdBreadcrumb = product ? {
 									/>
 								</div>
 							</div>
+
+							{/* Share Buttons */}
+							<ShareButtons url={`https://led-kikaku.com/products/${product.id}`} title={product.title} />
 
 							{/* Stock status */}
 							{stockValue !== null && (

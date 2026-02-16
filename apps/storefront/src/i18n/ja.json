@@ -91,6 +91,10 @@
     "priceAbove": "{min}円以上",
     "priceUpTo": "{max}円以下",
     "pagination": "ページネーション",
+    "sortLabel": "並び替え",
+    "sortNewest": "新着順",
+    "sortPriceAsc": "価格が安い順",
+    "sortPriceDesc": "価格が高い順",
     "announceCount": "{count}件の商品が見つかりました"
   },
   "cart": {
@@ -819,7 +823,16 @@
     "savePreferences": "設定を保存"
   },
   "accessibility": {
-    "skipToContent": "メインコンテンツへ"
+    "skipToContent": "メインコンテンツへ",
+    "backToTop": "ページの先頭へ戻る"
+  },
+  "share": {
+    "title": "この商品を共有",
+    "twitter": "Xで共有",
+    "line": "LINEで共有",
+    "facebook": "Facebookで共有",
+    "copyUrl": "URLをコピー",
+    "copied": "コピーしました"
   },
   "newsletter": {
     "title": "ニュースレター",

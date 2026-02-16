@@ -4,9 +4,30 @@ export const prerender = false;
 import Container from '../components/Container.astro';
 import Layout from '../layouts/Layout.astro';
 import { t } from '../i18n';
+
+const faqItems = [
+	{ question: t('pages.faq.shippingQuestion'), answer: t('pages.faq.shippingAnswer') },
+	{ question: t('pages.faq.refundQuestion'), answer: `${t('pages.faq.refundAnswer')} ${t('pages.faq.refundLink')}` },
+	{ question: t('pages.faq.orderStatusQuestion'), answer: `${t('pages.faq.orderStatusAnswer')} ${t('pages.faq.orderStatusLink')}` },
+	{ question: t('pages.faq.contactQuestion'), answer: `${t('pages.faq.contactAnswer')} ${t('pages.faq.contactLink')}` },
+];
+
+const jsonLdFaq = {
+	'@context': 'https://schema.org',
+	'@type': 'FAQPage',
+	mainEntity: faqItems.map((item) => ({
+		'@type': 'Question',
+		name: item.question,
+		acceptedAnswer: {
+			'@type': 'Answer',
+			text: item.answer,
+		},
+	})),
+};
 ---
 
 <Layout title={t('pages.faq.pageTitle')}>
+	<script type="application/ld+json" set:html={JSON.stringify(jsonLdFaq)} />
 	<div class="bg-white min-h-screen">
 		<section class="pt-24 pb-20 md:pt-32 md:pb-28">
 			<Container class="max-w-3xl">

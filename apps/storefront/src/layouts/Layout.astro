@@ -1,4 +1,5 @@
 ---
+import BackToTop from '../components/BackToTop.astro';
 import Container from '../components/Container.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SearchModal from '../components/SearchModal';
@@ -152,5 +153,8 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 
 		{/* Cookie Consent Banner */}
 		<CookieConsent client:only="react" />
+
+		{/* Back to Top Button */}
+		<BackToTop />
 	</body>
 </html>

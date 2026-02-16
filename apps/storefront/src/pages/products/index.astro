@@ -102,6 +102,16 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 				<div class="flex items-center justify-between mb-8">
 					<h2 id="section-title" class="text-2xl font-semibold tracking-tight text-primary">{t('products.theLatest')}</h2>
 					<div class="flex items-center gap-3">
+						{/* Sort Dropdown */}
+						<select
+							id="sort-select"
+							class="px-3 py-2 min-h-[44px] text-sm font-medium text-[#1d1d1f] bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-gray-50 transition-colors appearance-none pr-8 cursor-pointer"
+							aria-label={t('products.sortLabel')}
+						>
+							<option value="newest">{t('products.sortNewest')}</option>
+							<option value="price_asc">{t('products.sortPriceAsc')}</option>
+							<option value="price_desc">{t('products.sortPriceDesc')}</option>
+						</select>
 						{/* Mobile Filter Button */}
 						<button
 							id="mobile-filter-btn"
