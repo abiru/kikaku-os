@@ -27,12 +27,12 @@ interface Props {
 const {
 	title = 'Led Kikaku Store',
 	description = 'Led Kikaku - LED照明製品のオンラインストア',
-	image = '/favicon.svg',
+	image,
 	url,
 } = Astro.props;
 const siteUrl = Astro.site ?? 'https://led-kikaku.com';
 const canonicalURL = url ? new URL(url, siteUrl) : new URL(Astro.url.pathname, siteUrl);
-const ogImage = new URL(image, siteUrl).href;
+const ogImage = image ? new URL(image, siteUrl).href : null;
 const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 ---
 
@@ -52,7 +52,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 		<!-- Open Graph -->
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
-		<meta property="og:image" content={ogImage} />
+		{ogImage && <meta property="og:image" content={ogImage} />}
 		<meta property="og:url" content={canonicalURL.href} />
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="Led Kikaku Store" />
@@ -61,7 +61,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
-		<meta name="twitter:image" content={ogImage} />
+		{ogImage && <meta name="twitter:image" content={ogImage} />}
 
 		{/* Google Tag Manager */}
 		{gtmId && (

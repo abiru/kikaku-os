@@ -6,6 +6,7 @@ import Layout from '../layouts/Layout.astro';
 import { getApiBase } from '../lib/api';
 import { parseMarkdown } from '../utils/markdown';
 import { formatDate } from '../lib/format';
+import { t } from '../i18n';
 
 type StaticPage = {
 	id: number;
@@ -30,7 +31,7 @@ try {
 	}
 } catch (e) {
 	console.error('Failed to fetch page:', e);
-	error = 'ページの読み込みに失敗しました。';
+	error = t('cms.loadError');
 }
 
 const metaTitle = page?.meta_title || '返品・返金について - Led Kikaku';
@@ -51,7 +52,7 @@ const metaDescription = page?.meta_description || '';
 				</h1>
 				{page && (
 					<p class="mt-6 text-center text-secondary text-lg font-medium">
-						最終更新日：{formatDate(page.updated_at, { year: 'numeric', month: 'long', day: 'numeric' })}
+						{t('cms.lastUpdated', { date: formatDate(page.updated_at, { year: 'numeric', month: 'long', day: 'numeric' }) })}
 					</p>
 				)}
 			</Container>
@@ -68,7 +69,7 @@ const metaDescription = page?.meta_description || '';
 					</div>
 				) : (
 					<div class="text-center py-12">
-						<p class="text-secondary">このページは現在準備中です。</p>
+						<p class="text-secondary">{t('cms.preparing')}</p>
 					</div>
 				)}
 			</Container>
