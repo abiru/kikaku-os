@@ -355,6 +355,7 @@ adminOrders.post(
 
     const result = await cancelOrder({
       db: c.env.DB,
+      env: c.env,
       orderId,
       reason,
       actor: getActor(c),
