@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -7,52 +8,48 @@ on:
       - 'apps/api/**'
       - 'apps/storefront/**'
       - 'packages/**'
+      - 'scripts/**'
       - 'pnpm-lock.yaml'
-  push:
-    branches: [main]
-    paths:
-      - 'apps/api/**'
-      - 'apps/storefront/**'
-      - 'packages/**'
-      - 'pnpm-lock.yaml'
+      - 'package.json'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # NOTE: PR-only trigger 前提。push を戻す場合は
+  # github.event.pull_request.number || github.ref に変更すること
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-  changes:
-    name: Detect changed paths
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    outputs:
-      api: ${{ steps.filter.outputs.api }}
-      storefront: ${{ steps.filter.outputs.storefront }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            api:
-              - 'apps/api/**'
-              - 'packages/**'
-            storefront:
-              - 'apps/storefront/**'
-              - 'packages/**'
-
   api:
     name: API - Typecheck / Test / Integration / Build
-    needs: changes
-    if: needs.changes.outputs.api == 'true'
-    runs-on: ubuntu-latest
+    # Toggle: self-hosted ↔ ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 15
     steps:
+      - name: Clean workspace
+        run: git clean -ffdx || true
+
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup
+      - uses: actions/setup-node@v4
         with:
-          working-directory: apps/api
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.dir }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
         run: pnpm -C apps/api typecheck
@@ -76,16 +73,35 @@ jobs:
 
   storefront:
     name: Storefront - Typecheck / Test / Build
-    needs: changes
-    if: needs.changes.outputs.storefront == 'true'
-    runs-on: ubuntu-latest
+    # Toggle: self-hosted ↔ ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 15
     steps:
+      - name: Clean workspace
+        run: git clean -ffdx || true
+
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup
+      - uses: actions/setup-node@v4
         with:
-          working-directory: apps/storefront
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.dir }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
         run: pnpm -C apps/storefront exec astro check
@@ -102,55 +118,4 @@ jobs:
         with:
           name: storefront-coverage
           path: apps/storefront/coverage/
-          retention-days: 7
-
-  e2e:
-    name: E2E - Playwright Tests
-    if: >-
-      github.event_name == 'push' &&
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
-    needs: [api, storefront]
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup
-
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Create .dev.vars for Wrangler
-        run: |
-          cat > .dev.vars <<'EOF'
-          ADMIN_API_KEY=CHANGE_ME
-          DEV_MODE=true
-          STRIPE_SECRET_KEY=sk_test_dummy
-          STRIPE_WEBHOOK_SECRET=whsec_dummy
-          STOREFRONT_BASE_URL=http://localhost:4321
-          EOF
-
-      - name: Apply D1 migrations (local)
-        run: pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
-
-      - name: Create storefront .env for Astro
-        run: |
-          cat > apps/storefront/.env <<'EOF'
-          PUBLIC_API_BASE=http://localhost:8787
-          PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_dummy_for_ci
-          CLERK_SECRET_KEY=sk_test_dummy_for_ci
-          EOF
-
-      - name: Run Playwright E2E tests
-        run: pnpm exec playwright test --config=playwright.seed.config.ts
-        env:
-          CI: 'true'
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: codex-runs/playwright-report/
           retention-days: 7

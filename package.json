@@ -18,7 +18,15 @@
 		"typecheck": "pnpm -C apps/api typecheck",
 		"env:setup": "node scripts/setup-env.mjs",
 		"db:migrate": "pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local",
-		"db:seed": "curl -X POST http://localhost:8787/dev/seed -H 'x-admin-key: CHANGE_ME' -H 'content-type: application/json' -d '{\"date\":\"2026-01-15\",\"orders\":5,\"refunds\":1}'"
+		"db:seed": "curl -X POST http://localhost:8787/dev/seed -H 'x-admin-key: CHANGE_ME' -H 'content-type: application/json' -d '{\"date\":\"2026-01-15\",\"orders\":5,\"refunds\":1}'",
+		"runner:install": "mkdir -p ~/actions-runner && cd ~/actions-runner && curl -o actions-runner-linux-x64-2.322.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.322.0/actions-runner-linux-x64-2.322.0.tar.gz && tar xzf actions-runner-linux-x64-2.322.0.tar.gz",
+		"runner:configure": "cd ~/actions-runner && ./config.sh --url https://github.com/nicekikaku/kikaku-os --labels self-hosted,Linux,X64",
+		"runner:start": "cd ~/actions-runner && ./run.sh",
+		"runner:start:bg": "cd ~/actions-runner && nohup ./run.sh > runner.log 2>&1 &",
+		"runner:stop": "cd ~/actions-runner && ./svc.sh stop || pkill -f 'Runner.Listener'",
+		"runner:status": "cd ~/actions-runner && ./svc.sh status 2>/dev/null || (ps aux | grep -v grep | grep Runner.Listener && echo 'Runner is running' || echo 'Runner is NOT running')",
+		"runner:logs": "tail -f ~/actions-runner/runner.log 2>/dev/null || tail -f ~/actions-runner/_diag/Runner_*.log",
+		"runner:uninstall": "cd ~/actions-runner && ./config.sh remove && rm -rf ~/actions-runner"
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.11.1",
