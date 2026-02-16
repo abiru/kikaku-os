@@ -134,14 +134,14 @@ const renderProducts = (products: ProductListItem[]) => {
 
 		// 1. Tag / Badge (Top Left)
 		const tag = document.createElement('span');
-		tag.className = 'mb-2 text-[10px] font-bold uppercase tracking-wider text-[#bf4800]';
+		tag.className = 'mb-2 text-[10px] font-bold uppercase tracking-wider text-amber-700';
 		tag.textContent = i18n.new;
 		card.appendChild(tag);
 
 		// 2. Title & Desc
 		const titleLink = document.createElement('a');
 		titleLink.href = `/products/${product.id}`;
-		titleLink.className = 'text-xl font-semibold text-[#1d1d1f] hover:underline decoration-1 underline-offset-2';
+		titleLink.className = 'text-xl font-semibold text-primary hover:underline decoration-1 underline-offset-2';
 		titleLink.textContent = String(product.title ?? '');
 
 		const fullLinkOverlay = document.createElement('span');
@@ -162,7 +162,7 @@ const renderProducts = (products: ProductListItem[]) => {
 
 		// 3. Image Container
 		const imgContainer = document.createElement('div');
-		imgContainer.className = 'mt-8 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#f5f5f7] flex items-center justify-center';
+		imgContainer.className = 'mt-8 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-subtle flex items-center justify-center';
 
 		if (product.image) {
 			const img = document.createElement('img');
@@ -188,11 +188,11 @@ const renderProducts = (products: ProductListItem[]) => {
 		const price = variant?.price;
 
 		const priceEl = document.createElement('span');
-		priceEl.className = 'text-[15px] text-[#1d1d1f]';
+		priceEl.className = 'text-[15px] text-primary';
 		priceEl.textContent = price ? `${i18n.from} ${price.amount.toLocaleString()} ${price.currency}` : '';
 
 		const buyBtn = document.createElement('span');
-		buyBtn.className = 'rounded-full bg-[#0071e3] px-4 py-1.5 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100';
+		buyBtn.className = 'rounded-full bg-brand px-4 py-1.5 text-[12px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100';
 		buyBtn.textContent = i18n.buy;
 
 		footer.appendChild(priceEl);
@@ -283,14 +283,14 @@ const loadProducts = async () => {
 	const hasFilters = category || minPrice || maxPrice;
 	if (hasFilters && filterInfo && activeFilters) {
 		const badges: string[] = [];
-		if (category) badges.push(`<span class="px-2 py-1 text-xs bg-[#0071e3]/10 text-[#0071e3] rounded-full capitalize">${escapeHtml(category)}</span>`);
+		if (category) badges.push(`<span class="px-2 py-1 text-xs bg-brand/10 text-brand rounded-full capitalize">${escapeHtml(category)}</span>`);
 		if (minPrice || maxPrice) {
 			const priceLabel = minPrice && maxPrice
 				? `${Number(minPrice).toLocaleString()} - ${Number(maxPrice).toLocaleString()} JPY`
 				: minPrice
 				? i18n.priceAbove.replace('{min}', Number(minPrice).toLocaleString())
 				: i18n.priceUpTo.replace('{max}', Number(maxPrice).toLocaleString());
-			badges.push(`<span class="px-2 py-1 text-xs bg-[#0071e3]/10 text-[#0071e3] rounded-full">${priceLabel}</span>`);
+			badges.push(`<span class="px-2 py-1 text-xs bg-brand/10 text-brand rounded-full">${priceLabel}</span>`);
 		}
 		activeFilters.innerHTML = DOMPurify.sanitize(badges.join(''));
 		filterInfo.classList.remove('hidden');

@@ -200,7 +200,10 @@ export default function CheckoutForm({
 				<p className="text-sm text-gray-600 mb-4">{t('checkout.stripeLoadFailedDescription')}</p>
 				<button
 					type="button"
-					onClick={() => window.location.reload()}
+					onClick={() => {
+					stripePromiseCache.delete(publishableKey);
+					setStripeLoadError(false);
+				}}
 					className="text-brand hover:text-brand-active font-medium min-h-[44px]"
 				>
 					{t('errors.reload')}
