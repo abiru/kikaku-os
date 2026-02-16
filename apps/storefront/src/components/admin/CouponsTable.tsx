@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
 import { formatDate } from '../../lib/format'
+import TableEmptyState from './TableEmptyState'
+import { t } from '../../i18n'
 
 type Coupon = {
   id: number
@@ -234,8 +236,14 @@ export default function CouponsTable({ coupons: initialCoupons }: Props) {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-zinc-500">
-                No coupons found.
+              <TableCell colSpan={8}>
+                <TableEmptyState
+                  icon="tag"
+                  message={t('admin.emptyCoupons')}
+                  description={t('admin.emptyCouponsDesc')}
+                  actionLabel={t('admin.addFirstCoupon')}
+                  actionHref="/admin/coupons/new"
+                />
               </TableCell>
             </TableRow>
           )}

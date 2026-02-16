@@ -15,7 +15,7 @@ const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
 const status = Astro.url.searchParams.get('status') || 'all';
 const page = Number(Astro.url.searchParams.get('page') || '1');
-const perPage = 20;
+const perPage = Number(Astro.url.searchParams.get('perPage') || '20');
 
 let products: Product[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
@@ -109,9 +109,9 @@ if (import.meta.env.ADMIN_API_KEY) {
 			</a>
 		</div>
 
-		{/* Search Bar */}
-		<div>
-			<form method="get" class="relative max-w-md">
+		{/* Search Bar + Controls */}
+		<div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+			<form method="get" class="relative max-w-md flex-1">
 				<Input
 					type="search"
 					name="q"
@@ -129,7 +129,28 @@ if (import.meta.env.ADMIN_API_KEY) {
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 				</svg>
 				<input type="hidden" name="status" value={status} />
+				<input type="hidden" name="perPage" value={perPage.toString()} />
 			</form>
+			<div class="flex items-center gap-2">
+				<select
+					onchange={`window.location.href='?status=${status}&q=${q}&perPage='+this.value`}
+					class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 shadow-sm"
+				>
+					{[10, 20, 50, 100].map((n) => (
+						<option value={n} selected={perPage === n}>{t('admin.perPage', { count: n })}</option>
+					))}
+				</select>
+				<a
+					href={`?status=${status}&q=${q}&perPage=${perPage}`}
+					class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 shadow-sm hover:bg-zinc-50 transition-colors"
+					title={t('admin.refresh')}
+				>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+					</svg>
+					{t('admin.refresh')}
+				</a>
+			</div>
 		</div>
 
 		{error && (

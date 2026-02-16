@@ -1,6 +1,8 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
 import { getInventoryBadgeColor, getInventoryStatusLabel } from '../../lib/adminUtils'
+import TableEmptyState from './TableEmptyState'
+import { t } from '../../i18n'
 
 type InventoryItem = {
   variant_id: number
@@ -71,8 +73,14 @@ export default function InventoryTable({ inventory, onAdjust, onThreshold }: Pro
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={7} className="text-center text-zinc-500">
-              No variants found. Add variants to products first.
+            <TableCell colSpan={7}>
+              <TableEmptyState
+                icon="package"
+                message={t('admin.emptyInventory')}
+                description={t('admin.emptyInventoryDesc')}
+                actionLabel={t('admin.newProduct')}
+                actionHref="/admin/products/new"
+              />
             </TableCell>
           </TableRow>
         )}

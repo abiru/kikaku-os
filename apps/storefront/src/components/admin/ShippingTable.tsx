@@ -2,6 +2,7 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '.
 import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
 import { formatDate, formatPrice } from '../../lib/format'
+import TableEmptyState from './TableEmptyState'
 import { t } from '../../i18n'
 
 type ReadyToShipOrder = {
@@ -97,8 +98,12 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
           })
         ) : (
           <TableRow>
-            <TableCell colSpan={7} className="text-center text-zinc-500">
-              {t('admin.noShippingOrders')}
+            <TableCell colSpan={7}>
+              <TableEmptyState
+                icon="truck"
+                message={t('admin.emptyShipping')}
+                description={t('admin.emptyShippingDesc')}
+              />
             </TableCell>
           </TableRow>
         )}

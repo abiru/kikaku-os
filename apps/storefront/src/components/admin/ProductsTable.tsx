@@ -5,6 +5,8 @@ import { Button } from '../catalyst/button'
 import { Link } from '../catalyst/link'
 import AdminPagination from './AdminPagination'
 import { getProductBadgeColor } from '../../lib/adminUtils'
+import TableEmptyState from './TableEmptyState'
+import { t } from '../../i18n'
 
 type Product = {
   id: number
@@ -178,6 +180,18 @@ export default function ProductsTable({
     }
   }, [])
 
+  if (sortedProducts.length === 0) {
+    return (
+      <TableEmptyState
+        icon="package"
+        message={t('admin.emptyProducts')}
+        description={t('admin.emptyProductsDesc')}
+        actionLabel={t('admin.addFirstProduct')}
+        actionHref="/admin/products/new"
+      />
+    )
+  }
+
   return (
     <div>
       {/* Confirm Dialog */}
@@ -264,42 +278,82 @@ export default function ProductsTable({
         </div>
       )}
 
-      <Table striped>
-        <TableHead>
-          <TableRow>
-            <TableHeader className="w-10">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                onChange={toggleAll}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                aria-label="全て選択"
-              />
-            </TableHeader>
-            <TableHeader>
-              <button type="button" onClick={() => handleSort('title')} className="inline-flex items-center hover:text-indigo-600">
-                Title
-                <SortIcon field="title" sortField={sortField} sortOrder={sortOrder} />
-              </button>
-            </TableHeader>
-            <TableHeader>
-              <button type="button" onClick={() => handleSort('status')} className="inline-flex items-center hover:text-indigo-600">
-                Status
-                <SortIcon field="status" sortField={sortField} sortOrder={sortOrder} />
-              </button>
-            </TableHeader>
-            <TableHeader>
-              <button type="button" onClick={() => handleSort('updated_at')} className="inline-flex items-center hover:text-indigo-600">
-                Updated
-                <SortIcon field="updated_at" sortField={sortField} sortOrder={sortOrder} />
-              </button>
-            </TableHeader>
-            <TableHeader className="text-right">Action</TableHeader>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {sortedProducts.length > 0 ? (
-            sortedProducts.map((product) => (
+      {/* Mobile card layout */}
+      <div className="block md:hidden space-y-3">
+        {sortedProducts.map((product) => (
+          <div key={product.id} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <a href={`/admin/products/${product.id}`} className="font-medium text-zinc-950 hover:text-indigo-600">
+                  {product.title}
+                </a>
+                {product.description && (
+                  <p className="mt-0.5 text-xs text-zinc-500 truncate">{product.description}</p>
+                )}
+              </div>
+              <Badge color={getProductBadgeColor(product.status)}>
+                {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+              </Badge>
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
+              <span>{new Date(product.updated_at).toLocaleDateString('ja-JP')}</span>
+              <div className="flex items-center gap-3">
+                <a href={`/admin/products/${product.id}`} className="text-indigo-600 font-medium">
+                  {t('common.edit')}
+                </a>
+                {product.status !== 'archived' && (
+                  <button type="button" onClick={() => handleArchive(product.id, product.title)} className="text-red-600">
+                    {t('admin.archive')}
+                  </button>
+                )}
+                {product.status === 'archived' && (
+                  <button type="button" onClick={() => handleRestore(product.id, product.title)} className="text-green-600">
+                    {t('admin.restore')}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table layout */}
+      <div className="hidden md:block">
+        <Table striped>
+          <TableHead>
+            <TableRow>
+              <TableHeader className="w-10">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  aria-label="全て選択"
+                />
+              </TableHeader>
+              <TableHeader>
+                <button type="button" onClick={() => handleSort('title')} className="inline-flex items-center hover:text-indigo-600">
+                  {t('admin.title')}
+                  <SortIcon field="title" sortField={sortField} sortOrder={sortOrder} />
+                </button>
+              </TableHeader>
+              <TableHeader>
+                <button type="button" onClick={() => handleSort('status')} className="inline-flex items-center hover:text-indigo-600">
+                  {t('admin.status')}
+                  <SortIcon field="status" sortField={sortField} sortOrder={sortOrder} />
+                </button>
+              </TableHeader>
+              <TableHeader>
+                <button type="button" onClick={() => handleSort('updated_at')} className="inline-flex items-center hover:text-indigo-600">
+                  {t('admin.updated')}
+                  <SortIcon field="updated_at" sortField={sortField} sortOrder={sortOrder} />
+                </button>
+              </TableHeader>
+              <TableHeader className="text-right">{t('admin.action')}</TableHeader>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedProducts.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>
                   <input
@@ -329,7 +383,7 @@ export default function ProductsTable({
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Link href={`/admin/products/${product.id}`} className="text-indigo-600 hover:text-indigo-800 font-medium">
-                      Edit
+                      {t('common.edit')}
                     </Link>
                     {product.status !== 'archived' && (
                       <Button
@@ -337,7 +391,7 @@ export default function ProductsTable({
                         onClick={() => handleArchive(product.id, product.title)}
                         className="text-red-600 hover:text-red-800"
                       >
-                        Archive
+                        {t('admin.archive')}
                       </Button>
                     )}
                     {product.status === 'archived' && (
@@ -346,22 +400,16 @@ export default function ProductsTable({
                         onClick={() => handleRestore(product.id, product.title)}
                         className="text-green-600 hover:text-green-800"
                       >
-                        Restore
+                        {t('admin.restore')}
                       </Button>
                     )}
                   </div>
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center text-zinc-500 py-12">
-                No products found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <AdminPagination
         currentPage={currentPage}

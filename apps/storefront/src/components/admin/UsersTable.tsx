@@ -2,6 +2,8 @@ import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
 import { formatDate } from '../../lib/format';
 import AdminPagination from './AdminPagination';
+import TableEmptyState from './TableEmptyState';
+import { t } from '../../i18n';
 
 type AdminUser = {
 	id: number;
@@ -119,8 +121,14 @@ export default function UsersTable({
 						))
 					) : (
 						<TableRow>
-							<TableCell colSpan={7} className="text-center text-zinc-500">
-								No users found.
+							<TableCell colSpan={7}>
+								<TableEmptyState
+									icon="shield"
+									message={t('admin.emptyUsers')}
+									description={t('admin.emptyUsersDesc')}
+									actionLabel={t('admin.addUser')}
+									actionHref="/admin/users/new"
+								/>
 							</TableCell>
 						</TableRow>
 					)}
