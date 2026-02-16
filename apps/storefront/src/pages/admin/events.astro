@@ -105,7 +105,7 @@ const failedCount = events.filter(e => e.processing_status === 'failed').length;
 			</div>
 
 			{error && (
-				<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+				<div role="alert" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
 					{error}
 				</div>
 			)}

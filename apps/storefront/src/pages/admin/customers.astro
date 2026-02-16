@@ -71,8 +71,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		{/* Search Bar */}
 		<div class="mb-6">
 			<form method="get" class="relative max-w-md">
+				<label for="customer-search" class="sr-only">{t('admin.searchByNameOrEmail')}</label>
 				<input
 					type="search"
+					id="customer-search"
 					name="q"
 					value={q}
 					placeholder={t('admin.searchByNameOrEmail')}

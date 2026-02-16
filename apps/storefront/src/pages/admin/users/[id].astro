@@ -230,7 +230,7 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 		)}
 
 		{error && user && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+			<div role="alert" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
 				{error}
 			</div>
 		)}

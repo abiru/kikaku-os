@@ -113,7 +113,7 @@ if (Astro.request.method === 'POST') {
 			<h1 class="text-2xl font-semibold text-gray-900">New Coupon</h1>
 		</div>
 		{error && (
-			<div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+			<div role="alert" class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
 				{error}
 			</div>
 		)}
