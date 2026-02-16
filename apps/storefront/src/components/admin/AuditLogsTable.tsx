@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
-import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
 import { formatDate } from '../../lib/format';
+import AdminPagination from './AdminPagination';
 import { t } from '../../i18n';
 
 const dateTimeOpts: Intl.DateTimeFormatOptions = {
@@ -69,9 +69,6 @@ export default function AuditLogsTable({
   availableTargets,
 }: Props) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
-
-  const hasPrev = currentPage > 1;
-  const hasNext = currentPage < totalPages;
 
   const buildPaginationUrl = (page: number) => {
     const params = new URLSearchParams();
@@ -196,18 +193,11 @@ export default function AuditLogsTable({
         </TableBody>
       </Table>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-zinc-500">
-            {t('admin.total')} {total} {t('admin.entries')} — {t('admin.pageOf', { page: currentPage, totalPages })}
-          </div>
-          <Pagination>
-            <PaginationPrevious href={hasPrev ? buildPaginationUrl(currentPage - 1) : null} />
-            <PaginationNext href={hasNext ? buildPaginationUrl(currentPage + 1) : null} />
-          </Pagination>
-        </div>
-      )}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        buildHref={buildPaginationUrl}
+      />
     </>
   );
 }
