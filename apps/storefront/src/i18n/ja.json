@@ -156,6 +156,8 @@
       "email": "メールアドレス",
       "payment": "お支払い"
     },
+    "paymentProcessing": "お支払い処理中",
+    "paymentProcessingDescription": "お支払いを処理しています。確認メールが間もなく届きます。",
     "stripeErrors": {
       "card_declined": "カードが拒否されました。別のカードをお試しください。",
       "insufficient_funds": "残高不足です。別のカードをお試しください。",
@@ -467,7 +469,12 @@
     "defaultDetail1": "高品質な素材",
     "defaultDetail2": "プロ仕様",
     "defaultDetail3": "簡単な取り付け",
-    "defaultDetail4": "長持ちする性能"
+    "defaultDetail4": "長持ちする性能",
+    "images": "画像",
+    "domesticShipping": "国内発送",
+    "domesticShippingDescription": "2〜3日でお届け",
+    "internationalShipping": "海外発送",
+    "internationalShippingDescription": "10日程度でお届け"
   },
   "recentlyViewed": {
     "title": "最近チェックした商品"
@@ -540,7 +547,72 @@
     "serverErrorCode": "500",
     "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
     "reload": "再読み込み",
-    "componentError": "表示中にエラーが発生しました。ページを再読み込みしてください。"
+    "componentError": "表示中にエラーが発生しました。ページを再読み込みしてください。",
+    "error": "エラー"
+  },
+  "pages": {
+    "orderStatus": {
+      "pageTitle": "注文状況 - Led Kikaku",
+      "title": "注文状況",
+      "description": "ご注文の状況をご確認いただけます。",
+      "checkViaAccount": "アカウントで確認",
+      "checkViaAccountDescription": "アカウントにログインして、注文履歴と配送状況をご確認いただけます。",
+      "viewOrderHistory": "注文履歴を見る",
+      "login": "ログイン",
+      "needHelp": "お困りですか？",
+      "needHelpDescription": "ご不明な点がございましたら、お気軽にお問い合わせください。",
+      "contactLink": "お問い合わせ →"
+    },
+    "social": {
+      "pageTitle": "SNS - Led Kikaku",
+      "title": "フォローする",
+      "description": "Led Kikakuの最新情報をSNSでチェック。",
+      "xTitle": "X (旧Twitter)",
+      "comingSoonBadge": "準備中",
+      "comingSoon": "アカウントを準備中です。もうしばらくお待ちください。",
+      "instagramTitle": "Instagram",
+      "facebookTitle": "Facebook",
+      "contactButton": "お問い合わせ"
+    },
+    "faq": {
+      "pageTitle": "よくある質問 - Led Kikaku",
+      "title": "よくある質問",
+      "description": "お客様からよくいただくご質問をまとめました。",
+      "shippingQuestion": "配送にはどのくらいかかりますか？",
+      "shippingAnswer": "国内配送は通常2〜3営業日でお届けいたします。海外配送は10日程度かかる場合がございます。",
+      "refundQuestion": "返品・返金はできますか？",
+      "refundAnswer": "商品到着後7日以内であれば返品・返金を承ります。詳しくは返品ポリシーをご確認ください。",
+      "refundLink": "返品ポリシー",
+      "orderStatusQuestion": "注文状況はどこで確認できますか？",
+      "orderStatusAnswer": "注文状況ページまたはアカウントの注文履歴からご確認いただけます。",
+      "orderStatusLink": "注文状況を確認",
+      "contactQuestion": "その他のお問い合わせ方法は？",
+      "contactAnswer": "お問い合わせフォームからお気軽にご連絡ください。",
+      "contactLink": "お問い合わせ"
+    },
+    "legalNotice": {
+      "pageTitle": "特定商取引法に基づく表記 - Led Kikaku",
+      "title": "特定商取引法に基づく表記",
+      "seller": "販売業者",
+      "sellerValue": "Led Kikaku Inc.",
+      "representative": "代表者",
+      "representativeValue": "（代表者名）",
+      "addressPhone": "所在地・電話番号",
+      "addressPhoneValue": "（お問い合わせフォームよりご確認ください）",
+      "email": "メールアドレス",
+      "emailValue": "お問い合わせフォームへ",
+      "price": "販売価格",
+      "priceValue": "各商品ページに表示（税込）",
+      "additionalFees": "商品代金以外の必要料金",
+      "additionalFeesValue": "配送料（一部商品は送料無料）",
+      "paymentMethod": "お支払い方法",
+      "paymentMethodValue": "クレジットカード（Visa, Mastercard, AMEX, JCB）、銀行振込",
+      "deliveryTime": "商品の引渡し時期",
+      "deliveryTimeValue": "ご注文後、通常2〜3営業日以内に発送いたします。",
+      "returnPolicy": "返品・交換について",
+      "returnPolicyValue": "商品到着後7日以内にご連絡ください。詳しくは{link}をご確認ください。",
+      "returnPolicyLink": "返品ポリシー"
+    }
   },
   "home": {
     "viewProducts": "商品を見る",
