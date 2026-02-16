@@ -12,6 +12,7 @@ import { Textarea } from '../../../components/catalyst/textarea';
 import { Field, Label } from '../../../components/catalyst/fieldset';
 import { Button as CatalystButton } from '../../../components/catalyst/button';
 import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../../lib/csrf';
+import { t } from '../../../i18n';
 
 const { slug } = Astro.params;
 const apiBase = getApiBase();
@@ -46,7 +47,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 			const body_text = formData.get('body_text')?.toString() || '';
 
 			if (!subject) {
-				error = 'Subject is required';
+				error = t('errors.subjectRequired');
 			} else {
 				const res = await fetch(`${apiBase}/admin/email-templates/${slug}`, {
 					method: 'PUT',
@@ -64,16 +65,16 @@ if (Astro.request.method === 'POST' && apiKey) {
 				const data = await res.json();
 
 				if (!res.ok) {
-					error = data.message || 'Failed to update template';
+					error = data.message || t('errors.failedToUpdateTemplate');
 				} else {
 					template = data.template;
-					successMessage = 'Template updated successfully';
+					successMessage = t('admin.templateUpdated');
 				}
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to update template. Please check your connection.';
+		error = t('errors.failedToUpdateTemplate');
 	}
 }
 
@@ -86,7 +87,7 @@ if (!template && apiKey) {
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error = 'Template not found';
+				error = t('errors.templateNotFound');
 			} else {
 				const data = await res.json();
 				error = data.message || `API Error: ${res.status}`;
@@ -97,10 +98,10 @@ if (!template && apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error || 'Failed to load template. Please check your connection.';
+		error = error || t('errors.failedToLoadTemplate');
 	}
 } else if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing in server environment';
+	error = t('errors.adminKeyMissing');
 }
 
 const dateTimeOpts: Intl.DateTimeFormatOptions = {
@@ -124,7 +125,7 @@ if (csrfCookieHeader) {
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Email Templates
+				{t('admin.emailTemplates')}
 			</a>
 			<h1 class="text-2xl font-semibold text-gray-900">
 				{template ? template.name : 'Email Template'}
@@ -141,7 +142,7 @@ if (csrfCookieHeader) {
 			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
 				<div class="text-red-600 mb-4">{error}</div>
 				<Button href="/admin/email-templates" outline client:load >
-					Back to Templates
+					{t('admin.backToTemplates')}
 				</Button>
 			</div>
 		)}
@@ -157,21 +158,21 @@ if (csrfCookieHeader) {
 				<input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} />
 				{/* Variables Info */}
 				<div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
-					<h3 class="text-sm font-medium text-blue-900 mb-2">Available Variables</h3>
+					<h3 class="text-sm font-medium text-blue-900 mb-2">	{t('admin.availableVariables')}</h3>
 					<div class="flex flex-wrap gap-2">
 						{template.variables && template.variables.length > 0 ? (
 							template.variables.map((variable) => (
 								<code class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{`{{${variable}}}`}</code>
 							))
 						) : (
-							<span class="text-sm text-blue-700">No variables defined</span>
+							<span class="text-sm text-blue-700">	{t('admin.noVariables')}</span>
 						)}
 					</div>
 				</div>
 
 				{/* Subject */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-secondary">Email Subject</h2>
+					<h2 class="text-sm font-medium text-secondary">	{t('admin.emailSubject')}</h2>
 					<Field>
 						<Input client:load
 							type="text"
@@ -180,21 +181,21 @@ if (csrfCookieHeader) {
 							required
 							value={template.subject}
 						/>
-						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Supports variables like {`{{customer_name}}`}</p>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.supportsVariables')}</p>
 					</Field>
 				</div>
 
 				{/* HTML Body */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
 					<div class="flex items-center justify-between">
-						<h2 class="text-sm font-medium text-secondary">HTML Content</h2>
+						<h2 class="text-sm font-medium text-secondary">{t('admin.htmlContent')}</h2>
 						<div class="flex gap-2">
 							<button
 								type="button"
 								id="preview-html-btn"
 								class="text-sm text-brand hover:underline"
 							>
-								Preview
+								{t('admin.previewLabel')}
 							</button>
 						</div>
 					</div>
@@ -215,20 +216,20 @@ if (csrfCookieHeader) {
 
 				{/* Text Body */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-secondary">Plain Text Content (Fallback)</h2>
+					<h2 class="text-sm font-medium text-secondary">{t('admin.plainTextContent')}</h2>
 					<Field>
 						<Textarea client:load
 							id="body_text"
 							name="body_text"
 							rows={10}
 						>{template.body_text}</Textarea>
-						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Used when HTML email cannot be displayed</p>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.usedWhenHtmlUnavailable')}</p>
 					</Field>
 				</div>
 
 				{/* Preview Email */}
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-					<h2 class="text-sm font-medium text-secondary">Send Test Email</h2>
+					<h2 class="text-sm font-medium text-secondary">{t('admin.sendTestEmail')}</h2>
 					<div class="flex gap-4">
 						<Input client:load
 							type="email"
@@ -241,10 +242,10 @@ if (csrfCookieHeader) {
 							id="send-preview-btn"
 							color="zinc"
 						>
-							Send Preview
+							{t('admin.sendPreview')}
 						</CatalystButton>
 					</div>
-					<p class="text-xs text-secondary">A test email will be sent with sample data</p>
+					<p class="text-xs text-secondary">{t('admin.testEmailNote')}</p>
 					<div id="preview-result" class="hidden"></div>
 				</div>
 
@@ -252,11 +253,11 @@ if (csrfCookieHeader) {
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
 					<dl class="grid grid-cols-2 gap-4 text-sm">
 						<div>
-							<dt class="text-secondary">Created</dt>
+							<dt class="text-secondary">{t('admin.created')}</dt>
 							<dd class="text-zinc-950 tabular-nums">{formatDate(template.created_at, dateTimeOpts)}</dd>
 						</div>
 						<div>
-							<dt class="text-secondary">Updated</dt>
+							<dt class="text-secondary">{t('admin.updated')}</dt>
 							<dd class="text-zinc-950 tabular-nums">{formatDate(template.updated_at, dateTimeOpts)}</dd>
 						</div>
 					</dl>
@@ -265,10 +266,10 @@ if (csrfCookieHeader) {
 				{/* Actions */}
 				<div class="flex justify-end gap-3">
 					<Button href="/admin/email-templates" outline client:load >
-						Back
+						{t('admin.back')}
 					</Button>
 					<Button type="submit" color="indigo" client:load >
-						Save Changes
+						{t('admin.saveChanges')}
 					</Button>
 				</div>
 			</form>

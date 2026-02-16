@@ -45,11 +45,11 @@ if (Astro.request.method === 'POST') {
 				headers: { 'x-admin-key': apiKey }
 			});
 			if (!res.ok) throw new Error(`API Error: ${res.status}`);
-			actionMessage = { type: 'success', text: `Item ${action}ed successfully.` };
+			actionMessage = { type: 'success', text: action === 'approve' ? t('admin.itemApproved') : t('admin.itemRejected') };
 		}
 	} catch (e) {
 		console.error(e);
-		actionMessage = { type: 'error', text: 'Failed to process action.' };
+		actionMessage = { type: 'error', text: t('errors.failedToProcessAction') };
 	}
 }
 
@@ -66,7 +66,7 @@ if (apiKey) {
 		const data = await res.json();
 		items = data.items || [];
 	} catch (e) {
-		error = t('errors.failedToLoadOrders');
+		error = t('errors.failedToLoadInbox');
 	}
 } else {
 	error = t('errors.adminKeyMissing');

@@ -7,6 +7,7 @@ import { Heading } from'../../components/catalyst/heading';
 import AdminLayout from'../../layouts/AdminLayout.astro';
 import { getApiBase } from'../../lib/api';
 import { formatDate } from '../../lib/format';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 
@@ -41,30 +42,30 @@ if (import.meta.env.ADMIN_API_KEY) {
 		templates = data.templates || [];
 	} catch (e) {
 		console.error(e);
-		error ='Failed to load email templates. Please check your admin key.';
+		error = t('errors.failedToLoadEmailTemplates');
 	}
 } else {
-	error ='ADMIN_API_KEY is missing in server environment.';
+	error = t('errors.adminKeyMissing');
 }
 
 const templateLabels: Record<string, string> = {
-	'order-confirmation':'Order Confirmation',
-	'shipping-notification':'Shipping Notification',
-	'payment-failed':'Payment Failed'
+	'order-confirmation': t('admin.orderConfirmation'),
+	'shipping-notification': t('admin.shippingNotification'),
+	'payment-failed': t('admin.paymentFailedLabel'),
 };
 ---
 
-<AdminLayout title="Email Templates - Admin">
+<AdminLayout title={`${t('admin.emailTemplates')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<Heading>Email Templates</Heading>
-				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{templates.length} templates</span>
+				<Heading>{t('admin.emailTemplates')}</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{t('admin.templatesCount', { count: templates.length })}</span>
 			</div>
 		</div>
 
 		<p class="text-sm text-zinc-500">
-			Customize the email notifications sent to customers. Click on a template to edit its content.
+			{t('admin.emailTemplatesDesc')}
 		</p>
 
 		{error && (
@@ -106,34 +107,33 @@ const templateLabels: Record<string, string> = {
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 						</svg>
 					</div>
-					<h3 class="text-lg font-semibold text-zinc-950 mb-2">No email templates found</h3>
-					<p class="text-sm text-zinc-500">Run database migrations to create default templates.</p>
+					<h3 class="text-lg font-semibold text-zinc-950 mb-2">{t('admin.noTemplatesFound')}</h3>
+					<p class="text-sm text-zinc-500">{t('admin.runMigrations')}</p>
 				</div>
 			)}
 		</div>
 
 		{/* Help Section */}
 		<Alert color="blue" client:load>
-			<h3 class="font-semibold mb-2">Using Template Variables</h3>
+			<h3 class="font-semibold mb-2">{t('admin.usingTemplateVariables')}</h3>
 			<p class="text-sm mb-4">
-				Templates support dynamic variables that are replaced with actual data when emails are sent.
-				Use the format <code class="bg-blue-100 px-1.5 py-0.5 rounded text-xs">{"{{variable_name}}"}</code> in your templates.
+				{t('admin.templateVariablesDesc')}
 			</p>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
 				<div>
-					<h4 class="font-medium mb-1">Order Confirmation</h4>
+					<h4 class="font-medium mb-1">{t('admin.orderConfirmation')}</h4>
 					<ul class="space-y-1">
-						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{customer_name}}"}</code> - Customer name</li>
-						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_number}}"}</code> - Order ID</li>
-						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_date}}"}</code> - Order date</li>
-						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{total_amount}}"}</code> - Total amount</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{customer_name}}"}</code> - {t('admin.customerNameVar')}</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_number}}"}</code> - {t('admin.orderId')}</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{order_date}}"}</code> - {t('admin.orderDateLabel')}</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{total_amount}}"}</code> - {t('admin.totalAmount')}</li>
 					</ul>
 				</div>
 				<div>
-					<h4 class="font-medium mb-1">Shipping Notification</h4>
+					<h4 class="font-medium mb-1">{t('admin.shippingNotification')}</h4>
 					<ul class="space-y-1">
-						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{carrier}}"}</code> - Shipping carrier</li>
-						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{tracking_number}}"}</code> - Tracking number</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{carrier}}"}</code> - {t('admin.shippingCarrier')}</li>
+						<li><code class="bg-blue-100 px-1 rounded text-xs">{"{{tracking_number}}"}</code> - {t('admin.trackingNumber')}</li>
 					</ul>
 				</div>
 			</div>

@@ -11,6 +11,7 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '.
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
+import { t } from '../../../i18n';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -54,7 +55,7 @@ if (Astro.request.method === 'POST' && apiKey) {
 		const email = formData.get('email')?.toString().trim() || null;
 
 		if (!name) {
-			error = 'Name is required';
+			error = t('errors.nameRequired');
 		} else {
 			const res = await fetch(`${apiBase}/admin/customers/${id}`, {
 				method: 'PUT',
@@ -68,15 +69,15 @@ if (Astro.request.method === 'POST' && apiKey) {
 			const data = await res.json();
 
 			if (!res.ok) {
-				error = data.message || 'Failed to update customer';
+				error = data.message || t('errors.failedToUpdateCustomer');
 			} else {
 				customer = data.customer;
-				successMessage = 'Customer updated successfully';
+				successMessage = t('admin.customerUpdated');
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to update customer. Please check your connection.';
+		error = t('errors.failedToUpdateCustomer');
 	}
 }
 
@@ -89,7 +90,7 @@ if (!customer && apiKey) {
 
 		if (!res.ok) {
 			if (res.status === 404) {
-				error = 'Customer not found';
+				error = t('errors.customerNotFound');
 			} else {
 				const data = await res.json();
 				error = data.message || `API Error: ${res.status}`;
@@ -102,10 +103,10 @@ if (!customer && apiKey) {
 		}
 	} catch (e) {
 		console.error(e);
-		error = error || 'Failed to load customer. Please check your connection.';
+		error = error || t('errors.failedToLoadCustomer');
 	}
 } else if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing in server environment';
+	error = t('errors.adminKeyMissing');
 }
 
 // Re-fetch orders and stats if customer was updated via POST
@@ -143,11 +144,11 @@ const formatCurrency = (amount: number, currency: string = 'JPY') => {
 const getStatusBadge = (status: string) => {
 	switch (status) {
 		case 'paid':
-			return { color: 'blue' as const, label: 'Paid' };
+			return { color: 'blue' as const, label: t('admin.paid') };
 		case 'pending':
-			return { color: 'amber' as const, label: 'Pending' };
+			return { color: 'amber' as const, label: t('admin.pending') };
 		case 'failed':
-			return { color: 'red' as const, label: 'Failed' };
+			return { color: 'red' as const, label: t('admin.failed') };
 		default:
 			return { color: 'zinc' as const, label: status };
 	}
@@ -161,7 +162,7 @@ const getStatusBadge = (status: string) => {
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Customers
+				{t('admin.customers')}
 			</a>
 			<Heading>
 				{customer ? customer.name : 'Customer'}
@@ -177,7 +178,7 @@ const getStatusBadge = (status: string) => {
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
 					<div class="text-red-600 mb-4">{error}</div>
 					<Button href="/admin/customers" outline client:load>
-						Back to Customers
+						{t('admin.backToCustomers')}
 					</Button>
 				</div>
 			)}
@@ -193,26 +194,26 @@ const getStatusBadge = (status: string) => {
 					{/* Stats Cards */}
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-							<div class="text-sm text-secondary mb-1">Total Orders</div>
+							<div class="text-sm text-secondary mb-1">{t('admin.totalOrders')}</div>
 							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{stats.total_orders}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-							<div class="text-sm text-secondary mb-1">Total Spent</div>
+							<div class="text-sm text-secondary mb-1">{t('admin.totalSpent')}</div>
 							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(stats.total_spent)}</div>
 						</div>
 						<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-							<div class="text-sm text-secondary mb-1">Avg. Order Value</div>
+							<div class="text-sm text-secondary mb-1">{t('admin.avgOrderValue')}</div>
 							<div class="text-2xl font-semibold text-zinc-950 tabular-nums">{formatCurrency(Math.round(stats.avg_order_value))}</div>
 						</div>
 					</div>
 
 					{/* Edit Form */}
 					<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6 mb-8">
-						<Subheading>Customer Details</Subheading>
+						<Subheading>{t('admin.customerDetails')}</Subheading>
 
 						<Fieldset client:load>
 							<Field>
-								<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Name *</label>
+								<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">{t('admin.nameLabel')} *</label>
 								<Input
 									type="text"
 									name="name"
@@ -222,7 +223,7 @@ const getStatusBadge = (status: string) => {
 							</Field>
 
 							<Field>
-								<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Email</label>
+								<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">{t('admin.email')}</label>
 								<Input
 									type="email"
 									name="email"
@@ -235,11 +236,11 @@ const getStatusBadge = (status: string) => {
 						<div class="pt-4 border-t border-gray-100">
 							<dl class="grid grid-cols-2 gap-4 text-sm">
 								<div>
-									<dt class="text-secondary">Created</dt>
+									<dt class="text-secondary">{t('admin.created')}</dt>
 									<dd class="text-zinc-950 tabular-nums">{formatDate(customer.created_at, dateTimeOpts)}</dd>
 								</div>
 								<div>
-									<dt class="text-secondary">Updated</dt>
+									<dt class="text-secondary">{t('admin.updated')}</dt>
 									<dd class="text-zinc-950 tabular-nums">{formatDate(customer.updated_at, dateTimeOpts)}</dd>
 								</div>
 							</dl>
@@ -247,21 +248,21 @@ const getStatusBadge = (status: string) => {
 
 						<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
 							<Button href="/admin/customers" outline client:load>
-								Back
+								{t('admin.back')}
 							</Button>
 							<Button type="submit" color="indigo" client:load>
-								Save Changes
+								{t('admin.saveChanges')}
 							</Button>
 						</div>
 					</form>
 
 					{/* Order History */}
 					<div>
-						<Subheading>Order History</Subheading>
+						<Subheading>{t('admin.orderHistory')}</Subheading>
 
 						{orders.length === 0 ? (
 							<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-								<p class="text-secondary text-sm">No orders yet.</p>
+								<p class="text-secondary text-sm">{t('admin.noOrdersYet')}</p>
 							</div>
 						) : (
 							<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -269,12 +270,12 @@ const getStatusBadge = (status: string) => {
 									<Table client:only="react">
 										<TableHead>
 											<TableRow>
-												<TableHeader>Order ID</TableHeader>
-												<TableHeader>Status</TableHeader>
-												<TableHeader>Total</TableHeader>
-												<TableHeader>Created</TableHeader>
-												<TableHeader>Paid</TableHeader>
-												<TableHeader>Action</TableHeader>
+												<TableHeader>{t('admin.orderId')}</TableHeader>
+												<TableHeader>{t('admin.status')}</TableHeader>
+												<TableHeader>{t('admin.total')}</TableHeader>
+												<TableHeader>{t('admin.created')}</TableHeader>
+												<TableHeader>{t('admin.paid')}</TableHeader>
+												<TableHeader>{t('admin.action')}</TableHeader>
 											</TableRow>
 										</TableHead>
 										<TableBody>
@@ -298,7 +299,7 @@ const getStatusBadge = (status: string) => {
 															{formatDate(order.paid_at, dateTimeOpts)}
 														</TableCell>
 														<TableCell>
-															<a href={`/admin/orders/${order.id}`} class="text-brand hover:underline font-medium">View</a>
+															<a href={`/admin/orders/${order.id}`} class="text-brand hover:underline font-medium">{t('admin.view')}</a>
 														</TableCell>
 													</TableRow>
 												);

@@ -5,23 +5,24 @@ import { Button } from '../../components/catalyst/button';
 import { Input } from '../../components/catalyst/input';
 import { Heading, Subheading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { t } from '../../i18n';
 ---
 
-<AdminLayout title="Bulk Image Upload - Admin">
+<AdminLayout title={`${t('admin.bulkImageUpload')} - Admin`}>
 	<div class="space-y-6 max-w-4xl">
 		<div class="flex items-center justify-between">
-			<Heading>Bulk Image Upload from External URLs</Heading>
+			<Heading>{t('admin.bulkImageUploadTitle')}</Heading>
 			<Button href="/admin/products" outline client:load>
-				Back to Products
+				{t('admin.backToProducts')}
 			</Button>
 		</div>
 
 		<!-- Step 1: Upload File -->
 		<div class="bg-white rounded-lg shadow p-6 space-y-4">
-			<Subheading>Step 1: Upload CSV/JSON File</Subheading>
+			<Subheading>{t('admin.step1Upload')}</Subheading>
 
 			<div class="bg-zinc-50 border border-zinc-200 rounded-lg p-4 space-y-2">
-				<p class="text-sm font-medium text-zinc-700">Format Examples:</p>
+				<p class="text-sm font-medium text-zinc-700">{t('admin.formatExamples')}</p>
 				<div class="space-y-2 text-xs text-zinc-500">
 					<div>
 						<strong>CSV:</strong>
@@ -61,7 +62,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 					color="indigo"
 					client:load
 				>
-					Parse File
+					{t('admin.parseFile')}
 				</Button>
 			</div>
 
@@ -70,7 +71,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
 		<!-- Step 2: Preview -->
 		<div id="previewSection" class="hidden bg-white rounded-lg shadow p-6 space-y-4">
-			<Subheading>Step 2: Preview</Subheading>
+			<Subheading>{t('admin.step2Preview')}</Subheading>
 			<div id="previewSummary" class="text-sm text-zinc-500"></div>
 			<div id="previewContent" class="space-y-4"></div>
 			<div id="previewErrors" class="hidden space-y-2"></div>
@@ -88,7 +89,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 					color="green"
 					client:load
 				>
-					Send to Inbox for Approval
+					{t('admin.sendToInboxForApproval')}
 				</Button>
 			</div>
 		</div>

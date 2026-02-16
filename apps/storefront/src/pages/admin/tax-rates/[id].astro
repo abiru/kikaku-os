@@ -11,6 +11,7 @@ import { Textarea } from '../../../components/catalyst/textarea';
 import { Checkbox } from '../../../components/catalyst/checkbox';
 import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../../lib/csrf';
+import { t } from '../../../i18n';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -34,7 +35,7 @@ let success: string | null = null;
 
 // Fetch tax rate
 if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing';
+	error = t('errors.adminKeyMissing');
 } else {
 	try {
 		const res = await fetch(`${apiBase}/admin/tax-rates/${id}`, {
@@ -44,13 +45,13 @@ if (!apiKey) {
 		if (res.ok) {
 			taxRate = await res.json();
 		} else if (res.status === 404) {
-			error = 'Tax rate not found';
+			error = t('errors.taxRateNotFound');
 		} else {
-			error = `Failed to load tax rate: ${res.status}`;
+			error = t('errors.failedToLoadTaxRates');
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load tax rate';
+		error = t('errors.failedToLoadTaxRates');
 	}
 }
 
@@ -75,7 +76,7 @@ if (Astro.request.method === 'POST' && taxRate) {
 					return Astro.redirect('/admin/tax-rates');
 				} else {
 					const data = await res.json();
-					error = data.message || 'Failed to delete tax rate';
+					error = data.message || t('errors.failedToDeleteTaxRate');
 				}
 			} else {
 				// Update tax rate
@@ -89,11 +90,11 @@ if (Astro.request.method === 'POST' && taxRate) {
 				const rate = parseFloat(rateStr);
 
 				if (!name) {
-					error = 'Name is required';
+					error = t('errors.nameRequired');
 				} else if (isNaN(rate) || rate < 0 || rate > 1) {
-					error = 'Rate must be between 0 and 1';
+					error = t('errors.rateBetween');
 				} else if (!applicable_from) {
-					error = 'Applicable from date is required';
+					error = t('errors.applicableFromRequired');
 				} else {
 					const res = await fetch(`${apiBase}/admin/tax-rates/${id}`, {
 						method: 'PUT',
@@ -113,17 +114,17 @@ if (Astro.request.method === 'POST' && taxRate) {
 
 					if (res.ok) {
 						taxRate = await res.json();
-						success = 'Tax rate updated successfully';
+						success = t('admin.taxRateUpdated');
 					} else {
 						const data = await res.json();
-						error = data.message || 'Failed to update tax rate';
+						error = data.message || t('errors.failedToUpdateTaxRate');
 					}
 				}
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to process request';
+		error = t('errors.failedToProcessRequest');
 	}
 }
 
@@ -135,17 +136,17 @@ if (csrfCookieHeader) {
 }
 ---
 
-<AdminLayout title={taxRate ? `Edit Tax Rate: ${taxRate.name}` : 'Tax Rate - Admin'}>
+<AdminLayout title={taxRate ? `${t('common.edit')}: ${taxRate.name}` : `${t('admin.taxRates')} - Admin`}>
 	<div class="space-y-6 max-w-2xl">
 		<div class="flex items-center gap-4">
 			<a href="/admin/tax-rates" class="text-indigo-600 hover:text-indigo-500 text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Tax Rates
+				{t('admin.taxRates')}
 			</a>
 			<h1 class="text-2xl font-semibold text-gray-900">
-				{taxRate ? `Edit: ${taxRate.name}` : 'Tax Rate'}
+				{taxRate ? `${t('common.edit')}: ${taxRate.name}` : t('admin.taxRates')}
 			</h1>
 		</div>
 
@@ -169,7 +170,7 @@ if (csrfCookieHeader) {
 						<div class="md:col-span-2">
 				<Fieldset client:load>
 							<Field>
-								<Label htmlFor="name">Name <span class="text-red-500">*</span></Label>
+								<Label htmlFor="name">{t('admin.name')} <span class="text-red-500">*</span></Label>
 								<Input client:load
 									type="text"
 									id="name"
@@ -182,7 +183,7 @@ if (csrfCookieHeader) {
 
 						<div>
 							<Field>
-								<Label htmlFor="rate">Rate (decimal) <span class="text-red-500">*</span></Label>
+								<Label htmlFor="rate">{t('admin.rateDecimal')} <span class="text-red-500">*</span></Label>
 								<Input client:load
 									type="number"
 									id="rate"
@@ -193,13 +194,13 @@ if (csrfCookieHeader) {
 									max="1"
 									value={taxRate.rate}
 								/>
-								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Current: {formatRate(taxRate.rate)}</p>
+								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.currentRate', { rate: formatRate(taxRate.rate) })}</p>
 							</Field>
 						</div>
 
 						<div>
 							<Field>
-								<Label htmlFor="applicable_from">Applicable From <span class="text-red-500">*</span></Label>
+								<Label htmlFor="applicable_from">{t('admin.applicableFrom')} <span class="text-red-500">*</span></Label>
 								<Input client:load
 									type="date"
 									id="applicable_from"
@@ -212,20 +213,20 @@ if (csrfCookieHeader) {
 
 						<div>
 							<Field>
-								<Label htmlFor="applicable_to">Applicable To</Label>
+								<Label htmlFor="applicable_to">{t('admin.applicableTo')}</Label>
 								<Input client:load
 									type="date"
 									id="applicable_to"
 									name="applicable_to"
 									value={taxRate.applicable_to || ''}
 								/>
-								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for no end date</p>
+								<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.noEndDate')}</p>
 							</Field>
 						</div>
 
 						<div class="md:col-span-2">
 							<Field>
-								<Label htmlFor="description">Description</Label>
+								<Label htmlFor="description">{t('admin.description')}</Label>
 								<Textarea client:load
 									id="description"
 									name="description"
@@ -243,7 +244,7 @@ if (csrfCookieHeader) {
 										value="true"
 										checked={taxRate.is_active === 1}
 									/>
-									<label for="is_active" class="text-base/6 text-zinc-950 select-none sm:text-sm/6">Active</label>
+									<label for="is_active" class="text-base/6 text-zinc-950 select-none sm:text-sm/6">{t('admin.active')}</label>
 								</div>
 							</Field>
 				</Fieldset>
@@ -252,38 +253,38 @@ if (csrfCookieHeader) {
 
 					<div class="flex gap-3 pt-4 border-t border-gray-200">
 						<Button type="submit" color="indigo" client:load >
-							Save Changes
+							{t('admin.saveChanges')}
 						</Button>
 						<Button href="/admin/tax-rates" outline client:load >
-							Cancel
+							{t('common.cancel')}
 						</Button>
 					</div>
 				</form>
 
 				<form method="POST" class="bg-white rounded-xl border border-red-200 shadow-sm p-6">
 					<input type="hidden" name={CSRF_FIELD_NAME} value={csrfToken} />
-					<h3 class="text-lg font-semibold text-red-600 mb-3">Danger Zone</h3>
+					<h3 class="text-lg font-semibold text-red-600 mb-3">	{t('admin.dangerZone')}</h3>
 					<p class="text-sm text-secondary mb-4">
-						Delete this tax rate. It will be permanently removed.
+						{t('admin.deactivateDescription')}
 					</p>
 						<input type="hidden" name="action" value="delete" />
 						<button
 							type="submit"
-							onclick="return confirm('Are you sure you want to delete this tax rate? This action cannot be undone.')"
+							onclick={`return confirm('${t('admin.deactivateConfirm')}')`}
 							class="relative isolate inline-flex items-baseline justify-center gap-x-2 rounded-lg border text-base/6 font-semibold px-[calc(var(--spacing)*3.5-1px)] py-[calc(var(--spacing)*2.5-1px)] sm:px-[calc(var(--spacing)*3-1px)] sm:py-[calc(var(--spacing)*1.5-1px)] sm:text-sm/6 border-transparent text-white cursor-default [--btn-bg:var(--color-red-600)] [--btn-border:var(--color-red-700)]/90 bg-[--btn-border] before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-[--btn-bg] before:shadow-sm"
 						>
-							Delete Tax Rate
+							{t('admin.deactivateTaxRate')}
 						</button>
 				</form>
 
 				<div class="bg-gray-50 rounded-lg p-4 text-sm text-secondary">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
-							<div class="font-medium text-zinc-950">Created</div>
+							<div class="font-medium text-zinc-950">	{t('admin.created')}</div>
 							<div>{new Date(taxRate.created_at).toLocaleString('ja-JP')}</div>
 						</div>
 						<div>
-							<div class="font-medium text-zinc-950">Updated</div>
+							<div class="font-medium text-zinc-950">	{t('admin.updated')}</div>
 							<div>{new Date(taxRate.updated_at).toLocaleString('ja-JP')}</div>
 						</div>
 					</div>

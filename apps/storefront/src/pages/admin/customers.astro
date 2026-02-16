@@ -53,7 +53,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = t('errors.failedToLoadOrders');
+		error = t('errors.failedToLoadCustomers');
 	}
 } else {
 	error = t('errors.adminKeyMissing');

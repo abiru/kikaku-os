@@ -7,6 +7,7 @@ import { Heading } from '../../components/catalyst/heading';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../lib/api';
 import PagesTable from '../../components/admin/PagesTable';
+import { t } from '../../i18n';
 
 const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
@@ -54,10 +55,10 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to load pages. Please check your admin key.';
+		error = t('errors.failedToLoadPages');
 	}
 } else {
-	error = 'ADMIN_API_KEY is missing in server environment.';
+	error = t('errors.adminKeyMissing');
 }
 
 const hasNext = page < meta.totalPages;
@@ -66,28 +67,28 @@ const hasPrev = page > 1;
 const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 ---
 
-<AdminLayout title="Pages - Admin">
+<AdminLayout title={`${t('admin.pages')} - Admin`}>
 	<div class="space-y-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<Heading>Pages</Heading>
-				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} items</span>
+				<Heading>{t('admin.pages')}</Heading>
+				<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.items')}</span>
 			</div>
 			<Button href="/admin/pages/new" color="indigo" client:load>
-				+ New Page
+				{t('admin.newPage')}
 			</Button>
 		</div>
 
 		{/* Search & Filter */}
 		<div class="mb-6 flex flex-col sm:flex-row gap-4">
 			<form method="get" class="relative flex-1 max-w-md">
-				<label for="page-search" class="sr-only">Search by title or slug</label>
+				<label for="page-search" class="sr-only">{t('admin.searchByTitleOrSlug')}</label>
 				<input
 					type="search"
 					id="page-search"
 					name="q"
 					value={q}
-					placeholder="Search by title or slug..."
+					placeholder={t('admin.searchByTitleOrSlug')}
 					class="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-sm text-zinc-950 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all shadow-sm"
 				/>
 				<input type="hidden" name="status" value={status} />
@@ -105,19 +106,19 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 					href={`?q=${q}&status=all`}
 					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 				>
-					All
+					{t('common.all')}
 				</a>
 				<a
 					href={`?q=${q}&status=published`}
 					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'published' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 				>
-					Published
+					{t('admin.published')}
 				</a>
 				<a
 					href={`?q=${q}&status=draft`}
 					class={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${status === 'draft' ? 'bg-indigo-600 text-white' : 'bg-white text-zinc-950 border border-zinc-200 hover:bg-zinc-50'}`}
 				>
-					Draft
+					{t('admin.draft')}
 				</a>
 			</div>
 		</div>
@@ -134,7 +135,7 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 		{/* Pagination */}
 		<div class="flex items-center justify-between">
 			<div class="text-xs text-zinc-500">
-				Page {page} of {meta.totalPages}
+				{t('admin.pageOf', { page, totalPages: meta.totalPages })}
 			</div>
 			<div class="flex gap-2">
 				{hasPrev ? (
@@ -143,7 +144,7 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 						outline
 						client:load
 					>
-						Previous
+						{t('admin.previous')}
 					</Button>
 				) : (
 					<Button
@@ -151,7 +152,7 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 						disabled
 						client:load
 					>
-						Previous
+						{t('admin.previous')}
 					</Button>
 				)}
 				{hasNext ? (
@@ -160,7 +161,7 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 						outline
 						client:load
 					>
-						Next
+						{t('admin.next')}
 					</Button>
 				) : (
 					<Button
@@ -168,7 +169,7 @@ const CORE_SLUGS = ['terms', 'privacy', 'refund'];
 						disabled
 						client:load
 					>
-						Next
+						{t('admin.next')}
 					</Button>
 				)}
 			</div>

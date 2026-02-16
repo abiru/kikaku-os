@@ -9,11 +9,18 @@ import { getApiBase } from '../../lib/api';
 import ReportsTable from '../../components/admin/ReportsTable';
 import { t } from '../../i18n';
 
+type Report = {
+	id: number;
+	date: string;
+	created_at: string;
+	downloadUrl?: string;
+};
+
 const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
 
-let reports: any[] = [];
+let reports: Report[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
 let error = null;
 
@@ -35,7 +42,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		meta = data.meta || meta;
 	} catch (e) {
 		console.error(e);
-		error = t('errors.failedToLoadOrders');
+		error = t('errors.failedToLoadReports');
 	}
 } else {
 	error = t('errors.adminKeyMissing');

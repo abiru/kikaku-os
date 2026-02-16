@@ -9,6 +9,7 @@ import { Fieldset, Field, Label } from '../../../components/catalyst/fieldset';
 import { Input } from '../../../components/catalyst/input';
 import { Textarea } from '../../../components/catalyst/textarea';
 import { Checkbox, CheckboxField } from '../../../components/catalyst/checkbox';
+import { t } from '../../../i18n';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -45,13 +46,13 @@ if (Astro.request.method === 'POST') {
 		const rate = parseFloat(rateStr);
 
 		if (!name) {
-			error = 'Name is required';
+			error = t('errors.nameRequired');
 		} else if (isNaN(rate) || rate < 0 || rate > 1) {
-			error = 'Rate must be a number between 0 and 1 (e.g., 0.10 for 10%)';
+			error = t('errors.rateRange');
 		} else if (!applicable_from) {
-			error = 'Applicable from date is required';
+			error = t('errors.applicableFromRequired');
 		} else if (!apiKey) {
-			error = 'ADMIN_API_KEY is missing in server environment';
+			error = t('errors.adminKeyMissing');
 		} else {
 			const res = await fetch(`${apiBase}/admin/tax-rates`, {
 				method: 'POST',
@@ -72,30 +73,30 @@ if (Astro.request.method === 'POST') {
 			const data = await res.json();
 
 			if (!res.ok) {
-				error = data.message || 'Failed to create tax rate';
+				error = data.message || t('errors.failedToCreateTaxRate');
 			} else if (data.id) {
 				return Astro.redirect(`/admin/tax-rates/${data.id}`);
 			} else {
-				error = 'Failed to create tax rate';
+				error = t('errors.failedToCreateTaxRate');
 			}
 		}
 	} catch (e) {
 		console.error(e);
-		error = 'Failed to create tax rate. Please check your connection.';
+		error = t('errors.failedToCreateTaxRate');
 	}
 }
 ---
 
-<AdminLayout title="New Tax Rate - Admin">
+<AdminLayout title={`${t('admin.taxRates')} - Admin`}>
 	<div class="space-y-6 max-w-2xl">
 		<div class="flex items-center gap-4">
 			<a href="/admin/tax-rates" class="text-indigo-600 hover:text-indigo-500 text-sm flex items-center gap-1">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Tax Rates
+				{t('admin.taxRates')}
 			</a>
-			<h1 class="text-2xl font-semibold text-gray-900">New Tax Rate</h1>
+			<h1 class="text-2xl font-semibold text-gray-900">{t('admin.newTaxRate')}</h1>
 		</div>
 
 		{error && (
@@ -110,7 +111,7 @@ if (Astro.request.method === 'POST') {
 				<Fieldset client:load>
 					<Field>
 						<Label>
-							Name <span class="text-red-500">*</span>
+							{t('admin.name')} <span class="text-red-500">*</span>
 						</Label>
 						<Input
 							client:load
@@ -127,7 +128,7 @@ if (Astro.request.method === 'POST') {
 				<div>
 					<Field>
 						<Label>
-							Rate (decimal) <span class="text-red-500">*</span>
+							{t('admin.rateDecimal')} <span class="text-red-500">*</span>
 						</Label>
 						<Input
 							client:load
@@ -140,14 +141,14 @@ if (Astro.request.method === 'POST') {
 							defaultValue={formValues.rate}
 							placeholder="0.10"
 						/>
-						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">0.10 = 10%, 0.08 = 8%</p>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.rateExample')}</p>
 					</Field>
 				</div>
 
 				<div>
 					<Field>
 						<Label>
-							Applicable From <span class="text-red-500">*</span>
+							{t('admin.applicableFrom')} <span class="text-red-500">*</span>
 						</Label>
 						<Input
 							client:load
@@ -161,20 +162,20 @@ if (Astro.request.method === 'POST') {
 
 				<div>
 					<Field>
-						<Label>Applicable To</Label>
+						<Label>{t('admin.applicableTo')}</Label>
 						<Input
 							client:load
 							type="date"
 							name="applicable_to"
 							defaultValue={formValues.applicable_to}
 						/>
-						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Leave empty for no end date</p>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.noEndDate')}</p>
 					</Field>
 				</div>
 
 				<div class="md:col-span-2">
 					<Field>
-						<Label>Description</Label>
+						<Label>{t('admin.description')}</Label>
 						<Textarea
 							client:load
 							name="description"
@@ -195,26 +196,26 @@ if (Astro.request.method === 'POST') {
 							defaultChecked={formValues.is_active === 'true'}
 							color="indigo"
 						/>
-						<Label>Active</Label>
-						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">Only active rates can be assigned to products</p>
+						<Label>{t('admin.active')}</Label>
+						<p data-slot="description" class="text-base/6 text-zinc-500 sm:text-sm/6">{t('admin.onlyActiveAssignable')}</p>
 					</CheckboxField>
 				</div>
 			</div>
 
 			<div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
-				<strong>Note:</strong> Japanese consumption tax rates are:
+				{t('admin.taxRatesNote')}
 				<ul class="mt-2 ml-4 list-disc">
-					<li>Standard Rate: 10% (enter 0.10)</li>
-					<li>Reduced Rate: 8% (enter 0.08 for food/beverages)</li>
+					<li>{t('admin.standardRateNote')}</li>
+					<li>{t('admin.reducedRateNote')}</li>
 				</ul>
 			</div>
 
 			<div class="flex gap-3 pt-4 border-t border-gray-200">
 				<Button type="submit" color="indigo" client:load >
-					Create Tax Rate
+					{t('admin.createTaxRate')}
 				</Button>
 				<Button href="/admin/tax-rates" outline client:load >
-					Cancel
+					{t('common.cancel')}
 				</Button>
 			</div>
 		</form>
