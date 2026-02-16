@@ -28,7 +28,7 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
 
       return (
         <article
-          class="category-card relative flex h-[580px] flex-col items-center px-6 py-8 text-center overflow-hidden"
+          class="category-card relative flex h-[580px] flex-col items-center px-6 py-8 text-center overflow-visible"
         >
           <img
             src={bgImage}
@@ -48,13 +48,13 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
           <div class="category-text mt-4 flex gap-2">
             <a
               href={`/products?category=${encodeURIComponent(product.category || '')}`}
-              class="rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-active transition-colors"
+              class="rounded-full bg-brand px-5 py-2.5 min-h-[44px] inline-flex items-center text-sm font-semibold text-white hover:bg-brand-active transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
             >
               {t('home.viewProducts')}
             </a>
             <a
               href={`/products/${product.id}`}
-              class="rounded-full border border-brand px-4 py-1.5 text-sm font-semibold text-brand hover:bg-brand hover:text-white transition-colors"
+              class="rounded-full border border-brand px-5 py-2.5 min-h-[44px] inline-flex items-center text-sm font-semibold text-brand hover:bg-brand hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
             >
               {t('home.viewDetails')}
             </a>
