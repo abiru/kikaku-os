@@ -424,6 +424,9 @@ describe('quotation service', () => {
     });
 
     it('should set valid_until to 30 days from now', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-02-17T12:00:00Z'));
+
       const db = createMockDb();
       db._setResults({
         all: [
@@ -449,7 +452,6 @@ describe('quotation service', () => {
         ],
       });
 
-      const now = new Date();
       const result = await createQuotation(db, {
         customerCompany: 'C',
         customerName: 'N',
@@ -459,11 +461,9 @@ describe('quotation service', () => {
         items: [{ variantId: 1, quantity: 1 }],
       });
 
-      const validUntil = new Date(result.validUntil);
-      const diffDays = Math.round(
-        (validUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      expect(diffDays).toBe(30);
+      expect(result.validUntil).toBe('2026-03-19');
+
+      vi.useRealTimers();
     });
 
     it('should use uppercase currency from first variant', async () => {
