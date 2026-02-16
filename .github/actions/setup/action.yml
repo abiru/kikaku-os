@@ -1,0 +1,37 @@
+name: Setup Node & pnpm
+description: Setup Node 22, pnpm, and install dependencies
+
+inputs:
+  working-directory:
+    description: 'Directory to run pnpm install in (omit for root install)'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - uses: pnpm/action-setup@v4
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.dir }}
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: ${{ runner.os }}-pnpm-
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.working-directory }}" ]; then
+          pnpm -C ${{ inputs.working-directory }} install --frozen-lockfile
+        else
+          pnpm install --frozen-lockfile
+        fi

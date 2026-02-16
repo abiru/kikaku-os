@@ -10,37 +10,49 @@ on:
       - 'pnpm-lock.yaml'
   push:
     branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'apps/storefront/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      storefront: ${{ steps.filter.outputs.storefront }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'packages/**'
+            storefront:
+              - 'apps/storefront/**'
+              - 'packages/**'
+
   api:
     name: API - Typecheck / Test / Integration / Build
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.dir }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - name: Install dependencies
-        run: pnpm -C apps/api install --frozen-lockfile
+          working-directory: apps/api
 
       - name: Type check
         run: pnpm -C apps/api typecheck
@@ -64,29 +76,16 @@ jobs:
 
   storefront:
     name: Storefront - Typecheck / Test / Build
+    needs: changes
+    if: needs.changes.outputs.storefront == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.dir }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - name: Install dependencies
-        run: pnpm -C apps/storefront install --frozen-lockfile
+          working-directory: apps/storefront
 
       - name: Type check
         run: pnpm -C apps/storefront exec astro check
@@ -107,29 +106,17 @@ jobs:
 
   e2e:
     name: E2E - Playwright Tests
+    if: >-
+      github.event_name == 'push' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    needs: [api, storefront]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.dir }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
