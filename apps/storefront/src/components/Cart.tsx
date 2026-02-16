@@ -51,6 +51,7 @@ function CartItem({ item }: { item: CartItem }) {
 					<img
 						src={item.imageUrl}
 						alt={item.title}
+						loading="lazy"
 						className="size-24 rounded-md object-cover sm:size-48"
 					/>
 				) : (

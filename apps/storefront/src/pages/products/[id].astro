@@ -279,6 +279,7 @@ const jsonLdBreadcrumb = product ? {
 											alt={image.alt}
 											src={image.src}
 											loading={image.primary ? 'eager' : 'lazy'}
+											fetchpriority={image.primary ? 'high' : undefined}
 											class:list={[
 												'rounded-lg object-cover w-full',
 												image.primary ? 'lg:col-span-2 lg:row-span-2 aspect-square' : 'hidden lg:block aspect-square',
@@ -307,7 +308,7 @@ const jsonLdBreadcrumb = product ? {
 												index === 0 ? 'ring-[#0071e3]' : 'ring-transparent hover:ring-gray-300',
 											]}
 										>
-											<img src={image.src} alt={image.alt} class="w-full h-full object-cover" />
+											<img src={image.src} alt={image.alt} width="80" height="80" loading="lazy" class="w-full h-full object-cover" />
 										</button>
 									))}
 								</div>

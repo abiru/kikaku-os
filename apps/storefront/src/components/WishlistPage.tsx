@@ -51,6 +51,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 						<img
 							src={item.imageUrl}
 							alt={item.title}
+							loading="lazy"
 							className="size-24 rounded-md object-cover sm:size-48 hover:opacity-80 transition-opacity"
 						/>
 					) : (
