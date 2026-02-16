@@ -54,6 +54,8 @@
     "instagram": "Instagram",
     "facebook": "Facebook",
     "termsOfUse": "利用規約",
+    "shippingPolicy": "配送ポリシー",
+    "refundPolicy": "返金ポリシー",
     "salesAndRefunds": "販売と返金",
     "copyright": "Copyright © {year} Led Kikaku Inc. All rights reserved."
   },
@@ -113,8 +115,7 @@
     "shippingConfigLoading": "配送設定を読み込み中...",
     "shippingConfigError": "配送設定の読み込みに失敗しました",
     "retry": "再試行",
-    "maxStock": "在庫上限: {stock}個",
-    "quantity": "数量"
+    "maxStock": "在庫上限: {stock}個"
   },
   "checkout": {
     "pageTitle": "チェックアウト - Led Kikaku",

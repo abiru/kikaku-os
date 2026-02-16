@@ -33,7 +33,7 @@ type PageRow = {
 };
 
 // Core pages that cannot be deleted
-const CORE_PAGE_SLUGS = ['terms', 'privacy', 'refund'];
+const CORE_PAGE_SLUGS = ['terms', 'privacy', 'shipping', 'refund', 'legal'];
 
 // GET /pages - List pages with pagination, search, and status filter
 app.get(

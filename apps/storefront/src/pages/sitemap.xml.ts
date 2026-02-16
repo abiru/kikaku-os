@@ -12,12 +12,14 @@ const STATIC_PAGES = [
   { path: '/order-status', changefreq: 'monthly', priority: '0.5' },
   { path: '/faq', changefreq: 'monthly', priority: '0.5' },
   { path: '/about', changefreq: 'monthly', priority: '0.5' },
+  { path: '/legal', changefreq: 'yearly', priority: '0.4' },
   { path: '/legal-notice', changefreq: 'yearly', priority: '0.4' },
   { path: '/social', changefreq: 'monthly', priority: '0.4' },
   { path: '/wishlist', changefreq: 'weekly', priority: '0.5' },
   { path: '/cart', changefreq: 'weekly', priority: '0.5' },
   { path: '/terms', changefreq: 'yearly', priority: '0.3' },
   { path: '/privacy', changefreq: 'yearly', priority: '0.3' },
+  { path: '/shipping', changefreq: 'yearly', priority: '0.3' },
   { path: '/refund', changefreq: 'yearly', priority: '0.3' },
 ];
 
