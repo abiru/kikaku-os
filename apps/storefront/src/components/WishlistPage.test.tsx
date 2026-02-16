@@ -14,10 +14,22 @@ vi.mock('../lib/format', () => ({
   formatPrice: (amount: number, currency: string) => `${currency} ${amount}`,
 }))
 
+type WishlistItem = {
+  productId: number
+  title: string
+  price: number
+  currency: string
+  taxRate?: number
+  imageUrl?: string
+  variantId?: number
+  variantTitle?: string
+  addedAt: number
+}
+
 const { mockRemoveFromWishlist, mockAddToCart, mockWishlistGet } = vi.hoisted(() => ({
   mockRemoveFromWishlist: vi.fn(),
   mockAddToCart: vi.fn(),
-  mockWishlistGet: vi.fn(() => []),
+  mockWishlistGet: vi.fn((): WishlistItem[] => []),
 }))
 
 vi.mock('../lib/wishlist', () => ({
@@ -35,28 +47,31 @@ vi.mock('@nanostores/react', () => ({
 
 import WishlistPage from './WishlistPage'
 
-const mockItems = [
-  {
-    productId: 1,
-    variantId: 10,
-    title: 'Test Product',
-    variantTitle: 'Large',
-    price: 3000,
-    currency: 'JPY',
-    taxRate: 10,
-    imageUrl: '/img/product.jpg',
-  },
-  {
-    productId: 2,
-    variantId: null,
-    title: 'No Variant Product',
-    variantTitle: null,
-    price: 1500,
-    currency: 'JPY',
-    taxRate: 10,
-    imageUrl: null,
-  },
-]
+const mockItemWithVariant: WishlistItem = {
+  productId: 1,
+  variantId: 10,
+  title: 'Test Product',
+  variantTitle: 'Large',
+  price: 3000,
+  currency: 'JPY',
+  taxRate: 10,
+  imageUrl: '/img/product.jpg',
+  addedAt: Date.now(),
+}
+
+const mockItemWithoutVariant: WishlistItem = {
+  productId: 2,
+  variantId: undefined,
+  title: 'No Variant Product',
+  variantTitle: undefined,
+  price: 1500,
+  currency: 'JPY',
+  taxRate: 10,
+  imageUrl: undefined,
+  addedAt: Date.now() - 1000,
+}
+
+const mockItems: WishlistItem[] = [mockItemWithVariant, mockItemWithoutVariant]
 
 describe('WishlistPage', () => {
   it('renders empty state when no items', () => {
@@ -80,19 +95,19 @@ describe('WishlistPage', () => {
   })
 
   it('shows add to cart button for items with variants', () => {
-    mockWishlistGet.mockReturnValue([mockItems[0]])
+    mockWishlistGet.mockReturnValue([mockItemWithVariant])
     render(<WishlistPage />)
     expect(screen.getByText('wishlist.addToCart')).toBeDefined()
   })
 
   it('shows view product link for items without variants', () => {
-    mockWishlistGet.mockReturnValue([mockItems[1]])
+    mockWishlistGet.mockReturnValue([mockItemWithoutVariant])
     render(<WishlistPage />)
     expect(screen.getByText('wishlist.viewProduct')).toBeDefined()
   })
 
   it('calls addToCart when add to cart clicked', () => {
-    mockWishlistGet.mockReturnValue([mockItems[0]])
+    mockWishlistGet.mockReturnValue([mockItemWithVariant])
     render(<WishlistPage />)
     fireEvent.click(screen.getByText('wishlist.addToCart'))
     expect(mockAddToCart).toHaveBeenCalledWith(expect.objectContaining({
@@ -103,7 +118,7 @@ describe('WishlistPage', () => {
   })
 
   it('shows variant title when not Default', () => {
-    mockWishlistGet.mockReturnValue([mockItems[0]])
+    mockWishlistGet.mockReturnValue([mockItemWithVariant])
     render(<WishlistPage />)
     expect(screen.getByText('Large')).toBeDefined()
   })

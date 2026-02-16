@@ -5,7 +5,7 @@ type Hero = {
   id: number
   position: number
   title: string
-  subtitle: string
+  subtitle: string | null
   status: string
   updated_at: string
 }
