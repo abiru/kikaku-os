@@ -1,0 +1,56 @@
+---
+import Alert from './Alert.astro';
+import { t } from '../i18n';
+
+interface Props {
+	variantId: number | null;
+	addedToCartLabel: string;
+}
+
+const { variantId, addedToCartLabel } = Astro.props;
+---
+
+<form id="product-form">
+	{/* Quantity picker */}
+	<div>
+		<h2 class="text-sm font-medium text-gray-900">{t('cart.quantity')}</h2>
+
+		<div class="mt-2 grid w-full max-w-[120px] grid-cols-1">
+			<select
+				name="quantity"
+				id="quantity-select"
+				class="col-start-1 row-start-1 appearance-none rounded-md bg-white py-2.5 pr-8 pl-4 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-[#0071e3] sm:text-sm"
+			>
+				{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((qty) => (
+					<option value={qty} selected={qty === 1}>{qty}</option>
+				))}
+			</select>
+			<svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor">
+				<path fill-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+			</svg>
+		</div>
+	</div>
+
+	<button
+		type="button"
+		id="buy-button"
+		data-added-label={addedToCartLabel}
+		disabled={!variantId}
+		class="mt-8 flex w-full items-center justify-center rounded-md border border-transparent bg-[#0071e3] px-8 py-3 text-base font-medium text-white hover:bg-[#005bb5] focus:ring-2 focus:ring-[#0071e3] focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+	>
+		<span id="buy-label">{t('product.addToCart')}</span>
+		<span id="buy-spinner" class="hidden ml-2 animate-spin">
+			<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
+				<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+				<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+			</svg>
+		</span>
+	</button>
+</form>
+
+{/* Error message */}
+<div id="checkout-error" class="hidden mt-4">
+	<Alert severity="critical" title={t('errors.error')}>
+		<p id="checkout-error-message" class="text-sm"></p>
+	</Alert>
+</div>
