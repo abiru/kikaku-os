@@ -21,6 +21,7 @@
 		"db:seed": "curl -X POST http://localhost:8787/dev/seed -H 'x-admin-key: CHANGE_ME' -H 'content-type: application/json' -d '{\"date\":\"2026-01-15\",\"orders\":5,\"refunds\":1}'"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "^4.11.1",
 		"@playwright/test": "^1.58.2",
 		"concurrently": "^9.1.2",
 		"playwright": "^1.57.0"

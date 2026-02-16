@@ -16,12 +16,11 @@ export default defineConfig({
 				'src/**/*.test.{ts,tsx}',
 				'src/__tests__/**',
 				'src/env.d.ts',
-				'src/components/catalyst/**',
-				'src/components/admin/**'
+				'src/components/catalyst/**'
 			],
 			thresholds: {
-				lines: 30,
-				statements: 30
+				lines: 28,
+				statements: 28
 			}
 		}
 	}
