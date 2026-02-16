@@ -41,11 +41,13 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 	const elements = useElements();
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [paymentElementReady, setPaymentElementReady] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!stripe || !elements || !orderToken) {
+		if (!stripe || !elements || !orderToken || !paymentElementReady) {
+			setErrorMessage(t('checkout.stripeLoadFailedDescription'));
 			return;
 		}
 
@@ -53,6 +55,13 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 		setErrorMessage(null);
 
 		try {
+			const submitResult = await elements.submit();
+			if (submitResult.error) {
+				setErrorMessage(getStripeErrorMessage(submitResult.error, t));
+				setIsProcessing(false);
+				return;
+			}
+
 			const confirmPromise = stripe.confirmPayment({
 				elements,
 				confirmParams: {
@@ -87,7 +96,15 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 				<label className="block text-sm font-medium text-gray-700 mb-2">
 					{t('checkout.paymentDetails')}
 				</label>
-				<PaymentElement />
+				<PaymentElement
+					onReady={() => {
+						setPaymentElementReady(true);
+					}}
+					onLoadError={() => {
+						setPaymentElementReady(false);
+						setErrorMessage(t('checkout.stripeLoadFailedDescription'));
+					}}
+				/>
 			</div>
 
 			{/* Error message */}
@@ -102,7 +119,7 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 			{/* Submit button */}
 			<button
 				type="submit"
-				disabled={!stripe || isProcessing}
+				disabled={!stripe || isProcessing || !paymentElementReady}
 				className="w-full rounded-md bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 			>
 				{isProcessing ? (
