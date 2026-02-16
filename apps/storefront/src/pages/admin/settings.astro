@@ -48,11 +48,11 @@ if (!apiKey) {
       const data = await res.json();
       grouped = data.grouped || {};
     } else {
-      error = `Failed to load settings: ${res.status}`;
+      error = t('errors.failedToLoadSettingsStatus', { status: res.status });
     }
   } catch (e) {
     console.error(e);
-    error = 'Failed to load settings';
+    error = t('errors.failedToLoadSettingsGeneric');
   }
 }
 
@@ -91,9 +91,9 @@ if (Astro.request.method === 'POST') {
       const data = await res.json();
 
       if (res.ok) {
-        success = `Successfully updated ${data.results?.length || 0} setting(s)`;
+        success = t('admin.settingsUpdated', { count: data.results?.length || 0 });
         if (data.errors && data.errors.length > 0) {
-          error = `Some settings failed: ${data.errors.map((e: any) => e.key).join(', ')}`;
+          error = t('admin.settingsPartialFail', { keys: data.errors.map((e: any) => e.key).join(', ') });
         }
 
         // Refresh settings
@@ -105,20 +105,20 @@ if (Astro.request.method === 'POST') {
           grouped = refreshData.grouped || {};
         }
       } else {
-        error = data.message || 'Failed to update settings';
+        error = data.message || t('errors.failedToUpdateSettings');
       }
     }
   } catch (e) {
     console.error(e);
-    error = 'Failed to save settings';
+    error = t('errors.failedToSaveSettings');
   }
 }
 
 const categoryLabels: Record<string, string> = {
-  shipping: '配送設定',
-  company: '会社情報',
-  store: 'ストア設定',
-  general: '一般設定'
+  shipping: t('admin.settingsCategoryShipping'),
+  company: t('admin.settingsCategoryCompany'),
+  store: t('admin.settingsCategoryStore'),
+  general: t('admin.settingsCategoryGeneral'),
 };
 
 const getInputType = (dataType: string) => {

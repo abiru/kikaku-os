@@ -41,7 +41,7 @@ try {
     }
   }
 } catch (e) {
-  error = 'Failed to load orders';
+  error = t('account.loadError');
 }
 
 const formatCurrency = (amount: number, currency = 'JPY') => {
@@ -58,7 +58,7 @@ const statusLabels: Record<string, string> = {
 };
 ---
 
-<AccountLayout title="注文履歴 - Led Kikaku Store" activeTab="orders">
+<AccountLayout title={t('account.ordersPageTitle')} activeTab="orders">
   <Container class="py-8">
     <div class="max-w-4xl mx-auto">
       <h1 class="text-2xl font-semibold text-primary mb-6">
@@ -141,7 +141,7 @@ const statusLabels: Record<string, string> = {
                   href={`/account/orders?page=${page - 1}`}
                   class="px-4 py-2 text-sm font-medium text-brand hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  前へ
+                  {t('common.previous')}
                 </a>
               )}
 
@@ -154,7 +154,7 @@ const statusLabels: Record<string, string> = {
                   href={`/account/orders?page=${page + 1}`}
                   class="px-4 py-2 text-sm font-medium text-brand hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  次へ
+                  {t('common.next')}
                 </a>
               )}
             </div>

@@ -100,8 +100,8 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
         <h2>{t('quotation.customerInfo')}</h2>
         <p><strong>{quotation.customer_company}</strong></p>
         <p>{quotation.customer_name} 様</p>
-        {quotation.customer_email && <p>Email: {quotation.customer_email}</p>}
-        {quotation.customer_phone && <p>TEL: {quotation.customer_phone}</p>}
+        {quotation.customer_email && <p>{t('quotation.emailLabel')}: {quotation.customer_email}</p>}
+        {quotation.customer_phone && <p>{t('quotation.phoneLabel')}: {quotation.customer_phone}</p>}
       </div>
 
       <div class="info-card">

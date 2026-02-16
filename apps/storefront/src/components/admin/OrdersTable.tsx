@@ -4,7 +4,8 @@ import { Badge } from'../catalyst/badge'
 import { Link } from'../catalyst/link'
 import AdminPagination from './AdminPagination'
 import { formatPrice } from '../../lib/format'
-import { getOrderBadgeColor } from '../../lib/adminUtils'
+import { getOrderBadgeColor, getPaymentStatusLabel, getFulfillmentStatusLabel } from '../../lib/adminUtils'
+import { t } from '../../i18n'
 
 type Order = {
  id: number
@@ -144,7 +145,7 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
 
    if (action === 'export') {
      exportOrdersCSV(orders, selectedIds)
-     setBulkSuccess(`${selectedIds.size}件の注文をCSVエクスポートしました`)
+     setBulkSuccess(t('admin.bulkExportSuccess', { count: selectedIds.size }))
      setTimeout(() => setBulkSuccess(null), 3000)
      return
    }
@@ -173,13 +174,13 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
 
      setBulkLoading(false)
      if (failCount === 0) {
-       setBulkSuccess(`${successCount}件の注文を発送済みに変更しました`)
+       setBulkSuccess(t('admin.bulkFulfillSuccess', { count: successCount }))
        setOrders(prev => prev.map(o =>
          selectedIds.has(o.id) ? { ...o, fulfillment_status: 'shipped' } : o
        ))
        setSelectedIds(new Set())
      } else {
-       setBulkError(`${successCount}件成功、${failCount}件失敗しました`)
+       setBulkError(t('admin.bulkPartialFail', { succeeded: successCount, failed: failCount }))
      }
    }
  }, [orders, selectedIds])
@@ -190,7 +191,7 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
  {someSelected && (
   <div className="mb-4 flex items-center gap-4 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3">
    <span className="text-sm font-medium text-indigo-900">
-    {selectedIds.size}件選択中
+    {t('admin.selectedCount', { count: selectedIds.size })}
    </span>
    <select
     className="rounded-md border-gray-300 text-sm py-1.5 pl-3 pr-8 focus:border-indigo-500 focus:ring-indigo-500"
@@ -202,19 +203,19 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
     }}
     disabled={bulkLoading}
    >
-    <option value="" disabled>一括操作...</option>
-    <option value="fulfill">発送済みに変更</option>
-    <option value="export">CSVエクスポート</option>
+    <option value="" disabled>{t('admin.bulkActions')}</option>
+    <option value="fulfill">{t('admin.markAsShipped')}</option>
+    <option value="export">{t('admin.csvExport')}</option>
    </select>
    {bulkLoading && (
-     <span className="text-sm text-indigo-600 animate-pulse">処理中...</span>
+     <span className="text-sm text-indigo-600 animate-pulse">{t('admin.processing')}</span>
    )}
    <button
     type="button"
     onClick={() => setSelectedIds(new Set())}
     className="ml-auto text-sm text-indigo-600 hover:text-indigo-800"
    >
-    選択解除
+    {t('admin.deselect')}
    </button>
   </div>
  )}
@@ -240,32 +241,32 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
    checked={allSelected}
    onChange={toggleAll}
    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-   aria-label="全て選択"
+   aria-label={t('admin.selectAll')}
   />
  </TableHeader>
  <TableHeader>
    <button type="button" onClick={() => handleSort('id')} className="inline-flex items-center hover:text-indigo-600">
-     Order
+     {t('admin.order')}
      <SortIcon field="id" sortField={sortField} sortOrder={sortOrder} />
    </button>
  </TableHeader>
  <TableHeader>
    <button type="button" onClick={() => handleSort('created_at')} className="inline-flex items-center hover:text-indigo-600">
-     Date
+     {t('admin.date')}
      <SortIcon field="created_at" sortField={sortField} sortOrder={sortOrder} />
    </button>
  </TableHeader>
- <TableHeader>Customer</TableHeader>
+ <TableHeader>{t('admin.customer')}</TableHeader>
  <TableHeader>
    <button type="button" onClick={() => handleSort('status')} className="inline-flex items-center hover:text-indigo-600">
-     Payment
+     {t('admin.payment')}
      <SortIcon field="status" sortField={sortField} sortOrder={sortOrder} />
    </button>
  </TableHeader>
- <TableHeader>Fulfillment</TableHeader>
+ <TableHeader>{t('admin.fulfillment')}</TableHeader>
  <TableHeader className="text-right">
    <button type="button" onClick={() => handleSort('total_net')} className="inline-flex items-center hover:text-indigo-600">
-     Total
+     {t('admin.total')}
      <SortIcon field="total_net" sortField={sortField} sortOrder={sortOrder} />
    </button>
  </TableHeader>
@@ -274,7 +275,7 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
  <TableBody>
  {sortedOrders.length > 0 ? (
  sortedOrders.map((order) => (
- <TableRow key={order.id} href={`/admin/orders/${order.id}`} title={`Order #${order.id}`}>
+ <TableRow key={order.id} href={`/admin/orders/${order.id}`} title={`${t('admin.order')} #${order.id}`}>
  <TableCell>
   <input
    type="checkbox"
@@ -285,7 +286,7 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
    }}
    onClick={(e) => e.stopPropagation()}
    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-   aria-label={`注文 #${order.id} を選択`}
+   aria-label={t('admin.selectOrder', { id: order.id })}
   />
  </TableCell>
  <TableCell className="font-medium">
@@ -300,14 +301,14 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
  </span>
  </TableCell>
  <TableCell>
- <div className="text-zinc-950">{order.customer_email ||'Guest'}</div>
+ <div className="text-zinc-950">{order.customer_email || t('admin.guest')}</div>
  </TableCell>
  <TableCell>
- <Badge color={getOrderBadgeColor(order.status)}>{order.status}</Badge>
+ <Badge color={getOrderBadgeColor(order.status)}>{getPaymentStatusLabel(order.status)}</Badge>
  </TableCell>
  <TableCell>
  <Badge color={getFulfillmentBadgeColor(order.fulfillment_status)}>
- {order.fulfillment_status ||'Unfulfilled'}
+ {getFulfillmentStatusLabel(order.fulfillment_status)}
  </Badge>
  </TableCell>
  <TableCell className="text-right font-medium tabular-nums">
@@ -318,7 +319,7 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
  ) : (
  <TableRow>
  <TableCell colSpan={7} className="text-center text-zinc-500 py-12">
- No orders found.
+ {t('admin.noOrders')}
  </TableCell>
  </TableRow>
  )}

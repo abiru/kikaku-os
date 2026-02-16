@@ -1,5 +1,6 @@
 // Shared admin utility functions
 // Badge color types matching catalyst Badge component
+import { t } from '../i18n'
 
 type BadgeColor = 'lime' | 'amber' | 'red' | 'zinc' | 'blue' | 'green' | 'yellow'
 
@@ -15,9 +16,9 @@ export const getInquiryBadgeColor = (status: string): BadgeColor => {
 
 export const getInquiryStatusLabel = (status: string): string => {
   switch (status) {
-    case 'open': return '未対応'
-    case 'replied': return '返信済み'
-    case 'closed': return 'クローズ'
+    case 'open': return t('admin.inquiryStatusOpen')
+    case 'replied': return t('admin.inquiryStatusReplied')
+    case 'closed': return t('admin.inquiryStatusClosed')
     default: return status
   }
 }
@@ -29,6 +30,25 @@ export const getOrderBadgeColor = (status: string): BadgeColor => {
     case 'pending': return 'amber'
     case 'refunded': return 'red'
     default: return 'zinc'
+  }
+}
+
+export const getPaymentStatusLabel = (status: string): string => {
+  switch (status) {
+    case 'paid': return t('admin.paid')
+    case 'pending': return t('admin.pending')
+    case 'refunded': return t('admin.refunded')
+    default: return status
+  }
+}
+
+export const getFulfillmentStatusLabel = (status: string | null): string => {
+  switch (status) {
+    case 'shipped': return t('admin.fulfilled')
+    case null:
+    case undefined:
+    case '': return t('admin.unfulfilled')
+    default: return status
   }
 }
 

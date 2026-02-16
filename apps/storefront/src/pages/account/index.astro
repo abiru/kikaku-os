@@ -51,7 +51,7 @@ try {
     }
   }
 } catch (e) {
-  error = 'Failed to load account data';
+  error = t('account.loadError');
 }
 
 const formatCurrency = (amount: number, currency = 'JPY') => {
@@ -68,7 +68,7 @@ const statusLabels: Record<string, string> = {
 };
 ---
 
-<AccountLayout title="マイアカウント - Led Kikaku Store" activeTab="dashboard">
+<AccountLayout title={t('account.pageTitle')} activeTab="dashboard">
   <Container class="py-8">
     <div class="max-w-4xl mx-auto">
       {error && (
