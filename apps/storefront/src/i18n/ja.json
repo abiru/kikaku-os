@@ -100,7 +100,8 @@
     "invalidCoupon": "無効なクーポンです",
     "processing": "処理中...",
     "returnToCart": "カートに戻る",
-    "createQuotation": "見積書を作成"
+    "createQuotation": "見積書を作成",
+    "itemCount": "カートに{count}件の商品"
   },
   "checkout": {
     "pageTitle": "チェックアウト - Led Kikaku",
@@ -442,7 +443,7 @@
     "home": "ホーム",
     "noProducts": "このカテゴリの商品はありません",
     "noProductsDescription": "他のカテゴリをご覧いただくか、すべての商品をご確認ください。",
-    "itemCount": "件の商品",
+    "itemCount": "{count}件の商品",
     "domesticShipping": "国内発送 2〜3日",
     "internationalShipping": "海外発送 10日程"
   },
@@ -481,13 +482,15 @@
     "minPrice": "最低価格",
     "maxPrice": "最高価格",
     "showFilters": "フィルター",
-    "closeFilters": "フィルターを閉じる"
+    "closeFilters": "フィルターを閉じる",
+    "activeFilters": "フィルターが適用されています"
   },
   "search": {
     "tryDifferent": "別の検索キーワードを試してください",
     "toNavigate": "で移動",
     "toSelect": "で選択",
-    "toClose": "で閉じる"
+    "toClose": "で閉じる",
+    "resultCount": "{count}件の検索結果"
   },
   "breadcrumb": {
     "home": "ホーム",

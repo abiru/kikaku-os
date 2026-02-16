@@ -199,11 +199,13 @@ function CheckoutFormInner({ orderToken, email, onEmailChange }: { orderToken: s
 			</div>
 
 			{/* Error message */}
-			{errorMessage && (
-				<div className="rounded-md bg-red-50 p-4">
-					<p className="text-sm text-red-800">{errorMessage}</p>
-				</div>
-			)}
+			<div aria-live="assertive">
+				{errorMessage && (
+					<div className="rounded-md bg-red-50 p-4">
+						<p className="text-sm text-red-800">{errorMessage}</p>
+					</div>
+				)}
+			</div>
 
 			{/* Submit button */}
 			<button

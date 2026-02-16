@@ -96,7 +96,7 @@ function ContactFormContent() {
 
   if (submitted) {
     return (
-      <div className="rounded-2xl bg-white p-8 text-center shadow-sm border border-gray-200">
+      <div role="status" className="rounded-2xl bg-white p-8 text-center shadow-sm border border-gray-200">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
           <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -118,7 +118,7 @@ function ContactFormContent() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {submitError && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+        <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
           {submitError}
         </div>
       )}
