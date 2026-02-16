@@ -16,7 +16,8 @@ type Props = {
   categories: Category[]
 }
 
-export default function CategoriesPage({ categories }: Props) {
+export default function CategoriesPage({ categories: initialCategories }: Props) {
+  const [categories, setCategories] = useState(initialCategories)
   const [renameModal, setRenameModal] = useState<{ open: boolean; category: string }>({ open: false, category: '' })
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; category: string; count: number }>({ open: false, category: '', count: 0 })
   const [newName, setNewName] = useState('')
@@ -74,7 +75,10 @@ export default function CategoriesPage({ categories }: Props) {
         return
       }
 
-      window.location.reload()
+      setCategories(prev => prev.map(c =>
+        c.category === renameModal.category ? { ...c, category: trimmedName } : c
+      ))
+      closeRenameModal()
     } catch {
       setRenameError('An error occurred. Please try again.')
     }
@@ -100,7 +104,8 @@ export default function CategoriesPage({ categories }: Props) {
         return
       }
 
-      window.location.reload()
+      setCategories(prev => prev.filter(c => c.category !== deleteModal.category))
+      closeDeleteModal()
     } catch {
       setDeleteError('An error occurred. Please try again.')
     }

@@ -29,7 +29,8 @@ type Props = {
   orders: ReadyToShipOrder[]
 }
 
-export default function ShippingPage({ orders }: Props) {
+export default function ShippingPage({ orders: initialOrders }: Props) {
+  const [orders, setOrders] = useState(initialOrders)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<{ orderId: number; fulfillmentId: number | null } | null>(null)
   const [trackingNumber, setTrackingNumber] = useState('')
@@ -99,7 +100,8 @@ export default function ShippingPage({ orders }: Props) {
         return
       }
 
-      window.location.reload()
+      setOrders(prev => prev.filter(o => o.order_id !== selectedOrder?.orderId))
+      handleClose()
     } catch {
       setError('エラーが発生しました。もう一度お試しください。')
     } finally {

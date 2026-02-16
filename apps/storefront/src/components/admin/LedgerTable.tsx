@@ -1,4 +1,5 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
+import { formatPrice } from '../../lib/format'
 
 type LedgerEntry = {
   id: number
@@ -14,10 +15,6 @@ type LedgerEntry = {
 
 type Props = {
   entries: LedgerEntry[]
-}
-
-const formatCurrency = (amount: number, currency: string) => {
-  return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount)
 }
 
 export default function LedgerTable({ entries }: Props) {
@@ -54,10 +51,10 @@ export default function LedgerTable({ entries }: Props) {
                 {entry.memo || '-'}
               </TableCell>
               <TableCell className="font-mono">
-                {entry.debit > 0 ? formatCurrency(entry.debit, entry.currency) : ''}
+                {entry.debit > 0 ? formatPrice(entry.debit, entry.currency) : ''}
               </TableCell>
               <TableCell className="font-mono">
-                {entry.credit > 0 ? formatCurrency(entry.credit, entry.currency) : ''}
+                {entry.credit > 0 ? formatPrice(entry.credit, entry.currency) : ''}
               </TableCell>
             </TableRow>
           ))

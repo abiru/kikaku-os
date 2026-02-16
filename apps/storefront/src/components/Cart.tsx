@@ -356,8 +356,7 @@ function CartContent() {
 				if (data.shippingFee !== undefined && data.freeShippingThreshold !== undefined) {
 					setShippingConfig(data);
 				}
-			} catch (err) {
-				console.error('Failed to fetch shipping config:', err);
+			} catch {
 				// Use default values from store
 			}
 		};

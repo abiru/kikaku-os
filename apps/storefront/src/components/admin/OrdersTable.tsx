@@ -3,6 +3,8 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from'..
 import { Badge } from'../catalyst/badge'
 import { Link } from'../catalyst/link'
 import AdminPagination from './AdminPagination'
+import { formatPrice } from '../../lib/format'
+import { getOrderBadgeColor } from '../../lib/adminUtils'
 
 type Order = {
  id: number
@@ -22,23 +24,6 @@ type Props = {
  currentPage: number
  totalPages: number
  searchQuery: string
-}
-
-const formatCurrency = (amount: number, currency: string) => {
- return new Intl.NumberFormat('ja-JP', { style:'currency', currency }).format(amount)
-}
-
-const getBadgeColor = (status: string) => {
- switch (status) {
- case'paid':
- return'lime' as const
- case'pending':
- return'amber' as const
- case'refunded':
- return'red' as const
- default:
- return'zinc' as const
- }
 }
 
 const getFulfillmentBadgeColor = (status: string | null) => {
@@ -90,7 +75,8 @@ const exportOrdersCSV = (orders: readonly Order[], selectedIds: ReadonlySet<numb
   URL.revokeObjectURL(url)
 }
 
-export default function OrdersTable({ orders, currentPage, totalPages, searchQuery }: Props) {
+export default function OrdersTable({ orders: initialOrders, currentPage, totalPages, searchQuery }: Props) {
+ const [orders, setOrders] = useState(initialOrders)
  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(new Set())
  const [sortField, setSortField] = useState<SortField>('id')
  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
@@ -188,7 +174,10 @@ export default function OrdersTable({ orders, currentPage, totalPages, searchQue
      setBulkLoading(false)
      if (failCount === 0) {
        setBulkSuccess(`${successCount}件の注文を発送済みに変更しました`)
-       setTimeout(() => { window.location.reload() }, 1500)
+       setOrders(prev => prev.map(o =>
+         selectedIds.has(o.id) ? { ...o, fulfillment_status: 'shipped' } : o
+       ))
+       setSelectedIds(new Set())
      } else {
        setBulkError(`${successCount}件成功、${failCount}件失敗しました`)
      }
@@ -314,7 +303,7 @@ export default function OrdersTable({ orders, currentPage, totalPages, searchQue
  <div className="text-zinc-950">{order.customer_email ||'Guest'}</div>
  </TableCell>
  <TableCell>
- <Badge color={getBadgeColor(order.status)}>{order.status}</Badge>
+ <Badge color={getOrderBadgeColor(order.status)}>{order.status}</Badge>
  </TableCell>
  <TableCell>
  <Badge color={getFulfillmentBadgeColor(order.fulfillment_status)}>
@@ -322,7 +311,7 @@ export default function OrdersTable({ orders, currentPage, totalPages, searchQue
  </Badge>
  </TableCell>
  <TableCell className="text-right font-medium tabular-nums">
- {formatCurrency(order.total_net, order.currency)}
+ {formatPrice(order.total_net, order.currency)}
  </TableCell>
  </TableRow>
  ))

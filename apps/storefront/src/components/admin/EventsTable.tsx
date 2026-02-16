@@ -1,7 +1,8 @@
 import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
-import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
 import { formatDate } from '../../lib/format';
+import AdminPagination from './AdminPagination';
+import { getEventBadgeColor } from '../../lib/adminUtils';
 
 const dateTimeSecsOpts: Intl.DateTimeFormatOptions = {
 	year: 'numeric',
@@ -29,19 +30,7 @@ type Props = {
 	type: string;
 };
 
-const getStatusColor = (status: string): 'lime' | 'amber' | 'red' | 'zinc' => {
-	switch (status) {
-		case 'completed': return 'lime';
-		case 'pending': return 'amber';
-		case 'failed': return 'red';
-		default: return 'zinc';
-	}
-};
-
 export default function EventsTable({ events, currentPage, totalPages, status, type }: Props) {
-	const hasPrev = currentPage > 1;
-	const hasNext = currentPage < totalPages;
-
 	const buildPaginationUrl = (page: number) => {
 		const params = new URLSearchParams();
 		params.set('page', page.toString());
@@ -82,7 +71,7 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 									</TableCell>
 									<TableCell className="font-mono text-xs">{e.event_type}</TableCell>
 									<TableCell>
-										<Badge color={getStatusColor(e.processing_status)}>{e.processing_status}</Badge>
+										<Badge color={getEventBadgeColor(e.processing_status)}>{e.processing_status}</Badge>
 									</TableCell>
 									<TableCell className="text-xs max-w-xs truncate" title={e.error || ''}>
 										{e.error ? (
@@ -104,18 +93,11 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 					</TableBody>
 			</Table>
 
-			{/* Pagination */}
-			{totalPages > 1 && (
-				<div className="flex items-center justify-between mt-4">
-					<div className="text-sm text-zinc-500">
-						Page {currentPage} of {totalPages}
-					</div>
-					<Pagination>
-						<PaginationPrevious href={hasPrev ? buildPaginationUrl(currentPage - 1) : null} />
-						<PaginationNext href={hasNext ? buildPaginationUrl(currentPage + 1) : null} />
-					</Pagination>
-				</div>
-			)}
+			<AdminPagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				buildHref={buildPaginationUrl}
+			/>
 		</>
 	);
 }

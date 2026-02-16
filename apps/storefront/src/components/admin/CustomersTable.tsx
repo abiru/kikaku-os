@@ -1,7 +1,7 @@
 import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
-import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
-import { formatDate } from '../../lib/format';
+import { formatDate, formatPrice } from '../../lib/format';
+import AdminPagination from './AdminPagination';
 
 type Customer = {
 	id: number;
@@ -22,14 +22,7 @@ type Props = {
 	searchQuery: string;
 };
 
-const formatCurrency = (amount: number) => {
-	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount);
-};
-
 export default function CustomersTable({ customers, currentPage, totalPages, searchQuery }: Props) {
-	const hasPrev = currentPage > 1;
-	const hasNext = currentPage < totalPages;
-
 	return (
 		<>
 			<Table>
@@ -67,7 +60,7 @@ export default function CustomersTable({ customers, currentPage, totalPages, sea
 										)}
 									</TableCell>
 									<TableCell className="text-right tabular-nums">
-										{formatCurrency(customer.total_spent)}
+										{formatPrice(customer.total_spent)}
 									</TableCell>
 									<TableCell className="text-zinc-500 tabular-nums">
 										{formatDate(customer.last_order_date)}
@@ -95,18 +88,11 @@ export default function CustomersTable({ customers, currentPage, totalPages, sea
 					</TableBody>
 			</Table>
 
-			{/* Pagination */}
-			{totalPages > 1 && (
-				<div className="flex items-center justify-between mt-4">
-					<div className="text-sm text-zinc-500">
-						Page {currentPage} of {totalPages}
-					</div>
-					<Pagination>
-						<PaginationPrevious href={hasPrev ? `?page=${currentPage - 1}&q=${searchQuery}` : null} />
-						<PaginationNext href={hasNext ? `?page=${currentPage + 1}&q=${searchQuery}` : null} />
-					</Pagination>
-				</div>
-			)}
+			<AdminPagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				buildHref={(page) => `?page=${page}&q=${searchQuery}`}
+			/>
 		</>
 	);
 }

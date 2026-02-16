@@ -36,8 +36,8 @@ export default function ProductFilters() {
 				const res = await fetch(`${apiBase}/store/products/filters`);
 				const data = await res.json();
 				setOptions(data);
-			} catch (err) {
-				console.error('Failed to load filter options:', err);
+			} catch {
+				// Filter options unavailable; continue with defaults
 			} finally {
 				setLoading(false);
 			}

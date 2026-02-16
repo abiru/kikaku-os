@@ -1,7 +1,7 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
-import { formatDate } from '../../lib/format'
+import { formatDate, formatPrice } from '../../lib/format'
 
 type ReadyToShipOrder = {
   order_id: number
@@ -17,10 +17,6 @@ type ReadyToShipOrder = {
 type Props = {
   orders: ReadyToShipOrder[]
   onShipClick: (orderId: number, fulfillmentId: number | null) => void
-}
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount)
 }
 
 const getStatusBadge = (status: string | null): { label: string; color: 'zinc' | 'yellow' | 'blue' | 'green' } => {
@@ -84,7 +80,7 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
                   )}
                 </TableCell>
                 <TableCell className="text-right font-medium tabular-nums">
-                  {formatCurrency(order.total)}
+                  {formatPrice(order.total)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
