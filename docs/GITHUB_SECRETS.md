@@ -72,6 +72,33 @@ Copy the **Production** publishable key (starts with `pk_live_...`)
 4. Select events (see Stripe webhook documentation)
 5. Copy signing secret (starts with `whsec_...`)
 
+## High Priority Secrets (Email)
+
+### RESEND_API_KEY
+**Priority**: HIGH (required for transaction emails)
+**Source**: Resend Dashboard → API Keys
+
+1. Go to https://resend.com and create an account
+2. Navigate to API Keys → Create API Key
+3. Name: `kikaku-os-production`
+4. Permission: Sending access
+5. Copy the API key (starts with `re_...`)
+
+Required for: order confirmation, shipping notification, bank transfer instructions, contact form confirmation emails. Without this, all email functionality is silently disabled.
+
+### RESEND_FROM_EMAIL
+**Priority**: HIGH
+**Source**: Your verified sender domain in Resend
+
+1. Go to Resend Dashboard → Domains
+2. Add your domain and follow DNS verification steps (add MX, SPF, DKIM records)
+3. Wait for verification to complete
+4. Use a sender address on your verified domain
+
+Example: `noreply@your-domain.com`
+
+⚠️ Using an unverified domain will cause email delivery to fail.
+
 ## Optional Secrets (Monitoring & Alerts)
 
 ### SLACK_WEBHOOK_URL
@@ -86,18 +113,6 @@ Copy the **Production** publishable key (starts with `pk_live_...`)
 6. Copy webhook URL (starts with `https://hooks.slack.com/services/...`)
 
 Used for critical alerts (daily close failures, errors, etc.)
-
-### RESEND_API_KEY
-**Priority**: MEDIUM (for email notifications)
-**Source**: Resend Dashboard → API Keys
-
-Create an API key with sending permissions.
-
-### RESEND_FROM_EMAIL
-**Priority**: MEDIUM
-**Source**: Your verified sender email in Resend
-
-Example: `noreply@your-domain.com`
 
 ### SENTRY_DSN
 **Priority**: MEDIUM (highly recommended for production error tracking)

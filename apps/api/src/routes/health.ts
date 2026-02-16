@@ -15,6 +15,7 @@ const REQUIRED_SECRETS = [
 
 const OPTIONAL_SECRETS = [
   'RESEND_API_KEY',
+  'RESEND_FROM_EMAIL',
 ] as const;
 
 function isConfigured(env: Record<string, unknown>, key: string): boolean {

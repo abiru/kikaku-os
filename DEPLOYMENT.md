@@ -11,6 +11,7 @@ Complete guide for deploying Kikaku OS to production on Cloudflare.
 - Storage: Cloudflare R2
 - Auth: Clerk
 - Payments: Stripe
+- Email: Resend
 
 **Deployment Strategy**: Phased rollout with validation at each step
 
@@ -25,6 +26,7 @@ Before starting deployment:
 - [ ] Cloudflare account with Workers/Pages enabled
 - [ ] Domain registered and managed in Cloudflare (optional but recommended)
 - [ ] Stripe account fully verified (Live mode enabled)
+- [ ] Resend account with verified sending domain
 - [ ] Clerk account with production instance
 - [ ] GitHub repository access
 - [ ] Local development environment working
@@ -144,11 +146,14 @@ See `docs/GITHUB_SECRETS.md` for detailed instructions.
 | `STRIPE_WEBHOOK_SECRET` | Created after first deployment | HIGH |
 | `CLERK_SECRET_KEY` | Clerk → API Keys (sk_live_...) | CRITICAL |
 | `PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk → API Keys (pk_live_...) | HIGH |
+| `RESEND_API_KEY` | Resend → API Keys | HIGH |
+| `RESEND_FROM_EMAIL` | Verified sender (e.g. noreply@your-domain.com) | HIGH |
 
 **Optional** (monitoring):
 - `SLACK_WEBHOOK_URL` - For alerts
-- `RESEND_API_KEY` - For email notifications
 - `SENTRY_DSN` - For error tracking
+
+**Note**: `RESEND_API_KEY` and `RESEND_FROM_EMAIL` are required for transaction emails (order confirmation, shipping notification, bank transfer instructions, contact form confirmation). Without them, all email functionality is silently disabled.
 
 **Verification**: After adding, verify all secrets appear in Settings → Secrets.
 
@@ -478,6 +483,7 @@ After successful deployment:
 **External Services**:
 - Stripe Dashboard: https://dashboard.stripe.com
 - Clerk Dashboard: https://dashboard.clerk.com
+- Resend Dashboard: https://resend.com
 - GitHub Actions: https://github.com/[your-repo]/actions
 
 ## Deployment History
