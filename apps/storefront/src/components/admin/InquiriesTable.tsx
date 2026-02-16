@@ -8,6 +8,8 @@ import {
 } from '../catalyst/table';
 import { Badge } from '../catalyst/badge';
 import { Link } from '../catalyst/link';
+import AdminPagination from './AdminPagination';
+import { getInquiryBadgeColor, getInquiryStatusLabel } from '../../lib/adminUtils';
 
 type Inquiry = {
   id: number;
@@ -24,32 +26,6 @@ type Props = {
   total: number;
   limit: number;
   offset: number;
-};
-
-const getStatusBadgeColor = (status: string) => {
-  switch (status) {
-    case 'open':
-      return 'amber' as const;
-    case 'replied':
-      return 'lime' as const;
-    case 'closed':
-      return 'zinc' as const;
-    default:
-      return 'zinc' as const;
-  }
-};
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'open':
-      return '未対応';
-    case 'replied':
-      return '返信済み';
-    case 'closed':
-      return 'クローズ';
-    default:
-      return status;
-  }
 };
 
 export default function InquiriesTable({ inquiries, currentStatus, total, limit, offset }: Props) {
@@ -71,7 +47,7 @@ export default function InquiriesTable({ inquiries, currentStatus, total, limit,
                 : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
             }`}
           >
-            {getStatusLabel(s)}
+            {getInquiryStatusLabel(s)}
           </a>
         ))}
       </div>
@@ -103,8 +79,8 @@ export default function InquiriesTable({ inquiries, currentStatus, total, limit,
                 <TableCell>{inquiry.name}</TableCell>
                 <TableCell className="text-zinc-500">{inquiry.email}</TableCell>
                 <TableCell>
-                  <Badge color={getStatusBadgeColor(inquiry.status)}>
-                    {getStatusLabel(inquiry.status)}
+                  <Badge color={getInquiryBadgeColor(inquiry.status)}>
+                    {getInquiryStatusLabel(inquiry.status)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-zinc-500 tabular-nums">
@@ -128,31 +104,11 @@ export default function InquiriesTable({ inquiries, currentStatus, total, limit,
         </TableBody>
       </Table>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4">
-          <div className="text-sm text-zinc-500">
-            {currentPage} / {totalPages} ページ
-          </div>
-          <div className="flex gap-2">
-            {currentPage > 1 && (
-              <a
-                href={`/admin/inquiries?status=${currentStatus}&offset=${(currentPage - 2) * limit}`}
-                className="rounded-lg bg-zinc-100 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-200"
-              >
-                前へ
-              </a>
-            )}
-            {currentPage < totalPages && (
-              <a
-                href={`/admin/inquiries?status=${currentStatus}&offset=${currentPage * limit}`}
-                className="rounded-lg bg-zinc-100 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-200"
-              >
-                次へ
-              </a>
-            )}
-          </div>
-        </div>
-      )}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        buildHref={(page) => `?status=${currentStatus}&offset=${(page - 1) * limit}`}
+      />
     </div>
   );
 }

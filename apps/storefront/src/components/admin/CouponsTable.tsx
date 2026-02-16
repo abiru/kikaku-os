@@ -40,7 +40,8 @@ const isExpired = (coupon: Coupon) => {
   return new Date(coupon.expires_at) < new Date()
 }
 
-export default function CouponsTable({ coupons }: Props) {
+export default function CouponsTable({ coupons: initialCoupons }: Props) {
+  const [coupons, setCoupons] = useState(initialCoupons)
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -91,7 +92,8 @@ export default function CouponsTable({ coupons }: Props) {
     setBulkLoading(false)
     if (fail === 0) {
       setBulkMessage({ type: 'success', text: `${success}件のクーポンを削除しました` })
-      setTimeout(() => window.location.reload(), 1500)
+      setCoupons(prev => prev.filter(c => !selectedIds.has(c.id)))
+      setSelectedIds(new Set())
     } else {
       setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
     }

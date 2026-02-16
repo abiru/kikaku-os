@@ -20,7 +20,8 @@ type Props = {
   coreSlugs: string[]
 }
 
-export default function PagesTable({ pages, coreSlugs }: Props) {
+export default function PagesTable({ pages: initialPages, coreSlugs }: Props) {
+  const [pages, setPages] = useState(initialPages)
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -72,7 +73,8 @@ export default function PagesTable({ pages, coreSlugs }: Props) {
     setBulkLoading(false)
     if (fail === 0) {
       setBulkMessage({ type: 'success', text: `${success}件のページを削除しました` })
-      setTimeout(() => window.location.reload(), 1500)
+      setPages(prev => prev.filter(p => !selectedDeletable.includes(p.id)))
+      setSelectedIds(new Set())
     } else {
       setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
     }

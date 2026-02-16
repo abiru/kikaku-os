@@ -63,8 +63,7 @@ export default function SearchModal() {
 				const data = await res.json();
 				setResults(data.products || []);
 				setSelectedIndex(0);
-			} catch (err) {
-				console.error('Search error:', err);
+			} catch {
 				setResults([]);
 			} finally {
 				setLoading(false);

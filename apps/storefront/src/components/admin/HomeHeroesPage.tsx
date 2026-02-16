@@ -14,7 +14,8 @@ type Props = {
   heroes: Hero[]
 }
 
-export default function HomeHeroesPage({ heroes }: Props) {
+export default function HomeHeroesPage({ heroes: initialHeroes }: Props) {
+  const [heroes, setHeroes] = useState(initialHeroes)
   const [error, setError] = useState<string | null>(null)
 
   const handleArchive = async (id: number) => {
@@ -27,7 +28,7 @@ export default function HomeHeroesPage({ heroes }: Props) {
       })
 
       if (res.ok) {
-        window.location.reload()
+        setHeroes(prev => prev.filter(h => h.id !== id))
       } else {
         setError('Failed to archive hero section')
       }
@@ -44,7 +45,7 @@ export default function HomeHeroesPage({ heroes }: Props) {
       })
 
       if (res.ok) {
-        window.location.reload()
+        setHeroes(prev => prev.map(h => h.id === id ? { ...h, status: 'active' } : h))
       } else {
         setError('Failed to restore hero section')
       }

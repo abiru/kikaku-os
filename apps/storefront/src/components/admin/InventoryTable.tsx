@@ -1,5 +1,6 @@
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
+import { getInventoryBadgeColor, getInventoryStatusLabel } from '../../lib/adminUtils'
 
 type InventoryItem = {
   variant_id: number
@@ -16,32 +17,6 @@ type Props = {
   inventory: InventoryItem[]
   onAdjust: (variantId: number, variantTitle: string, productTitle: string, onHand: number) => void
   onThreshold: (variantId: number, variantTitle: string, threshold: number | null) => void
-}
-
-const getStatusColor = (status: string): 'lime' | 'amber' | 'red' | 'zinc' => {
-  switch (status) {
-    case 'ok':
-      return 'lime'
-    case 'low':
-      return 'amber'
-    case 'out':
-      return 'red'
-    default:
-      return 'zinc'
-  }
-}
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'ok':
-      return 'OK'
-    case 'low':
-      return 'Low'
-    case 'out':
-      return 'Out'
-    default:
-      return status
-  }
 }
 
 export default function InventoryTable({ inventory, onAdjust, onThreshold }: Props) {
@@ -72,7 +47,7 @@ export default function InventoryTable({ inventory, onAdjust, onThreshold }: Pro
               <TableCell className="tabular-nums font-semibold">{item.on_hand}</TableCell>
               <TableCell className="tabular-nums text-zinc-500">{item.threshold ?? '-'}</TableCell>
               <TableCell>
-                <Badge color={getStatusColor(item.status)}>{getStatusLabel(item.status)}</Badge>
+                <Badge color={getInventoryBadgeColor(item.status)}>{getInventoryStatusLabel(item.status)}</Badge>
               </TableCell>
               <TableCell>
                 <div className="flex gap-2">

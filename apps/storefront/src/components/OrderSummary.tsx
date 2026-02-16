@@ -39,7 +39,6 @@ export default function OrderSummary({ items, breakdown, onCouponApply }: OrderS
 			await onCouponApply(couponCode.trim());
 			setShowCouponInput(false);
 		} catch (err) {
-			console.error('Coupon application error:', err);
 			setCouponError(err instanceof Error ? err.message : t('checkout.couponInvalid'));
 		} finally {
 			setIsApplyingCoupon(false);

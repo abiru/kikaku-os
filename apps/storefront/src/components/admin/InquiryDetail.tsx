@@ -4,6 +4,7 @@ import { Badge } from '../catalyst/badge';
 import { Button } from '../catalyst/button';
 import { Textarea } from '../catalyst/textarea';
 import { Field, Label } from '../catalyst/fieldset';
+import { getInquiryBadgeColor, getInquiryStatusLabel } from '../../lib/adminUtils';
 
 type Inquiry = {
   id: number;
@@ -23,46 +24,11 @@ type Props = {
   apiBase: string;
 };
 
-const getStatusBadgeColor = (status: string) => {
-  switch (status) {
-    case 'open':
-      return 'amber' as const;
-    case 'replied':
-      return 'lime' as const;
-    case 'closed':
-      return 'zinc' as const;
-    default:
-      return 'zinc' as const;
-  }
-};
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'open':
-      return '未対応';
-    case 'replied':
-      return '返信済み';
-    case 'closed':
-      return 'クローズ';
-    default:
-      return status;
-  }
-};
-
 export default function InquiryDetail({ inquiry: initialInquiry, apiBase }: Props) {
   const [inquiry, setInquiry] = useState(initialInquiry);
   const [reply, setReply] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const getAuthHeaders = (): Record<string, string> => {
-    const headers: Record<string, string> = { 'content-type': 'application/json' };
-    const clerk = (window as { Clerk?: { session?: { id: string } } }).Clerk;
-    if (clerk?.session) {
-      // Use Clerk session token if available; otherwise fall back (SSR handles admin key)
-    }
-    return headers;
-  };
 
   const handleReply = async () => {
     if (!reply.trim()) return;
@@ -72,7 +38,7 @@ export default function InquiryDetail({ inquiry: initialInquiry, apiBase }: Prop
     try {
       const res = await fetch(`${apiBase}/admin/inquiries/${inquiry.id}/reply`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ reply }),
       });
       const data = await res.json();
@@ -109,7 +75,7 @@ export default function InquiryDetail({ inquiry: initialInquiry, apiBase }: Prop
     try {
       const res = await fetch(`${apiBase}/admin/inquiries/${inquiry.id}/close`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: { 'content-type': 'application/json' },
       });
       const data = await res.json();
 
@@ -140,8 +106,8 @@ export default function InquiryDetail({ inquiry: initialInquiry, apiBase }: Prop
             </svg>
           </a>
           <Heading>お問い合わせ #{inquiry.id}</Heading>
-          <Badge color={getStatusBadgeColor(inquiry.status)}>
-            {getStatusLabel(inquiry.status)}
+          <Badge color={getInquiryBadgeColor(inquiry.status)}>
+            {getInquiryStatusLabel(inquiry.status)}
           </Badge>
         </div>
         {inquiry.status !== 'closed' && (

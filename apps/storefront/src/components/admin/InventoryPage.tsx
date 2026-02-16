@@ -23,7 +23,14 @@ type Props = {
   inventory: InventoryItem[]
 }
 
-export default function InventoryPage({ inventory }: Props) {
+const getInventoryStatus = (onHand: number, threshold: number | null): 'ok' | 'low' | 'out' => {
+  if (onHand <= 0) return 'out'
+  if (threshold !== null && onHand <= threshold) return 'low'
+  return 'ok'
+}
+
+export default function InventoryPage({ inventory: initialInventory }: Props) {
+  const [inventory, setInventory] = useState(initialInventory)
   const [adjustModal, setAdjustModal] = useState<{
     open: boolean
     variantId: number
@@ -94,7 +101,12 @@ export default function InventoryPage({ inventory }: Props) {
         return
       }
 
-      window.location.reload()
+      setInventory(prev => prev.map(item =>
+        item.variant_id === adjustModal.variantId
+          ? { ...item, on_hand: item.on_hand + delta, status: getInventoryStatus(item.on_hand + delta, item.threshold) }
+          : item
+      ))
+      closeAdjustModal()
     } catch {
       setAdjustError('An error occurred. Please try again.')
     }
@@ -125,7 +137,12 @@ export default function InventoryPage({ inventory }: Props) {
         return
       }
 
-      window.location.reload()
+      setInventory(prev => prev.map(item =>
+        item.variant_id === thresholdModal.variantId
+          ? { ...item, threshold, status: getInventoryStatus(item.on_hand, threshold) }
+          : item
+      ))
+      closeThresholdModal()
     } catch {
       setThresholdError('An error occurred. Please try again.')
     }

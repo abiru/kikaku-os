@@ -4,6 +4,7 @@ import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
 import { Link } from '../catalyst/link'
 import AdminPagination from './AdminPagination'
+import { getProductBadgeColor } from '../../lib/adminUtils'
 
 type Product = {
   id: number
@@ -22,19 +23,6 @@ type Props = {
   totalPages: number
   searchQuery: string
   statusFilter: string
-}
-
-const getStatusBadgeColor = (status: string) => {
-  switch (status) {
-    case 'active':
-      return 'lime' as const
-    case 'draft':
-      return 'zinc' as const
-    case 'archived':
-      return 'red' as const
-    default:
-      return 'zinc' as const
-  }
 }
 
 const SortIcon = ({ field, sortField, sortOrder }: { field: SortField; sortField: SortField; sortOrder: SortOrder }) => {
@@ -57,12 +45,13 @@ const SortIcon = ({ field, sortField, sortOrder }: { field: SortField; sortField
 }
 
 export default function ProductsTable({
-  products,
+  products: initialProducts,
   currentPage,
   totalPages,
   searchQuery,
   statusFilter,
 }: Props) {
+  const [products, setProducts] = useState(initialProducts)
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(new Set())
   const [sortField, setSortField] = useState<SortField>('updated_at')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
@@ -70,7 +59,7 @@ export default function ProductsTable({
   const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [showConfirm, setShowConfirm] = useState<{ type: string; id?: number; title?: string } | null>(null)
 
-  const sortedProducts = [...products].sort((a, b) => {
+  const sortedProducts = [...products].sort((a: Product, b: Product) => {
     let cmp = 0
     switch (sortField) {
       case 'title':
@@ -136,7 +125,7 @@ export default function ProductsTable({
       try {
         const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
         if (res.ok) {
-          window.location.reload()
+          setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'archived' } : p))
         } else {
           const data = await res.json()
           setBulkMessage({ type: 'error', text: data.message || 'Failed to archive' })
@@ -148,7 +137,7 @@ export default function ProductsTable({
       try {
         const res = await fetch(`/api/admin/products/${id}/restore`, { method: 'POST' })
         if (res.ok) {
-          window.location.reload()
+          setProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'active' } : p))
         } else {
           const data = await res.json()
           setBulkMessage({ type: 'error', text: data.message || 'Failed to restore' })
@@ -172,7 +161,8 @@ export default function ProductsTable({
       setBulkLoading(false)
       if (fail === 0) {
         setBulkMessage({ type: 'success', text: `${success}件のアーカイブに成功しました` })
-        setTimeout(() => window.location.reload(), 1500)
+        setProducts(prev => prev.map(p => selectedIds.has(p.id) ? { ...p, status: 'archived' } : p))
+        setSelectedIds(new Set())
       } else {
         setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
       }
@@ -329,7 +319,7 @@ export default function ProductsTable({
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge color={getStatusBadgeColor(product.status)}>
+                  <Badge color={getProductBadgeColor(product.status)}>
                     {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
                   </Badge>
                 </TableCell>

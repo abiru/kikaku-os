@@ -23,14 +23,7 @@ type Review = {
   updated_at: string;
 };
 
-const getStatusBadgeColor = (status: string) => {
-  const colors: Record<string, 'amber' | 'lime' | 'red' | 'zinc'> = {
-    pending: 'amber',
-    approved: 'lime',
-    rejected: 'red',
-  };
-  return colors[status] || 'zinc';
-};
+import { getReviewBadgeColor } from '../../lib/adminUtils';
 
 export default function ReviewsTable({ apiBase }: { apiBase: string }) {
   const { t } = useTranslation();
@@ -157,7 +150,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
                   <div className="text-zinc-500 text-xs truncate mt-0.5">{review.body}</div>
                 </TableCell>
                 <TableCell>
-                  <Badge color={getStatusBadgeColor(review.status)}>
+                  <Badge color={getReviewBadgeColor(review.status)}>
                     {statusLabel(review.status)}
                   </Badge>
                 </TableCell>

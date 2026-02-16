@@ -1,7 +1,7 @@
 import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
-import { Pagination, PaginationPrevious, PaginationNext } from '../catalyst/pagination';
 import { formatDate } from '../../lib/format';
+import AdminPagination from './AdminPagination';
 
 type AdminUser = {
 	id: number;
@@ -55,9 +55,6 @@ export default function UsersTable({
 	roleFilter,
 	activeFilter
 }: Props) {
-	const hasPrev = currentPage > 1;
-	const hasNext = currentPage < totalPages;
-
 	const buildQueryString = (page: number) => {
 		const params = new URLSearchParams();
 		params.set('page', page.toString());
@@ -130,18 +127,11 @@ export default function UsersTable({
 				</TableBody>
 			</Table>
 
-			{/* Pagination */}
-			{totalPages > 1 && (
-				<div className="flex items-center justify-between mt-4">
-					<div className="text-sm text-zinc-500">
-						Page {currentPage} of {totalPages}
-					</div>
-					<Pagination>
-						<PaginationPrevious href={hasPrev ? `?${buildQueryString(currentPage - 1)}` : null} />
-						<PaginationNext href={hasNext ? `?${buildQueryString(currentPage + 1)}` : null} />
-					</Pagination>
-				</div>
-			)}
+			<AdminPagination
+				currentPage={currentPage}
+				totalPages={totalPages}
+				buildHref={(page) => `?${buildQueryString(page)}`}
+			/>
 		</>
 	);
 }
