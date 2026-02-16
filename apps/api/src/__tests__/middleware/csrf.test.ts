@@ -66,6 +66,10 @@ describe('csrfProtection middleware', () => {
     app.post('/test', (c) => c.json({ ok: true }));
     app.put('/test', (c) => c.json({ ok: true }));
     app.delete('/test', (c) => c.json({ ok: true }));
+    app.post('/checkout/quote', (c) => c.json({ ok: true }));
+    app.post('/checkout/validate-coupon', (c) => c.json({ ok: true }));
+    app.post('/checkout/session', (c) => c.json({ ok: true }));
+    app.post('/payments/intent', (c) => c.json({ ok: true }));
     app.post('/webhooks/stripe', (c) => c.json({ ok: true }));
     app.post('/stripe/webhook', (c) => c.json({ ok: true }));
     app.post('/admin-action', (c) => c.json({ ok: true }));
@@ -192,6 +196,18 @@ describe('csrfProtection middleware', () => {
   it('exempts stripe/webhook endpoint from CSRF', async () => {
     const app = createApp();
     const res = await app.request('/stripe/webhook', { method: 'POST' });
+    expect(res.status).toBe(200);
+  });
+
+  it('exempts public checkout quote endpoint from CSRF', async () => {
+    const app = createApp();
+    const res = await app.request('/checkout/quote', { method: 'POST' });
+    expect(res.status).toBe(200);
+  });
+
+  it('exempts public payment intent endpoint from CSRF', async () => {
+    const app = createApp();
+    const res = await app.request('/payments/intent', { method: 'POST' });
     expect(res.status).toBe(200);
   });
 

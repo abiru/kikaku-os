@@ -296,8 +296,89 @@ describe('POST /payments/intent', () => {
     expect(params.get('amount')).toBe('6000');
     expect(params.get('currency')).toBe('jpy');
     expect(params.get('customer')).toBe('cus_existing');
-    expect(params.get('automatic_payment_methods[enabled]')).toBe('true');
+    expect(params.get('payment_method_types[]')).toBe('card');
+    expect(params.get('metadata[paymentMethod]')).toBe('card');
+    expect(params.get('payment_method_options[customer_balance][funding_type]')).toBeNull();
+  });
+
+  it('creates bank transfer payment intent when paymentMethod=bank_transfer', async () => {
+    const app = new Hono();
+    app.route('/', payments);
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'cus_existing' })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'pi_test_bank_123',
+          client_secret: 'pi_test_bank_123_secret_abc',
+          amount: 6000,
+          currency: 'jpy',
+          customer: 'cus_test_123',
+          payment_method_types: ['customer_balance']
+        })
+      });
+
+    globalThis.fetch = fetchMock as any;
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+    const env = {
+      DB: createMockDb({
+        quoteRow: {
+          id: 'quote_bank_123',
+          items_json: JSON.stringify([{ variantId: 10, quantity: 1 }]),
+          coupon_code: null,
+          coupon_id: null,
+          subtotal: 5000,
+          tax_amount: 500,
+          cart_total: 5500,
+          discount: 0,
+          shipping_fee: 500,
+          grand_total: 6000,
+          currency: 'JPY',
+          expires_at: expiresAt
+        },
+        customerRow: {
+          id: 789,
+          email: 'test@example.com',
+          stripe_customer_id: 'cus_existing'
+        },
+        stockByVariant: { 10: 10 }
+      }),
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STRIPE_PUBLISHABLE_KEY: 'pk_test_123'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/payments/intent',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          quoteId: 'quote_bank_123',
+          email: 'test@example.com',
+          paymentMethod: 'bank_transfer'
+        })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.ok).toBe(true);
+
+    const paymentIntentCall = fetchMock.mock.calls[1];
+    const body = String(paymentIntentCall[1]?.body || '');
+    const params = new URLSearchParams(body);
+    expect(params.get('payment_method_types[]')).toBe('customer_balance');
     expect(params.get('payment_method_options[customer_balance][funding_type]')).toBe('bank_transfer');
+    expect(params.get('payment_method_options[customer_balance][bank_transfer][type]')).toBe('jp_bank_transfer');
+    expect(params.get('metadata[paymentMethod]')).toBe('bank_transfer');
   });
 
   it('returns 400 for missing quoteId', async () => {
