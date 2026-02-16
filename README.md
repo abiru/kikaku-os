@@ -68,6 +68,9 @@ git push origin main
   - `STRIPE_PUBLISHABLE_KEY`（Embedded Checkout用）
   - `STRIPE_WEBHOOK_SECRET`
   - `STOREFRONT_BASE_URL`
+  - `RESEND_API_KEY`（トランザクションメール送信用・Resend APIキー）
+  - `RESEND_FROM_EMAIL`（送信元メールアドレス、例: `noreply@your-domain.com`）
+    - 未設定時、注文確認・発送通知・銀行振込案内・問い合わせ確認メールが送信されません
 - オプション変数:
   - `CLAUDE_API_KEY`（AI機能用・Anthropic APIキー）
   - `AI_GATEWAY_ACCOUNT_ID`（Cloudflare AI Gateway経由でClaude API呼び出し）
