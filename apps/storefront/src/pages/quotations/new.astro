@@ -1,4 +1,5 @@
 ---
+import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
 import { t } from '../../i18n';
 
@@ -6,260 +7,68 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 ---
 
 <Layout title={t('quotation.createTitle')}>
-  <div class="container">
-    <h1>{t('quotation.createTitle')}</h1>
-    <p class="subtitle">{t('quotation.createSubtitle')}</p>
+  <Container class="max-w-[800px] py-8">
+    <h1 class="text-3xl mb-2">{t('quotation.createTitle')}</h1>
+    <p class="text-secondary mb-8">{t('quotation.createSubtitle')}</p>
 
-    <div id="cart-summary" class="card">
-      <h2>{t('quotation.cartContents')}</h2>
-      <div id="cart-items"></div>
-      <div class="summary">
-        <div class="summary-row">
+    <div id="cart-summary" class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+      <h2 class="text-xl mb-4 pb-2 border-b-2 border-gray-100">{t('quotation.cartContents')}</h2>
+      <div id="cart-items" class="mb-4"></div>
+      <div class="mt-4 pt-4 border-t-2 border-gray-100">
+        <div class="flex justify-between py-2 text-[15px]">
           <span>{t('quotation.subtotalExclTax')}</span>
           <span id="subtotal">¥0</span>
         </div>
-        <div class="summary-row">
+        <div class="flex justify-between py-2 text-[15px]">
           <span>{t('quotation.tax')}</span>
           <span id="tax">¥0</span>
         </div>
-        <div class="summary-row total">
+        <div class="flex justify-between py-2 text-lg font-bold mt-2 pt-3 border-t-2 border-gray-200">
           <span>{t('quotation.total')}</span>
           <span id="total">¥0</span>
         </div>
       </div>
     </div>
 
-    <form id="quotation-form" class="card">
-      <h2>{t('quotation.customerInfo')}</h2>
+    <form id="quotation-form" class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+      <h2 class="text-xl mb-4 pb-2 border-b-2 border-gray-100">{t('quotation.customerInfo')}</h2>
 
-      <div class="form-group">
-        <label for="customerCompany">{t('quotation.companyName')} <span class="required">*</span></label>
-        <input type="text" id="customerCompany" name="customerCompany" required aria-required="true" />
+      <div class="mb-6">
+        <label for="customerCompany" class="block font-semibold mb-2">{t('quotation.companyName')} <span class="text-red-600">*</span></label>
+        <input type="text" id="customerCompany" name="customerCompany" required aria-required="true" class="w-full px-3 py-3 border border-gray-300 rounded-md text-base font-[inherit] focus:outline-none focus:border-brand focus:ring-[3px] focus:ring-brand/10" />
       </div>
 
-      <div class="form-group">
-        <label for="customerName">{t('quotation.contactPerson')} <span class="required">*</span></label>
-        <input type="text" id="customerName" name="customerName" required aria-required="true" />
+      <div class="mb-6">
+        <label for="customerName" class="block font-semibold mb-2">{t('quotation.contactPerson')} <span class="text-red-600">*</span></label>
+        <input type="text" id="customerName" name="customerName" required aria-required="true" class="w-full px-3 py-3 border border-gray-300 rounded-md text-base font-[inherit] focus:outline-none focus:border-brand focus:ring-[3px] focus:ring-brand/10" />
       </div>
 
-      <div class="form-group">
-        <label for="customerEmail">{t('quotation.email')}</label>
-        <input type="email" id="customerEmail" name="customerEmail" />
-        <small>{t('quotation.emailNote')}</small>
+      <div class="mb-6">
+        <label for="customerEmail" class="block font-semibold mb-2">{t('quotation.email')}</label>
+        <input type="email" id="customerEmail" name="customerEmail" class="w-full px-3 py-3 border border-gray-300 rounded-md text-base font-[inherit] focus:outline-none focus:border-brand focus:ring-[3px] focus:ring-brand/10" />
+        <small class="block text-gray-500 text-sm mt-1">{t('quotation.emailNote')}</small>
       </div>
 
-      <div class="form-group">
-        <label for="customerPhone">{t('quotation.phone')}</label>
-        <input type="tel" id="customerPhone" name="customerPhone" />
-        <small>{t('quotation.phoneExample')}</small>
+      <div class="mb-6">
+        <label for="customerPhone" class="block font-semibold mb-2">{t('quotation.phone')}</label>
+        <input type="tel" id="customerPhone" name="customerPhone" class="w-full px-3 py-3 border border-gray-300 rounded-md text-base font-[inherit] focus:outline-none focus:border-brand focus:ring-[3px] focus:ring-brand/10" />
+        <small class="block text-gray-500 text-sm mt-1">{t('quotation.phoneExample')}</small>
       </div>
 
-      <div class="form-group">
-        <label for="notes">{t('quotation.notes')}</label>
-        <textarea id="notes" name="notes" rows="4"></textarea>
+      <div class="mb-6">
+        <label for="notes" class="block font-semibold mb-2">{t('quotation.notes')}</label>
+        <textarea id="notes" name="notes" rows="4" class="w-full px-3 py-3 border border-gray-300 rounded-md text-base font-[inherit] focus:outline-none focus:border-brand focus:ring-[3px] focus:ring-brand/10"></textarea>
       </div>
 
-      <div class="form-actions">
-        <a href="/products" class="btn btn-secondary">{t('quotation.back')}</a>
-        <button type="submit" class="btn btn-primary" id="submit-btn">{t('quotation.createButton')}</button>
+      <div class="flex gap-4 justify-end mt-8">
+        <a href="/products" class="px-6 py-3 rounded-md font-semibold no-underline text-base transition-all duration-150 bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">{t('quotation.back')}</a>
+        <button type="submit" id="submit-btn" class="px-6 py-3 rounded-md font-semibold text-base transition-all duration-150 bg-brand text-white hover:bg-brand-hover disabled:bg-gray-400 disabled:cursor-not-allowed">{t('quotation.createButton')}</button>
       </div>
 
-      <div id="error-message" role="alert" class="error-message" style="display: none;"></div>
+      <div id="error-message" role="alert" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-600"></div>
     </form>
-  </div>
+  </Container>
 </Layout>
-
-<style>
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-  }
-
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .subtitle {
-    color: #666;
-    margin-bottom: 2rem;
-  }
-
-  .card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .card h2 {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #f3f4f6;
-  }
-
-  #cart-items {
-    margin-bottom: 1rem;
-  }
-
-  .cart-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f3f4f6;
-  }
-
-  .cart-item:last-child {
-    border-bottom: none;
-  }
-
-  .item-details {
-    flex: 1;
-  }
-
-  .item-title {
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-  }
-
-  .item-variant {
-    color: #666;
-    font-size: 0.875rem;
-  }
-
-  .item-quantity {
-    color: #666;
-    margin-right: 1rem;
-  }
-
-  .item-price {
-    font-weight: 600;
-  }
-
-  .summary {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 2px solid #f3f4f6;
-  }
-
-  .summary-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    font-size: 0.9375rem;
-  }
-
-  .summary-row.total {
-    font-size: 1.125rem;
-    font-weight: 700;
-    margin-top: 0.5rem;
-    padding-top: 0.75rem;
-    border-top: 2px solid #e5e7eb;
-  }
-
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-
-  .required {
-    color: #dc2626;
-  }
-
-  .form-group input,
-  .form-group textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-family: inherit;
-  }
-
-  .form-group input:focus,
-  .form-group textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  }
-
-  .form-group small {
-    display: block;
-    color: #6b7280;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-  }
-
-  .form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 2rem;
-  }
-
-  .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 6px;
-    font-weight: 600;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.15s;
-  }
-
-  .btn-primary {
-    background: #2563eb;
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: #1d4ed8;
-  }
-
-  .btn-primary:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-  }
-
-  .btn-secondary {
-    background: white;
-    color: #374151;
-    border: 1px solid #d1d5db;
-  }
-
-  .btn-secondary:hover {
-    background: #f9fafb;
-  }
-
-  .error-message {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 6px;
-    color: #dc2626;
-  }
-
-  .empty-cart {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: #6b7280;
-  }
-
-  .empty-cart-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-  }
-</style>
 
 <script define:vars={{ apiUrl, i18nEmptyCart: t('quotation.emptyCart'), i18nViewProducts: t('quotation.viewProducts'), i18nQuantity: t('quotation.quantity'), i18nCreating: t('quotation.creating'), i18nCreateButton: t('quotation.createButton'), i18nCreateError: t('quotation.createError'), i18nTokenError: t('quotation.tokenError') }}>
   window.__QUOTATION_API_URL__ = apiUrl;
@@ -311,10 +120,10 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
     if (items.length === 0) {
       cartItemsEl.innerHTML = DOMPurify.sanitize(`
-        <div class="empty-cart">
-          <div class="empty-cart-icon">🛒</div>
+        <div class="text-center py-12 px-4 text-gray-500">
+          <div class="text-5xl mb-4">🛒</div>
           <p>${escapeHtml(i18n.emptyCart)}</p>
-          <p><a href="/products">${escapeHtml(i18n.viewProducts)}</a></p>
+          <p><a href="/products" class="text-brand hover:underline">${escapeHtml(i18n.viewProducts)}</a></p>
         </div>
       `);
       const formEl = document.getElementById('quotation-form');
@@ -324,14 +133,14 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
     // Display items
     cartItemsEl.innerHTML = DOMPurify.sanitize(items.map(item => `
-      <div class="cart-item">
-        <div class="item-details">
-          <div class="item-title">${escapeHtml(item.title)}</div>
-          <div class="item-variant">${escapeHtml(item.variantTitle)}</div>
+      <div class="flex justify-between py-3 border-b border-gray-100 last:border-b-0">
+        <div class="flex-1">
+          <div class="font-semibold mb-1">${escapeHtml(item.title)}</div>
+          <div class="text-secondary text-sm">${escapeHtml(item.variantTitle)}</div>
         </div>
-        <div style="display: flex; align-items: center;">
-          <span class="item-quantity">${escapeHtml(i18n.quantity)}: ${item.quantity}</span>
-          <span class="item-price">${formatPrice(item.price * item.quantity, item.currency)}</span>
+        <div class="flex items-center">
+          <span class="text-secondary mr-4">${escapeHtml(i18n.quantity)}: ${item.quantity}</span>
+          <span class="font-semibold">${formatPrice(item.price * item.quantity, item.currency)}</span>
         </div>
       </div>
     `).join(''));
@@ -362,7 +171,7 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
     submitBtn.disabled = true;
     submitBtn.textContent = i18n.creating;
-    errorMessageEl.style.display = 'none';
+    errorMessageEl.classList.add('hidden');
 
     const formData = new FormData(e.target as HTMLFormElement);
     const customerCompany = formData.get('customerCompany');
@@ -394,10 +203,9 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
       clearCart();
       window.location.href = `/quotations/${data.publicToken}`;
     } catch (error) {
-      console.error('Error creating quotation:', error);
       const errorMessage = error instanceof Error ? error.message : i18n.createError;
       errorMessageEl.textContent = errorMessage;
-      errorMessageEl.style.display = 'block';
+      errorMessageEl.classList.remove('hidden');
       submitBtn.disabled = false;
       submitBtn.textContent = i18n.createButton;
     }

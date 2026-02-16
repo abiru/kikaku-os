@@ -157,6 +157,7 @@ app.use('/payments/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'pay' }))
 app.use('/checkout/*', rateLimit({ max: 20, windowSeconds: 60, prefix: 'co' }));
 app.use('/store/contact', rateLimit({ max: 5, windowSeconds: 60, prefix: 'contact' }));
 app.use('/store/newsletter/*', rateLimit({ max: 5, windowSeconds: 60, prefix: 'nl' }));
+app.use('/store/products/*/notify', rateLimit({ max: 5, windowSeconds: 60, prefix: 'restock' }));
 app.use('/quotations', rateLimit({ max: 10, windowSeconds: 60, prefix: 'quot' }));
 app.use('/quotations/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'quot' }));
 app.use('/ai/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'ai' }));

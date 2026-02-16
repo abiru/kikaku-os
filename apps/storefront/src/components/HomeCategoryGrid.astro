@@ -24,7 +24,7 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
     products.map((product) => {
       const bgImage = product.image || placeholderBg;
       const categoryName = product.category || 'Products';
-      const description = product.description || 'Explore our products';
+      const description = product.description || t('home.exploreProducts');
 
       return (
         <article
@@ -64,11 +64,7 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
         </article>
       );
     })
-  ) : (
-    <div class="col-span-2 py-12 text-center text-gray-500">
-      {t('home.configureFeatured')}
-    </div>
-  )}
+  ) : null}
 </section>
 
 <style>
