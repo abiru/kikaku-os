@@ -91,6 +91,41 @@ export const getInventoryStatusLabel = (status: string): string => {
   }
 }
 
+// Fulfillment status (order context)
+export const getFulfillmentBadgeColor = (status: string | null): BadgeColor => {
+  if (status === 'shipped') return 'lime'
+  return 'zinc'
+}
+
+// Shipping status (shipping context — more granular)
+export const getShippingBadgeColor = (status: string | null): BadgeColor => {
+  switch (status) {
+    case 'shipped': return 'blue'
+    case 'processing': return 'yellow'
+    case 'delivered': return 'green'
+    default: return 'zinc'
+  }
+}
+
+export const getShippingStatusLabel = (status: string | null): string => {
+  switch (status) {
+    case 'shipped': return t('admin.shippingStatusShipped')
+    case 'processing': return t('admin.shippingStatusProcessing')
+    case 'delivered': return t('admin.shippingStatusDelivered')
+    default: return t('admin.shippingStatusUnfulfilled')
+  }
+}
+
+// Review status label
+export const getReviewStatusLabel = (status: string): string => {
+  switch (status) {
+    case 'pending': return t('reviews.pendingReview')
+    case 'approved': return t('reviews.approved')
+    case 'rejected': return t('reviews.rejected')
+    default: return status
+  }
+}
+
 // Product status
 export const getProductBadgeColor = (status: string): BadgeColor => {
   switch (status) {

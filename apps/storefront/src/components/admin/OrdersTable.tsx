@@ -4,7 +4,7 @@ import { Badge } from '../catalyst/badge'
 import { Link } from '../catalyst/link'
 import AdminPagination from './AdminPagination'
 import { formatPrice } from '../../lib/format'
-import { getOrderBadgeColor, getPaymentStatusLabel, getFulfillmentStatusLabel } from '../../lib/adminUtils'
+import { getOrderBadgeColor, getPaymentStatusLabel, getFulfillmentStatusLabel, getFulfillmentBadgeColor } from '../../lib/adminUtils'
 import TableEmptyState from './TableEmptyState'
 import { t } from '../../i18n'
 
@@ -26,11 +26,6 @@ type Props = {
   currentPage: number
   totalPages: number
   searchQuery: string
-}
-
-const getFulfillmentBadgeColor = (status: string | null) => {
-  if (status === 'shipped') return 'lime' as const
-  return 'zinc' as const
 }
 
 const SortIcon = ({ field, sortField, sortOrder }: { field: SortField; sortField: SortField; sortOrder: SortOrder }) => {

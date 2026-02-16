@@ -11,6 +11,7 @@ vi.mock('../../lib/adminUtils', () => ({
 	getOrderBadgeColor: (status: string) => (status === 'paid' ? 'lime' : 'zinc'),
 	getPaymentStatusLabel: (status: string) => status,
 	getFulfillmentStatusLabel: (status: string | null) => status || 'unfulfilled',
+	getFulfillmentBadgeColor: (status: string | null) => (status === 'shipped' ? 'lime' : 'zinc'),
 }))
 
 // Mock format
