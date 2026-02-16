@@ -2,6 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import dailyCloseArtifacts from '../../../routes/accounting/dailyCloseArtifacts';
 
+vi.mock('../../../middleware/rbac', () => ({
+  loadRbac: async (_c: any, next: any) => next(),
+  requirePermission: () => async (_c: any, next: any) => next(),
+}));
+
 vi.mock('../../../services/dailyReport', () => ({
   generateDailyReport: vi.fn(),
 }));

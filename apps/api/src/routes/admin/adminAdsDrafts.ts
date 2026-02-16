@@ -3,7 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
-import { requirePermission } from '../../middleware/rbac';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import { createLogger } from '../../lib/logger';
 import {
@@ -17,6 +17,9 @@ import { validateAdCopy } from '../../services/adValidation';
 
 const logger = createLogger('admin-ads-drafts');
 const app = new Hono<Env>();
+
+// Apply RBAC middleware independently (defense-in-depth)
+app.use('*', loadRbac);
 
 // GET /admin/ads/drafts - List ad drafts
 app.get(

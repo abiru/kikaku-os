@@ -2,6 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
 import quotations from '../../../routes/checkout/quotations';
 
+vi.mock('../../../middleware/rbac', () => ({
+  loadRbac: async (_c: any, next: any) => next(),
+  requirePermission: () => async (_c: any, next: any) => next(),
+}));
+
 type VariantPriceRow = {
   variant_id: number;
   variant_title: string;
@@ -447,16 +452,12 @@ describe('Quotation GET Endpoints', () => {
 });
 
 describe('Quotation Delete - Extended', () => {
-  const adminEnv = { ADMIN_API_KEY: 'test-admin-key' };
-  const adminHeaders = { 'x-admin-key': 'test-admin-key' };
-
   it('returns 404 when quotation does not exist', async () => {
     const db = createMockDb({ quotationRow: null });
-    const { fetch } = createApp(db, adminEnv);
+    const { fetch } = createApp(db);
 
     const response = await fetch('/quotations/999', {
       method: 'DELETE',
-      headers: adminHeaders
     });
 
     expect(response.status).toBe(404);
@@ -464,11 +465,10 @@ describe('Quotation Delete - Extended', () => {
 
   it('returns 400 for invalid quotation ID', async () => {
     const db = createMockDb({});
-    const { fetch } = createApp(db, adminEnv);
+    const { fetch } = createApp(db);
 
     const response = await fetch('/quotations/0', {
       method: 'DELETE',
-      headers: adminHeaders
     });
 
     expect(response.status).toBe(400);
@@ -478,11 +478,10 @@ describe('Quotation Delete - Extended', () => {
     const db = createMockDb({
       quotationRow: { id: 1, status: 'draft', converted_order_id: null }
     });
-    const { fetch } = createApp(db, adminEnv);
+    const { fetch } = createApp(db);
 
     const response = await fetch('/quotations/1', {
       method: 'DELETE',
-      headers: adminHeaders
     });
 
     expect(response.status).toBe(200);

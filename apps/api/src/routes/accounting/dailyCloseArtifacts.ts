@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { ensureDate } from '../../lib/date';
 import { jsonError, jsonOk } from '../../lib/http';
 import { createLogger } from '../../lib/logger';
-import { backfillSchema } from '../../lib/schemas';
+import { backfillSchema, PERMISSIONS } from '../../lib/schemas';
 import { generateDailyReport } from '../../services/dailyReport';
 import { generateStripeEvidence } from '../../services/stripeEvidence';
 import { renderDailyCloseHtml } from '../../services/renderDailyCloseHtml';
@@ -18,9 +18,13 @@ import {
   type DailyCloseRunResult
 } from '../../services/dailyCloseRuns';
 import type { Env } from '../../env';
+import { loadRbac, requirePermission } from '../../middleware/rbac';
 
 const logger = createLogger('daily-close-artifacts');
 const dailyCloseArtifacts = new Hono<Env>();
+
+// Apply RBAC middleware to all routes in this file
+dailyCloseArtifacts.use('*', loadRbac);
 
 const baseKey = (date: string) => `daily-close/${date}`;
 
@@ -88,7 +92,7 @@ const runDailyCloseForDate = async (
   }
 };
 
-dailyCloseArtifacts.post('/daily-close/:date/artifacts', async (c) => {
+dailyCloseArtifacts.post('/daily-close/:date/artifacts', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const date = ensureDate(c.req.param('date') || '');
   if (!date) return jsonError(c, 'Invalid date', 400);
 
@@ -119,7 +123,7 @@ dailyCloseArtifacts.post('/daily-close/:date/artifacts', async (c) => {
   }
 });
 
-dailyCloseArtifacts.get('/daily-close/:date/documents', async (c) => {
+dailyCloseArtifacts.get('/daily-close/:date/documents', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const date = ensureDate(c.req.param('date') || '');
   if (!date) return jsonError(c, 'Invalid date', 400);
   try {
@@ -132,7 +136,7 @@ dailyCloseArtifacts.get('/daily-close/:date/documents', async (c) => {
 });
 
 // Get status of daily close run for a date
-dailyCloseArtifacts.get('/daily-close/:date/status', async (c) => {
+dailyCloseArtifacts.get('/daily-close/:date/status', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const date = ensureDate(c.req.param('date') || '');
   if (!date) return jsonError(c, 'Invalid date', 400);
 
@@ -146,7 +150,7 @@ dailyCloseArtifacts.get('/daily-close/:date/status', async (c) => {
 });
 
 // List all daily close runs
-dailyCloseArtifacts.get('/daily-close/runs', async (c) => {
+dailyCloseArtifacts.get('/daily-close/runs', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const limit = parseInt(c.req.query('limit') || '20', 10);
   const offset = parseInt(c.req.query('offset') || '0', 10);
 
@@ -160,7 +164,7 @@ dailyCloseArtifacts.get('/daily-close/runs', async (c) => {
 });
 
 // Backfill daily close for a date range
-dailyCloseArtifacts.post('/daily-close/backfill', async (c) => {
+dailyCloseArtifacts.post('/daily-close/backfill', requirePermission(PERMISSIONS.REPORTS_READ), async (c) => {
   const raw = await c.req.json();
   const parsed = backfillSchema.safeParse(raw);
 

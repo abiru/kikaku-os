@@ -14,6 +14,16 @@ import health from '../../routes/health';
 // Shared mock factories
 // ---------------------------------------------------------------------------
 
+// All admin permissions for RBAC mock
+const ALL_ADMIN_PERMISSIONS = [
+  { id: 'dashboard:read' }, { id: 'users:read' }, { id: 'users:write' }, { id: 'users:delete' },
+  { id: 'orders:read' }, { id: 'orders:write' }, { id: 'products:read' }, { id: 'products:write' },
+  { id: 'products:delete' }, { id: 'inventory:read' }, { id: 'inventory:write' },
+  { id: 'inbox:read' }, { id: 'inbox:approve' }, { id: 'reports:read' }, { id: 'ledger:read' },
+  { id: 'settings:read' }, { id: 'settings:write' }, { id: 'customers:read' }, { id: 'customers:write' },
+  { id: 'tax-rates:read' }, { id: 'tax-rates:write' },
+];
+
 const createMockDb = () => ({
   prepare: vi.fn((sql: string) => {
     const statement = {
@@ -23,7 +33,13 @@ const createMockDb = () => ({
         if (sql.includes('COUNT')) return { total: 0 };
         return null;
       }),
-      all: vi.fn(async () => ({ results: [] })),
+      all: vi.fn(async () => {
+        // Return admin permissions for RBAC loadRbac queries
+        if (sql.includes('FROM permissions') && sql.includes('role_permissions')) {
+          return { results: ALL_ADMIN_PERMISSIONS };
+        }
+        return { results: [] };
+      }),
       run: vi.fn(async () => ({ meta: { last_row_id: 0, changes: 0 }, success: true })),
     };
     return statement;
@@ -99,6 +115,8 @@ const createSmokeApp = (envOverrides: Record<string, unknown> = {}) => {
     // Protected endpoints require x-admin-key
     const apiKey = c.req.header('x-admin-key');
     if (apiKey && apiKey === env.ADMIN_API_KEY) {
+      // Set authUser so loadRbac can grant admin permissions
+      c.set('authUser', { userId: 'api-key', method: 'api-key' } as any);
       return next();
     }
     return c.json({ ok: false, message: 'Unauthorized' }, 401);

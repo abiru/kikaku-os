@@ -2,6 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
 import accounting from '../../../routes/accounting/accounting';
 
+vi.mock('../../../middleware/rbac', () => ({
+  loadRbac: async (_c: any, next: any) => next(),
+  requirePermission: () => async (_c: any, next: any) => next(),
+}));
+
 vi.mock('../../../services/journalize', () => ({
   listLedgerEntries: vi.fn(),
 }));

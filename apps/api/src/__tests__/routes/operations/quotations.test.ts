@@ -2,6 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
 import quotations from '../../../routes/checkout/quotations';
 
+vi.mock('../../../middleware/rbac', () => ({
+  loadRbac: async (_c: any, next: any) => next(),
+  requirePermission: () => async (_c: any, next: any) => next(),
+}));
+
 type VariantPriceRow = {
   variant_id: number;
   variant_title: string;
@@ -343,26 +348,14 @@ describe('Quotations API', () => {
   });
 
   describe('DELETE /quotations/:id', () => {
-    const adminEnv = { ADMIN_API_KEY: 'test-admin-key' };
-    const adminHeaders = { 'x-admin-key': 'test-admin-key' };
-
-    it('requires admin key', async () => {
-      const db = createMockDb({});
-      const { fetch } = createApp(db, adminEnv);
-
-      const response = await fetch('/quotations/1', { method: 'DELETE' });
-      expect(response.status).toBe(401);
-    });
-
     it('returns 409 when quotation is accepted', async () => {
       const db = createMockDb({
         quotationRow: { id: 1, status: 'accepted', converted_order_id: null }
       });
-      const { fetch } = createApp(db, adminEnv);
+      const { fetch } = createApp(db);
 
       const response = await fetch('/quotations/1', {
         method: 'DELETE',
-        headers: adminHeaders
       });
 
       expect(response.status).toBe(409);
@@ -373,11 +366,10 @@ describe('Quotations API', () => {
         quotationRow: { id: 1, status: 'draft', converted_order_id: 10 },
         orderRow: { id: 10, status: 'paid' }
       });
-      const { fetch } = createApp(db, adminEnv);
+      const { fetch } = createApp(db);
 
       const response = await fetch('/quotations/1', {
         method: 'DELETE',
-        headers: adminHeaders
       });
 
       expect(response.status).toBe(409);
@@ -388,11 +380,10 @@ describe('Quotations API', () => {
         quotationRow: { id: 1, status: 'draft', converted_order_id: 10 },
         orderRow: { id: 10, status: 'cancelled' }
       });
-      const { fetch } = createApp(db, adminEnv);
+      const { fetch } = createApp(db);
 
       const response = await fetch('/quotations/1', {
         method: 'DELETE',
-        headers: adminHeaders
       });
 
       expect(response.status).toBe(200);
