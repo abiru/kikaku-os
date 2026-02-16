@@ -17,6 +17,7 @@ const logger = createLogger('payments');
 const paymentIntentSchema = z.object({
   quoteId: z.string().min(1, 'quoteId is required'),
   email: z.string().email('Valid email is required'),
+  paymentMethod: z.enum(['card', 'bank_transfer']).optional().default('card'),
 });
 
 const runStatements = async (
@@ -100,7 +101,7 @@ payments.post('/payments/intent', async (c) => {
     return jsonError(c, parsed.error.issues[0]?.message || 'Invalid request', 400);
   }
 
-  const { quoteId, email } = parsed.data;
+  const { quoteId, email, paymentMethod } = parsed.data;
 
   // Fetch and validate quote
   type QuoteRow = {
@@ -287,15 +288,15 @@ payments.post('/payments/intent', async (c) => {
   params.set('metadata[orderId]', String(orderId));
   params.set('metadata[order_id]', String(orderId));
   params.set('metadata[quoteId]', quoteId);
+  params.set('metadata[paymentMethod]', paymentMethod);
 
-  // Use automatic payment methods to let Stripe show all available options
-  params.set('automatic_payment_methods[enabled]', 'true');
-  params.set('automatic_payment_methods[allow_redirects]', 'never');
-
-  // Configure customer_balance for bank transfers (jp_bank_transfer)
-  // Actual availability is controlled by Stripe Dashboard settings
-  params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
-  params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
+  if (paymentMethod === 'bank_transfer') {
+    params.append('payment_method_types[]', 'customer_balance');
+    params.set('payment_method_options[customer_balance][funding_type]', 'bank_transfer');
+    params.set('payment_method_options[customer_balance][bank_transfer][type]', 'jp_bank_transfer');
+  } else {
+    params.append('payment_method_types[]', 'card');
+  }
 
   // Store coupon metadata for webhook handler
   if (quote.coupon_id) {

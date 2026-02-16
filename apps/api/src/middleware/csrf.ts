@@ -30,6 +30,13 @@ const EXEMPT_PATH_PREFIXES = [
   '/stripe/webhook',
 ] as const;
 
+const EXEMPT_METHOD_PATHS = new Set([
+  'POST /checkout/quote',
+  'POST /checkout/validate-coupon',
+  'POST /checkout/session',
+  'POST /payments/intent',
+]);
+
 /**
  * Generate a cryptographically random CSRF token.
  * Returns a base64url-encoded random string.
@@ -63,6 +70,9 @@ export const validateCsrfToken = (cookieToken: string, headerToken: string): boo
  */
 const isExemptPath = (path: string): boolean =>
   EXEMPT_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
+
+const isExemptMethodPath = (method: string, path: string): boolean =>
+  EXEMPT_METHOD_PATHS.has(`${method.toUpperCase()} ${path}`);
 
 /**
  * Check if a request uses admin API key authentication.
@@ -115,8 +125,8 @@ const ensureCsrfCookie = (c: Context<Env>): string => {
  */
 export const csrfProtection = () => {
   return async (c: Context<Env>, next: Next) => {
-    // Webhook endpoints are exempt (use Stripe signature verification)
-    if (isExemptPath(c.req.path)) {
+    // Public endpoints and webhooks are exempt (protected by other controls)
+    if (isExemptPath(c.req.path) || isExemptMethodPath(c.req.method, c.req.path)) {
       return next();
     }
 

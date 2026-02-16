@@ -39,6 +39,7 @@ type PaymentIntentResponse = {
 };
 
 type CheckoutStep = 'cart' | 'email' | 'payment';
+type CheckoutPaymentMethod = 'card' | 'bank_transfer';
 
 const computeStep = (breakdown: QuoteBreakdown | null, emailSubmitted: boolean): CheckoutStep => {
 	if (!breakdown) return 'cart';
@@ -100,6 +101,7 @@ function CheckoutPageContent() {
 	const [orderToken, setOrderToken] = useState<string | null>(null);
 	const [publishableKey, setPublishableKey] = useState<string>('');
 	const [customerEmail, setCustomerEmail] = useState<string>('');
+	const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>('card');
 	const [emailError, setEmailError] = useState<string | null>(null);
 	const [emailTouched, setEmailTouched] = useState(false);
 	const [emailSubmitted, setEmailSubmitted] = useState(false);
@@ -204,12 +206,13 @@ function CheckoutPageContent() {
 				{
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({
-						quoteId,
-						email: customerEmail
-					})
-				}
-			);
+						body: JSON.stringify({
+							quoteId,
+							email: customerEmail,
+							paymentMethod
+						})
+					}
+				);
 
 			if (!intentData.ok) {
 				throw new Error('Failed to create payment intent');
@@ -353,11 +356,40 @@ function CheckoutPageContent() {
 									placeholder={t('checkout.emailPlaceholder') || 'your@email.com'}
 									className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand focus:ring-brand text-base p-3 border"
 								/>
-								{emailTouched && emailError && (
-									<p id="checkout-email-error" className="text-red-500 text-sm mt-1" role="alert">{emailError}</p>
-								)}
-							</div>
-							<button
+									{emailTouched && emailError && (
+										<p id="checkout-email-error" className="text-red-500 text-sm mt-1" role="alert">{emailError}</p>
+									)}
+								</div>
+								<fieldset>
+									<legend className="block text-sm font-medium text-gray-700">
+										{t('checkout.paymentMethodLabel') || 'Payment Method'}
+									</legend>
+									<div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+										<label className="flex items-center gap-2 rounded-md border border-gray-300 p-3 cursor-pointer hover:border-brand">
+											<input
+												type="radio"
+												name="payment-method"
+												value="card"
+												checked={paymentMethod === 'card'}
+												onChange={() => setPaymentMethod('card')}
+												className="h-4 w-4 text-brand focus:ring-brand"
+											/>
+											<span className="text-sm text-gray-900">{t('checkout.paymentMethodCard') || 'Card Payment'}</span>
+										</label>
+										<label className="flex items-center gap-2 rounded-md border border-gray-300 p-3 cursor-pointer hover:border-brand">
+											<input
+												type="radio"
+												name="payment-method"
+												value="bank_transfer"
+												checked={paymentMethod === 'bank_transfer'}
+												onChange={() => setPaymentMethod('bank_transfer')}
+												className="h-4 w-4 text-brand focus:ring-brand"
+											/>
+											<span className="text-sm text-gray-900">{t('checkout.paymentMethodBankTransfer') || 'Bank Transfer'}</span>
+										</label>
+									</div>
+								</fieldset>
+								<button
 								type="submit"
 								disabled={loading || !customerEmail.includes('@')}
 								className="w-full bg-brand text-white py-3 px-4 rounded-md hover:bg-brand-active disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] text-base font-medium touch-manipulation"
