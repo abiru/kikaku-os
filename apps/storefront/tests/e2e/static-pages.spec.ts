@@ -4,6 +4,7 @@ import { test, expect } from '@playwright/test';
 // These tests verify that each static page returns 200 and has a title.
 // Playwright is not yet configured — all tests are skipped until setup is complete.
 
+// NOTE: Full E2E tests for static pages, contact form, newsletter are in tests/e2e/static-pages.spec.ts
 const staticPages = [
   { path: '/about', name: 'About' },
   { path: '/faq', name: 'FAQ' },

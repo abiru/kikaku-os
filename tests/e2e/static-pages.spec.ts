@@ -80,6 +80,55 @@ test.describe('Contact page', () => {
       }
     }
   });
+
+  test('empty form submission shows validation errors', async ({ page }) => {
+    await page.goto('/contact');
+    await page.waitForLoadState('networkidle');
+
+    // Submit the form without filling any fields
+    const submitButton = page.locator('button[type="submit"]');
+    await submitButton.click();
+
+    // Validation error messages should appear
+    const errorMessages = page.locator('[role="alert"]');
+    await expect(errorMessages.first()).toBeVisible();
+
+    // aria-invalid should be set on the fields
+    const nameInput = page.locator('input[name="name"]');
+    await expect(nameInput).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('invalid email shows email validation error', async ({ page }) => {
+    await page.goto('/contact');
+    await page.waitForLoadState('networkidle');
+
+    // Fill name and subject but use invalid email
+    await page.locator('input[name="name"]').fill('Test User');
+    await page.locator('input[name="email"]').fill('invalid-email');
+    await page.locator('input[name="subject"]').fill('Test Subject');
+    await page.locator('textarea[name="body"]').fill('Test message body');
+
+    const submitButton = page.locator('button[type="submit"]');
+    await submitButton.click();
+
+    // Email field should show invalid state
+    const emailInput = page.locator('input[name="email"]');
+    await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+
+    // Error message for email should be visible
+    const emailError = page.locator('#contact-email-error');
+    await expect(emailError).toBeVisible();
+  });
+
+  test('contact page has SEO meta tags', async ({ page }) => {
+    await page.goto('/contact');
+
+    const ogTitle = page.locator('meta[property="og:title"]');
+    await expect(ogTitle).toHaveAttribute('content', /.+/);
+
+    const ogUrl = page.locator('meta[property="og:url"]');
+    await expect(ogUrl).toHaveAttribute('content', /.+/);
+  });
 });
 
 test.describe('FAQ page', () => {
@@ -155,6 +204,7 @@ test.describe('FAQ page', () => {
 test.describe('Static content pages', () => {
   const staticPages = [
     { path: '/legal', titlePattern: /特定商取引法/ },
+    { path: '/legal-notice', titlePattern: /特定商取引法/ },
     { path: '/privacy', titlePattern: /プライバシー/ },
     { path: '/terms', titlePattern: /利用規約/ },
     { path: '/shipping', titlePattern: /配送/ },
@@ -192,6 +242,18 @@ test.describe('Static content pages', () => {
     const section = page.locator('section');
     await expect(section.first()).toBeVisible();
   });
+
+  for (const { path } of staticPages) {
+    test(`${path} page has SEO meta tags`, async ({ page }) => {
+      await page.goto(path);
+
+      const ogTitle = page.locator('meta[property="og:title"]');
+      await expect(ogTitle).toHaveAttribute('content', /.+/);
+
+      const ogUrl = page.locator('meta[property="og:url"]');
+      await expect(ogUrl).toHaveAttribute('content', /.+/);
+    });
+  }
 });
 
 test.describe('Newsletter subscription', () => {
@@ -253,6 +315,25 @@ test.describe('Newsletter subscription', () => {
     const newsletterHeading = footer.locator('h3').last();
     await expect(newsletterHeading).toBeVisible();
   });
+
+  test('newsletter form validates invalid email on submit', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const emailInput = page.locator('#newsletter-email');
+    await emailInput.fill('not-an-email');
+
+    // Submit the newsletter form
+    const submitButton = emailInput
+      .locator('..')
+      .locator('..')
+      .locator('button[type="submit"]');
+    await submitButton.click();
+
+    // Error message should appear
+    const errorMessage = page.locator('footer').locator('.text-red-500');
+    await expect(errorMessage).toBeVisible();
+  });
 });
 
 test.describe('Static pages a11y', () => {
@@ -269,7 +350,7 @@ test.describe('Static pages a11y', () => {
   });
 
   test('static pages have single h1', async ({ page }) => {
-    const pages = ['/legal', '/privacy', '/terms', '/shipping', '/refund', '/about'];
+    const pages = ['/legal', '/legal-notice', '/privacy', '/terms', '/shipping', '/refund', '/about'];
 
     for (const url of pages) {
       await page.goto(url);
