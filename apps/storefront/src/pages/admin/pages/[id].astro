@@ -9,6 +9,7 @@ import { Select } from '../../../components/catalyst/select';
 import { Field, Label, Description } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 
@@ -389,18 +390,19 @@ Code block
 			</form>
 		)}
 	</div>
+	<ConfirmDialog />
 </AdminLayout>
 
-<script define:vars={{ pageId: id, canDelete, currentStatus: page?.status }}>
+<script define:vars={{ pageId: id, canDelete, currentStatus: page?.status, pageTitle: page?.title }}>
 	// Store server variables in window for module script access
-	window.__PAGE_CONFIG__ = { pageId, canDelete, currentStatus };
+	window.__PAGE_CONFIG__ = { pageId, canDelete, currentStatus, pageTitle };
 </script>
 
 <script type="module">
 	import { marked } from 'marked';
 	import DOMPurify from 'isomorphic-dompurify';
 
-	const { pageId, canDelete, currentStatus } = window.__PAGE_CONFIG__;
+	const { pageId, canDelete, currentStatus, pageTitle } = window.__PAGE_CONFIG__;
 
 	const deleteBtn = document.getElementById('delete-btn');
 	const publishBtn = document.getElementById('publish-btn');
@@ -450,9 +452,13 @@ Code block
 	// Delete button
 	if (deleteBtn && canDelete) {
 		deleteBtn.addEventListener('click', async () => {
-			if (!confirm('Are you sure you want to delete this page? This action cannot be undone.')) {
-				return;
-			}
+			const confirmed = await window.__confirmDialog({
+				title: 'Delete Page',
+				message: `Are you sure you want to delete "${pageTitle}"? This action cannot be undone.`,
+				confirmLabel: 'Delete',
+				danger: true,
+			});
+			if (!confirmed) return;
 
 			try {
 				const res = await fetch(`/api/admin/pages/${pageId}`, {

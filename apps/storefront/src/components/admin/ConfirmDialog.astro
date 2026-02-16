@@ -1,0 +1,105 @@
+---
+/**
+ * Reusable confirm dialog component for admin pages.
+ * Replaces browser-native window.confirm() with a proper modal.
+ *
+ * Usage:
+ *   1. Include <ConfirmDialog /> in your page
+ *   2. Call window.__confirmDialog({ title, message, confirmLabel?, danger? })
+ *      which returns a Promise<boolean>
+ */
+---
+
+<div
+	id="confirm-dialog-backdrop"
+	class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="confirm-dialog-title"
+>
+	<div class="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md mx-4 overflow-hidden">
+		<div class="p-6">
+			<h3 id="confirm-dialog-title" class="text-lg font-semibold text-zinc-950 mb-2"></h3>
+			<p id="confirm-dialog-message" class="text-sm text-zinc-600"></p>
+		</div>
+		<div class="flex justify-end gap-3 px-6 py-4 bg-zinc-50 border-t border-gray-100">
+			<button
+				type="button"
+				id="confirm-dialog-cancel"
+				class="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors"
+			>
+				Cancel
+			</button>
+			<button
+				type="button"
+				id="confirm-dialog-ok"
+				class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+			>
+				Confirm
+			</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	type ConfirmOptions = {
+		title: string;
+		message: string;
+		confirmLabel?: string;
+		cancelLabel?: string;
+		danger?: boolean;
+	};
+
+	const backdrop = document.getElementById('confirm-dialog-backdrop')!;
+	const titleEl = document.getElementById('confirm-dialog-title')!;
+	const messageEl = document.getElementById('confirm-dialog-message')!;
+	const cancelBtn = document.getElementById('confirm-dialog-cancel')!;
+	const okBtn = document.getElementById('confirm-dialog-ok')!;
+
+	let resolvePromise: ((value: boolean) => void) | null = null;
+
+	function showDialog(options: ConfirmOptions): Promise<boolean> {
+		titleEl.textContent = options.title;
+		messageEl.textContent = options.message;
+		cancelBtn.textContent = options.cancelLabel || 'Cancel';
+		okBtn.textContent = options.confirmLabel || 'Confirm';
+
+		if (options.danger) {
+			okBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors';
+		} else {
+			okBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors';
+		}
+
+		backdrop.classList.remove('hidden');
+		backdrop.classList.add('flex');
+		okBtn.focus();
+
+		return new Promise<boolean>((resolve) => {
+			resolvePromise = resolve;
+		});
+	}
+
+	function closeDialog(result: boolean) {
+		backdrop.classList.add('hidden');
+		backdrop.classList.remove('flex');
+		if (resolvePromise) {
+			resolvePromise(result);
+			resolvePromise = null;
+		}
+	}
+
+	cancelBtn.addEventListener('click', () => closeDialog(false));
+	okBtn.addEventListener('click', () => closeDialog(true));
+
+	backdrop.addEventListener('click', (e) => {
+		if (e.target === backdrop) closeDialog(false);
+	});
+
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && !backdrop.classList.contains('hidden')) {
+			closeDialog(false);
+		}
+	});
+
+	(window as any).__confirmDialog = showDialog;
+</script>

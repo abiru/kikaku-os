@@ -57,7 +57,17 @@ export function initImageHandlers(productId: string) {
 
     const imageId = btn.dataset.imageId;
     const filename = btn.dataset.imageFilename;
-    if (!confirm(`Delete image "${filename}"?`)) return;
+
+    const confirmDialog = (window as any).__confirmDialog;
+    const confirmed = confirmDialog
+      ? await confirmDialog({
+          title: 'Delete Image',
+          message: `Are you sure you want to delete "${filename}"? This action cannot be undone.`,
+          confirmLabel: 'Delete',
+          danger: true,
+        })
+      : confirm(`Delete image "${filename}"?`);
+    if (!confirmed) return;
 
     try {
       const res = await fetch(`/api/admin/products/${productId}/images/${imageId}`, {

@@ -7,6 +7,7 @@ import { Fieldset, Field } from '../../../components/catalyst/fieldset';
 import { Button } from '../../../components/catalyst/button';
 import { Badge } from '../../../components/catalyst/badge';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 
 const { id } = Astro.params;
@@ -366,12 +367,11 @@ if (Astro.request.method === 'POST' && hero) {
 										class="w-full h-auto rounded"
 									/>
 								</div>
-								<form method="POST">
+								<form method="POST" class="delete-hero-image-form" data-image-label="main">
 									<input type="hidden" name="delete_image_type" value="main" />
 									<button
 										type="button"
-										onclick="if(confirm('Delete this image?')) this.form.submit()"
-										class="text-sm text-red-600 hover:text-red-700"
+										class="delete-hero-image-btn text-sm text-red-600 hover:text-red-700"
 									>
 										Delete Main Image
 									</button>
@@ -421,12 +421,11 @@ if (Astro.request.method === 'POST' && hero) {
 										class="w-full h-auto rounded"
 									/>
 								</div>
-								<form method="POST">
+								<form method="POST" class="delete-hero-image-form" data-image-label="small">
 									<input type="hidden" name="delete_image_type" value="small" />
 									<button
 										type="button"
-										onclick="if(confirm('Delete this image?')) this.form.submit()"
-										class="text-sm text-red-600 hover:text-red-700"
+										class="delete-hero-image-btn text-sm text-red-600 hover:text-red-700"
 									>
 										Delete Small Image
 									</button>
@@ -467,4 +466,24 @@ if (Astro.request.method === 'POST' && hero) {
 			</div>
 		)}
 	</div>
+	<ConfirmDialog />
 </AdminLayout>
+
+<script>
+	document.querySelectorAll('.delete-hero-image-btn').forEach((btn) => {
+		btn.addEventListener('click', async () => {
+			const form = btn.closest('.delete-hero-image-form');
+			if (!form) return;
+			const label = form.dataset.imageLabel || 'this';
+			const confirmed = await (window as any).__confirmDialog({
+				title: 'Delete Image',
+				message: `Are you sure you want to delete the ${label} image? This action cannot be undone.`,
+				confirmLabel: 'Delete',
+				danger: true,
+			});
+			if (confirmed) {
+				(form as HTMLFormElement).submit();
+			}
+		});
+	});
+</script>
