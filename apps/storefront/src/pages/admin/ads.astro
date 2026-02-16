@@ -13,6 +13,7 @@ import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '.
 import { getApiBase } from '../../lib/api';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
+import type { AdDraft } from '../../types/ads';
 
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const apiBase = getApiBase();
@@ -21,7 +22,7 @@ const q = Astro.url.searchParams.get('q') || '';
 const status = Astro.url.searchParams.get('status') || 'all';
 const page = Number(Astro.url.searchParams.get('page') || '1');
 
-let drafts: any[] = [];
+let drafts: AdDraft[] = [];
 let totalCount = 0;
 let totalPages = 0;
 let error: string | null = null;

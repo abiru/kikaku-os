@@ -6,6 +6,7 @@ import { Alert } from '../../../components/catalyst/alert-banner';
 import InquiriesTable from '../../../components/admin/InquiriesTable';
 import { Heading } from '../../../components/catalyst/heading';
 import { getApiBase } from '../../../lib/api';
+import type { ContactInquiry } from '../../../lib/types';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -13,7 +14,7 @@ const status = Astro.url.searchParams.get('status') || 'open';
 const offset = Number(Astro.url.searchParams.get('offset') || '0');
 const limit = 20;
 
-let inquiries: any[] = [];
+let inquiries: ContactInquiry[] = [];
 let meta = { total: 0, limit, offset };
 let error = null;
 

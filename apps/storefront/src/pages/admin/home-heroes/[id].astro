@@ -9,22 +9,22 @@ import { Badge } from '../../../components/catalyst/badge';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
+import { handleHeroPost, type HeroDetail } from '../../../lib/admin/hero-actions';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
 
-let hero: any = null;
-let error = null;
+let hero: HeroDetail | null = null;
+let error: string | null = null;
 let success = false;
 let imageUploadSuccess = false;
-let imageUploadError = null;
+let imageUploadError: string | null = null;
 
 // Fetch hero section data
 try {
 	const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-		headers: {
-			'x-admin-key': import.meta.env.ADMIN_API_KEY
-		}
+		headers: { 'x-admin-key': apiKey },
 	});
 
 	if (!res.ok) {
@@ -41,135 +41,12 @@ try {
 // Handle form submission
 if (Astro.request.method === 'POST' && hero) {
 	const formData = await Astro.request.formData();
-	const imageFile = formData.get('image_upload');
-	const imageType = formData.get('image_type');
-	const deleteImageType = formData.get('delete_image_type');
-
-	// Check if this is a hero data update (not an image operation)
-	const isImageOperation = imageFile instanceof File && imageFile.size > 0 || deleteImageType;
-
-	if (!isImageOperation) {
-		try {
-			const title = formData.get('title') as string;
-			const subtitle = formData.get('subtitle') as string;
-			const ctaPrimaryText = formData.get('cta_primary_text') as string;
-			const ctaPrimaryUrl = formData.get('cta_primary_url') as string;
-			const ctaSecondaryText = formData.get('cta_secondary_text') as string;
-			const ctaSecondaryUrl = formData.get('cta_secondary_url') as string;
-			const position = Number(formData.get('position') || '0');
-			const status = formData.get('status') as string || 'draft';
-
-			const body: any = {};
-
-			if (title !== hero.title) body.title = title;
-			if (subtitle !== hero.subtitle) body.subtitle = subtitle || null;
-			if (ctaPrimaryText !== hero.cta_primary_text) body.cta_primary_text = ctaPrimaryText || null;
-			if (ctaPrimaryUrl !== hero.cta_primary_url) body.cta_primary_url = ctaPrimaryUrl || null;
-			if (ctaSecondaryText !== hero.cta_secondary_text) body.cta_secondary_text = ctaSecondaryText || null;
-			if (ctaSecondaryUrl !== hero.cta_secondary_url) body.cta_secondary_url = ctaSecondaryUrl || null;
-			if (position !== hero.position) body.position = position;
-			if (status !== hero.status) body.status = status;
-
-			if (Object.keys(body).length > 0) {
-				const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json',
-						'x-admin-key': import.meta.env.ADMIN_API_KEY
-					},
-					body: JSON.stringify(body)
-				});
-
-				if (!res.ok) {
-					const data = await res.json();
-					throw new Error(data.message || 'Failed to update hero section');
-				}
-
-				success = true;
-
-				// Reload hero data
-				const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-					headers: {
-						'x-admin-key': import.meta.env.ADMIN_API_KEY
-					}
-				});
-				const refreshData = await refreshRes.json();
-				hero = refreshData.hero;
-			}
-		} catch (e: unknown) {
-			console.error(e);
-			const msg = e instanceof Error ? e.message : 'Failed to update hero section';
-			error = msg.includes('Invalid input')
-				? 'Validation error: Please check all required fields'
-				: msg;
-		}
-	}
-
-	// Handle image deletion
-	else if (deleteImageType) {
-		try {
-			const res = await fetch(`${apiBase}/admin/home/heroes/${id}/image/${deleteImageType}`, {
-				method: 'DELETE',
-				headers: {
-					'x-admin-key': import.meta.env.ADMIN_API_KEY
-				}
-			});
-
-			if (!res.ok) {
-				const data = await res.json();
-				throw new Error(data.message || 'Failed to delete image');
-			}
-
-			imageUploadSuccess = true;
-
-			// Reload hero data
-			const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-				headers: {
-					'x-admin-key': import.meta.env.ADMIN_API_KEY
-				}
-			});
-			const refreshData = await refreshRes.json();
-			hero = refreshData.hero;
-		} catch (e: unknown) {
-			console.error(e);
-			imageUploadError = e instanceof Error ? e.message : 'Failed to delete image';
-		}
-	}
-	// Handle image upload
-	else if (imageFile && imageFile instanceof File && imageFile.size > 0) {
-		try {
-			const uploadFormData = new FormData();
-			uploadFormData.append('image', imageFile);
-			uploadFormData.append('imageType', imageType as string);
-
-			const res = await fetch(`${apiBase}/admin/home/heroes/${id}/image`, {
-				method: 'POST',
-				headers: {
-					'x-admin-key': import.meta.env.ADMIN_API_KEY
-				},
-				body: uploadFormData
-			});
-
-			if (!res.ok) {
-				const data = await res.json();
-				throw new Error(data.message || 'Failed to upload image');
-			}
-
-			imageUploadSuccess = true;
-
-			// Reload hero data
-			const refreshRes = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-				headers: {
-					'x-admin-key': import.meta.env.ADMIN_API_KEY
-				}
-			});
-			const refreshData = await refreshRes.json();
-			hero = refreshData.hero;
-		} catch (e: unknown) {
-			console.error(e);
-			imageUploadError = e instanceof Error ? e.message : 'Failed to upload image';
-		}
-	}
+	const result = await handleHeroPost(formData, hero, apiBase, apiKey, id!);
+	hero = result.hero ?? hero;
+	error = result.error;
+	success = result.success;
+	imageUploadSuccess = result.imageUploadSuccess;
+	imageUploadError = result.imageUploadError;
 }
 ---
 

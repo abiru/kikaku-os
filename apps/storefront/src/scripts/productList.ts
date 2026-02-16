@@ -63,7 +63,7 @@ const setState = (next: string) => {
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
-const isProduct = (value: unknown) => isRecord(value) && 'id' in value && 'title' in value;
+const isProduct = (value: unknown): value is ProductListItem => isRecord(value) && 'id' in value && 'title' in value;
 
 type VariantListItem = {
 	id: number;
@@ -312,7 +312,7 @@ const loadProducts = async () => {
 
 		const queryString = params.toString();
 		const url = buildStoreUrl(queryString ? `/products?${queryString}` : '/products', apiBase);
-		const data = await fetchJson(url) as any;
+		const data = (await fetchJson(url)) as { products?: unknown[]; meta?: PageMeta | null };
 		const products = Array.isArray(data?.products) ? data.products.filter(isProduct) : [];
 
 		if (!products.length) {
@@ -321,7 +321,7 @@ const loadProducts = async () => {
 		}
 
 		renderProducts(products);
-		renderPagination(data?.meta);
+		renderPagination(data?.meta ?? null);
 		setState('loaded');
 		announceProductCount(products.length);
 	} catch (err) {

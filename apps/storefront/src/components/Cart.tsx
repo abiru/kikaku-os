@@ -30,7 +30,7 @@ function EmptyCart() {
 			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('cart.empty')}</h2>
 			<p className="mt-2 text-sm text-gray-500">{t('cart.emptyDescription')}</p>
 			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
+				<a href="/products" className="inline-flex items-center rounded-full bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
 					{t('cart.browseProducts')}
 				</a>
 			</div>
