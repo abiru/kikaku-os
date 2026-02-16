@@ -5,6 +5,7 @@ import ProductVariantSelector from '../../components/ProductVariantSelector.astr
 import RelatedProducts from '../../components/RelatedProducts.astro';
 import ShippingPolicy from '../../components/ShippingPolicy.astro';
 import WishlistButton from '../../components/WishlistButton';
+import RestockNotification from '../../components/RestockNotification';
 import ReviewSection from '../../components/ReviewSection';
 import RecentlyViewed from '../../components/RecentlyViewed';
 import Layout from '../../layouts/Layout.astro';
@@ -262,7 +263,10 @@ const jsonLdBreadcrumb = product ? {
 												</div>
 											</>
 										) : (
-											<p class="text-sm text-gray-500">{t('product.checkAvailability')}</p>
+											<>
+												<p class="text-sm text-gray-500">{t('product.checkAvailability')}</p>
+												<RestockNotification client:only="react" productId={product.id} />
+											</>
 										)}
 									</div>
 								</div>
