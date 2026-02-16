@@ -73,13 +73,13 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 	<div class="bg-white min-h-screen">
 		<section class="pt-24 pb-12 sm:pt-32 border-b border-gray-200">
 			<Container>
-				<h1 class="text-4xl font-semibold tracking-tight text-[#1d1d1f] md:text-5xl">
-					{t('products.title')} <span class="text-[#6e6e73]">{t('products.subtitle')}</span>
+				<h1 class="text-4xl font-semibold tracking-tight text-primary md:text-5xl">
+					{t('products.title')} <span class="text-secondary">{t('products.subtitle')}</span>
 				</h1>
 			</Container>
 		</section>
 
-		<section class="py-12 bg-[#f5f5f7]">
+		<section class="py-12 bg-subtle">
 			<Container>
 				<div id="search-info" class="hidden mb-6">
 					<div class="flex items-center justify-between">
@@ -100,13 +100,13 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 				</div>
 
 				<div class="flex items-center justify-between mb-8">
-					<h2 id="section-title" class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">{t('products.theLatest')}</h2>
+					<h2 id="section-title" class="text-2xl font-semibold tracking-tight text-primary">{t('products.theLatest')}</h2>
 					<div class="flex items-center gap-3">
 						{/* Mobile Filter Button */}
 						<button
 							id="mobile-filter-btn"
 							type="button"
-							class="lg:hidden inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-sm font-medium text-[#1d1d1f] bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-gray-50 transition-colors"
+							class="lg:hidden inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-sm font-medium text-primary bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-gray-50 transition-colors"
 							aria-label={t('filters.showFilters')}
 						>
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -126,11 +126,11 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 					aria-label={t('filters.showFilters')}
 				>
 					<div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-						<h2 class="text-lg font-semibold text-[#1d1d1f]">{t('products.filters')}</h2>
+						<h2 class="text-lg font-semibold text-primary">{t('products.filters')}</h2>
 						<button
 							id="mobile-filter-close"
 							type="button"
-							class="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors"
+							class="min-h-[44px] min-w-[44px] flex items-center justify-center text-primary/60 hover:text-primary transition-colors"
 							aria-label={t('filters.closeFilters')}
 						>
 							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -145,7 +145,7 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 					{/* Filter Sidebar - Desktop only */}
 					<aside class="hidden lg:block w-64 flex-shrink-0" aria-label={t('products.filters')}>
 						<div class="sticky top-20 bg-white rounded-2xl p-6 shadow-sm ring-1 ring-black/5">
-							<h2 class="text-lg font-semibold text-[#1d1d1f] mb-4">{t('products.filters')}</h2>
+							<h2 class="text-lg font-semibold text-primary mb-4">{t('products.filters')}</h2>
 							<ProductFilters client:only="react" />
 						</div>
 					</aside>
@@ -157,7 +157,7 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 							<div id="product-skeleton" class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:gap-8">
 								{skeletonCards.map(() => (
 									<div class="group relative flex flex-col overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-lg">
-										<div class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#f5f5f7]"></div>
+										<div class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-subtle"></div>
 										<div class="mt-6 flex flex-col gap-2">
 											<div class="h-4 w-24 bg-gray-100 rounded-full"></div>
 											<div class="h-6 w-48 bg-gray-100 rounded-lg"></div>
