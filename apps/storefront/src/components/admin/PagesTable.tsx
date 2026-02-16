@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react'
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
 import { Badge } from '../catalyst/badge'
 import { formatDate } from '../../lib/format'
+import TableEmptyState from './TableEmptyState'
+import { t } from '../../i18n'
 
 type Page = {
   id: number
@@ -201,8 +203,14 @@ export default function PagesTable({ pages: initialPages, coreSlugs }: Props) {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-zinc-500">
-                No pages found.
+              <TableCell colSpan={6}>
+                <TableEmptyState
+                  icon="file-text"
+                  message={t('admin.emptyPages')}
+                  description={t('admin.emptyPagesDesc')}
+                  actionLabel={t('admin.addFirstPage')}
+                  actionHref="/admin/pages/new"
+                />
               </TableCell>
             </TableRow>
           )}

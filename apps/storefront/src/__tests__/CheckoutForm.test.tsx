@@ -11,10 +11,7 @@ vi.mock('../i18n', () => ({
 // Mock Stripe
 vi.mock('@stripe/react-stripe-js', () => ({
 	Elements: ({ children }: { children: React.ReactNode }) => <div data-testid="stripe-elements">{children}</div>,
-	PaymentElement: ({ onReady }: { onReady?: () => void }) => {
-		onReady?.();
-		return <div data-testid="payment-element">PaymentElement</div>;
-	},
+	PaymentElement: () => <div data-testid="payment-element">PaymentElement</div>,
 	AddressElement: () => <div data-testid="address-element">AddressElement</div>,
 	useStripe: () => ({
 		confirmPayment: vi.fn(),
@@ -118,7 +115,7 @@ describe('CheckoutForm', () => {
 		expect(screen.getByText('checkout.title')).toBeInTheDocument();
 	});
 
-	it('renders shipping address label', () => {
+	it('renders payment details label', () => {
 		render(
 			<CheckoutForm
 				clientSecret="pi_secret_123"
@@ -127,6 +124,6 @@ describe('CheckoutForm', () => {
 			/>
 		);
 
-		expect(screen.getByText('checkout.shippingAddress')).toBeInTheDocument();
+		expect(screen.getByText('checkout.paymentDetails')).toBeInTheDocument();
 	});
 });

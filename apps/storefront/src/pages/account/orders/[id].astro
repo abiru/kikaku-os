@@ -60,7 +60,7 @@ try {
     return Astro.redirect('/account/orders');
   }
 } catch (e) {
-  error = 'Failed to load order';
+  error = t('account.loadError');
 }
 
 if (!order) {
@@ -89,7 +89,7 @@ const statusLabels: Record<string, string> = {
 };
 ---
 
-<AccountLayout title={`注文 #${order.id} - Led Kikaku Store`} activeTab="orders">
+<AccountLayout title={t('account.orderDetailPageTitle', { id: order.id })} activeTab="orders">
   <Container class="py-8">
     <div class="max-w-4xl mx-auto">
       {/* Back Link */}

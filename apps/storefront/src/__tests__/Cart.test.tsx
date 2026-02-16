@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
 // Mock i18n — return the key so tests are language-independent
 vi.mock('../i18n', () => ({
@@ -25,6 +25,12 @@ describe('Cart', () => {
 		$cartItems.set({});
 		$appliedCoupon.set(null);
 		$shippingConfig.set({ shippingFee: 500, freeShippingThreshold: 5000 });
+		(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(() =>
+			Promise.resolve({
+				ok: true,
+				text: () => Promise.resolve(JSON.stringify({ shippingFee: 500, freeShippingThreshold: 5000 })),
+			})
+		);
 	});
 
 	it('renders empty cart when no items', () => {
@@ -192,5 +198,60 @@ describe('Cart', () => {
 
 		const link = screen.getByText('Linked Product').closest('a');
 		expect(link).toHaveAttribute('href', '/products/42');
+	});
+
+	it('limits quantity options when stock is defined', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Limited Stock Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+				stock: 3,
+			},
+		});
+
+		render(<Cart />);
+
+		const select = screen.getByRole('combobox');
+		const options = select.querySelectorAll('option');
+		expect(options).toHaveLength(3);
+		expect(options[0]).toHaveValue('1');
+		expect(options[2]).toHaveValue('3');
+	});
+
+	it('shows shipping error and retry button when fetch fails', async () => {
+		(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(() =>
+			Promise.resolve({
+				ok: false,
+				status: 500,
+				statusText: 'Internal Server Error',
+				text: () => Promise.resolve('Server error'),
+			})
+		);
+
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		await waitFor(() => {
+			expect(screen.getByText('cart.shippingConfigError')).toBeInTheDocument();
+		});
+		expect(screen.getByText('cart.retry')).toBeInTheDocument();
 	});
 });

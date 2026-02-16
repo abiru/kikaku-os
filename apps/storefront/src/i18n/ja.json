@@ -24,6 +24,9 @@
     "next": "次へ",
     "page": "ページ"
   },
+  "signIn": {
+    "pageTitle": "ログイン - Led Kikaku Store"
+  },
   "nav": {
     "store": "ストア",
     "products": "製品",
@@ -106,7 +109,11 @@
     "returnToCart": "カートに戻る",
     "createQuotation": "見積書を作成",
     "itemCount": "カートに{count}件の商品",
-    "quantityLabel": "{title}の数量"
+    "quantityLabel": "{title}の数量",
+    "shippingConfigLoading": "配送設定を読み込み中...",
+    "shippingConfigError": "配送設定の読み込みに失敗しました",
+    "retry": "再試行",
+    "maxStock": "在庫上限: {stock}個"
   },
   "checkout": {
     "pageTitle": "チェックアウト - Led Kikaku",
@@ -469,6 +476,35 @@
     "itemApproved": "項目が承認されました。",
     "itemRejected": "項目が却下されました。",
     "nameLabel": "名前",
+    "bulkActions": "一括操作...",
+    "markAsShipped": "発送済みに変更",
+    "csvExport": "CSVエクスポート",
+    "deselect": "選択解除",
+    "selectOrder": "注文 #{id} を選択",
+    "bulkExportSuccess": "{count}件の注文をCSVエクスポートしました",
+    "bulkFulfillSuccess": "{count}件の注文を発送済みに変更しました",
+    "bulkPartialFail": "{succeeded}件成功、{failed}件失敗しました",
+    "shippingInfo": "配送情報",
+    "shipButton": "発送",
+    "noShippingOrders": "出荷待ちの注文はありません。",
+    "shippingStatusShipped": "発送済み",
+    "shippingStatusProcessing": "準備中",
+    "shippingStatusDelivered": "配達済み",
+    "shippingStatusUnfulfilled": "未発送",
+    "inquiryStatusOpen": "未対応",
+    "inquiryStatusReplied": "返信済み",
+    "inquiryStatusClosed": "クローズ",
+    "inquirySubject": "件名",
+    "inquiryName": "お名前",
+    "inquiryEmail": "メール",
+    "inquiryReceivedAt": "受付日時",
+    "noInquiries": "お問い合わせはありません。",
+    "settingsCategoryShipping": "配送設定",
+    "settingsCategoryCompany": "会社情報",
+    "settingsCategoryStore": "ストア設定",
+    "settingsCategoryGeneral": "一般設定",
+    "settingsUpdated": "{count}件の設定を更新しました",
+    "settingsPartialFail": "一部の設定の保存に失敗しました: {keys}",
     "quotations": "見積管理",
     "quotationNumber": "見積番号",
     "noQuotations": "見積がありません。",
@@ -495,7 +531,36 @@
     "category": "カテゴリー",
     "taxRate": "税率",
     "featuredProduct": "おすすめ商品",
-    "dateRange": "日付範囲"
+    "dateRange": "日付範囲",
+    "refresh": "更新",
+    "perPage": "{count}件表示",
+    "emptyProducts": "商品がまだ登録されていません",
+    "emptyProductsDesc": "最初の商品を登録して販売を始めましょう。",
+    "addFirstProduct": "商品を登録",
+    "emptyOrders": "注文がまだありません",
+    "emptyOrdersDesc": "注文が入るとここに表示されます。",
+    "emptyCoupons": "クーポンがまだ登録されていません",
+    "emptyCouponsDesc": "クーポンを作成して割引を提供しましょう。",
+    "addFirstCoupon": "クーポンを作成",
+    "emptyCustomers": "顧客がまだ登録されていません",
+    "emptyCustomersDesc": "注文が入ると顧客情報が自動的に記録されます。",
+    "emptyEvents": "イベントがまだありません",
+    "emptyEventsDesc": "Stripe Webhookイベントが受信されるとここに表示されます。",
+    "emptyInventory": "在庫データがありません",
+    "emptyInventoryDesc": "商品にバリアントを追加すると在庫管理が可能になります。",
+    "emptyLedger": "仕訳データがありません",
+    "emptyLedgerDesc": "日次締めを実行すると仕訳が自動生成されます。",
+    "emptyReports": "レポートがまだありません",
+    "emptyReportsDesc": "日次締めを実行するとレポートが生成されます。",
+    "emptyPages": "ページがまだ登録されていません",
+    "emptyPagesDesc": "CMSページを作成してサイトのコンテンツを管理しましょう。",
+    "addFirstPage": "ページを作成",
+    "emptyUsers": "管理者ユーザーがまだ登録されていません",
+    "emptyUsersDesc": "ユーザーを追加してチームで管理しましょう。",
+    "emptyShipping": "出荷待ちの注文はありません",
+    "emptyShippingDesc": "支払い済みの注文が入ると出荷待ちとして表示されます。",
+    "emptyNewsletter": "登録者がまだいません",
+    "emptyNewsletterDesc": "ニュースレターに登録があるとここに表示されます。"
   },
   "wishlist": {
     "title": "お気に入り",
@@ -655,7 +720,13 @@
     "saving": "保存中...",
     "saved": "保存しました",
     "saveFailed": "保存に失敗しました",
-    "loadError": "アカウントデータの読み込みに失敗しました"
+    "loadError": "アカウントデータの読み込みに失敗しました",
+    "pageTitle": "マイアカウント - Led Kikaku Store",
+    "profilePageTitle": "プロフィール編集 - Led Kikaku Store",
+    "ordersPageTitle": "注文履歴 - Led Kikaku Store",
+    "orderDetailPageTitle": "注文 #{id} - Led Kikaku Store",
+    "basicInfo": "基本情報",
+    "emailManagedByClerk": "メールアドレスはClerkアカウントで管理されています"
   },
   "category": {
     "home": "ホーム",
@@ -809,7 +880,11 @@
     "rateRange": "税率は0から1の間で指定してください（例：10%は0.10）。",
     "rateBetween": "税率は0から1の間で指定してください。",
     "applicableFromRequired": "適用開始日は必須です。",
-    "failedToLoadQuotations": "見積の読み込みに失敗しました。"
+    "failedToLoadQuotations": "見積の読み込みに失敗しました。",
+    "failedToLoadSettingsStatus": "設定の読み込みに失敗しました: {status}",
+    "failedToLoadSettingsGeneric": "設定の読み込みに失敗しました",
+    "failedToUpdateSettings": "設定の更新に失敗しました",
+    "failedToSaveSettings": "設定の保存に失敗しました"
   },
   "pages": {
     "orderStatus": {
@@ -939,11 +1014,21 @@
     "statusSent": "送信済み",
     "statusAccepted": "承認済み",
     "statusExpired": "期限切れ",
-    "statusCancelled": "キャンセル"
+    "statusCancelled": "キャンセル",
+    "ordered": "注文作成済み",
+    "emailLabel": "Email",
+    "phoneLabel": "TEL"
   },
   "cms": {
     "loadError": "ページの読み込みに失敗しました。",
     "preparing": "このページは現在準備中です。",
     "lastUpdated": "最終更新日：{date}"
+  },
+  "seo": {
+    "siteName": "Led Kikaku",
+    "homeDescription": "Led Kikaku - プロ仕様の植物育成ライト・LED照明製品のオンラインストア。研究機関・大学への豊富な納品実績。",
+    "productsDescription": "Led Kikakuの植物育成ライト・LED照明製品一覧。プロ仕様の高品質な製品を取り揃えています。",
+    "categoryDescription": "{category}カテゴリの植物育成ライト・LED照明製品一覧 - Led Kikaku",
+    "orgDescription": "Led Kikakuは、プロ仕様の植物育成ライト・LED照明製品を提供する専門店です。大学・研究機関への豊富な納品実績があります。"
   }
 }

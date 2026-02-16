@@ -7,21 +7,17 @@ import {
 	$cartCurrency,
 	$cartDiscount,
 	$shippingFee,
-	$shippingConfig,
 	$cartGrandTotal,
-	$appliedCoupon,
 	removeFromCart,
 	updateQuantity,
-	applyCoupon,
-	removeCoupon,
 	setShippingConfig,
 	type CartItem,
-	type AppliedCoupon
 } from '../lib/cart';
 import { getApiBase, fetchJson } from '../lib/api';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import { ErrorBoundary } from './ErrorBoundary';
+import { CartOrderSummary } from './CartOrderSummary';
 import { formatPrice } from '../lib/format';
 
 function EmptyCart() {
@@ -42,8 +38,19 @@ function EmptyCart() {
 	);
 }
 
+const MAX_QUANTITY = 99;
+
+function buildQuantityOptions(currentQuantity: number, stock?: number): number[] {
+	const max = stock !== undefined ? Math.min(stock, MAX_QUANTITY) : MAX_QUANTITY;
+	const safeMax = Math.max(max, currentQuantity);
+	const count = Math.min(safeMax, MAX_QUANTITY);
+	return Array.from({ length: count }, (_, i) => i + 1);
+}
+
 function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HTMLLIElement> }) {
 	const { t } = useTranslation();
+	const quantityOptions = buildQuantityOptions(item.quantity, item.stock);
+
 	return (
 		<li ref={itemRef} className="flex py-6 sm:py-10">
 			<div className="shrink-0">
@@ -86,11 +93,16 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 						<div className="grid w-full max-w-16 grid-cols-1">
 							<select
 								value={item.quantity}
-								onChange={(e) => updateQuantity(item.variantId, Number(e.target.value))}
+								onChange={(e) => {
+									const val = Number(e.target.value);
+									if (val > 0 && (item.stock === undefined || val <= item.stock)) {
+										updateQuantity(item.variantId, val);
+									}
+								}}
 								aria-label={t('cart.quantityLabel', { title: item.title })}
 								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand sm:text-sm"
 							>
-								{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+								{quantityOptions.map((n) => (
 									<option key={n} value={n}>{n}</option>
 								))}
 							</select>
@@ -118,195 +130,33 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 	);
 }
 
-function CouponInput() {
-	const { t } = useTranslation();
-	const [code, setCode] = useState('');
-	const [isApplying, setIsApplying] = useState(false);
-	const [error, setError] = useState('');
-	const appliedCoupon = useStore($appliedCoupon);
-	const cartTotal = useStore($cartTotal);
+type ShippingFetchState = 'idle' | 'loading' | 'success' | 'error';
 
-	const handleApply = async () => {
-		if (!code.trim()) return;
+function useShippingConfig() {
+	const [state, setState] = useState<ShippingFetchState>('idle');
 
-		setIsApplying(true);
-		setError('');
-
+	const fetchConfig = useCallback(async () => {
+		setState('loading');
 		try {
 			const data = await fetchJson<{
-				valid: boolean;
-				coupon?: AppliedCoupon;
-				message?: string;
-			}>(`${getApiBase()}/checkout/validate-coupon`, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ code: code.trim(), cartTotal })
-			});
+				shippingFee: number;
+				freeShippingThreshold: number;
+			}>(`${getApiBase()}/checkout/config`);
 
-			if (data.valid && data.coupon) {
-				applyCoupon(data.coupon);
-				setCode('');
-			} else {
-				setError(data.message || t('cart.invalidCoupon'));
+			if (data.shippingFee !== undefined && data.freeShippingThreshold !== undefined) {
+				setShippingConfig(data);
 			}
-		} catch (err) {
-			setError(err instanceof Error ? err.message : t('cart.failedToApplyCoupon'));
-		} finally {
-			setIsApplying(false);
+			setState('success');
+		} catch {
+			setState('error');
 		}
-	};
+	}, []);
 
-	if (appliedCoupon) {
-		return (
-			<div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-md px-4 py-2">
-				<div>
-					<span className="text-sm font-medium text-green-900">
-						{appliedCoupon.code}
-					</span>
-					<span className="text-xs text-green-700 ml-2">
-						-{formatPrice(appliedCoupon.discountAmount, 'JPY')}
-					</span>
-				</div>
-				<button
-					onClick={removeCoupon}
-					className="text-sm text-green-700 hover:text-green-900"
-				>
-					{t('cart.removeCoupon')}
-				</button>
-			</div>
-		);
-	}
+	useEffect(() => {
+		fetchConfig();
+	}, [fetchConfig]);
 
-	return (
-		<div className="space-y-2">
-			<div className="flex gap-2">
-				<input
-					type="text"
-					value={code}
-					onChange={(e) => setCode(e.target.value.toUpperCase())}
-					placeholder={t('cart.couponPlaceholder')}
-					className="flex-1 rounded-md border-gray-300 px-4 py-2 text-sm focus:border-brand focus:ring-brand"
-					disabled={isApplying}
-				/>
-				<button
-					onClick={handleApply}
-					disabled={isApplying || !code.trim()}
-					className="px-4 py-2 bg-gray-100 text-sm font-medium rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-				>
-					{isApplying ? t('cart.applying') : t('cart.applyCoupon')}
-				</button>
-			</div>
-			{error && (
-				<p className="text-sm text-red-600" role="alert">{error}</p>
-			)}
-		</div>
-	);
-}
-
-function OrderSummary({
-	subtotal,
-	taxAmount,
-	cartTotal,
-	discount,
-	shipping,
-	grandTotal,
-	currency,
-	onCheckout
-}: {
-	subtotal: number;
-	taxAmount: number;
-	cartTotal: number;
-	discount: number;
-	shipping: number;
-	grandTotal: number;
-	currency: string;
-	onCheckout: () => void;
-}) {
-	const { t } = useTranslation();
-	const shippingConfig = useStore($shippingConfig);
-	const remainingForFreeShipping = Math.max(0, shippingConfig.freeShippingThreshold - cartTotal);
-
-	return (
-		<section aria-labelledby="summary-heading" className="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6 lg:col-span-5 lg:mt-0 lg:p-8">
-			<h2 id="summary-heading" className="text-lg font-medium text-gray-900">{t('cart.orderSummary')}</h2>
-
-			<dl className="mt-6 space-y-4">
-				<div className="flex items-center justify-between">
-					<dt className="text-sm text-gray-600">{t('cart.subtotal')}</dt>
-					<dd className="text-sm font-medium text-gray-900">{formatPrice(subtotal, currency)}</dd>
-				</div>
-
-				<div className="flex items-center justify-between">
-					<dt className="text-sm text-gray-600">{t('cart.tax')}</dt>
-					<dd className="text-sm font-medium text-gray-900">{formatPrice(taxAmount, currency)}</dd>
-				</div>
-
-				{/* Coupon Input */}
-				<div className="border-t border-gray-200 pt-4">
-					<dt className="text-sm text-gray-600 mb-2">{t('cart.couponCode')}</dt>
-					<CouponInput />
-				</div>
-
-				{/* Discount Display */}
-				{discount > 0 && (
-					<div className="flex items-center justify-between text-green-600">
-						<dt className="text-sm">{t('cart.discount')}</dt>
-						<dd className="text-sm font-medium">-{formatPrice(discount, currency)}</dd>
-					</div>
-				)}
-
-				{/* Shipping */}
-				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
-					<dt className="text-sm text-gray-600">{t('cart.shipping')}</dt>
-					<dd className="text-sm font-medium text-gray-900">
-						{shipping === 0 ? (
-							<span className="text-green-600 font-semibold">{t('common.free').toUpperCase()}</span>
-						) : (
-							formatPrice(shipping, currency)
-						)}
-					</dd>
-				</div>
-
-				{/* Order Total */}
-				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
-					<dt className="text-base font-medium text-gray-900">{t('cart.orderTotal')}</dt>
-					<dd className="text-base font-medium text-gray-900">{formatPrice(grandTotal, currency)}</dd>
-				</div>
-			</dl>
-
-			{remainingForFreeShipping > 0 && (
-				<div className="mt-4 text-sm text-gray-500 text-center">
-					{t('cart.addForFreeShipping', { amount: formatPrice(remainingForFreeShipping, currency) })}
-				</div>
-			)}
-
-			<div className="mt-6 space-y-3">
-				<button
-					type="button"
-					onClick={onCheckout}
-					className="w-full rounded-md border border-transparent bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors"
-				>
-					{t('cart.checkout')}
-				</button>
-				<a
-					href="/quotations/new"
-					className="w-full block rounded-md border border-gray-300 bg-white px-4 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors text-center"
-				>
-					{t('cart.createQuotation')}
-				</a>
-			</div>
-
-			<div className="mt-6 text-center text-sm">
-				<p>
-					{t('common.or')}{' '}
-					<a href="/products" className="font-medium text-brand hover:text-brand-active">
-						{t('cart.continueShopping')}
-						<span aria-hidden="true"> &rarr;</span>
-					</a>
-				</p>
-			</div>
-		</section>
-	);
+	return { state, retry: fetchConfig };
 }
 
 function CartContent() {
@@ -321,12 +171,12 @@ function CartContent() {
 	const currency = useStore($cartCurrency);
 	const itemRefs = useRef<Map<number, HTMLLIElement>>(new Map());
 	const prevItemsRef = useRef<CartItem[]>([]);
+	const { state: shippingState, retry: retryShipping } = useShippingConfig();
 
 	// Track item deletions and move focus to next item
 	useEffect(() => {
 		const prevItems = prevItemsRef.current;
 		if (prevItems.length > items.length && items.length > 0) {
-			// An item was removed - find which one
 			const removedIndex = prevItems.findIndex(
 				(prev) => !items.some((curr) => curr.variantId === prev.variantId)
 			);
@@ -343,31 +193,8 @@ function CartContent() {
 		prevItemsRef.current = items;
 	}, [items]);
 
-	// Fetch shipping config on mount
-	useEffect(() => {
-		const fetchShippingConfig = async () => {
-			try {
-				const data = await fetchJson<{
-					shippingFee: number;
-					freeShippingThreshold: number;
-				}>(
-					`${getApiBase()}/checkout/config`
-				);
-				if (data.shippingFee !== undefined && data.freeShippingThreshold !== undefined) {
-					setShippingConfig(data);
-				}
-			} catch {
-				// Use default values from store
-			}
-		};
-
-		fetchShippingConfig();
-	}, []);
-
 	const handleCheckout = () => {
 		if (items.length === 0) return;
-
-		// Redirect to new checkout page with Payment Element
 		window.location.href = '/checkout';
 	};
 
@@ -401,16 +228,30 @@ function CartContent() {
 				</ul>
 			</section>
 
-			<OrderSummary
-				subtotal={subtotal}
-				taxAmount={taxAmount}
-				cartTotal={cartTotal}
-				discount={discount}
-				shipping={shipping}
-				grandTotal={grandTotal}
-				currency={currency}
-				onCheckout={handleCheckout}
-			/>
+			<div className="lg:col-span-5">
+				{shippingState === 'error' && (
+					<div className="mb-4 rounded-md bg-yellow-50 border border-yellow-200 p-4 text-center">
+						<p className="text-sm text-yellow-800">{t('cart.shippingConfigError')}</p>
+						<button
+							type="button"
+							onClick={retryShipping}
+							className="mt-2 text-sm font-medium text-yellow-700 underline hover:text-yellow-900"
+						>
+							{t('cart.retry')}
+						</button>
+					</div>
+				)}
+				<CartOrderSummary
+					subtotal={subtotal}
+					taxAmount={taxAmount}
+					cartTotal={cartTotal}
+					discount={discount}
+					shipping={shipping}
+					grandTotal={grandTotal}
+					currency={currency}
+					onCheckout={handleCheckout}
+				/>
+			</div>
 		</div>
 	);
 }

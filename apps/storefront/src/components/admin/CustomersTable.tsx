@@ -2,6 +2,8 @@ import { Badge } from '../catalyst/badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
 import { formatDate, formatPrice } from '../../lib/format';
 import AdminPagination from './AdminPagination';
+import TableEmptyState from './TableEmptyState';
+import { t } from '../../i18n';
 
 type Customer = {
 	id: number;
@@ -80,8 +82,12 @@ export default function CustomersTable({ customers, currentPage, totalPages, sea
 							))
 						) : (
 							<TableRow>
-								<TableCell colSpan={7} className="text-center text-zinc-500">
-									No customers found.
+								<TableCell colSpan={7}>
+									<TableEmptyState
+										icon="users"
+										message={t('admin.emptyCustomers')}
+										description={t('admin.emptyCustomersDesc')}
+									/>
 								</TableCell>
 							</TableRow>
 						)}

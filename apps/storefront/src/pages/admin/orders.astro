@@ -16,7 +16,7 @@ const paymentStatus = Astro.url.searchParams.get('payment') || '';
 const fulfillmentStatus = Astro.url.searchParams.get('fulfillment') || '';
 const dateFrom = Astro.url.searchParams.get('from') || '';
 const dateTo = Astro.url.searchParams.get('to') || '';
-const perPage = 20;
+const perPage = Number(Astro.url.searchParams.get('perPage') || '20');
 
 let orders: Order[] = [];
 let meta = { totalCount: 0, totalPages: 1 };
@@ -114,7 +114,28 @@ const hasFilters = paymentStatus || fulfillmentStatus || dateFrom || dateTo;
 				{fulfillmentStatus && <input type="hidden" name="fulfillment" value={fulfillmentStatus} />}
 				{dateFrom && <input type="hidden" name="from" value={dateFrom} />}
 				{dateTo && <input type="hidden" name="to" value={dateTo} />}
+				<input type="hidden" name="perPage" value={perPage.toString()} />
 			</form>
+			<div class="flex items-center gap-2">
+				<select
+					onchange={`window.location.href='?q=${q}&perPage='+this.value${paymentStatus ? `+'&payment=${paymentStatus}'` : ''}${fulfillmentStatus ? `+'&fulfillment=${fulfillmentStatus}'` : ''}${dateFrom ? `+'&from=${dateFrom}'` : ''}${dateTo ? `+'&to=${dateTo}'` : ''}`}
+					class="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 shadow-sm"
+				>
+					{[10, 20, 50, 100].map((n) => (
+						<option value={n} selected={perPage === n}>{t('admin.perPage', { count: n })}</option>
+					))}
+				</select>
+				<a
+					href={Astro.url.pathname + Astro.url.search}
+					class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700 shadow-sm hover:bg-zinc-50 transition-colors"
+					title={t('admin.refresh')}
+				>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+					</svg>
+					{t('admin.refresh')}
+				</a>
+			</div>
 		</div>
 
 		{/* Advanced Filters */}

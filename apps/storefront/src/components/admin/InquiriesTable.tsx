@@ -10,6 +10,7 @@ import { Badge } from '../catalyst/badge';
 import { Link } from '../catalyst/link';
 import AdminPagination from './AdminPagination';
 import { getInquiryBadgeColor, getInquiryStatusLabel } from '../../lib/adminUtils';
+import { t } from '../../i18n';
 
 type Inquiry = {
   id: number;
@@ -56,11 +57,11 @@ export default function InquiriesTable({ inquiries, currentStatus, total, limit,
         <TableHead>
           <TableRow>
             <TableHeader>ID</TableHeader>
-            <TableHeader>件名</TableHeader>
-            <TableHeader>お名前</TableHeader>
-            <TableHeader>メール</TableHeader>
-            <TableHeader>ステータス</TableHeader>
-            <TableHeader>受付日時</TableHeader>
+            <TableHeader>{t('admin.inquirySubject')}</TableHeader>
+            <TableHeader>{t('admin.inquiryName')}</TableHeader>
+            <TableHeader>{t('admin.inquiryEmail')}</TableHeader>
+            <TableHeader>{t('admin.status')}</TableHeader>
+            <TableHeader>{t('admin.inquiryReceivedAt')}</TableHeader>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -97,7 +98,7 @@ export default function InquiriesTable({ inquiries, currentStatus, total, limit,
           ) : (
             <TableRow>
               <TableCell colSpan={6} className="text-center text-zinc-500 py-12">
-                お問い合わせはありません。
+                {t('admin.noInquiries')}
               </TableCell>
             </TableRow>
           )}

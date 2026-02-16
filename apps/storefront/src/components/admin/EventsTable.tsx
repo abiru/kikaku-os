@@ -3,6 +3,8 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '.
 import { formatDate } from '../../lib/format';
 import AdminPagination from './AdminPagination';
 import { getEventBadgeColor } from '../../lib/adminUtils';
+import TableEmptyState from './TableEmptyState';
+import { t } from '../../i18n';
 
 const dateTimeSecsOpts: Intl.DateTimeFormatOptions = {
 	year: 'numeric',
@@ -85,8 +87,12 @@ export default function EventsTable({ events, currentPage, totalPages, status, t
 							))
 						) : (
 							<TableRow>
-								<TableCell colSpan={6} className="text-center text-zinc-500">
-									No events found.
+								<TableCell colSpan={6}>
+									<TableEmptyState
+										icon="calendar"
+										message={t('admin.emptyEvents')}
+										description={t('admin.emptyEventsDesc')}
+									/>
 								</TableCell>
 							</TableRow>
 						)}

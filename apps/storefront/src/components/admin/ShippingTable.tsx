@@ -2,6 +2,8 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '.
 import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
 import { formatDate, formatPrice } from '../../lib/format'
+import TableEmptyState from './TableEmptyState'
+import { t } from '../../i18n'
 
 type ReadyToShipOrder = {
   order_id: number
@@ -22,13 +24,13 @@ type Props = {
 const getStatusBadge = (status: string | null): { label: string; color: 'zinc' | 'yellow' | 'blue' | 'green' } => {
   switch (status) {
     case 'shipped':
-      return { label: '発送済み', color: 'blue' }
+      return { label: t('admin.shippingStatusShipped'), color: 'blue' }
     case 'processing':
-      return { label: '準備中', color: 'yellow' }
+      return { label: t('admin.shippingStatusProcessing'), color: 'yellow' }
     case 'delivered':
-      return { label: '配達済み', color: 'green' }
+      return { label: t('admin.shippingStatusDelivered'), color: 'green' }
     default:
-      return { label: '未発送', color: 'zinc' }
+      return { label: t('admin.shippingStatusUnfulfilled'), color: 'zinc' }
   }
 }
 
@@ -37,13 +39,13 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
     <Table>
       <TableHead>
         <TableRow>
-          <TableHeader>注文</TableHeader>
-          <TableHeader>顧客</TableHeader>
-          <TableHeader>支払日時</TableHeader>
-          <TableHeader>ステータス</TableHeader>
-          <TableHeader>配送情報</TableHeader>
-          <TableHeader className="text-right">合計</TableHeader>
-          <TableHeader className="text-right">アクション</TableHeader>
+          <TableHeader>{t('admin.order')}</TableHeader>
+          <TableHeader>{t('admin.customer')}</TableHeader>
+          <TableHeader>{t('admin.paidAt')}</TableHeader>
+          <TableHeader>{t('admin.status')}</TableHeader>
+          <TableHeader>{t('admin.shippingInfo')}</TableHeader>
+          <TableHeader className="text-right">{t('admin.total')}</TableHeader>
+          <TableHeader className="text-right">{t('admin.actions')}</TableHeader>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -58,7 +60,7 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
                   </a>
                 </TableCell>
                 <TableCell>
-                  <div className="text-zinc-950">{order.customer_email || 'ゲスト'}</div>
+                  <div className="text-zinc-950">{order.customer_email || t('admin.guest')}</div>
                 </TableCell>
                 <TableCell className="text-zinc-500 tabular-nums">
                   {formatDate(order.paid_at, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
@@ -88,7 +90,7 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
                     color="indigo"
                     onClick={() => onShipClick(order.order_id, order.fulfillment_id)}
                   >
-                    発送
+                    {t('admin.shipButton')}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -96,8 +98,12 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
           })
         ) : (
           <TableRow>
-            <TableCell colSpan={7} className="text-center text-zinc-500">
-              出荷待ちの注文はありません。
+            <TableCell colSpan={7}>
+              <TableEmptyState
+                icon="truck"
+                message={t('admin.emptyShipping')}
+                description={t('admin.emptyShippingDesc')}
+              />
             </TableCell>
           </TableRow>
         )}
