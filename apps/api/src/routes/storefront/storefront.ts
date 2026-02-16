@@ -573,12 +573,20 @@ storefront.post('/products/:id/notify', zValidator('json', restockNotifySchema),
   const { email } = c.req.valid('json');
 
   try {
+    const product = await c.env.DB.prepare(
+      'SELECT product_id FROM products WHERE product_id = ?'
+    ).bind(productId).first();
+    if (!product) {
+      return jsonError(c, 'Product not found', 404);
+    }
+
     await c.env.DB.prepare(
-      'INSERT INTO restock_notifications (product_id, email) VALUES (?, ?)'
+      'INSERT OR IGNORE INTO restock_notifications (product_id, email) VALUES (?, ?)'
     ).bind(productId, email).run();
 
     return jsonOk(c, { message: 'Subscribed to restock notifications' });
   } catch (error) {
+    console.error('Restock notification subscription failed:', error);
     return jsonError(c, 'Failed to subscribe to restock notifications', 500);
   }
 });
