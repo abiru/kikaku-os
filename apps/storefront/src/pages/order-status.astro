@@ -19,6 +19,34 @@ import { t } from '../i18n';
 
 				<div class="mt-10 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm space-y-6">
 					<div class="space-y-3">
+						<h2 class="text-xl font-semibold text-primary">{t('pages.orderStatus.searchByToken')}</h2>
+						<p class="text-secondary">
+							{t('pages.orderStatus.searchByTokenDescription')}
+						</p>
+						<form id="order-search-form" class="space-y-4">
+							<div>
+								<label for="order-token" class="block text-sm font-medium text-primary mb-1">
+									{t('pages.orderStatus.orderTokenLabel')}
+								</label>
+								<input
+									type="text"
+									id="order-token"
+									name="token"
+									required
+									placeholder={t('pages.orderStatus.orderTokenPlaceholder')}
+									class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-primary placeholder:text-gray-400 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+								/>
+							</div>
+							<button
+								type="submit"
+								class="inline-flex items-center rounded-full bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-hover transition-colors"
+							>
+								{t('pages.orderStatus.searchButton')}
+							</button>
+						</form>
+					</div>
+
+					<div class="space-y-3 pt-2 border-t border-gray-100">
 						<h2 class="text-xl font-semibold text-primary">{t('pages.orderStatus.checkViaAccount')}</h2>
 						<p class="text-secondary">
 							{t('pages.orderStatus.checkViaAccountDescription')}
@@ -46,4 +74,15 @@ import { t } from '../i18n';
 			</Container>
 		</section>
 	</div>
+<script>
+	const form = document.getElementById('order-search-form');
+	form?.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const input = document.getElementById('order-token') as HTMLInputElement;
+		const token = input?.value.trim();
+		if (token) {
+			window.location.href = `/orders/${encodeURIComponent(token)}`;
+		}
+	});
+</script>
 </Layout>

@@ -15,7 +15,7 @@ function EmptyWishlist() {
 			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('wishlist.empty')}</h2>
 			<p className="mt-2 text-sm text-gray-500">{t('wishlist.emptyDescription')}</p>
 			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-md bg-[#0071e3] px-4 py-2 text-sm font-medium text-white hover:bg-[#005bb5]">
+				<a href="/products" className="inline-flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
 					{t('wishlist.browseProducts')}
 				</a>
 			</div>
@@ -102,7 +102,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 						<button
 							type="button"
 							onClick={handleAddToCart}
-							className="inline-flex items-center rounded-md bg-[#0071e3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005bb5] transition-colors disabled:opacity-50"
+							className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-active transition-colors disabled:opacity-50"
 							disabled={addedToCart}
 						>
 							{addedToCart ? t('wishlist.addedToCart') : t('wishlist.addToCart')}
@@ -110,7 +110,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 					) : (
 						<a
 							href={`/products/${item.productId}`}
-							className="inline-flex items-center rounded-md bg-[#0071e3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#005bb5] transition-colors"
+							className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-active transition-colors"
 						>
 							{t('wishlist.viewProduct')}
 						</a>
@@ -140,7 +140,7 @@ export default function WishlistPage() {
 				))}
 			</ul>
 			<div className="mt-6 text-center text-sm">
-				<a href="/products" className="font-medium text-[#0071e3] hover:text-[#005bb5]">
+				<a href="/products" className="font-medium text-brand hover:text-brand-active">
 					{t('wishlist.continueShopping')}
 					<span aria-hidden="true"> &rarr;</span>
 				</a>

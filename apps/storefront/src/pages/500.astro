@@ -25,7 +25,8 @@ import { t } from '../i18n';
 						{t('errors.backToHome')}
 					</a>
 					<button
-						onclick="window.location.reload()"
+						id="reload-btn"
+						type="button"
 						class="inline-flex items-center gap-2 px-6 py-3 border border-[#d2d2d7] text-primary text-[15px] font-medium rounded-full hover:bg-subtle transition-colors"
 					>
 						{t('errors.reload')}
@@ -34,4 +35,10 @@ import { t } from '../i18n';
 			</div>
 		</Container>
 	</div>
+
+	<script>
+		document.getElementById('reload-btn')?.addEventListener('click', () => {
+			window.location.reload();
+		});
+	</script>
 </Layout>

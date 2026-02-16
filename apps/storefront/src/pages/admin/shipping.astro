@@ -7,6 +7,7 @@ import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import ShippingPage from '../../components/admin/ShippingPage';
 import { t } from '../../i18n';
+import { logError } from '../../utils/logger';
 
 const apiBase = getApiBase();
 
@@ -33,7 +34,7 @@ if (import.meta.env.ADMIN_API_KEY) {
 		const data = await res.json();
 		orders = data.orders || [];
 	} catch (e) {
-		console.error(e);
+		logError({ page: 'admin/shipping' }, e);
 		error = t('errors.failedToLoadShipping');
 	}
 } else {
