@@ -63,6 +63,34 @@ const hasFilters = paymentStatus || fulfillmentStatus || dateFrom || dateTo;
 
 		{/* Toolbar */}
 		<div class="flex flex-col sm:flex-row gap-4 justify-between">
+			{/* CSV Export */}
+			<details class="bg-white rounded-xl border border-gray-200 shadow-sm w-full">
+				<summary class="px-4 py-3 text-sm font-medium text-zinc-700 cursor-pointer hover:text-indigo-600 flex items-center gap-2">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+					</svg>
+					{t('admin.exportOrders')}
+				</summary>
+				<div class="px-4 pb-4 pt-2">
+					<form id="export-form" class="flex flex-wrap items-end gap-4">
+						<div>
+							<label for="export-from" class="block text-xs font-medium text-zinc-600 mb-1">{t('admin.exportDateFrom')}</label>
+							<input type="date" id="export-from" name="from" class="rounded-md border-zinc-200 text-sm py-1.5" required />
+						</div>
+						<div>
+							<label for="export-to" class="block text-xs font-medium text-zinc-600 mb-1">{t('admin.exportDateTo')}</label>
+							<input type="date" id="export-to" name="to" class="rounded-md border-zinc-200 text-sm py-1.5" required />
+						</div>
+						<button type="submit" class="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+							{t('admin.exportCsv')}
+						</button>
+					</form>
+					<div id="export-error" class="hidden mt-2 text-sm text-red-600"></div>
+				</div>
+			</details>
+		</div>
+
+		<div class="flex flex-col sm:flex-row gap-4 justify-between">
 			<form method="get" class="relative w-full max-w-md">
 				<label for="order-search" class="sr-only">{t('admin.searchOrders')}</label>
 				<input
@@ -151,4 +179,41 @@ const hasFilters = paymentStatus || fulfillmentStatus || dateFrom || dateTo;
 			searchQuery={q}
 		/>
 	</div>
+
+	<script>
+		const form = document.getElementById('export-form') as HTMLFormElement | null;
+		const errorDiv = document.getElementById('export-error');
+		if (form) {
+			form.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const fromInput = form.querySelector<HTMLInputElement>('[name="from"]');
+				const toInput = form.querySelector<HTMLInputElement>('[name="to"]');
+				const from = fromInput?.value || '';
+				const to = toInput?.value || '';
+
+				if (errorDiv) {
+					errorDiv.classList.add('hidden');
+					errorDiv.textContent = '';
+				}
+
+				if (!from || !to) {
+					if (errorDiv) {
+						errorDiv.textContent = '日付範囲を指定してください。';
+						errorDiv.classList.remove('hidden');
+					}
+					return;
+				}
+
+				if (from > to) {
+					if (errorDiv) {
+						errorDiv.textContent = '開始日は終了日以前にしてください。';
+						errorDiv.classList.remove('hidden');
+					}
+					return;
+				}
+
+				window.location.href = `/api/admin/orders/export?from=${from}&to=${to}&format=csv`;
+			});
+		}
+	</script>
 </AdminLayout>

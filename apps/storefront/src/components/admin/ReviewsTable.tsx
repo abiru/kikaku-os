@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table';
 import { Badge } from '../catalyst/badge';
 import { Button } from '../catalyst/button';
 import { Select } from '../catalyst/select';
 import { Field, Label } from '../catalyst/fieldset';
+import { Input } from '../catalyst/input';
 import { Link } from '../catalyst/link';
 import { StarRatingDisplay } from '../StarRating';
 import { useTranslation } from '../../i18n';
@@ -32,7 +33,10 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [productFilter, setProductFilter] = useState('');
   const [actioningId, setActioningId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkActioning, setBulkActioning] = useState(false);
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -44,6 +48,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
       if (!data.ok) throw new Error(data.message || 'Failed to load reviews');
       setReviews(data.reviews || []);
       setTotal(data.total || 0);
+      setSelectedIds(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load reviews');
     } finally {
@@ -54,6 +59,22 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
   useEffect(() => {
     fetchReviews();
   }, [statusFilter]);
+
+  const filteredReviews = useMemo(() => {
+    if (!productFilter) return reviews;
+    const lower = productFilter.toLowerCase();
+    return reviews.filter((r) =>
+      (r.product_title || '').toLowerCase().includes(lower)
+    );
+  }, [reviews, productFilter]);
+
+  const productNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const r of reviews) {
+      if (r.product_title) names.add(r.product_title);
+    }
+    return Array.from(names).sort();
+  }, [reviews]);
 
   const handleAction = async (reviewId: number, action: 'approve' | 'reject') => {
     setActioningId(reviewId);
@@ -71,6 +92,46 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
     }
   };
 
+  const handleBulkAction = async (action: 'approve' | 'reject') => {
+    if (selectedIds.size === 0) return;
+    setBulkActioning(true);
+    setError('');
+    try {
+      const promises = Array.from(selectedIds).map(async (id) => {
+        const res = await fetch(`${apiBase}/admin/reviews/${id}/${action}`, {
+          method: 'POST',
+        });
+        return res.json() as Promise<{ ok: boolean; message?: string }>;
+      });
+      await Promise.all(promises);
+      await fetchReviews();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to bulk ${action}`);
+    } finally {
+      setBulkActioning(false);
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredReviews.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredReviews.map((r) => r.id)));
+    }
+  };
+
   const statusLabel = (status: string) => {
     const labels: Record<string, string> = {
       pending: t('reviews.pendingReview'),
@@ -80,6 +141,10 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
     return labels[status] || status;
   };
 
+  const pendingSelected = filteredReviews.filter(
+    (r) => selectedIds.has(r.id) && r.status === 'pending'
+  );
+
   return (
     <div>
       <div className="sm:flex sm:items-center sm:justify-between mb-6">
@@ -87,7 +152,19 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
           <h1 className="text-2xl font-semibold text-zinc-950">{t('reviews.adminTitle')}</h1>
           <p className="mt-1 text-sm text-zinc-500">{total} {t('admin.items')}</p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        <div className="mt-4 sm:mt-0 flex gap-3 items-end flex-wrap">
+          <Field>
+            <Label className="sr-only">{t('admin.filterByProduct')}</Label>
+            <Select
+              value={productFilter}
+              onChange={(e) => setProductFilter(e.target.value)}
+            >
+              <option value="">{t('reviews.product')}: {t('common.all')}</option>
+              {productNames.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </Select>
+          </Field>
           <Field>
             <Label className="sr-only">{t('reviews.status')}</Label>
             <Select
@@ -103,6 +180,35 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
         </div>
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3">
+          <span className="text-sm font-medium text-indigo-800">
+            {t('admin.selectedCount', { count: selectedIds.size })}
+          </span>
+          {pendingSelected.length > 0 && (
+            <>
+              <Button
+                plain
+                onClick={() => handleBulkAction('approve')}
+                disabled={bulkActioning}
+                className="text-green-600 hover:text-green-800 text-sm"
+              >
+                {t('admin.bulkApprove')}
+              </Button>
+              <Button
+                plain
+                onClick={() => handleBulkAction('reject')}
+                disabled={bulkActioning}
+                className="text-red-600 hover:text-red-800 text-sm"
+              >
+                {t('admin.bulkReject')}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       {error && (
         <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-800">{error}</div>
       )}
@@ -113,7 +219,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
             <div key={i} className="h-20 bg-zinc-100 rounded-lg" />
           ))}
         </div>
-      ) : reviews.length === 0 ? (
+      ) : filteredReviews.length === 0 ? (
         <div className="text-center py-12 text-zinc-500">
           <p>{t('reviews.noReviewsAdmin')}</p>
         </div>
@@ -121,6 +227,14 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
         <Table striped>
           <TableHead>
             <TableRow>
+              <TableHeader>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === filteredReviews.length && filteredReviews.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded border-zinc-300"
+                />
+              </TableHeader>
               <TableHeader>{t('reviews.product')}</TableHeader>
               <TableHeader>{t('reviews.reviewer')}</TableHeader>
               <TableHeader>{t('reviews.rating')}</TableHeader>
@@ -131,8 +245,16 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {reviews.map((review) => (
+            {filteredReviews.map((review) => (
               <TableRow key={review.id}>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(review.id)}
+                    onChange={() => toggleSelect(review.id)}
+                    className="rounded border-zinc-300"
+                  />
+                </TableCell>
                 <TableCell>
                   <Link href={`/admin/products/${review.product_id}`} className="text-indigo-600 hover:text-indigo-800">
                     {review.product_title || `#${review.product_id}`}

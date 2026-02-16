@@ -10,12 +10,42 @@ import { Select } from '../../../components/catalyst/select';
 import { Textarea } from '../../../components/catalyst/textarea';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
+import { t } from '../../../i18n';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
 
 let error: string | null = null;
-let formValues = { title: '', description: '', status: 'active' };
+let formValues = { title: '', description: '', status: 'active', category: '', tax_rate_id: '', featured: false };
+
+// Fetch categories and tax rates for dropdowns
+type TaxRate = { id: number; name: string; rate: number };
+let categories: string[] = [];
+let taxRates: TaxRate[] = [];
+
+if (apiKey) {
+	try {
+		const [catRes, taxRes] = await Promise.all([
+			fetch(`${apiBase}/admin/categories`, { headers: { 'x-admin-key': apiKey } }),
+			fetch(`${apiBase}/admin/tax-rates`, { headers: { 'x-admin-key': apiKey } }),
+		]);
+		if (catRes.ok) {
+			const catData = await catRes.json();
+			categories = (catData.categories || []).map((c: { category: string }) => c.category);
+		}
+		if (taxRes.ok) {
+			const taxData = await taxRes.json();
+			const rawRates = Array.isArray(taxData) ? taxData : (taxData.taxRates || taxData.tax_rates || []);
+			taxRates = rawRates.map((tr: { id: number; name: string; rate: number }) => ({
+				id: tr.id,
+				name: tr.name,
+				rate: tr.rate,
+			}));
+		}
+	} catch {
+		// Non-critical: dropdowns will be empty
+	}
+}
 
 // Handle POST - Create product
 if (Astro.request.method === 'POST') {
@@ -24,21 +54,36 @@ if (Astro.request.method === 'POST') {
 		const title = formData.get('title')?.toString().trim() || '';
 		const description = formData.get('description')?.toString().trim() || '';
 		const status = formData.get('status')?.toString() || 'active';
+		const category = formData.get('category')?.toString().trim() || null;
+		const taxRateIdStr = formData.get('tax_rate_id')?.toString() || '';
+		const tax_rate_id = taxRateIdStr ? parseInt(taxRateIdStr, 10) : null;
+		const featured = formData.get('featured') === '1';
 
-		formValues = { title, description, status };
+		formValues = {
+			title,
+			description,
+			status,
+			category: category || '',
+			tax_rate_id: taxRateIdStr,
+			featured,
+		};
 
 		if (!title) {
 			error = 'Title is required';
 		} else if (!apiKey) {
 			error = 'ADMIN_API_KEY is missing in server environment';
 		} else {
+			const body: Record<string, unknown> = { title, description, status };
+			if (category) body.category = category;
+			if (tax_rate_id) body.tax_rate_id = tax_rate_id;
+
 			const res = await fetch(`${apiBase}/admin/products`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					'x-admin-key': apiKey
 				},
-				body: JSON.stringify({ title, description, status })
+				body: JSON.stringify(body)
 			});
 
 			const data = await res.json();
@@ -65,9 +110,9 @@ if (Astro.request.method === 'POST') {
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
-				Products
+				{t('admin.products')}
 			</a>
-			<Heading>New Product</Heading>
+			<Heading>{t('admin.newProduct')}</Heading>
 		</div>
 			{error && (
 				<Alert color="red" client:load>
@@ -78,7 +123,7 @@ if (Astro.request.method === 'POST') {
 			<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 				<Fieldset client:load>
 					<Field>
-						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Title *</label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">{t('admin.title')} *</label>
 						<Input type="text" name="title" required value={formValues.title} placeholder="Product title" />
 					</Field>
 
@@ -88,20 +133,55 @@ if (Astro.request.method === 'POST') {
 					</Field>
 
 					<Field>
-						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">{t('admin.status')}</label>
 						<Select name="status">
-							<option value="active" selected={formValues.status === 'active'}>Active</option>
-							<option value="draft" selected={formValues.status === 'draft'}>Draft</option>
+							<option value="active" selected={formValues.status === 'active'}>{t('admin.active')}</option>
+							<option value="draft" selected={formValues.status === 'draft'}>{t('admin.draft')}</option>
 						</Select>
+					</Field>
+
+					<Field>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">{t('admin.category')}</label>
+						<Select name="category">
+							<option value="">{t('common.none')}</option>
+							{categories.map((cat) => (
+								<option value={cat} selected={formValues.category === cat}>{cat}</option>
+							))}
+						</Select>
+					</Field>
+
+					<Field>
+						<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">{t('admin.taxRate')}</label>
+						<Select name="tax_rate_id">
+							<option value="">{t('common.none')}</option>
+							{taxRates.map((tr) => (
+								<option value={tr.id.toString()} selected={formValues.tax_rate_id === tr.id.toString()}>
+									{tr.name} ({tr.rate}%)
+								</option>
+							))}
+						</Select>
+					</Field>
+
+					<Field>
+						<label class="flex items-center gap-3 cursor-pointer">
+							<input
+								type="checkbox"
+								name="featured"
+								value="1"
+								checked={formValues.featured}
+								class="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+							/>
+							<span class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">{t('admin.featuredProduct')}</span>
+						</label>
 					</Field>
 				</Fieldset>
 
 				<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
 					<Button href="/admin/products" outline client:load>
-						Cancel
+						{t('common.cancel')}
 					</Button>
 					<Button type="submit" color="indigo" client:load>
-						Create Product
+						{t('admin.newProduct')}
 					</Button>
 				</div>
 			</form>

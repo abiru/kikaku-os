@@ -1,0 +1,321 @@
+---
+export const prerender = false;
+
+import { Alert } from '../../../components/catalyst/alert-banner';
+import { Badge } from '../../../components/catalyst/badge';
+import { Button } from '../../../components/catalyst/button';
+import { Heading, Subheading } from '../../../components/catalyst/heading';
+import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { getApiBase } from '../../../lib/api';
+import { formatDate } from '../../../lib/format';
+import { t } from '../../../i18n';
+
+const { id } = Astro.params;
+const apiBase = getApiBase();
+const apiKey = import.meta.env.ADMIN_API_KEY;
+
+type QuotationItem = {
+	id: number;
+	quotation_id: number;
+	variant_id: number;
+	product_title: string;
+	variant_title: string | null;
+	quantity: number;
+	unit_price: number;
+	subtotal: number;
+	created_at: string;
+};
+
+type Quotation = {
+	id: number;
+	quotation_number: string;
+	customer_company: string;
+	customer_name: string;
+	customer_email: string | null;
+	customer_phone: string | null;
+	subtotal: number;
+	tax_amount: number;
+	total_amount: number;
+	currency: string;
+	valid_until: string;
+	status: string;
+	converted_order_id: number | null;
+	notes: string | null;
+	public_token: string;
+	created_at: string;
+	updated_at: string;
+};
+
+let quotation: Quotation | null = null;
+let items: QuotationItem[] = [];
+let error: string | null = null;
+let deleteMessage: string | null = null;
+
+// Handle POST - Delete quotation
+if (Astro.request.method === 'POST' && apiKey) {
+	try {
+		const formData = await Astro.request.formData();
+		const action = formData.get('action');
+
+		if (action === 'delete') {
+			const res = await fetch(`${apiBase}/quotations/${id}`, {
+				method: 'DELETE',
+				headers: { 'x-admin-key': apiKey },
+			});
+
+			if (res.ok) {
+				return Astro.redirect('/admin/quotations');
+			}
+			const data = await res.json();
+			error = data.message || t('admin.deleteQuotationFailed');
+		}
+	} catch (e) {
+		console.error(e);
+		error = t('admin.deleteQuotationFailed');
+	}
+}
+
+// Fetch quotation data
+if (apiKey) {
+	try {
+		// The list API uses admin auth; the detail uses public_token
+		// We need to first get the quotation from the list to find its public_token
+		const listRes = await fetch(`${apiBase}/quotations?perPage=100`, {
+			headers: { 'x-admin-key': apiKey },
+		});
+
+		if (listRes.ok) {
+			const listData = await listRes.json();
+			const found = (listData.quotations || []).find((q: Quotation) => q.id === Number(id));
+
+			if (found) {
+				quotation = found;
+
+				// Fetch items via the public token endpoint
+				const detailRes = await fetch(`${apiBase}/quotations/${found.public_token}`, {
+					headers: { 'x-admin-key': apiKey },
+				});
+
+				if (detailRes.ok) {
+					const detailData = await detailRes.json();
+					items = detailData.items || [];
+				}
+			} else {
+				error = t('admin.quotationNotFound');
+			}
+		} else {
+			error = `API Error: ${listRes.status}`;
+		}
+	} catch (e) {
+		console.error(e);
+		error = t('errors.failedToLoadQuotations');
+	}
+} else {
+	error = t('errors.adminKeyMissing');
+}
+
+const getStatusBadge = (status: string) => {
+	const map: Record<string, { color: 'amber' | 'lime' | 'blue' | 'red' | 'zinc'; label: string }> = {
+		draft: { color: 'amber', label: t('quotation.statusDraft') },
+		sent: { color: 'blue', label: t('quotation.statusSent') },
+		accepted: { color: 'lime', label: t('quotation.statusAccepted') },
+		expired: { color: 'zinc', label: t('quotation.statusExpired') },
+		cancelled: { color: 'red', label: t('quotation.statusCancelled') },
+	};
+	return map[status] || { color: 'zinc' as const, label: status };
+};
+
+const formatCurrency = (amount: number, currency: string = 'JPY') => {
+	return new Intl.NumberFormat('ja-JP', {
+		style: 'currency',
+		currency,
+		minimumFractionDigits: 0,
+	}).format(amount);
+};
+
+const dateTimeOpts: Intl.DateTimeFormatOptions = {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit',
+};
+
+const canDelete = quotation && quotation.status !== 'accepted' && !quotation.converted_order_id;
+---
+
+<AdminLayout title={quotation ? `${quotation.quotation_number} - Admin` : 'Quotation - Admin'}>
+	<div class="space-y-6 max-w-4xl">
+		<div class="flex items-center gap-4">
+			<a href="/admin/quotations" class="text-indigo-600 hover:underline text-sm flex items-center gap-1">
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+				</svg>
+				{t('admin.quotations')}
+			</a>
+			<Heading>
+				{quotation ? quotation.quotation_number : t('admin.quotations')}
+			</Heading>
+		</div>
+
+		{error && (
+			<Alert color="red" client:load>
+				{error}
+			</Alert>
+		)}
+
+		{!quotation && !error && (
+			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
+				<p class="text-zinc-500">{t('admin.quotationNotFound')}</p>
+				<Button href="/admin/quotations" outline client:load>
+					{t('admin.quotations')}
+				</Button>
+			</div>
+		)}
+
+		{quotation && (
+			<>
+				{/* Status & Info Cards */}
+				<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<div class="text-sm text-zinc-500 mb-1">{t('admin.status')}</div>
+						<Badge color={getStatusBadge(quotation.status).color} client:load>
+							{getStatusBadge(quotation.status).label}
+						</Badge>
+					</div>
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<div class="text-sm text-zinc-500 mb-1">{t('quotation.totalAmount')}</div>
+						<div class="text-2xl font-semibold text-zinc-950 tabular-nums">
+							{formatCurrency(quotation.total_amount, quotation.currency)}
+						</div>
+					</div>
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<div class="text-sm text-zinc-500 mb-1">{t('quotation.issueDate')}</div>
+						<div class="text-sm text-zinc-950 tabular-nums">{formatDate(quotation.created_at, dateTimeOpts)}</div>
+					</div>
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+						<div class="text-sm text-zinc-500 mb-1">{t('quotation.validUntil')}</div>
+						<div class="text-sm text-zinc-950 tabular-nums">{formatDate(quotation.valid_until, dateTimeOpts)}</div>
+					</div>
+				</div>
+
+				{/* Customer Info */}
+				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+					<Subheading>{t('quotation.customerInfo')}</Subheading>
+					<dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm">
+						<div>
+							<dt class="text-zinc-500">{t('quotation.companyName')}</dt>
+							<dd class="text-zinc-950 font-medium">{quotation.customer_company}</dd>
+						</div>
+						<div>
+							<dt class="text-zinc-500">{t('quotation.contactPerson')}</dt>
+							<dd class="text-zinc-950 font-medium">{quotation.customer_name}</dd>
+						</div>
+						{quotation.customer_email && (
+							<div>
+								<dt class="text-zinc-500">{t('quotation.email')}</dt>
+								<dd class="text-zinc-950">{quotation.customer_email}</dd>
+							</div>
+						)}
+						{quotation.customer_phone && (
+							<div>
+								<dt class="text-zinc-500">{t('quotation.phone')}</dt>
+								<dd class="text-zinc-950">{quotation.customer_phone}</dd>
+							</div>
+						)}
+						{quotation.notes && (
+							<div class="sm:col-span-2">
+								<dt class="text-zinc-500">{t('quotation.notes')}</dt>
+								<dd class="text-zinc-950 whitespace-pre-wrap">{quotation.notes}</dd>
+							</div>
+						)}
+					</dl>
+				</div>
+
+				{/* Conversion Info */}
+				{quotation.converted_order_id && (
+					<div class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
+						<p class="text-sm text-green-800 font-medium">
+							{t('admin.quotationConvertedToOrder', { orderId: quotation.converted_order_id })}
+						</p>
+						<a href={`/admin/orders/${quotation.converted_order_id}`} class="text-sm text-green-700 hover:text-green-900 font-medium underline">
+							{t('admin.viewOrder')}
+						</a>
+					</div>
+				)}
+
+				{/* Items Table */}
+				<div>
+					<Subheading>{t('quotation.details')}</Subheading>
+					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-4">
+						<div class="overflow-x-auto">
+							<Table client:only="react">
+								<TableHead>
+									<TableRow>
+										<TableHeader>{t('quotation.no')}</TableHeader>
+										<TableHeader>{t('quotation.productName')}</TableHeader>
+										<TableHeader>{t('quotation.unitPrice')}</TableHeader>
+										<TableHeader>{t('quotation.quantity')}</TableHeader>
+										<TableHeader>{t('quotation.subtotal')}</TableHeader>
+									</TableRow>
+								</TableHead>
+								<TableBody>
+									{items.map((item, index) => (
+										<TableRow>
+											<TableCell className="tabular-nums">{index + 1}</TableCell>
+											<TableCell>
+												<div class="font-medium text-zinc-950">{item.product_title}</div>
+												{item.variant_title && (
+													<div class="text-zinc-500 text-xs">{item.variant_title}</div>
+												)}
+											</TableCell>
+											<TableCell className="tabular-nums">
+												{formatCurrency(item.unit_price, quotation.currency)}
+											</TableCell>
+											<TableCell className="tabular-nums">{item.quantity}</TableCell>
+											<TableCell className="tabular-nums">
+												{formatCurrency(item.subtotal, quotation.currency)}
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</div>
+
+						{/* Totals */}
+						<div class="border-t border-gray-200 px-6 py-4 space-y-2">
+							<div class="flex justify-between text-sm">
+								<span class="text-zinc-500">{t('quotation.subtotalExclTax')}</span>
+								<span class="tabular-nums">{formatCurrency(quotation.subtotal, quotation.currency)}</span>
+							</div>
+							<div class="flex justify-between text-sm">
+								<span class="text-zinc-500">{t('quotation.tax')}</span>
+								<span class="tabular-nums">{formatCurrency(quotation.tax_amount, quotation.currency)}</span>
+							</div>
+							<div class="flex justify-between text-base font-semibold border-t border-gray-100 pt-2">
+								<span>{t('quotation.totalAmount')}</span>
+								<span class="tabular-nums">{formatCurrency(quotation.total_amount, quotation.currency)}</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* Actions */}
+				<div class="flex justify-between items-center pt-4">
+					<Button href="/admin/quotations" outline client:load>
+						{t('common.previous')}
+					</Button>
+					{canDelete && (
+						<form method="POST">
+							<input type="hidden" name="action" value="delete" />
+							<Button type="submit" color="red" client:load>
+								{t('common.delete')}
+							</Button>
+						</form>
+					)}
+				</div>
+			</>
+		)}
+	</div>
+</AdminLayout>

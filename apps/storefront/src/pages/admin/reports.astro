@@ -18,6 +18,8 @@ type Report = {
 
 const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
+const dateFrom = Astro.url.searchParams.get('from') || '';
+const dateTo = Astro.url.searchParams.get('to') || '';
 const perPage = 20;
 
 let reports: Report[] = [];
@@ -30,6 +32,8 @@ if (import.meta.env.ADMIN_API_KEY) {
 			page: page.toString(),
 			perPage: perPage.toString()
 		});
+		if (dateFrom) query.set('from', dateFrom);
+		if (dateTo) query.set('to', dateTo);
 
 		const res = await fetch(`${apiBase}/admin/reports?${query}`, {
 			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
@@ -71,6 +75,26 @@ const reportsWithUrls = reports.map(r => ({
 			<span class="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded-full">{meta.totalCount} {t('admin.reports')}</span>
 		</div>
 
+		{/* Date Range Filter */}
+		<form method="get" class="flex flex-wrap items-end gap-4">
+			<div>
+				<label for="report-from" class="block text-xs font-medium text-zinc-600 mb-1">{t('admin.exportDateFrom')}</label>
+				<input type="date" id="report-from" name="from" value={dateFrom} class="rounded-md border-zinc-200 text-sm py-1.5" />
+			</div>
+			<div>
+				<label for="report-to" class="block text-xs font-medium text-zinc-600 mb-1">{t('admin.exportDateTo')}</label>
+				<input type="date" id="report-to" name="to" value={dateTo} class="rounded-md border-zinc-200 text-sm py-1.5" />
+			</div>
+			<button type="submit" class="px-4 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+				{t('common.apply')}
+			</button>
+			{(dateFrom || dateTo) && (
+				<a href="/admin/reports" class="px-4 py-1.5 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200">
+					{t('common.clear')}
+				</a>
+			)}
+		</form>
+
 		{error && (
 			<Alert color="red" client:load>
 				{error}
@@ -85,8 +109,8 @@ const reportsWithUrls = reports.map(r => ({
 				{t('admin.pageOf', { page, totalPages: meta.totalPages })}
 			</div>
 			<Pagination client:load>
-				<PaginationPrevious href={hasPrev ? `?page=${page - 1}` : null} />
-				<PaginationNext href={hasNext ? `?page=${page + 1}` : null} />
+				<PaginationPrevious href={hasPrev ? `?page=${page - 1}${dateFrom ? `&from=${dateFrom}` : ''}${dateTo ? `&to=${dateTo}` : ''}` : null} />
+				<PaginationNext href={hasNext ? `?page=${page + 1}${dateFrom ? `&from=${dateFrom}` : ''}${dateTo ? `&to=${dateTo}` : ''}` : null} />
 			</Pagination>
 		</div>
 	</div>
