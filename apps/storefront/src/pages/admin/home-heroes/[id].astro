@@ -472,7 +472,7 @@ if (Astro.request.method === 'POST' && hero) {
 <script>
 	document.querySelectorAll('.delete-hero-image-btn').forEach((btn) => {
 		btn.addEventListener('click', async () => {
-			const form = btn.closest('.delete-hero-image-form');
+			const form = btn.closest<HTMLFormElement>('.delete-hero-image-form');
 			if (!form) return;
 			const label = form.dataset.imageLabel || 'this';
 			const confirmed = await (window as any).__confirmDialog({
@@ -482,7 +482,7 @@ if (Astro.request.method === 'POST' && hero) {
 				danger: true,
 			});
 			if (confirmed) {
-				(form as HTMLFormElement).submit();
+				form.submit();
 			}
 		});
 	});
