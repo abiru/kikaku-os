@@ -22,12 +22,15 @@ type Props = {
   coreSlugs: string[]
 }
 
+const confirmDialog = (window as any).__confirmDialog as
+  | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
+  | undefined
+
 export default function PagesTable({ pages: initialPages, coreSlugs }: Props) {
   const [pages, setPages] = useState(initialPages)
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [showConfirm, setShowConfirm] = useState(false)
 
   const deletablePages = pages.filter((p) => !coreSlugs.includes(p.slug))
   const deletableIds = deletablePages.map((p) => p.id)
@@ -55,8 +58,25 @@ export default function PagesTable({ pages: initialPages, coreSlugs }: Props) {
     })
   }, [])
 
-  const executeBulkDelete = async () => {
-    setShowConfirm(false)
+  const handleBulkDelete = async () => {
+    if (selectedDeletable.length === 0) return
+
+    const skipped = selectedIds.size - selectedDeletable.length
+    const message = skipped > 0
+      ? t('admin.confirm.deletePages', { count: selectedDeletable.length }) + '\n' + t('admin.confirm.corePagesSkipped', { count: skipped })
+      : t('admin.confirm.deletePages', { count: selectedDeletable.length })
+
+    const confirmed = confirmDialog
+      ? await confirmDialog({
+          title: t('admin.confirm.title'),
+          message,
+          confirmLabel: t('common.delete'),
+          cancelLabel: t('common.cancel'),
+          danger: true,
+        })
+      : window.confirm(message)
+    if (!confirmed) return
+
     setBulkLoading(true)
     setBulkMessage(null)
     let success = 0
@@ -84,29 +104,6 @@ export default function PagesTable({ pages: initialPages, coreSlugs }: Props) {
 
   return (
     <div>
-      {/* Confirm Dialog */}
-      {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-zinc-950 mb-2">Delete Pages</h3>
-              <p className="text-sm text-zinc-600">
-                Are you sure you want to delete {selectedDeletable.length} page(s)? This action cannot be undone.
-                {selectedIds.size !== selectedDeletable.length && (
-                  <span className="block mt-2 text-amber-600">
-                    Note: {selectedIds.size - selectedDeletable.length} core page(s) will be skipped.
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="flex justify-end gap-3 px-6 py-4 bg-zinc-50 border-t border-gray-100">
-              <button type="button" onClick={() => setShowConfirm(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-lg hover:bg-zinc-50">Cancel</button>
-              <button type="button" onClick={executeBulkDelete} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Bulk action bar */}
       {someSelected && (
         <div className="mb-4 flex items-center gap-4 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3">
@@ -115,7 +112,7 @@ export default function PagesTable({ pages: initialPages, coreSlugs }: Props) {
           </span>
           <button
             type="button"
-            onClick={() => { if (selectedDeletable.length > 0) setShowConfirm(true) }}
+            onClick={handleBulkDelete}
             disabled={bulkLoading || selectedDeletable.length === 0}
             className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 disabled:opacity-50"
           >

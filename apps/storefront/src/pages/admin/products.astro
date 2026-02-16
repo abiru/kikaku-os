@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Alert } from '../../components/catalyst/alert-banner';
 import ProductsTable from '../../components/admin/ProductsTable';
+import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { Button } from '../../components/catalyst/button';
 import { Input } from '../../components/catalyst/input';
 import { Heading } from '../../components/catalyst/heading';
@@ -169,4 +170,5 @@ if (import.meta.env.ADMIN_API_KEY) {
 			statusFilter={status}
 		/>
 	</div>
+	<ConfirmDialog />
 </AdminLayout>
