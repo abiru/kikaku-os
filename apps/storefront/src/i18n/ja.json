@@ -1027,6 +1027,16 @@
     "preparing": "このページは現在準備中です。",
     "lastUpdated": "最終更新日：{date}"
   },
+  "restock": {
+    "title": "再入荷通知を受け取る",
+    "description": "この商品が再入荷した際にメールでお知らせします。",
+    "emailPlaceholder": "メールアドレスを入力",
+    "subscribe": "通知を受け取る",
+    "submitting": "登録中...",
+    "success": "再入荷通知の登録が完了しました。入荷次第メールでお知らせします。",
+    "error": "登録に失敗しました。しばらくしてからもう一度お試しください。",
+    "invalidEmail": "有効なメールアドレスを入力してください"
+  },
   "seo": {
     "siteName": "Led Kikaku",
     "homeDescription": "Led Kikaku - プロ仕様の植物育成ライト・LED照明製品のオンラインストア。研究機関・大学への豊富な納品実績。",
