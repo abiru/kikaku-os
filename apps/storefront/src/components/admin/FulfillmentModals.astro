@@ -16,7 +16,7 @@ const { orderId, orderStatus } = Astro.props;
 	<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
 		<div class="p-6 border-b border-gray-100">
 			<h3 class="text-lg font-semibold text-zinc-950">Create Fulfillment</h3>
-			<p class="text-sm text-[#86868b] mt-1">Order #{orderId}</p>
+			<p class="text-sm text-muted mt-1">Order #{orderId}</p>
 		</div>
 		<form id="create-fulfillment-form" class="p-6 space-y-4">
 			<Fieldset client:load>
@@ -75,7 +75,7 @@ const { orderId, orderStatus } = Astro.props;
 				</button>
 				<button
 					type="submit"
-					class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+					class="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors"
 				>
 					Create
 				</button>
@@ -89,7 +89,7 @@ const { orderId, orderStatus } = Astro.props;
 	<div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
 		<div class="p-6 border-b border-gray-100">
 			<h3 class="text-lg font-semibold text-zinc-950">Edit Fulfillment</h3>
-			<p id="edit-subtitle" class="text-sm text-[#86868b] mt-1"></p>
+			<p id="edit-subtitle" class="text-sm text-muted mt-1"></p>
 		</div>
 		<form id="edit-fulfillment-form" class="p-6 space-y-4">
 			<input type="hidden" id="edit-fulfillment-id" name="fulfillmentId" />
@@ -150,7 +150,7 @@ const { orderId, orderStatus } = Astro.props;
 				</button>
 				<button
 					type="submit"
-					class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+					class="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors"
 				>
 					Save
 				</button>

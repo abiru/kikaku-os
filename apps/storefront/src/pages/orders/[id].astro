@@ -73,13 +73,13 @@ try {
 
 <Layout title={order ? `${t('orderTracking.title')} #${order.id}` : t('orderTracking.pageTitle')}>
 	{loadState === 'ready' && order ? (
-		<div class="min-h-screen bg-[#f5f5f7]">
+		<div class="min-h-screen bg-subtle">
 			<Container class="py-10">
 				<OrderTracking order={order} client:visible />
 			</Container>
 		</div>
 	) : loadState === 'unavailable' ? (
-		<div class="min-h-screen bg-[#f5f5f7] flex items-center">
+		<div class="min-h-screen bg-subtle flex items-center">
 			<Container class="py-16">
 				<EmptyState
 					title={t('orderTracking.unavailable')}
@@ -90,7 +90,7 @@ try {
 			</Container>
 		</div>
 	) : (
-		<div class="min-h-screen bg-[#f5f5f7] flex items-center">
+		<div class="min-h-screen bg-subtle flex items-center">
 			<Container class="py-16">
 				<EmptyState
 					title={t('orderTracking.notFound')}

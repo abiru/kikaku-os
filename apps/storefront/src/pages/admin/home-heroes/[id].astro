@@ -175,7 +175,7 @@ if (Astro.request.method === 'POST' && hero) {
 <AdminLayout title={hero ? `Edit Hero: ${hero.title}` : 'Edit Hero Section'}>
 	<div class="max-w-3xl space-y-6">
 		<div class="flex items-center gap-4">
-			<a href="/admin/home-heroes" class="text-[#0071e3] hover:underline text-sm">
+			<a href="/admin/home-heroes" class="text-brand hover:underline text-sm">
 				← Back to Hero Sections
 			</a>
 		</div>
@@ -395,8 +395,8 @@ if (Astro.request.method === 'POST' && hero) {
 										file:mr-3 file:py-2 file:px-4
 										file:rounded-lg file:border-0
 										file:text-sm file:font-medium
-										file:bg-[#0071e3] file:text-white
-										hover:file:bg-[#0077ed]
+										file:bg-brand file:text-white
+										hover:file:bg-brand-hover
 										file:cursor-pointer"
 								/>
 							</label>
@@ -450,8 +450,8 @@ if (Astro.request.method === 'POST' && hero) {
 										file:mr-3 file:py-2 file:px-4
 										file:rounded-lg file:border-0
 										file:text-sm file:font-medium
-										file:bg-[#0071e3] file:text-white
-										hover:file:bg-[#0077ed]
+										file:bg-brand file:text-white
+										hover:file:bg-brand-hover
 										file:cursor-pointer"
 								/>
 							</label>

@@ -130,19 +130,19 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<Subheading>Order Summary</Subheading>
 						<dl class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 							<div>
-								<dt class="text-[#6e6e73]">Total</dt>
+								<dt class="text-secondary">Total</dt>
 								<dd class="font-semibold text-zinc-950 text-lg">{formatCurrency(order.total_amount || order.total_net, order.currency)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#6e6e73]">Customer</dt>
+								<dt class="text-secondary">Customer</dt>
 								<dd class="text-zinc-950">{order.customer_email || 'Guest'}</dd>
 							</div>
 							<div>
-								<dt class="text-[#6e6e73]">Created</dt>
+								<dt class="text-secondary">Created</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(order.created_at, dateTimeOpts)}</dd>
 							</div>
 							<div>
-								<dt class="text-[#6e6e73]">Paid At</dt>
+								<dt class="text-secondary">Paid At</dt>
 								<dd class="text-zinc-950 tabular-nums">{formatDate(order.paid_at, dateTimeOpts)}</dd>
 							</div>
 						</dl>
@@ -150,29 +150,29 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						{/* Tax Breakdown */}
 						{(order.subtotal !== undefined || order.tax_amount !== undefined) && (
 							<div class="mt-4 pt-4 border-t border-gray-100">
-								<h3 class="text-xs font-medium text-[#6e6e73] uppercase tracking-wider mb-3">Price Breakdown</h3>
+								<h3 class="text-xs font-medium text-secondary uppercase tracking-wider mb-3">Price Breakdown</h3>
 								<dl class="space-y-2 text-sm">
 									{order.subtotal !== undefined && (
 										<div class="flex justify-between">
-											<dt class="text-[#6e6e73]">Subtotal (税抜)</dt>
+											<dt class="text-secondary">Subtotal (税抜)</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.subtotal, order.currency)}</dd>
 										</div>
 									)}
 									{order.tax_amount !== undefined && (
 										<div class="flex justify-between">
-											<dt class="text-[#6e6e73]">Tax (消費税)</dt>
+											<dt class="text-secondary">Tax (消費税)</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.tax_amount, order.currency)}</dd>
 										</div>
 									)}
 									{order.total_discount > 0 && (
 										<div class="flex justify-between">
-											<dt class="text-[#6e6e73]">Discount</dt>
+											<dt class="text-secondary">Discount</dt>
 											<dd class="font-medium text-red-600 tabular-nums">-{formatCurrency(order.total_discount, order.currency)}</dd>
 										</div>
 									)}
 									{order.shipping_fee > 0 && (
 										<div class="flex justify-between">
-											<dt class="text-[#6e6e73]">Shipping</dt>
+											<dt class="text-secondary">Shipping</dt>
 											<dd class="font-medium text-zinc-950 tabular-nums">{formatCurrency(order.shipping_fee, order.currency)}</dd>
 										</div>
 									)}
@@ -186,7 +186,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 
 						{(order.provider_checkout_session_id || order.provider_payment_intent_id) && (
 							<div class="mt-4 pt-4 border-t border-gray-100">
-								<h3 class="text-xs font-medium text-[#6e6e73] uppercase tracking-wider mb-2">Stripe IDs</h3>
+								<h3 class="text-xs font-medium text-secondary uppercase tracking-wider mb-2">Stripe IDs</h3>
 								<div class="text-xs text-zinc-950 font-mono space-y-1">
 									{order.provider_checkout_session_id && (
 										<div>Checkout: <span class="bg-gray-100 px-1 py-0.5 rounded">{order.provider_checkout_session_id}</span></div>
@@ -204,13 +204,13 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<div class="flex items-center gap-2">
 								<Subheading>Fulfillments</Subheading>
-								<span class="text-xs text-[#6e6e73] bg-gray-100 px-2 py-1 rounded-full">{fulfillments.length}</span>
+								<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded-full">{fulfillments.length}</span>
 							</div>
 							{order.status === 'paid' && (
 								<button
 									type="button"
 									id="create-fulfillment-btn"
-									class="text-sm text-[#0071e3] hover:underline flex items-center gap-1"
+									class="text-sm text-brand hover:underline flex items-center gap-1"
 								>
 									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -237,11 +237,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell>{f.id}</TableCell>
 												<TableCell><Badge color={getFulfillmentStatusColor(f.status)} client:load>{f.status}</Badge></TableCell>
 												<TableCell className="font-mono text-xs">{f.tracking_number || '-'}</TableCell>
-												<TableCell className="text-[#6e6e73] tabular-nums">{formatDate(f.created_at, dateTimeOpts)}</TableCell>
+												<TableCell className="text-secondary tabular-nums">{formatDate(f.created_at, dateTimeOpts)}</TableCell>
 												<TableCell>
 													<button
 														type="button"
-														class="edit-fulfillment-btn text-sm text-[#0071e3] hover:underline"
+														class="edit-fulfillment-btn text-sm text-brand hover:underline"
 														data-fulfillment={JSON.stringify(f)}
 													>
 														Edit
@@ -250,7 +250,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73]">No fulfillments</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-secondary">No fulfillments</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -261,7 +261,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<Subheading>Payments</Subheading>
-							<span class="text-xs text-[#6e6e73] bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
+							<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded-full">{payments.length}</span>
 						</div>
 						<div class="overflow-x-auto">
 							<Table client:only="react">
@@ -282,11 +282,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell><Badge color={getStatusColor(p.status)} client:load>{p.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(p.amount, p.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{p.provider_payment_id || '-'}</TableCell>
-												<TableCell className="text-[#6e6e73] tabular-nums">{formatDate(p.created_at, dateTimeOpts)}</TableCell>
+												<TableCell className="text-secondary tabular-nums">{formatDate(p.created_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73]">No payments</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-secondary">No payments</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -298,7 +298,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<div class="flex items-center gap-2">
 								<Subheading>Refunds</Subheading>
-								<span class="text-xs text-[#6e6e73] bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
+								<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded-full">{refunds.length}</span>
 							</div>
 							{(order.status === 'paid' || order.status === 'partially_refunded') && (
 								<button
@@ -333,12 +333,12 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell><Badge color={getStatusColor(r.status)} client:load>{r.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(r.amount, r.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{r.provider_refund_id || '-'}</TableCell>
-												<TableCell className="text-[#6e6e73]">{r.reason || '-'}</TableCell>
-												<TableCell className="text-[#6e6e73] tabular-nums">{formatDate(r.created_at, dateTimeOpts)}</TableCell>
+												<TableCell className="text-secondary">{r.reason || '-'}</TableCell>
+												<TableCell className="text-secondary tabular-nums">{formatDate(r.created_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={6} className="text-center text-[#6e6e73]">No refunds</TableCell></TableRow>
+										<TableRow><TableCell colSpan={6} className="text-center text-secondary">No refunds</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>
@@ -349,7 +349,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 					<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
 							<Subheading>Stripe Events</Subheading>
-							<span class="text-xs text-[#6e6e73] bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
+							<span class="text-xs text-secondary bg-gray-100 px-2 py-1 rounded-full">{stripeEvents.length}</span>
 						</div>
 						<div class="overflow-x-auto">
 							<Table client:only="react">
@@ -370,11 +370,11 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 												<TableCell className="font-mono text-xs">{e.event_type}</TableCell>
 												<TableCell><Badge color={getStatusColor(e.processing_status)} client:load>{e.processing_status}</Badge></TableCell>
 												<TableCell className="text-xs text-red-600">{e.error || '-'}</TableCell>
-												<TableCell className="text-[#6e6e73] tabular-nums">{formatDate(e.received_at, dateTimeOpts)}</TableCell>
+												<TableCell className="text-secondary tabular-nums">{formatDate(e.received_at, dateTimeOpts)}</TableCell>
 											</TableRow>
 										))
 									) : (
-										<TableRow><TableCell colSpan={5} className="text-center text-[#6e6e73]">No related events</TableCell></TableRow>
+										<TableRow><TableCell colSpan={5} className="text-center text-secondary">No related events</TableCell></TableRow>
 									)}
 								</TableBody>
 							</Table>

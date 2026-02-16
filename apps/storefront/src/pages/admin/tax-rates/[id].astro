@@ -249,7 +249,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 
 				<form method="POST" class="bg-white rounded-xl border border-red-200 shadow-sm p-6">
 					<h3 class="text-lg font-semibold text-red-600 mb-3">Danger Zone</h3>
-					<p class="text-sm text-[#6e6e73] mb-4">
+					<p class="text-sm text-secondary mb-4">
 						Deactivate this tax rate. It will no longer be assignable to products.
 					</p>
 						<input type="hidden" name="action" value="delete" />
@@ -262,7 +262,7 @@ const formatRate = (rate: number) => `${(rate * 100).toFixed(1)}%`;
 						</button>
 				</form>
 
-				<div class="bg-gray-50 rounded-lg p-4 text-sm text-[#6e6e73]">
+				<div class="bg-gray-50 rounded-lg p-4 text-sm text-secondary">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
 							<div class="font-medium text-zinc-950">Created</div>

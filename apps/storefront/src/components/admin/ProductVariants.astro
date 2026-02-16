@@ -37,7 +37,7 @@ const { variants } = Astro.props;
 		<button
 			type="button"
 			id="add-variant-btn"
-			class="text-sm text-[#0071e3] hover:underline flex items-center gap-1"
+			class="text-sm text-brand hover:underline flex items-center gap-1"
 		>
 			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -48,7 +48,7 @@ const { variants } = Astro.props;
 
 	{variants.length === 0 ? (
 		<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-			<p class="text-[#86868b] text-sm">No variants yet. Add one to set prices.</p>
+			<p class="text-muted text-sm">No variants yet. Add one to set prices.</p>
 		</div>
 	) : (
 		<div class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
@@ -58,7 +58,7 @@ const { variants } = Astro.props;
 					<div class="p-4 flex items-center justify-between" data-variant-id={variant.id}>
 						<div class="flex-1">
 							<div class="font-medium text-zinc-950">{variant.title}</div>
-							<div class="text-sm text-[#86868b] mt-1 flex flex-wrap gap-x-4 gap-y-1">
+							<div class="text-sm text-muted mt-1 flex flex-wrap gap-x-4 gap-y-1">
 								<span>SKU: {variant.sku || '-'}</span>
 								<span class="tabular-nums">
 									{price ? formatPrice(price.amount, price.currency) : 'No price set'}
@@ -71,7 +71,7 @@ const { variants } = Astro.props;
 						<div class="flex items-center gap-2 ml-4">
 							<button
 								type="button"
-								class="edit-variant-btn text-sm text-[#0071e3] hover:underline"
+								class="edit-variant-btn text-sm text-brand hover:underline"
 								data-variant={JSON.stringify(variant)}
 							>
 								Edit
@@ -146,7 +146,7 @@ const { variants } = Astro.props;
 						className="font-mono"
 						placeholder="price_xxxxxxxx"
 					/>
-					<p class="text-xs text-[#86868b] mt-1">Required for checkout. Get this from your Stripe Dashboard.</p>
+					<p class="text-xs text-muted mt-1">Required for checkout. Get this from your Stripe Dashboard.</p>
 				</Field>
 			</Fieldset>
 
@@ -164,7 +164,7 @@ const { variants } = Astro.props;
 				</button>
 				<button
 					type="submit"
-					class="px-4 py-2 text-sm font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ED] transition-colors"
+					class="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors"
 				>
 					Save
 				</button>
