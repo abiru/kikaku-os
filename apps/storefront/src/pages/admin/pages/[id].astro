@@ -39,7 +39,7 @@ let successMessage: string | null = null;
 // Handle POST - Update page
 if (Astro.request.method === 'POST' && apiKey) {
 	const formData = await Astro.request.formData();
-	const result = await handlePageUpdate(formData, apiBase, apiKey, id!);
+	const result = await handlePageUpdate(formData, apiBase, apiKey, id!, t);
 	page = result.page as Page | null;
 	error = result.error;
 	successMessage = result.successMessage;

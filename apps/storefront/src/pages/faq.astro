@@ -7,9 +7,16 @@ import { t } from '../i18n';
 
 const faqItems = [
 	{ question: t('pages.faq.shippingQuestion'), answer: t('pages.faq.shippingAnswer') },
-	{ question: t('pages.faq.refundQuestion'), answer: `${t('pages.faq.refundAnswer')} ${t('pages.faq.refundLink')}` },
-	{ question: t('pages.faq.orderStatusQuestion'), answer: `${t('pages.faq.orderStatusAnswer')} ${t('pages.faq.orderStatusLink')}` },
-	{ question: t('pages.faq.contactQuestion'), answer: `${t('pages.faq.contactAnswer')} ${t('pages.faq.contactLink')}` },
+	{ question: t('pages.faq.refundQuestion'), answer: `${t('pages.faq.refundAnswer')} ${t('pages.faq.refundLink')}: /refund` },
+	{ question: t('pages.faq.orderStatusQuestion'), answer: `${t('pages.faq.orderStatusAnswer')} ${t('pages.faq.orderStatusLink')}: /order-status` },
+	{ question: t('pages.faq.paymentQuestion'), answer: t('pages.faq.paymentAnswer') },
+	{ question: t('pages.faq.warrantyQuestion'), answer: t('pages.faq.warrantyAnswer') },
+	{ question: t('pages.faq.b2bQuestion'), answer: `${t('pages.faq.b2bAnswer')} ${t('pages.faq.b2bLink')}: /quotations/new` },
+	{ question: t('pages.faq.internationalQuestion'), answer: t('pages.faq.internationalAnswer') },
+	{ question: t('pages.faq.installationQuestion'), answer: t('pages.faq.installationAnswer') },
+	{ question: t('pages.faq.specQuestion'), answer: t('pages.faq.specAnswer') },
+	{ question: t('pages.faq.couponQuestion'), answer: t('pages.faq.couponAnswer') },
+	{ question: t('pages.faq.contactQuestion'), answer: `${t('pages.faq.contactAnswer')} ${t('pages.faq.contactLink')}: /contact` },
 ];
 
 const jsonLdFaq = {
