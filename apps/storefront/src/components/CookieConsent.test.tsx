@@ -64,7 +64,7 @@ describe('CookieConsent', () => {
     fireEvent.click(acceptButton)
 
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('cookie-consent-accepted', 'true')
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith('cookie-consent-accepted', 'accepted')
   })
 
   it('shows learn more link to privacy page', () => {
