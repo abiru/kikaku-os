@@ -18,7 +18,7 @@ interface Props {
 	formatCurrency: (amount: number, currency?: string) => string;
 }
 
-const { orders, formatCurrency } = Astro.props;
+const { orders, formatCurrency } = Astro.props as Props;
 
 const getStatusColor = (status: string) => {
 	switch (status) {
