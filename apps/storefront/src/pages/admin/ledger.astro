@@ -5,8 +5,8 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Heading } from '../../components/catalyst/heading';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
-import { getApiBase } from '../../lib/api';
 import LedgerTable from '../../components/admin/LedgerTable';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { t } from '../../i18n';
 
 type LedgerEntry = {
@@ -21,37 +21,19 @@ type LedgerEntry = {
 	created_at: string;
 };
 
-const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 50;
 
-let entries: LedgerEntry[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error = null;
+const query = new URLSearchParams({
+	page: page.toString(),
+	perPage: perPage.toString()
+});
 
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-
-		const res = await fetch(`${apiBase}/admin/ledger?${query}`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
-		});
-
-		if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-		const data = await res.json();
-		entries = data.entries || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadLedger');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+type LedgerMeta = { totalCount: number; totalPages: number };
+const { data, error: fetchError } = await adminFetchList<{ entries: LedgerEntry[]; meta: LedgerMeta }>('/admin/ledger', query);
+const entries = data?.entries || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error = fetchError ? t('errors.failedToLoadLedger') : null;
 
 const hasNext = page < meta.totalPages;
 const hasPrev = page > 1;

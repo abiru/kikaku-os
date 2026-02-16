@@ -3,13 +3,10 @@ export const prerender = false;
 
 import { Alert } from '../../components/catalyst/alert-banner';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import InventoryPage from '../../components/admin/InventoryPage';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { t } from '../../i18n';
-
-const apiBase = getApiBase();
-const apiKey = import.meta.env.ADMIN_API_KEY || '';
 
 type InventoryItem = {
 	variant_id: number;
@@ -22,34 +19,13 @@ type InventoryItem = {
 	status: 'ok' | 'low' | 'out';
 };
 
-let inventory: InventoryItem[] = [];
-let error: string | null = null;
-
 // Get filter from query params
 const statusFilter = Astro.url.searchParams.get('status') || '';
 const searchQuery = Astro.url.searchParams.get('q') || '';
 
-// Fetch inventory
-if (apiKey) {
-	try {
-		const res = await fetch(`${apiBase}/admin/inventory`, {
-			headers: { 'x-admin-key': apiKey }
-		});
-
-		if (!res.ok) {
-			const data = await res.json();
-			error = data.message || `API Error: ${res.status}`;
-		} else {
-			const data = await res.json();
-			inventory = data.inventory || [];
-		}
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadProducts');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+const { data, error: fetchError } = await adminFetchList<{ inventory: InventoryItem[] }>('/admin/inventory');
+const inventory = data?.inventory || [];
+const error: string | null = fetchError ? t('errors.failedToLoadProducts') : null;
 
 // Apply filters
 let filteredInventory = inventory;

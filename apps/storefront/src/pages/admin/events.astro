@@ -3,9 +3,9 @@ export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Alert } from '../../components/catalyst/alert-banner';
-import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import EventsTable from '../../components/admin/EventsTable';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { t } from '../../i18n';
 
 type StripeEvent = {
@@ -17,41 +17,23 @@ type StripeEvent = {
 	processed_at: string | null;
 };
 
-const apiBase = getApiBase();
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 50;
 const status = Astro.url.searchParams.get('status') || '';
 const type = Astro.url.searchParams.get('type') || '';
 
-let events: StripeEvent[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error: string | null = null;
+const query = new URLSearchParams({
+	page: page.toString(),
+	perPage: perPage.toString()
+});
+if (status) query.set('status', status);
+if (type) query.set('type', type);
 
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-		if (status) query.set('status', status);
-		if (type) query.set('type', type);
-
-		const res = await fetch(`${apiBase}/admin/stripe-events?${query}`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
-		});
-
-		if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-		const data = await res.json();
-		events = data.events || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		console.error(e);
-		error = t('errors.failedToLoadEvents');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+type EventsMeta = { totalCount: number; totalPages: number };
+const { data, error: fetchError } = await adminFetchList<{ events: StripeEvent[]; meta: EventsMeta }>('/admin/stripe-events', query);
+const events = data?.events || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error: string | null = fetchError ? t('errors.failedToLoadEvents') : null;
 
 const buildFilterUrl = (newStatus: string) => {
 	const params = new URLSearchParams();

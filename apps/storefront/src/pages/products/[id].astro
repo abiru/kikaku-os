@@ -179,7 +179,7 @@ const jsonLdBreadcrumb = product ? {
 } : null;
 ---
 
-<Layout title={product ? `${product.title} - Led Kikaku` : 'Product Detail'} description={product?.description ? product.description.slice(0, 160) : undefined}>
+<Layout title={product ? `${product.title} - Led Kikaku` : 'Product Detail'} description={product?.description ? product.description.slice(0, 160) : undefined} image={product?.image}>
 	{jsonLdProduct && (
 		<script type="application/ld+json" set:html={JSON.stringify(jsonLdProduct)} />
 	)}

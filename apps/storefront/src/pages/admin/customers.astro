@@ -3,13 +3,12 @@ export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Alert } from '../../components/catalyst/alert-banner';
-import { getApiBase } from '../../lib/api';
 import { Heading } from '../../components/catalyst/heading';
 import CustomersTable from '../../components/admin/CustomersTable';
+import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { t } from '../../i18n';
 import { logError } from '../../utils/logger';
 
-const apiBase = getApiBase();
 const q = Astro.url.searchParams.get('q') || '';
 const page = Number(Astro.url.searchParams.get('page') || '1');
 const perPage = 20;
@@ -26,39 +25,17 @@ type Customer = {
 	last_order_date: string | null;
 };
 
-let customers: Customer[] = [];
-let meta = { totalCount: 0, totalPages: 1 };
-let error: string | null = null;
+const query = new URLSearchParams({
+	q,
+	page: page.toString(),
+	perPage: perPage.toString()
+});
 
-// SSR Data Fetching
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const query = new URLSearchParams({
-			q,
-			page: page.toString(),
-			perPage: perPage.toString()
-		});
-
-		const res = await fetch(`${apiBase}/admin/customers?${query}`, {
-			headers: {
-				'x-admin-key': import.meta.env.ADMIN_API_KEY
-			}
-		});
-
-		if (!res.ok) {
-			throw new Error(`API Error: ${res.status}`);
-		}
-
-		const data = await res.json();
-		customers = data.customers || [];
-		meta = data.meta || meta;
-	} catch (e) {
-		logError({ page: 'admin/customers' }, e);
-		error = t('errors.failedToLoadCustomers');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
-}
+type CustomersMeta = { totalCount: number; totalPages: number };
+const { data, error: fetchError } = await adminFetchList<{ customers: Customer[]; meta: CustomersMeta }>('/admin/customers', query);
+const customers = data?.customers || [];
+const meta = data?.meta || { totalCount: 0, totalPages: 1 };
+const error: string | null = fetchError ? t('errors.failedToLoadCustomers') : null;
 
 ---
 
