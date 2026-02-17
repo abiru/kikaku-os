@@ -47,10 +47,14 @@ function ContactFormContent() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchCsrfToken = async () => {
       try {
         const base = getApiBase();
-        const res = await fetch(`${base}/csrf-token`, { credentials: 'include' });
+        const res = await fetch(`${base}/csrf-token`, {
+          credentials: 'include',
+          signal: controller.signal,
+        });
         if (!res.ok) {
           setCsrfError(true);
           return;
@@ -61,11 +65,13 @@ function ContactFormContent() {
           return;
         }
         setCsrfToken(data.token);
-      } catch {
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
         setCsrfError(true);
       }
     };
     fetchCsrfToken();
+    return () => controller.abort();
   }, []);
 
   const handleChange = (field: keyof FormData, value: string) => {
