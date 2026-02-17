@@ -20,6 +20,7 @@ interface Props {
 	description?: string;
 	image?: string;
 	url?: string;
+	disableViewTransitions?: boolean;
 }
 
 const {
@@ -27,6 +28,7 @@ const {
 	description = 'Led Kikaku - LED照明製品のオンラインストア',
 	image,
 	url,
+	disableViewTransitions = false,
 } = Astro.props;
 const siteUrl = Astro.site ?? 'https://led-kikaku.com';
 const canonicalURL = url ? new URL(url, siteUrl) : new URL(Astro.url.pathname, siteUrl);
@@ -66,7 +68,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 			<script set:html={`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtmId}');`} />
 		)}
 
-		<ViewTransitions />
+		{!disableViewTransitions && <ViewTransitions />}
 		<slot name="head" />
 	</head>
 	<body class="font-sans text-primary antialiased bg-subtle">
@@ -145,6 +147,20 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 				</Container>
 			</footer>
 		</div>
+
+		{/* Re-initialize GTM dataLayer on SPA navigation */}
+		{gtmId && (
+			<script is:inline>
+				document.addEventListener('astro:page-load', () => {
+					window.dataLayer = window.dataLayer || [];
+					window.dataLayer.push({
+						'event': 'page_view',
+						'page_location': window.location.href,
+						'page_title': document.title,
+					});
+				});
+			</script>
+		)}
 
 		{/* Search Modal */}
 		<SearchModal client:idle />

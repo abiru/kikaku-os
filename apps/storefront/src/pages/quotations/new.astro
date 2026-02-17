@@ -6,7 +6,7 @@ import { t } from '../../i18n';
 const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 ---
 
-<Layout title={t('quotation.createTitle')}>
+<Layout title={t('quotation.createTitle')} disableViewTransitions>
   <Container class="max-w-[800px] py-8">
     <h1 class="text-3xl mb-2">{t('quotation.createTitle')}</h1>
     <p class="text-secondary mb-8">{t('quotation.createSubtitle')}</p>
