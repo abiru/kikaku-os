@@ -151,6 +151,12 @@ function ContactFormContent() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {csrfError && (
+        <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+          {t('contact.csrfError')}
+        </div>
+      )}
+
       {submitError && (
         <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
           {submitError}
@@ -232,7 +238,7 @@ function ContactFormContent() {
         {errors.body && <p id="contact-body-error" className="mt-1 text-sm text-red-600" role="alert">{errors.body}</p>}
       </Field>
 
-      <Button type="submit" color="dark/zinc" className="w-full" disabled={submitting}>
+      <Button type="submit" color="dark/zinc" className="w-full" disabled={submitting || csrfError}>
         {submitting ? t('contact.submitting') : t('contact.submit')}
       </Button>
     </form>
