@@ -58,6 +58,8 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 					<img
 						src={item.imageUrl}
 						alt={item.title}
+						width={192}
+						height={192}
 						loading="lazy"
 						className="size-24 rounded-md object-cover sm:size-48"
 					/>

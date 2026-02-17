@@ -214,6 +214,8 @@ export default function SearchModal() {
 														<img
 															src={product.image}
 															alt={product.title}
+															width={64}
+															height={64}
 															className="h-full w-full object-cover"
 														/>
 													) : (
