@@ -70,7 +70,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
       </span>
 
       {/* Dot indicators */}
-      <div className="flex items-center gap-2">
+      <ol className="flex items-center gap-2">
         {steps.map((step, index) => {
           const isCompleted = index < currentIndex;
           const isCurrent = index === currentIndex;
@@ -109,7 +109,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
             </li>
           );
         })}
-      </div>
+      </ol>
     </div>
   );
 }

@@ -72,7 +72,7 @@ export function CartOrderSummary({
 
 				{/* Discount Display */}
 				{discount > 0 && (
-					<div className="flex items-center justify-between text-green-600">
+					<div className="flex items-center justify-between text-success">
 						<dt className="text-sm">{t('cart.discount')}</dt>
 						<dd className="text-sm font-medium">
 							-{formatPrice(discount, currency)}
@@ -85,7 +85,7 @@ export function CartOrderSummary({
 					<dt className="text-sm text-neutral-600">{t('cart.shipping')}</dt>
 					<dd className="text-sm font-medium text-neutral-900">
 						{shipping === 0 ? (
-							<span className="text-green-600 font-semibold">
+							<span className="text-success font-semibold">
 								{t('common.free').toUpperCase()}
 							</span>
 						) : (
@@ -124,7 +124,7 @@ export function CartOrderSummary({
 					type="button"
 					onClick={onCheckout}
 					disabled={checkoutDisabled}
-					className={`w-full rounded-full border border-transparent px-4 py-4 text-lg font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-subtle transition-colors inline-flex items-center justify-center gap-2 ${checkoutDisabled ? 'bg-neutral-400 cursor-not-allowed' : 'bg-brand hover:bg-brand-active'}`}
+					className={`w-full rounded-full border border-transparent px-4 py-4 text-lg font-medium text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors inline-flex items-center justify-center gap-2 ${checkoutDisabled ? 'bg-neutral-400 cursor-not-allowed' : 'bg-brand hover:bg-brand-active active:scale-[0.98]'}`}
 				>
 					<svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
 						<path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -133,7 +133,7 @@ export function CartOrderSummary({
 				</button>
 				<a
 					href="/quotations/new"
-					className="w-full block rounded-full border border-neutral-300 bg-white px-4 py-3 text-base font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-neutral-50 transition-colors text-center"
+					className="w-full block rounded-full border border-neutral-300 bg-white px-4 py-3 text-base font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors text-center"
 				>
 					{t('cart.createQuotation')}
 				</a>

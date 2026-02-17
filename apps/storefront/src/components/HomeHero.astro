@@ -1,5 +1,6 @@
 ---
 import { t } from '../i18n';
+import { FOCUS_RING } from '../lib/focusRing';
 
 interface Props {
   title: string;
@@ -48,7 +49,7 @@ const bgSmall = imageSmall || image || bgLarge;
       {ctaPrimaryText && ctaPrimaryUrl && (
         <a
           href={ctaPrimaryUrl}
-          class="w-full sm:w-auto h-12 px-6 py-3 rounded-full bg-brand inline-flex items-center justify-center text-base font-semibold text-white hover:bg-brand-active active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
+          class={`w-full sm:w-auto h-12 px-6 py-3 rounded-full bg-brand inline-flex items-center justify-center text-base font-semibold text-white hover:bg-brand-active active:scale-[0.98] ${FOCUS_RING} transition-colors`}
         >
           {ctaPrimaryText}
         </a>
@@ -56,7 +57,7 @@ const bgSmall = imageSmall || image || bgLarge;
       {ctaSecondaryText && ctaSecondaryUrl && (
         <a
           href={ctaSecondaryUrl}
-          class="w-full sm:w-auto h-12 px-6 py-3 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 inline-flex items-center justify-center text-base font-semibold text-white hover:bg-white/25 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-white/30 transition-colors"
+          class={`w-full sm:w-auto h-12 px-6 py-3 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 inline-flex items-center justify-center text-base font-semibold text-white hover:bg-white/25 active:scale-[0.98] ${FOCUS_RING} transition-colors`}
         >
           {ctaSecondaryText}
         </a>

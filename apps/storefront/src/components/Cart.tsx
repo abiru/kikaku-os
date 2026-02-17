@@ -99,7 +99,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 								}}
 								disabled={item.quantity <= 1}
 								aria-label={t('cart.decreaseQuantity')}
-								className="min-h-[44px] min-w-[44px] rounded-full ring-1 ring-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+								className="min-h-[44px] min-w-[44px] rounded-full ring-1 ring-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
 							>
 								<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
 									<path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
@@ -117,7 +117,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 								}}
 								disabled={item.quantity >= maxQty}
 								aria-label={t('cart.increaseQuantity')}
-								className="min-h-[44px] min-w-[44px] rounded-full ring-1 ring-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+								className="min-h-[44px] min-w-[44px] rounded-full ring-1 ring-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
 							>
 								<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
 									<path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m7-7H5" />
@@ -129,7 +129,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 							<button
 								type="button"
 								onClick={() => removeFromCart(item.variantId)}
-								className="text-sm font-medium text-brand hover:text-brand-active transition-colors"
+								className="min-h-[44px] inline-flex items-center text-sm font-medium text-brand hover:text-brand-active transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
 							>
 								{t('common.remove')}
 							</button>
@@ -246,13 +246,13 @@ function CartContent() {
 
 			<div className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
 				{shippingState === 'error' && (
-					<div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-center">
-						<p className="text-sm text-red-800">{t('cart.shippingConfigError')}</p>
-						<p className="mt-1 text-xs text-red-600">{t('cart.checkoutBlockedByShipping')}</p>
+					<div className="mb-4 rounded-md bg-danger-light border border-danger/20 p-4 text-center">
+						<p className="text-sm text-danger">{t('cart.shippingConfigError')}</p>
+						<p className="mt-1 text-xs text-danger">{t('cart.checkoutBlockedByShipping')}</p>
 						<button
 							type="button"
 							onClick={retryShipping}
-							className="mt-2 text-sm font-medium text-red-700 underline hover:text-red-900"
+							className="mt-2 text-sm font-medium text-danger underline hover:opacity-80"
 						>
 							{t('cart.retry')}
 						</button>

@@ -64,7 +64,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
 
   if (success) {
     return (
-      <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800">
+      <div className="rounded-lg bg-success-light border border-success/20 p-4 text-sm text-success">
         {t('reviews.submitSuccess')}
       </div>
     );
@@ -142,7 +142,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
         />
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <button
         type="submit"
