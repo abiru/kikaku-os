@@ -3,6 +3,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // We need to test the module in isolation, so we re-implement the tests
 // by mocking window.Clerk at different states
 
+function setWindowClerk(value: unknown) {
+  Object.defineProperty(window, 'Clerk', { value, writable: true, configurable: true });
+}
+
 describe('clerk.ts', () => {
   let getToken: typeof import('../lib/clerk').getToken;
   let isSignedIn: typeof import('../lib/clerk').isSignedIn;
@@ -15,7 +19,7 @@ describe('clerk.ts', () => {
     vi.resetModules();
 
     // Ensure window exists (jsdom)
-    (window as Record<string, unknown>).Clerk = undefined;
+    setWindowClerk(undefined);
 
     const mod = await import('../lib/clerk');
     getToken = mod.getToken;
@@ -27,13 +31,13 @@ describe('clerk.ts', () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    (window as Record<string, unknown>).Clerk = undefined;
+    setWindowClerk(undefined);
   });
 
   describe('waitForClerk (via getClerk)', () => {
     it('resolves immediately when Clerk is already loaded', async () => {
       const mockClerk = { loaded: true, session: null, user: null, signOut: vi.fn() };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       const result = await getClerk();
       expect(result).toBe(mockClerk);
@@ -43,13 +47,13 @@ describe('clerk.ts', () => {
       const mockClerk = { loaded: true, session: null, user: null, signOut: vi.fn() };
 
       // Clerk not ready initially
-      (window as Record<string, unknown>).Clerk = { loaded: false };
+      setWindowClerk({ loaded: false });
 
       const promise = getClerk();
 
       // Advance a few intervals, then make Clerk ready
       await vi.advanceTimersByTimeAsync(300);
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
       await vi.advanceTimersByTimeAsync(100);
 
       const result = await promise;
@@ -57,7 +61,7 @@ describe('clerk.ts', () => {
     });
 
     it('returns null (rejects internally) when Clerk fails to load within timeout', async () => {
-      (window as Record<string, unknown>).Clerk = { loaded: false };
+      setWindowClerk({ loaded: false });
 
       const promise = getClerk();
 
@@ -79,7 +83,7 @@ describe('clerk.ts', () => {
         user: null,
         signOut: vi.fn(),
       };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       const token = await getToken();
       expect(token).toBe('test-token-123');
@@ -92,7 +96,7 @@ describe('clerk.ts', () => {
         user: null,
         signOut: vi.fn(),
       };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       const token = await getToken();
       expect(token).toBeNull();
@@ -107,14 +111,14 @@ describe('clerk.ts', () => {
         user: null,
         signOut: vi.fn(),
       };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       const token = await getToken();
       expect(token).toBeNull();
     });
 
     it('returns null when Clerk fails to load', async () => {
-      (window as Record<string, unknown>).Clerk = { loaded: false };
+      setWindowClerk({ loaded: false });
 
       const promise = getToken();
       await vi.advanceTimersByTimeAsync(10_100);
@@ -132,7 +136,7 @@ describe('clerk.ts', () => {
         user: null,
         signOut: vi.fn(),
       };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       const result = await isSignedIn();
       expect(result).toBe(true);
@@ -145,14 +149,14 @@ describe('clerk.ts', () => {
         user: null,
         signOut: vi.fn(),
       };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       const result = await isSignedIn();
       expect(result).toBe(false);
     });
 
     it('returns false when Clerk fails to load', async () => {
-      (window as Record<string, unknown>).Clerk = { loaded: false };
+      setWindowClerk({ loaded: false });
 
       const promise = isSignedIn();
       await vi.advanceTimersByTimeAsync(10_100);
@@ -171,7 +175,7 @@ describe('clerk.ts', () => {
         user: mockUser,
         signOut: vi.fn(),
       };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       const user = await getCurrentUser();
       expect(user).toBe(mockUser);
@@ -184,14 +188,14 @@ describe('clerk.ts', () => {
         user: null,
         signOut: vi.fn(),
       };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       const user = await getCurrentUser();
       expect(user).toBeNull();
     });
 
     it('returns null when Clerk fails to load', async () => {
-      (window as Record<string, unknown>).Clerk = { loaded: false };
+      setWindowClerk({ loaded: false });
 
       const promise = getCurrentUser();
       await vi.advanceTimersByTimeAsync(10_100);
@@ -210,7 +214,7 @@ describe('clerk.ts', () => {
         user: null,
         signOut: mockSignOut,
       };
-      (window as Record<string, unknown>).Clerk = mockClerk;
+      setWindowClerk(mockClerk);
 
       await signOut();
       expect(mockSignOut).toHaveBeenCalled();
