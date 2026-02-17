@@ -250,6 +250,23 @@ const {
 		mobileMenuBtn.addEventListener('click', openMobileMenu);
 		mobileMenuClose?.addEventListener('click', closeMobileMenu);
 		mobileMenuOverlay?.addEventListener('click', closeMobileMenu);
+
+		// Close menu when navigation links are tapped
+		mobileMenu.addEventListener('click', (e) => {
+			const anchor = (e.target as HTMLElement).closest('a[href]');
+			if (anchor) {
+				closeMobileMenu();
+			}
+		});
+
+		// Reset menu state after View Transitions page swap
+		document.addEventListener('astro:after-swap', () => {
+			mobileMenu.classList.add('translate-x-full');
+			mobileMenuOverlay?.classList.add('hidden');
+			mobileMenuBtn.setAttribute('aria-expanded', 'false');
+			document.body.style.overflow = '';
+			document.removeEventListener('keydown', handleTrapKeydown);
+		});
 	}
 
 	// Remove clerk skeleton placeholder when Clerk initializes
