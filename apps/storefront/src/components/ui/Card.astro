@@ -1,0 +1,27 @@
+---
+interface Props {
+  variant?: 'default' | 'hover' | 'skeleton';
+  class?: string;
+  [key: string]: unknown;
+}
+
+const {
+  variant = 'default',
+  class: className = '',
+  ...rest
+} = Astro.props;
+
+const baseClasses = 'rounded-2xl bg-white ring-1 ring-black/5';
+
+const variantClasses: Record<string, string> = {
+  default: 'shadow-card',
+  hover: 'shadow-card transition-all duration-[var(--duration-normal)] hover:shadow-elevated hover:scale-[1.01]',
+  skeleton: 'shadow-card animate-shimmer',
+};
+
+const classes = [baseClasses, variantClasses[variant], className].join(' ');
+---
+
+<div class={classes} {...rest}>
+  <slot />
+</div>
