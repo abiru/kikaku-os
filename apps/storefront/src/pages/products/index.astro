@@ -1,16 +1,14 @@
 ---
-import { Badge } from '../../components/catalyst/badge';
+import Breadcrumb from '../../components/Breadcrumb.astro';
 import Container from '../../components/Container.astro';
-import EmptyState from '../../components/EmptyState.astro';
 import Layout from '../../layouts/Layout.astro';
 import ProductFilters from '../../components/ProductFilters';
+import ProductGrid from '../../components/ProductGrid';
 import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 import { formatPrice } from '../../lib/format';
 import { t } from '../../i18n';
 
 export const prerender = false;
-
-const skeletonCards = Array.from({ length: 6 });
 
 // SSR: Fetch initial products for SEO
 type SSRProduct = {
@@ -71,7 +69,12 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 		<script type="application/ld+json" set:html={JSON.stringify(jsonLdItemList)} />
 	)}
 	<div class="bg-white min-h-screen">
-		<section class="pt-24 pb-12 sm:pt-32 border-b border-gray-200">
+		<Breadcrumb items={[
+			{ label: t('breadcrumb.home'), href: '/' },
+			{ label: t('products.title') },
+		]} />
+
+		<section class="pt-24 pb-12 sm:pt-32 border-b border-neutral-200">
 			<Container>
 				<h1 class="text-4xl font-semibold tracking-tight text-primary md:text-5xl">
 					{t('products.title')} <span class="text-secondary">{t('products.subtitle')}</span>
@@ -81,42 +84,22 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 
 		<section class="py-12 bg-subtle">
 			<Container>
-				<div id="search-info" class="hidden mb-6">
-					<div class="flex items-center justify-between">
-						<p class="text-gray-600">
-							{t('products.showingResultsFor')} "<span id="search-term"></span>"
-						</p>
-						<a href="/products" class="text-sm font-medium text-brand hover:text-brand-active">
-							{t('products.clearSearch')}
-						</a>
-					</div>
-				</div>
-
-				<div id="filter-info" class="hidden mb-6">
-					<div class="flex items-center gap-2 flex-wrap">
-						<span class="text-gray-600">{t('products.activeFilters')}:</span>
-						<span id="active-filters" class="flex items-center gap-2"></span>
-					</div>
-				</div>
-
 				<div class="flex items-center justify-between mb-8">
-					<h2 id="section-title" class="text-2xl font-semibold tracking-tight text-primary">{t('products.theLatest')}</h2>
+					<h2 class="text-2xl font-semibold tracking-tight text-primary">{t('products.theLatest')}</h2>
 					<div class="flex items-center gap-3">
-						{/* Sort Dropdown */}
 						<select
 							id="sort-select"
-							class="px-3 py-2 min-h-[44px] text-sm font-medium text-primary bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-gray-50 transition-colors appearance-none pr-8 cursor-pointer"
+							class="px-3 py-2 min-h-[44px] text-sm font-medium text-primary bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-neutral-50 transition-colors appearance-none pr-8 cursor-pointer"
 							aria-label={t('products.sortLabel')}
 						>
 							<option value="newest">{t('products.sortNewest')}</option>
 							<option value="price_asc">{t('products.sortPriceAsc')}</option>
 							<option value="price_desc">{t('products.sortPriceDesc')}</option>
 						</select>
-						{/* Mobile Filter Button */}
 						<button
 							id="mobile-filter-btn"
 							type="button"
-							class="lg:hidden inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-sm font-medium text-primary bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-gray-50 transition-colors relative"
+							class="lg:hidden inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-sm font-medium text-primary bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-neutral-50 transition-colors relative"
 							aria-label={t('filters.showFilters')}
 						>
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -126,7 +109,6 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 								class="hidden absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-brand rounded-full"
 							></span>
 						</button>
-						<Badge color="green" client:load>{t('products.newArrivals')}</Badge>
 					</div>
 				</div>
 
@@ -139,7 +121,7 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 					aria-modal="true"
 					aria-label={t('filters.showFilters')}
 				>
-					<div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+					<div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
 						<h2 class="text-lg font-semibold text-primary">{t('products.filters')}</h2>
 						<button
 							id="mobile-filter-close"
@@ -156,9 +138,9 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 				</div>
 
 				<div class="flex gap-8">
-					{/* Filter Sidebar - Desktop only */}
+					{/* Filter Sidebar - Desktop */}
 					<aside class="hidden lg:block w-64 flex-shrink-0" aria-label={t('products.filters')}>
-						<div class="sticky top-20 bg-white rounded-2xl p-6 shadow-sm ring-1 ring-black/5">
+						<div class="sticky top-24 bg-white rounded-2xl p-6 shadow-sm ring-1 ring-black/5">
 							<h2 class="text-lg font-semibold text-primary mb-4">{t('products.filters')}</h2>
 							<ProductFilters client:only="react" />
 						</div>
@@ -166,100 +148,7 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 
 					{/* Product Grid */}
 					<div class="flex-1">
-						<div id="product-state">
-							{/* Skeleton State */}
-							<div id="product-skeleton" class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:gap-8">
-								{skeletonCards.map(() => (
-									<div class="group relative flex flex-col overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-lg">
-										<div class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-subtle"></div>
-										<div class="mt-6 flex flex-col gap-2">
-											<div class="h-4 w-24 bg-gray-100 rounded-full"></div>
-											<div class="h-6 w-48 bg-gray-100 rounded-lg"></div>
-											<div class="mt-2 h-4 w-16 bg-gray-100 rounded-full"></div>
-										</div>
-									</div>
-								))}
-							</div>
-
-							{/* Error State */}
-							<div id="product-error" class="hidden py-20">
-								<div id="error-content" class="rounded-3xl border border-dashed border-zinc-200 bg-white p-8">
-									<div class="mx-auto max-w-md text-center">
-										<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-500">
-											<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-6 w-6" aria-hidden="true">
-												<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-											</svg>
-										</div>
-										<h2 id="error-title" class="mt-4 text-lg font-semibold text-zinc-900">{t('errors.storeUnavailable')}</h2>
-										<p id="error-description" class="mt-2 text-sm text-zinc-500">{t('errors.storeUnavailableDescription')}</p>
-										<div class="mt-6 flex justify-center">
-											<button id="error-retry-btn" type="button" class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 transition-colors">
-												<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-													<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-												</svg>
-												{t('errors.retry')}
-											</button>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							{/* Empty State */}
-							<div id="product-empty" class="hidden py-20">
-								<EmptyState
-									title={t('products.noProducts')}
-									description={t('products.noProductsDescription')}
-									ctaLabel={t('products.viewAllProducts')}
-									ctaHref="/products"
-								/>
-							</div>
-
-							{/* Loaded Grid */}
-							<div id="product-grid" class="hidden grid grid-cols-1 gap-6 sm:grid-cols-2 xl:gap-8"></div>
-						</div>
-
-						{/* i18n data for client script */}
-						<div
-							id="i18n-data"
-							class="hidden"
-							data-new={t('products.new')}
-							data-from={t('products.from')}
-							data-buy={t('products.buy')}
-							data-search-results={t('products.searchResults')}
-							data-filtered-results={t('products.filteredResults')}
-							data-showing-count={t('products.showingCount')}
-							data-page-info={t('products.pageInfo')}
-							data-price-above={t('products.priceAbove')}
-							data-price-up-to={t('products.priceUpTo')}
-							data-domestic-shipping={t('category.domesticShipping')}
-							data-international-shipping={t('category.internationalShipping')}
-							data-error-network={t('errors.networkError')}
-							data-error-network-desc={t('errors.networkErrorDescription')}
-							data-error-server={t('errors.serverError')}
-							data-error-server-desc={t('errors.serverErrorDescription')}
-							data-error-not-found={t('errors.notFoundError')}
-							data-error-not-found-desc={t('errors.notFoundErrorDescription')}
-							data-error-generic={t('errors.storeUnavailable')}
-							data-error-generic-desc={t('errors.storeUnavailableDescription')}
-							data-announce-count={t('products.announceCount')}
-							data-wishlist-label={t('wishlist.addToWishlist')}
-						></div>
-
-						{/* Pagination */}
-						<nav id="pagination" class="hidden mt-12 flex items-center justify-between border-t border-gray-200 pt-6" aria-label={t('products.pagination')}>
-							<div class="text-sm text-gray-600">
-								<span id="pagination-info"></span>
-							</div>
-							<div class="flex gap-2">
-								<a id="prev-page" href="#" class="hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-									← {t('common.previous')}
-								</a>
-								<span id="current-page" class="px-4 py-2 text-sm font-medium text-gray-900" aria-current="page"></span>
-								<a id="next-page" href="#" class="hidden px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-									{t('common.next')} →
-								</a>
-							</div>
-						</nav>
+						<ProductGrid client:only="react" />
 					</div>
 				</div>
 			</Container>
@@ -288,6 +177,80 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 	)}
 
 	<script>
-		import '../../scripts/productList';
+		// Sort select handler
+		const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
+		if (sortSelect) {
+			const currentSort = new URLSearchParams(window.location.search).get('sort') || 'newest';
+			sortSelect.value = currentSort;
+			sortSelect.addEventListener('change', () => {
+				const params = new URLSearchParams(window.location.search);
+				if (sortSelect.value && sortSelect.value !== 'newest') {
+					params.set('sort', sortSelect.value);
+				} else {
+					params.delete('sort');
+				}
+				params.delete('page');
+				const newUrl = params.toString()
+					? `${window.location.pathname}?${params.toString()}`
+					: window.location.pathname;
+				window.location.href = newUrl;
+			});
+		}
+
+		// Mobile filter bottom sheet
+		const mobileFilterBtn = document.getElementById('mobile-filter-btn');
+		const mobileFilterSheet = document.getElementById('mobile-filter-sheet');
+		const mobileFilterOverlay = document.getElementById('mobile-filter-overlay');
+		const mobileFilterClose = document.getElementById('mobile-filter-close');
+
+		if (mobileFilterBtn && mobileFilterSheet && mobileFilterOverlay) {
+			const getFocusableElements = (): HTMLElement[] => {
+				const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+				return Array.from(mobileFilterSheet.querySelectorAll<HTMLElement>(selector));
+			};
+
+			const handleTrapKeydown = (e: KeyboardEvent) => {
+				if (e.key === 'Escape') {
+					closeFilters();
+					return;
+				}
+				if (e.key !== 'Tab') return;
+				const focusable = getFocusableElements();
+				if (focusable.length === 0) return;
+				const first = focusable[0]!;
+				const last = focusable[focusable.length - 1]!;
+				if (e.shiftKey) {
+					if (document.activeElement === first) {
+						e.preventDefault();
+						last.focus();
+					}
+				} else {
+					if (document.activeElement === last) {
+						e.preventDefault();
+						first.focus();
+					}
+				}
+			};
+
+			const openFilters = () => {
+				mobileFilterSheet.classList.remove('translate-y-full');
+				mobileFilterOverlay.classList.remove('hidden');
+				document.body.style.overflow = 'hidden';
+				document.addEventListener('keydown', handleTrapKeydown);
+				mobileFilterClose?.focus();
+			};
+
+			const closeFilters = () => {
+				mobileFilterSheet.classList.add('translate-y-full');
+				mobileFilterOverlay.classList.add('hidden');
+				document.body.style.overflow = '';
+				document.removeEventListener('keydown', handleTrapKeydown);
+				mobileFilterBtn.focus();
+			};
+
+			mobileFilterBtn.addEventListener('click', openFilters);
+			mobileFilterClose?.addEventListener('click', closeFilters);
+			mobileFilterOverlay.addEventListener('click', closeFilters);
+		}
 	</script>
 </Layout>

@@ -23,14 +23,14 @@ import { formatPrice } from '../lib/format';
 function EmptyCart() {
 	const { t } = useTranslation();
 	return (
-		<div className="text-center py-16">
-			<svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+		<div className="text-center py-24 px-4">
+			<svg className="mx-auto h-20 w-20 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1" aria-hidden="true">
 				<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
 			</svg>
-			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('cart.empty')}</h2>
-			<p className="mt-2 text-sm text-gray-500">{t('cart.emptyDescription')}</p>
-			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-full bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
+			<h2 className="mt-6 text-xl font-semibold text-neutral-900">{t('cart.empty')}</h2>
+			<p className="mt-2 text-base text-neutral-500 max-w-sm mx-auto">{t('cart.emptyDescription')}</p>
+			<div className="mt-8">
+				<a href="/products" className="inline-flex items-center rounded-full bg-brand px-6 py-3 text-base font-medium text-white hover:bg-brand-active transition-colors">
 					{t('cart.browseProducts')}
 				</a>
 			</div>
@@ -40,16 +40,13 @@ function EmptyCart() {
 
 const MAX_QUANTITY = 99;
 
-function buildQuantityOptions(currentQuantity: number, stock?: number): number[] {
-	const max = stock !== undefined ? Math.min(stock, MAX_QUANTITY) : MAX_QUANTITY;
-	const safeMax = Math.max(max, currentQuantity);
-	const count = Math.min(safeMax, MAX_QUANTITY);
-	return Array.from({ length: count }, (_, i) => i + 1);
+function getMaxQuantity(stock?: number): number {
+	return stock !== undefined ? Math.min(stock, MAX_QUANTITY) : MAX_QUANTITY;
 }
 
 function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HTMLLIElement> }) {
 	const { t } = useTranslation();
-	const quantityOptions = buildQuantityOptions(item.quantity, item.stock);
+	const maxQty = getMaxQuantity(item.stock);
 
 	return (
 		<li ref={itemRef} className="flex py-6 sm:py-10">
@@ -61,11 +58,11 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 						width={192}
 						height={192}
 						loading="lazy"
-						className="size-24 rounded-md object-cover sm:size-48"
+						className="size-24 rounded-xl object-cover sm:size-48"
 					/>
 				) : (
-					<div className="size-24 rounded-md bg-gray-100 flex items-center justify-center sm:size-48" aria-hidden="true">
-						<svg className="size-8 text-gray-300 sm:size-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<div className="size-24 rounded-xl bg-neutral-100 flex items-center justify-center sm:size-48" aria-hidden="true">
+						<svg className="size-8 text-neutral-300 sm:size-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
 							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
 						</svg>
@@ -78,51 +75,63 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 					<div>
 						<div className="flex justify-between">
 							<h3 className="text-sm">
-								<a href={`/products/${item.productId}`} className="font-medium text-gray-700 hover:text-gray-800">
+								<a href={`/products/${item.productId}`} className="font-medium text-neutral-700 hover:text-neutral-800">
 									{item.title}
 								</a>
 							</h3>
 						</div>
 						{item.variantTitle && item.variantTitle !== 'Default' && (
 							<div className="mt-1 flex text-sm">
-								<p className="text-gray-500">{item.variantTitle}</p>
+								<p className="text-neutral-500">{item.variantTitle}</p>
 							</div>
 						)}
-						<p className="mt-1 text-sm font-medium text-gray-900">{formatPrice(item.price, item.currency)}</p>
+						<p className="mt-1 text-sm font-medium text-neutral-900">{formatPrice(item.price, item.currency)}</p>
 					</div>
 
 					<div className="mt-4 sm:mt-0 sm:pr-9">
-						<div className="grid w-full max-w-16 grid-cols-1">
-							<select
-								value={item.quantity}
-								onChange={(e) => {
-									const val = Number(e.target.value);
-									if (val > 0 && (item.stock === undefined || val <= item.stock)) {
-										updateQuantity(item.variantId, val);
+						<div className="flex items-center gap-2" role="group" aria-label={t('cart.quantityLabel', { title: item.title })}>
+							<button
+								type="button"
+								onClick={() => {
+									if (item.quantity > 1) {
+										updateQuantity(item.variantId, item.quantity - 1);
 									}
 								}}
-								aria-label={t('cart.quantityLabel', { title: item.title })}
-								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand sm:text-sm"
+								disabled={item.quantity <= 1}
+								aria-label={t('cart.decreaseQuantity')}
+								className="min-h-[44px] min-w-[44px] rounded-full ring-1 ring-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 							>
-								{quantityOptions.map((n) => (
-									<option key={n} value={n}>{n}</option>
-								))}
-							</select>
-							<svg className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-								<path fillRule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-							</svg>
+								<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+									<path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+								</svg>
+							</button>
+							<span className="min-w-[2rem] text-center text-sm font-medium text-neutral-900" aria-live="polite">
+								{item.quantity}
+							</span>
+							<button
+								type="button"
+								onClick={() => {
+									if (item.quantity < maxQty) {
+										updateQuantity(item.variantId, item.quantity + 1);
+									}
+								}}
+								disabled={item.quantity >= maxQty}
+								aria-label={t('cart.increaseQuantity')}
+								className="min-h-[44px] min-w-[44px] rounded-full ring-1 ring-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+							>
+								<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+									<path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m7-7H5" />
+								</svg>
+							</button>
 						</div>
 
-						<div className="absolute top-0 right-0">
+						<div className="mt-2 sm:absolute sm:top-0 sm:right-0 sm:mt-0">
 							<button
 								type="button"
 								onClick={() => removeFromCart(item.variantId)}
-								className="-m-2 inline-flex p-2 text-gray-400 hover:text-gray-500"
+								className="text-sm font-medium text-brand hover:text-brand-active transition-colors"
 							>
-								<span className="sr-only">{t('common.remove')}</span>
-								<svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-									<path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-								</svg>
+								{t('common.remove')}
 							</button>
 						</div>
 					</div>
@@ -218,7 +227,7 @@ function CartContent() {
 			</div>
 			<section aria-labelledby="cart-heading" className="lg:col-span-7">
 				<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
-				<ul role="list" className="divide-y divide-gray-200 border-t border-b border-gray-200">
+				<ul role="list" className="divide-y divide-neutral-200 border-t border-b border-neutral-200">
 					{items.map((item) => (
 						<CartItemRow
 							key={item.variantId}
@@ -235,7 +244,7 @@ function CartContent() {
 				</ul>
 			</section>
 
-			<div className="lg:col-span-5">
+			<div className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
 				{shippingState === 'error' && (
 					<div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-center">
 						<p className="text-sm text-red-800">{t('cart.shippingConfigError')}</p>

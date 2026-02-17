@@ -18,7 +18,7 @@ const {
 } = Astro.props;
 ---
 
-<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50" role="banner">
+<header class="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl shadow-[var(--shadow-subtle)]" role="banner">
 	<Container class="flex h-[48px] items-center justify-between">
 		{/* Logo Area */}
 		<a href="/" class="flex items-center gap-2 group transition-opacity hover:opacity-80">
@@ -74,7 +74,7 @@ const {
 			<div id="clerk-auth" class="relative min-w-[56px] min-h-[28px] flex items-center justify-end">
 				<div
 					id="clerk-skeleton"
-					class="absolute right-0 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-gray-200/60 animate-pulse pointer-events-none"
+					class="absolute right-0 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-neutral-200/60 animate-pulse pointer-events-none"
 					aria-hidden="true"
 				></div>
 				{showAuthToggle ? (
@@ -111,8 +111,8 @@ const {
 	<>
 		{/* Mobile slide-out menu */}
 		<div id="mobile-menu-overlay" class="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm hidden" aria-hidden="true"></div>
-		<nav id="mobile-menu" class="fixed top-0 right-0 z-[70] h-full w-[280px] bg-white shadow-xl transform translate-x-full transition-transform duration-300 ease-in-out" aria-label={t('nav.mobileMenu')}>
-			<div class="flex items-center justify-between h-[48px] px-6 border-b border-gray-100">
+		<nav id="mobile-menu" class="fixed top-0 right-0 z-[70] h-full w-[280px] bg-white shadow-[var(--shadow-overlay)] transform translate-x-full transition-transform duration-300 ease-in-out" aria-label={t('nav.mobileMenu')}>
+			<div class="flex items-center justify-between h-[48px] px-6 border-b border-neutral-100">
 				<span class="text-[15px] font-semibold">{t('nav.menu')}</span>
 				<button
 					id="mobile-menu-close"
@@ -124,15 +124,15 @@ const {
 				</button>
 			</div>
 			<div class="px-6 py-4 space-y-1">
-				<a href="/" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.store')}</a>
-				<a href="/products" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/products') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.products')}</a>
-				<a href="/categories" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/categories') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.categories')}</a>
-				<a href="/faq" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/faq' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.faq')}</a>
-				<a href="/contact" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/contact' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.support')}</a>
-				<a href="/quotations/new" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath.startsWith('/quotations') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.quotation')}</a>
-				<a href="/about" class={`block py-3 text-[15px] border-b border-gray-100 transition-colors hover:text-brand ${currentPath === '/about' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.about')}</a>
-				<a href="/wishlist" class="block py-3 text-[15px] border-b border-gray-100 text-primary transition-colors hover:text-brand">{t('wishlist.openWishlist')}</a>
-				<a href="/cart" class="block py-3 text-[15px] border-b border-gray-100 text-primary transition-colors hover:text-brand">{t('nav.openCart')}</a>
+				<a href="/" class={`block py-3 text-[15px] border-b border-neutral-100 transition-colors hover:text-brand ${currentPath === '/' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.store')}</a>
+				<a href="/products" class={`block py-3 text-[15px] border-b border-neutral-100 transition-colors hover:text-brand ${currentPath.startsWith('/products') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.products')}</a>
+				<a href="/categories" class={`block py-3 text-[15px] border-b border-neutral-100 transition-colors hover:text-brand ${currentPath.startsWith('/categories') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.categories')}</a>
+				<a href="/faq" class={`block py-3 text-[15px] border-b border-neutral-100 transition-colors hover:text-brand ${currentPath === '/faq' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.faq')}</a>
+				<a href="/contact" class={`block py-3 text-[15px] border-b border-neutral-100 transition-colors hover:text-brand ${currentPath === '/contact' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.support')}</a>
+				<a href="/quotations/new" class={`block py-3 text-[15px] border-b border-neutral-100 transition-colors hover:text-brand ${currentPath.startsWith('/quotations') ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.quotation')}</a>
+				<a href="/about" class={`block py-3 text-[15px] border-b border-neutral-100 transition-colors hover:text-brand ${currentPath === '/about' ? 'text-brand font-medium' : 'text-primary'}`}>{t('nav.about')}</a>
+				<a href="/wishlist" class="block py-3 text-[15px] border-b border-neutral-100 text-primary transition-colors hover:text-brand">{t('wishlist.openWishlist')}</a>
+				<a href="/cart" class="block py-3 text-[15px] border-b border-neutral-100 text-primary transition-colors hover:text-brand">{t('nav.openCart')}</a>
 			</div>
 		</nav>
 	</>

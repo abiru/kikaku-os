@@ -232,17 +232,17 @@ const jsonLdBreadcrumb = product ? {
 						{breadcrumbs.map((breadcrumb) => (
 							<li>
 								<div class="flex items-center">
-									<a href={breadcrumb.href} class="mr-4 text-sm font-medium text-gray-900 hover:text-gray-600">
+									<a href={breadcrumb.href} class="mr-4 text-sm font-medium text-neutral-900 hover:text-neutral-600">
 										{breadcrumb.name}
 									</a>
-									<svg viewBox="0 0 6 20" aria-hidden="true" class="h-5 w-auto text-gray-300">
+									<svg viewBox="0 0 6 20" aria-hidden="true" class="h-5 w-auto text-neutral-300">
 										<path d="M4.878 4.34H3.551L.27 16.532h1.327l3.281-12.19z" fill="currentColor" />
 									</svg>
 								</div>
 							</li>
 						))}
 						<li class="text-sm">
-							<span aria-current="page" class="font-medium text-gray-500">
+							<span aria-current="page" class="font-medium text-neutral-500">
 								{product.title}
 							</span>
 						</li>
@@ -253,11 +253,12 @@ const jsonLdBreadcrumb = product ? {
 					<div class="lg:grid lg:auto-rows-min lg:grid-cols-12 lg:gap-x-8">
 						{/* Product title and price */}
 						<div class="lg:col-span-5 lg:col-start-8">
-							<div class="flex justify-between items-start">
-								<h1 class="text-xl font-medium text-gray-900">{product.title}</h1>
-								<div class="flex items-center gap-2">
-									<p class="text-xl font-medium text-gray-900">{priceLabel}</p>
-									<WishlistButton
+							<div class="flex items-start justify-between gap-4">
+								<div>
+									<h1 class="text-2xl lg:text-3xl font-semibold text-primary">{product.title}</h1>
+									<p class="mt-2 text-xl text-primary">{priceLabel}</p>
+								</div>
+								<WishlistButton
 										client:only="react"
 										product={{
 											productId: product.id,
@@ -271,7 +272,6 @@ const jsonLdBreadcrumb = product ? {
 										}}
 										size="lg"
 									/>
-								</div>
 							</div>
 
 							{/* Share Buttons */}
@@ -284,18 +284,18 @@ const jsonLdBreadcrumb = product ? {
 										{stockValue > 0 ? (
 											<>
 												<div class="flex items-center">
-													<svg class="size-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+													<svg class="size-5 text-success" viewBox="0 0 20 20" fill="currentColor">
 														<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
 													</svg>
-													<p class="ml-2 text-sm text-gray-700">{t('product.inStock')} ({stockValue})</p>
+													<p class="ml-2 text-sm text-neutral-700">{t('product.inStock')} ({stockValue})</p>
 												</div>
 												{stockValue <= 3 && (
-													<p class="mt-1 text-sm font-medium text-orange-600">{t('product.lowStock', { stock: String(stockValue) })}</p>
+													<p class="mt-1 text-sm font-medium text-warning">{t('product.lowStock', { stock: String(stockValue) })}</p>
 												)}
 											</>
 										) : (
 											<>
-												<p class="text-sm text-gray-500">{t('product.checkAvailability')}</p>
+												<p class="text-sm text-neutral-500">{t('product.checkAvailability')}</p>
 												<RestockNotification client:only="react" productId={product.id} />
 											</>
 										)}
@@ -305,33 +305,33 @@ const jsonLdBreadcrumb = product ? {
 						</div>
 
 						{/* Image gallery */}
-						<ProductImageGallery images={productImages} />
+						<ProductImageGallery productId={id} images={productImages} />
 
 						<div class="mt-8 lg:col-span-5">
 							<ProductVariantSelector variantId={variantId} addedToCartLabel={t('wishlist.addedToCart')} />
 
 							{/* Product description */}
 							<div class="mt-10">
-								<h2 class="text-sm font-medium text-gray-900">{t('product.description')}</h2>
+								<h2 class="text-sm font-medium text-neutral-900">{t('product.description')}</h2>
 
 								{product.description ? (
 									<div
-										class="mt-4 space-y-4 text-sm leading-6 text-gray-500 product-description"
+										class="mt-4 space-y-4 text-sm leading-6 text-neutral-500 product-description"
 										set:html={renderMarkdown(product.description)}
 									/>
 								) : (
-									<p class="mt-4 text-sm leading-6 text-gray-500">
+									<p class="mt-4 text-sm leading-6 text-neutral-500">
 										{t('product.noDescription')}
 									</p>
 								)}
 							</div>
 
 							{/* Product details */}
-							<div class="mt-8 border-t border-gray-200 pt-8">
-								<h2 class="text-sm font-medium text-gray-900">{t('product.details')}</h2>
+							<div class="mt-8 border-t border-neutral-200 pt-8">
+								<h2 class="text-sm font-medium text-neutral-900">{t('product.details')}</h2>
 
 								<div class="mt-4">
-									<ul role="list" class="list-disc space-y-1 pl-5 text-sm leading-6 text-gray-500 marker:text-gray-300">
+									<ul role="list" class="list-disc space-y-1 pl-5 text-sm leading-6 text-neutral-500 marker:text-neutral-300">
 										{productDetails.map((item: string) => (
 											<li class="pl-2">{item}</li>
 										))}
@@ -379,7 +379,7 @@ const jsonLdBreadcrumb = product ? {
 		.product-description h2,
 		.product-description h3,
 		.product-description h4 {
-			color: #1f2937;
+			color: var(--color-neutral-800);
 			font-weight: 600;
 			margin-top: 1.5em;
 			margin-bottom: 0.5em;
@@ -392,9 +392,9 @@ const jsonLdBreadcrumb = product ? {
 			padding-left: 1.5em;
 		}
 		.product-description li { margin-bottom: 0.5em; }
-		.product-description strong { color: #1f2937; }
+		.product-description strong { color: var(--color-neutral-800); }
 		.product-description a {
-			color: #0071e3;
+			color: var(--color-brand);
 			text-decoration: underline;
 		}
 	</style>

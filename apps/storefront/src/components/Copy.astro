@@ -1,44 +1,28 @@
 
 ---
 import { t } from '../i18n';
+import Button from './ui/Button.astro';
 
 const h1 = [t('home.heroCopy1'), t('home.heroCopy2')];
 
 ---
 
-
-	<div class="bg-subtle">
-		<section class="relative w-full pt-20 pb-24 text-center lg:py-10">
-			<div class="mx-auto max-w-[980px] px-6">
-				<h1 class="text-5xl font-bold tracking-tight md:text-7xl gradient-text">
-          {h1[0]}
-          <span>{h1[1]}</span>
-				</h1>
-				<p class="mx-auto mt-4 max-w-2xl text-base font-medium text-primary md:text-lg embossed-text">
-        {t('home.heroTagline')}<br class="hidden md:block" />{t('home.heroSubtagline')}
-				</p>
-				<div class="mt-10 flex items-center justify-center gap-4">
-					<a href="/products" class="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white hover:bg-brand-active transition-colors">
-						{t('home.viewProducts')}
-					</a>
-					<a href="/products" class="text-sm font-semibold text-brand hover:underline">
-						{t('home.learnMore')} &gt;
-					</a>
-				</div>
-			</div>
-
-		</section>
-    </div>
-
-<style>
-  .gradient-text {
-    line-height: 1.2;
-    padding-bottom: 0.1em;
-  }
-
-  .embossed-text {
-    text-shadow:
-      1px 1px 0 rgba(255, 255, 255, 0.8),
-      -1px -1px 0 rgba(0, 0, 0, 0.15);
-  }
-</style>
+<section class="bg-white pt-28 pb-32 lg:pt-36 lg:pb-40 text-center" data-reveal>
+	<div class="mx-auto max-w-[980px] px-6">
+		<h1 class="text-6xl font-bold tracking-tight md:text-8xl leading-[1.2] bg-gradient-to-r from-neutral-900 via-brand to-neutral-600 bg-clip-text text-transparent pb-[0.1em]">
+			{h1[0]}
+			<span>{h1[1]}</span>
+		</h1>
+		<p class="mx-auto mt-4 max-w-2xl text-base font-medium text-secondary md:text-lg">
+			{t('home.heroTagline')}<br class="hidden md:block" />{t('home.heroSubtagline')}
+		</p>
+		<div class="mt-10 flex items-center justify-center gap-4">
+			<Button href="/products" size="md">
+				{t('home.viewProducts')}
+			</Button>
+			<a href="/about" class="text-sm font-semibold text-brand hover:underline">
+				{t('home.learnMore')} &gt;
+			</a>
+		</div>
+	</div>
+</section>

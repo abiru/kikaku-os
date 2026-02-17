@@ -73,13 +73,13 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">{t('reviews.rating')}</label>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">{t('reviews.rating')}</label>
         <StarRatingInput value={rating} onChange={setRating} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="review-name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="review-name" className="block text-sm font-medium text-neutral-700 mb-1">
             {t('reviews.yourName')}
           </label>
           <input
@@ -88,13 +88,13 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('reviews.yourNamePlaceholder')}
-            className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
+            className="w-full rounded-md border-neutral-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
             required
             maxLength={100}
           />
         </div>
         <div>
-          <label htmlFor="review-email" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="review-email" className="block text-sm font-medium text-neutral-700 mb-1">
             {t('reviews.yourEmail')}
           </label>
           <input
@@ -103,7 +103,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t('reviews.yourEmailPlaceholder')}
-            className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
+            className="w-full rounded-md border-neutral-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
             required
             maxLength={255}
           />
@@ -111,7 +111,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
       </div>
 
       <div>
-        <label htmlFor="review-title" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="review-title" className="block text-sm font-medium text-neutral-700 mb-1">
           {t('reviews.reviewTitle')}
         </label>
         <input
@@ -120,14 +120,14 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t('reviews.reviewTitlePlaceholder')}
-          className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
+          className="w-full rounded-md border-neutral-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
           required
           maxLength={200}
         />
       </div>
 
       <div>
-        <label htmlFor="review-body" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="review-body" className="block text-sm font-medium text-neutral-700 mb-1">
           {t('reviews.reviewBody')}
         </label>
         <textarea
@@ -136,7 +136,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={t('reviews.reviewBodyPlaceholder')}
-          className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
+          className="w-full rounded-md border-neutral-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
           required
           maxLength={5000}
         />
@@ -147,7 +147,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
       <button
         type="submit"
         disabled={submitting || rating === 0}
-        className="rounded-md bg-[#0071e3] px-4 py-2 text-sm font-medium text-white hover:bg-[#005bb5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {submitting ? t('reviews.submitting') : t('reviews.submit')}
       </button>
@@ -159,16 +159,16 @@ function ReviewItem({ review }: { review: Review }) {
   const formattedDate = formatDate(review.created_at, 'DATE_LONG');
 
   return (
-    <div className="border-b border-gray-200 py-6 last:border-0">
+    <div className="border-b border-neutral-200 py-6 last:border-0">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <StarRatingDisplay rating={review.rating} size="sm" />
-          <span className="text-sm font-medium text-gray-900">{review.customer_name}</span>
+          <span className="text-sm font-medium text-neutral-900">{review.customer_name}</span>
         </div>
-        <span className="text-xs text-gray-500">{formattedDate}</span>
+        <span className="text-xs text-neutral-500">{formattedDate}</span>
       </div>
-      <h4 className="mt-2 text-sm font-medium text-gray-900">{review.title}</h4>
-      <p className="mt-1 text-sm text-gray-600 whitespace-pre-line">{review.body}</p>
+      <h4 className="mt-2 text-sm font-medium text-neutral-900">{review.title}</h4>
+      <p className="mt-1 text-sm text-neutral-600 whitespace-pre-line">{review.body}</p>
     </div>
   );
 }
@@ -202,24 +202,24 @@ export default function ReviewSection({ productId }: Props) {
 
   if (loading) {
     return (
-      <div className="mt-10 border-t border-gray-200 pt-10">
+      <div className="mt-10 border-t border-neutral-200 pt-10">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 w-48 bg-gray-200 rounded" />
-          <div className="h-4 w-32 bg-gray-200 rounded" />
+          <div className="h-6 w-48 bg-neutral-200 rounded" />
+          <div className="h-4 w-32 bg-neutral-200 rounded" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-10 border-t border-gray-200 pt-10">
+    <div className="mt-10 border-t border-neutral-200 pt-10">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium text-gray-900">{t('reviews.title')}</h2>
+        <h2 className="text-lg font-medium text-neutral-900">{t('reviews.title')}</h2>
         {!showForm && (
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="text-sm font-medium text-[#0071e3] hover:text-[#005bb5]"
+            className="text-sm font-medium text-brand hover:text-brand-active"
           >
             {t('reviews.writeReview')}
           </button>
@@ -230,7 +230,7 @@ export default function ReviewSection({ productId }: Props) {
       {averageRating !== null && reviewCount > 0 && (
         <div className="mt-4 flex items-center gap-3">
           <StarRatingDisplay rating={averageRating} size="md" showValue />
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-neutral-500">
             {t('reviews.basedOnReviews', { count: String(reviewCount) })}
           </span>
         </div>
@@ -238,8 +238,8 @@ export default function ReviewSection({ productId }: Props) {
 
       {/* Review form */}
       {showForm && (
-        <div className="mt-6 rounded-lg bg-gray-50 p-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">{t('reviews.writeReview')}</h3>
+        <div className="mt-6 rounded-lg bg-neutral-50 p-6">
+          <h3 className="text-sm font-medium text-neutral-900 mb-4">{t('reviews.writeReview')}</h3>
           <ReviewForm productId={productId} onSubmitted={loadReviews} />
         </div>
       )}
@@ -253,13 +253,13 @@ export default function ReviewSection({ productId }: Props) {
         </div>
       ) : (
         <div className="mt-6 text-center py-8">
-          <p className="text-sm text-gray-500">{t('reviews.noReviews')}</p>
-          <p className="mt-1 text-sm text-gray-500">{t('reviews.noReviewsDescription')}</p>
+          <p className="text-sm text-neutral-500">{t('reviews.noReviews')}</p>
+          <p className="mt-1 text-sm text-neutral-500">{t('reviews.noReviewsDescription')}</p>
           {!showForm && (
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="mt-4 text-sm font-medium text-[#0071e3] hover:text-[#005bb5]"
+              className="mt-4 text-sm font-medium text-brand hover:text-brand-active"
             >
               {t('reviews.beFirstToReview')}
             </button>

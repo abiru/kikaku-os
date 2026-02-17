@@ -81,13 +81,13 @@ export function CouponInput() {
 					onChange={(e) => setCode(e.target.value.toUpperCase())}
 					placeholder={t('cart.couponPlaceholder')}
 					maxLength={20}
-					className="flex-1 rounded-md border-gray-300 px-4 py-2 text-sm focus:border-brand focus:ring-brand"
+					className="flex-1 rounded-md border-neutral-300 px-4 py-2 text-sm focus:border-brand focus:ring-brand"
 					disabled={isApplying}
 				/>
 				<button
 					onClick={handleApply}
 					disabled={isApplying || !code.trim()}
-					className="px-4 py-2 bg-gray-100 text-sm font-medium rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					className="px-4 py-2 bg-neutral-100 text-sm font-medium rounded-md hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 				>
 					{isApplying ? t('cart.applying') : t('cart.applyCoupon')}
 				</button>

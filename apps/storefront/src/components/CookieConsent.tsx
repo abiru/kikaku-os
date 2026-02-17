@@ -70,7 +70,7 @@ export default function CookieConsent() {
 			aria-label={t('cookie.title')}
 		>
 			<div className="mx-auto max-w-5xl px-4 pb-4">
-				<div className="rounded-2xl bg-white shadow-lg ring-1 ring-gray-200/50 px-6 py-4">
+				<div className="rounded-2xl bg-white shadow-lg ring-1 ring-neutral-200/50 px-6 py-4">
 					{showPreferences ? (
 						<div className="space-y-4">
 							<h3 className="text-sm font-medium text-primary">
@@ -82,7 +82,7 @@ export default function CookieConsent() {
 										type="checkbox"
 										checked
 										disabled
-										className="rounded border-gray-300"
+										className="rounded border-neutral-300"
 									/>
 									<span>{t('cookie.essential')}</span>
 								</label>
@@ -91,7 +91,7 @@ export default function CookieConsent() {
 										type="checkbox"
 										checked={analyticsEnabled}
 										onChange={(e) => setAnalyticsEnabled(e.target.checked)}
-										className="rounded border-gray-300"
+										className="rounded border-neutral-300"
 									/>
 									<span>{t('cookie.analytics')}</span>
 								</label>
@@ -135,7 +135,7 @@ export default function CookieConsent() {
 								<button
 									type="button"
 									onClick={handleReject}
-									className="rounded-full border border-gray-300 bg-white px-5 py-2 text-[13px] font-medium text-primary/80 transition-colors hover:bg-gray-50 active:bg-gray-100"
+									className="rounded-full border border-neutral-300 bg-white px-5 py-2 text-[13px] font-medium text-primary/80 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
 								>
 									{t('cookie.reject')}
 								</button>

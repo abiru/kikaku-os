@@ -1,0 +1,18 @@
+---
+import { cardClasses } from '../../lib/cardClasses';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+---
+
+<div class:list={[cardClasses.skeleton.outer, 'overflow-hidden', className]}>
+  <div class={cardClasses.skeleton.imageWrap}></div>
+  <div class={cardClasses.skeleton.content}>
+    <div class={cardClasses.skeleton.badge}></div>
+    <div class={cardClasses.skeleton.title}></div>
+    <div class={cardClasses.skeleton.price}></div>
+  </div>
+</div>

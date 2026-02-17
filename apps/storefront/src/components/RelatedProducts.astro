@@ -1,5 +1,6 @@
 ---
 import Container from './Container.astro';
+import ProductCard from './ui/ProductCard.astro';
 import { t } from '../i18n';
 import type { Product } from '../lib/types';
 
@@ -11,45 +12,23 @@ const { products } = Astro.props;
 ---
 
 {products.length > 0 && (
-	<section class="border-t border-gray-200 bg-[#f5f5f7] py-16">
+	<section class="border-t border-neutral-200 bg-subtle py-16" data-reveal>
 		<Container>
-			<h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f] mb-8">
+			<h2 class="text-2xl font-semibold tracking-tight text-primary mb-8">
 				{t('product.relatedProducts')}
 			</h2>
-			<div class="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 xl:gap-8">
+			<div class="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4 xl:gap-8" data-reveal-delay="80">
 				{products.map((related: Product) => (
-					<a
-						href={`/products/${related.id}`}
-						class="group flex flex-col overflow-hidden rounded-2xl bg-white p-4 sm:p-6 shadow-sm ring-1 ring-black/5 transition-all duration-300 hover:shadow-lg hover:scale-[1.01]"
-					>
-						<div class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#f5f5f7] flex items-center justify-center">
-							{(related.mainImage || related.image) ? (
-								<img
-									src={related.mainImage || related.image}
-									alt={related.title}
-									class="w-full h-full object-cover"
-									loading="lazy"
-								/>
-							) : (
-								<svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
-								</svg>
-							)}
-						</div>
-						<h3 class="mt-4 text-sm font-semibold text-[#1d1d1f] group-hover:underline decoration-1 underline-offset-2 line-clamp-2">
-							{related.title}
-						</h3>
-						{related.variants?.[0]?.price && (
-							<p class="mt-1 text-sm text-[#6e6e73]">
-								{new Intl.NumberFormat('ja-JP', {
-									style: 'currency',
-									currency: related.variants[0].price.currency || 'JPY',
-									minimumFractionDigits: 0,
-								}).format(related.variants[0].price.amount)}
-							</p>
-						)}
-					</a>
+					<div data-reveal-child>
+						<ProductCard
+							id={related.id}
+							title={related.title}
+							image={related.mainImage || related.image}
+							price={related.variants?.[0]?.price?.amount}
+							currency={related.variants?.[0]?.price?.currency || 'JPY'}
+							variant="compact"
+						/>
+					</div>
 				))}
 			</div>
 		</Container>

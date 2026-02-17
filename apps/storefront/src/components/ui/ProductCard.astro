@@ -1,0 +1,82 @@
+---
+import { cardClasses } from '../../lib/cardClasses';
+
+interface Props {
+  id: number;
+  title: string;
+  image?: string | null;
+  price?: number;
+  currency?: string;
+  badge?: string;
+  badgeColor?: 'brand' | 'success' | 'warning' | 'neutral';
+  variant?: 'default' | 'compact';
+  class?: string;
+}
+
+const {
+  id,
+  title,
+  image,
+  price,
+  currency = 'JPY',
+  badge,
+  badgeColor = 'neutral',
+  variant = 'default',
+  class: className = '',
+} = Astro.props;
+
+const isCompact = variant === 'compact';
+const outerClass = isCompact ? cardClasses.outerCompact : cardClasses.outer;
+const titleClass = isCompact ? cardClasses.titleCompact : cardClasses.title;
+
+const badgeColorMap: Record<string, string> = {
+  brand: 'bg-brand/10 text-brand',
+  success: 'bg-success-light text-green-800',
+  warning: 'bg-warning-light text-amber-800',
+  neutral: 'bg-neutral-100 text-neutral-700',
+};
+
+const formattedPrice = price !== undefined
+  ? new Intl.NumberFormat('ja-JP', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+    }).format(price)
+  : null;
+---
+
+<a
+  href={`/products/${id}`}
+  class:list={['group relative flex flex-col overflow-hidden', outerClass, className]}
+>
+  <div class={cardClasses.imageWrap}>
+    {image ? (
+      <img
+        src={image}
+        alt={title}
+        loading="lazy"
+        class={cardClasses.image}
+        style={`view-transition-name: product-image-${id}`}
+      />
+    ) : (
+      <div class={cardClasses.imagePlaceholder} aria-hidden="true">
+        <svg class="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+    )}
+  </div>
+  <div class={cardClasses.content}>
+    {badge && (
+      <span class:list={[cardClasses.badge, badgeColorMap[badgeColor]]}>
+        {badge}
+      </span>
+    )}
+    <h3 class={titleClass}>{title}</h3>
+    {formattedPrice && (
+      <p class={cardClasses.price}>{formattedPrice}</p>
+    )}
+    <slot />
+  </div>
+</a>

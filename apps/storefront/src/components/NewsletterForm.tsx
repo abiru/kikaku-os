@@ -73,13 +73,13 @@ export default function NewsletterForm() {
           placeholder={t('newsletter.placeholder')}
           maxLength={254}
           aria-label={t('newsletter.placeholder')}
-          className="flex-1 min-w-0 px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
+          className="flex-1 min-w-0 px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
           disabled={status === 'submitting'}
         />
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-[#333] transition-colors disabled:opacity-50 whitespace-nowrap"
+          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 whitespace-nowrap"
         >
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </button>

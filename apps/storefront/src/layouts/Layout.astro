@@ -1,10 +1,9 @@
 ---
 import BackToTop from '../components/BackToTop.astro';
-import Container from '../components/Container.astro';
 import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 import SearchModal from '../components/SearchModal';
 import CookieConsent from '../components/CookieConsent';
-import NewsletterForm from '../components/NewsletterForm';
 import { t } from '../i18n';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -82,66 +81,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 				<slot />
 			</main>
 
-			<footer class="bg-subtle border-t border-gray-200 py-10 text-xs text-secondary" role="contentinfo">
-				<Container>
-					<div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5 mb-8">
-						<div class="space-y-3">
-							<h3 class="font-semibold text-primary">{t('footer.shopAndLearn')}</h3>
-							<ul class="space-y-0">
-								<li><a href="/products" class="inline-block py-1.5 hover:underline">{t('footer.store')}</a></li>
-								<li><a href="/products?sort=newest" class="inline-block py-1.5 hover:underline">{t('footer.newProducts')}</a></li>
-								<li><a href="/categories" class="inline-block py-1.5 hover:underline">{t('footer.categories')}</a></li>
-							</ul>
-						</div>
-						<div class="space-y-3">
-							<h3 class="font-semibold text-primary">{t('footer.support')}</h3>
-							<ul class="space-y-0">
-								<li><a href="/contact" class="inline-block py-1.5 hover:underline">{t('footer.contact')}</a></li>
-								<li><a href="/order-status" class="inline-block py-1.5 hover:underline">{t('footer.orderStatus')}</a></li>
-								<li><a href="/faq" class="inline-block py-1.5 hover:underline">{t('footer.faq')}</a></li>
-							</ul>
-						</div>
-						<div class="space-y-3">
-							<h3 class="font-semibold text-primary">{t('footer.about')}</h3>
-							<ul class="space-y-0">
-								<li><a href="/about" class="inline-block py-1.5 hover:underline">{t('footer.aboutCompany')}</a></li>
-								<li><a href="/legal" class="inline-block py-1.5 hover:underline">{t('footer.legalNotice')}</a></li>
-								<li><a href="/privacy" class="inline-block py-1.5 hover:underline">{t('footer.privacyPolicy')}</a></li>
-								<li><a href="/shipping" class="inline-block py-1.5 hover:underline">{t('footer.shippingPolicy')}</a></li>
-							</ul>
-						</div>
-						<div class="space-y-3">
-							<h3 class="font-semibold text-primary">{t('footer.business')}</h3>
-							<ul class="space-y-0">
-								<li><a href="/quotations/new" class="inline-block py-1.5 hover:underline">{t('footer.quotation')}</a></li>
-								<li><a href="/faq" class="inline-block py-1.5 hover:underline">{t('footer.faq')}</a></li>
-							</ul>
-						</div>
-						<div class="space-y-3 col-span-2 md:col-span-1">
-							<h3 class="font-semibold text-primary">{t('newsletter.title')}</h3>
-							<p class="text-xs text-secondary">{t('newsletter.description')}</p>
-							<NewsletterForm client:idle />
-						</div>
-					</div>
-
-					<nav class="pt-4 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4" aria-label="フッターリンク">
-						<p>{t('footer.copyright').replace('{year}', String(new Date().getFullYear()))}</p>
-						<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-							<a href="/legal" class="inline-block py-1.5 hover:underline">{t('footer.legalNotice')}</a>
-							<span class="text-gray-300" aria-hidden="true">&middot;</span>
-							<a href="/privacy" class="inline-block py-1.5 hover:underline">{t('footer.privacyPolicy')}</a>
-							<span class="text-gray-300" aria-hidden="true">&middot;</span>
-							<a href="/terms" class="inline-block py-1.5 hover:underline">{t('footer.termsOfUse')}</a>
-							<span class="text-gray-300" aria-hidden="true">&middot;</span>
-							<a href="/shipping" class="inline-block py-1.5 hover:underline">{t('footer.shippingPolicy')}</a>
-							<span class="text-gray-300" aria-hidden="true">&middot;</span>
-							<a href="/refund" class="inline-block py-1.5 hover:underline">{t('footer.refundPolicy')}</a>
-							<span class="text-gray-300" aria-hidden="true">&middot;</span>
-							<a href="/contact" class="inline-block py-1.5 hover:underline">{t('footer.contact')}</a>
-						</div>
-					</nav>
-				</Container>
-			</footer>
+			<SiteFooter />
 		</div>
 
 		{/* Search Modal */}
@@ -152,5 +92,9 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 
 		{/* Back to Top Button */}
 		<BackToTop />
+
+		<script>
+			import '../scripts/scrollReveal';
+		</script>
 	</body>
 </html>

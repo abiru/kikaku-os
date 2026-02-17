@@ -61,11 +61,11 @@ export default function RestockNotification({ productId }: Props) {
   }
 
   return (
-    <div className="mt-4 rounded-md border border-gray-200 bg-gray-50 p-4">
-      <h3 className="text-sm font-medium text-gray-900">
+    <div className="mt-4 rounded-md border border-neutral-200 bg-neutral-50 p-4">
+      <h3 className="text-sm font-medium text-neutral-900">
         {t('restock.title')}
       </h3>
-      <p className="mt-1 text-xs text-gray-500">
+      <p className="mt-1 text-xs text-neutral-500">
         {t('restock.description')}
       </p>
       <form onSubmit={handleSubmit} className="mt-3">
@@ -80,7 +80,7 @@ export default function RestockNotification({ productId }: Props) {
             }}
             placeholder={t('restock.emailPlaceholder')}
             maxLength={254}
-            className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             disabled={status === 'submitting'}
           />
           <button
