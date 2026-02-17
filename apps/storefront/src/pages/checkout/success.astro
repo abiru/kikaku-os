@@ -96,9 +96,11 @@ if (orderToken) {
 									{order.shipping.name && <p>{order.shipping.name}</p>}
 									{order.shipping.address && (
 										<>
-											{order.shipping.address.postal_code && <p>〒{order.shipping.address.postal_code}</p>}
-											{order.shipping.address.state && order.shipping.address.city && (
-												<p>{order.shipping.address.state}{order.shipping.address.city}</p>
+											{order.shipping.address.postal_code && (
+												<p>{`\u3012${order.shipping.address.postal_code}`}</p>
+											)}
+											{(order.shipping.address.state || order.shipping.address.city) && (
+												<p>{[order.shipping.address.state, order.shipping.address.city].filter(Boolean).join('')}</p>
 											)}
 											{order.shipping.address.line1 && <p>{order.shipping.address.line1}</p>}
 											{order.shipping.address.line2 && <p>{order.shipping.address.line2}</p>}
