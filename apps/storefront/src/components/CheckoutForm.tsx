@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Elements, PaymentElement, AddressElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { useTranslation } from '../i18n';
+import OrderConfirmationModal, { type AddressData } from './OrderConfirmationModal';
+import type { CartItem } from '../lib/cart';
 
 // Singleton cache: loadStripe should only be called once per publishable key
 const stripePromiseCache = new Map<string, Promise<Stripe | null>>();
@@ -29,13 +31,31 @@ const getStripeErrorMessage = (error: { type?: string; code?: string; decline_co
 
 const PAYMENT_TIMEOUT_MS = 30_000;
 
+type QuoteBreakdown = {
+	subtotal: number;
+	taxAmount: number;
+	cartTotal: number;
+	discount: number;
+	shippingFee: number;
+	grandTotal: number;
+	currency: string;
+};
+
 type CheckoutFormProps = {
 	clientSecret: string | null;
 	orderToken: string | null;
 	publishableKey: string;
+	items: CartItem[];
+	breakdown: QuoteBreakdown | null;
 };
 
-function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
+type CheckoutFormInnerProps = {
+	orderToken: string | null;
+	items: CartItem[];
+	breakdown: QuoteBreakdown | null;
+};
+
+function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerProps) {
 	const { t } = useTranslation();
 	const stripe = useStripe();
 	const elements = useElements();
@@ -44,6 +64,8 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 	const [paymentElementReady, setPaymentElementReady] = useState(false);
 	const [email, setEmail] = useState('');
 	const [emailError, setEmailError] = useState<string | null>(null);
+	const [showConfirmation, setShowConfirmation] = useState(false);
+	const [addressData, setAddressData] = useState<AddressData | null>(null);
 
 	const validateEmail = (value: string) => {
 		if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -72,6 +94,22 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 				return;
 			}
 
+			// Show confirmation modal instead of immediately processing payment
+			setIsProcessing(false);
+			setShowConfirmation(true);
+		} catch (err) {
+			setErrorMessage(err instanceof Error ? err.message : t('checkout.stripeErrors.default'));
+			setIsProcessing(false);
+		}
+	};
+
+	const handleConfirmPayment = async () => {
+		if (!stripe || !elements || !orderToken) return;
+
+		setIsProcessing(true);
+		setErrorMessage(null);
+
+		try {
 			const confirmPromise = stripe.confirmPayment({
 				elements,
 				confirmParams: {
@@ -89,6 +127,7 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 			if (error) {
 				setErrorMessage(getStripeErrorMessage(error, t));
 				setIsProcessing(false);
+				setShowConfirmation(false);
 			}
 			// If successful, user will be redirected by Stripe
 		} catch (err) {
@@ -98,102 +137,124 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 				setErrorMessage(err instanceof Error ? err.message : t('checkout.stripeErrors.default'));
 			}
 			setIsProcessing(false);
+			setShowConfirmation(false);
 		}
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-6" aria-busy={isProcessing}>
-			<div>
-				<label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
-					{t('checkout.email')}
-				</label>
-				<input
-					id="checkout-email"
-					type="email"
-					autoComplete="email"
-					required
-					maxLength={254}
-					value={email}
-					onChange={(e) => {
-						setEmail(e.target.value);
-						if (emailError) setEmailError(null);
-					}}
-					onBlur={(e) => validateEmail(e.target.value)}
-					placeholder="your@email.com"
-					className={`block w-full rounded-md border px-3 py-3 text-base shadow-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand focus:ring-brand'}`}
-					aria-invalid={!!emailError}
-					aria-describedby={emailError ? 'checkout-email-error' : undefined}
+		<>
+			{showConfirmation && breakdown && (
+				<OrderConfirmationModal
+					items={items}
+					breakdown={breakdown}
+					email={email}
+					address={addressData}
+					onConfirm={handleConfirmPayment}
+					onCancel={() => setShowConfirmation(false)}
+					isProcessing={isProcessing}
 				/>
-				{emailError && (
-					<p id="checkout-email-error" className="mt-1 text-sm text-red-600" role="alert">{emailError}</p>
-				)}
-			</div>
+			)}
 
-			<div>
-				<label className="block text-sm font-medium text-gray-700 mb-2">
-					{t('checkout.shippingAddress')}
-				</label>
-				<p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 mb-3" role="note">
-					{t('checkout.japanOnlyShipping')}
-				</p>
-				<AddressElement
-					options={{
-						mode: 'shipping',
-						allowedCountries: ['JP']
-					}}
-				/>
-			</div>
+			<form onSubmit={handleSubmit} className="space-y-6" aria-busy={isProcessing}>
+				<div>
+					<label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
+						{t('checkout.email')}
+					</label>
+					<input
+						id="checkout-email"
+						type="email"
+						autoComplete="email"
+						required
+						maxLength={254}
+						value={email}
+						onChange={(e) => {
+							setEmail(e.target.value);
+							if (emailError) setEmailError(null);
+						}}
+						onBlur={(e) => validateEmail(e.target.value)}
+						placeholder="your@email.com"
+						className={`block w-full rounded-md border px-3 py-3 text-base shadow-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand focus:ring-brand'}`}
+						aria-invalid={!!emailError}
+						aria-describedby={emailError ? 'checkout-email-error' : undefined}
+					/>
+					{emailError && (
+						<p id="checkout-email-error" className="mt-1 text-sm text-red-600" role="alert">{emailError}</p>
+					)}
+				</div>
 
-			<div>
-				<label className="block text-sm font-medium text-gray-700 mb-2">
-					{t('checkout.paymentDetails')}
-				</label>
-				<PaymentElement
-					options={{ layout: 'tabs' }}
-					onReady={() => {
-						setPaymentElementReady(true);
-					}}
-					onLoadError={(event) => {
-						setPaymentElementReady(false);
-						setErrorMessage(event.error?.message || t('checkout.stripeLoadFailedDescription'));
-					}}
-				/>
-			</div>
+				<div>
+					<label className="block text-sm font-medium text-gray-700 mb-2">
+						{t('checkout.shippingAddress')}
+					</label>
+					<p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 mb-3" role="note">
+						{t('checkout.japanOnlyShipping')}
+					</p>
+					<AddressElement
+						options={{
+							mode: 'shipping',
+							allowedCountries: ['JP']
+						}}
+						onChange={(event) => {
+							if (event.complete) {
+								setAddressData(event.value);
+							}
+						}}
+					/>
+				</div>
 
-			{/* Error message */}
-			<div aria-live="assertive">
-				{errorMessage && (
-					<div className="rounded-md bg-red-50 p-4" role="alert">
-						<p className="text-sm text-red-800">{errorMessage}</p>
-					</div>
-				)}
-			</div>
+				<div>
+					<label className="block text-sm font-medium text-gray-700 mb-2">
+						{t('checkout.paymentDetails')}
+					</label>
+					<PaymentElement
+						options={{ layout: 'tabs' }}
+						onReady={() => {
+							setPaymentElementReady(true);
+						}}
+						onLoadError={(event) => {
+							setPaymentElementReady(false);
+							setErrorMessage(event.error?.message || t('checkout.stripeLoadFailedDescription'));
+						}}
+					/>
+				</div>
 
-			{/* Submit button */}
-			<button
-				type="submit"
-				disabled={!stripe || isProcessing || !paymentElementReady}
-				aria-busy={isProcessing}
-				className="w-full rounded-lg bg-brand px-6 py-3 h-12 text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-			>
-				{isProcessing ? (
-					<span className="inline-flex items-center gap-2">
-						<svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-							<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-							<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-						</svg>
-						{t('checkout.processing')}
-					</span>
-				) : t('checkout.payNow')}
-			</button>
-		</form>
+				{/* Error message */}
+				<div aria-live="assertive">
+					{errorMessage && (
+						<div className="rounded-md bg-red-50 p-4" role="alert">
+							<p className="text-sm text-red-800">{errorMessage}</p>
+						</div>
+					)}
+				</div>
+
+				{/* Submit button */}
+				<button
+					type="submit"
+					disabled={!stripe || isProcessing || !paymentElementReady}
+					aria-busy={isProcessing}
+					className="w-full rounded-lg bg-brand px-6 py-3 h-12 text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+				>
+					{isProcessing ? (
+						<span className="inline-flex items-center gap-2">
+							<svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+							</svg>
+							{t('checkout.processing')}
+						</span>
+					) : t('checkout.payNow')}
+				</button>
+			</form>
+		</>
 	);
 }
 
 export default function CheckoutForm({
 	clientSecret,
 	orderToken,
-	publishableKey
+	publishableKey,
+	items,
+	breakdown
 }: CheckoutFormProps) {
 	const { t } = useTranslation();
 	const [stripeLoadError, setStripeLoadError] = useState(false);
@@ -266,7 +327,11 @@ export default function CheckoutForm({
 					locale: 'ja'
 				}}
 			>
-				<CheckoutFormInner orderToken={orderToken} />
+				<CheckoutFormInner
+					orderToken={orderToken}
+					items={items}
+					breakdown={breakdown}
+				/>
 			</Elements>
 		</div>
 	);

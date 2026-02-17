@@ -2,6 +2,8 @@
 import Layout from '../layouts/Layout.astro';
 import Container from '../components/Container.astro';
 import { t } from '../i18n';
+
+const errorTrackingId = `ERR-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 ---
 
 <Layout title={`${t('errors.serverErrorCode')} - ${t('errors.serverError')}`}>
@@ -17,17 +19,29 @@ import { t } from '../i18n';
 				<p class="mt-3 text-[17px] text-secondary leading-relaxed">
 					{t('errors.serverErrorMessage')}
 				</p>
+				<p class="mt-4 text-xs text-muted font-mono">
+					{t('errors.errorTrackingId', { id: errorTrackingId })}
+				</p>
+				<p class="mt-2 text-xs text-secondary">
+					{t('errors.contactSupport')}{' '}
+					<a
+						href={`/contact?error_id=${errorTrackingId}`}
+						class="text-brand underline hover:text-brand-hover"
+					>
+						{t('contact.title')}
+					</a>
+				</p>
 				<div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
 					<a
 						href="/"
-						class="inline-flex items-center gap-2 px-6 py-3 bg-brand text-white text-[15px] font-medium rounded-full hover:bg-brand-hover transition-colors"
+						class="inline-flex items-center gap-2 h-12 px-6 py-3 bg-brand text-white text-base font-semibold rounded-lg hover:bg-brand-hover transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]"
 					>
 						{t('errors.backToHome')}
 					</a>
 					<button
 						id="reload-btn"
 						type="button"
-						class="inline-flex items-center gap-2 px-6 py-3 border border-[#d2d2d7] text-primary text-[15px] font-medium rounded-full hover:bg-subtle transition-colors"
+						class="inline-flex items-center gap-2 h-12 px-6 py-3 border border-border text-primary text-base font-semibold rounded-lg hover:bg-subtle transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]"
 					>
 						{t('errors.reload')}
 					</button>

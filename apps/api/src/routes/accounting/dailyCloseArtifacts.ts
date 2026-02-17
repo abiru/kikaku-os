@@ -6,7 +6,7 @@ import { backfillSchema, PERMISSIONS } from '../../lib/schemas';
 import { generateDailyReport } from '../../services/dailyReport';
 import { generateStripeEvidence } from '../../services/stripeEvidence';
 import { renderDailyCloseHtml } from '../../services/renderDailyCloseHtml';
-import { putJson, putText } from '../../lib/r2';
+import { putJson, putText, createR2FailureAlert, storeDailyReportFallback } from '../../lib/r2';
 import { journalizeDailyClose } from '../../services/journalize';
 import { enqueueDailyCloseAnomaly } from '../../services/inboxAnomalies';
 import { listDocuments, upsertDocument } from '../../services/documents';
@@ -45,9 +45,24 @@ const runDailyCloseForDate = async (
     const evidenceKey = `${baseKey(date)}/stripe-evidence.json`;
     const htmlKey = `${baseKey(date)}/report.html`;
 
-    await putJson(env.R2, reportKey, report);
-    await putJson(env.R2, evidenceKey, evidence);
-    await putText(env.R2, htmlKey, html, 'text/html; charset=utf-8');
+    // Attempt R2 writes with retry; fall back to D1 for critical report data
+    try {
+      await putJson(env.R2, reportKey, report);
+      await putJson(env.R2, evidenceKey, evidence);
+      await putText(env.R2, htmlKey, html, 'text/html; charset=utf-8');
+    } catch (r2Err) {
+      logger.error('R2 write failed for daily close, using D1 fallback', {
+        date,
+        error: r2Err instanceof Error ? r2Err.message : String(r2Err),
+      });
+
+      // Store critical data in D1 fallback
+      await storeDailyReportFallback(env.DB, date, reportKey, report);
+      await storeDailyReportFallback(env.DB, date, evidenceKey, evidence);
+
+      // Create alert for admin attention
+      await createR2FailureAlert(env.DB, 'daily-close-artifacts', reportKey, r2Err);
+    }
 
     await upsertDocument(env, 'daily_close', date, reportKey, 'application/json');
     await upsertDocument(env, 'daily_close', date, evidenceKey, 'application/json');

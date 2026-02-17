@@ -1,35 +1,44 @@
 import { useTranslation } from '../i18n';
 import { useCheckout } from '../hooks/useCheckout';
 import CheckoutForm from './CheckoutForm';
+import CheckoutSteps from './CheckoutSteps';
 import OrderSummary from './OrderSummary';
 import { ErrorBoundary } from './ErrorBoundary';
 
 function CheckoutSkeleton() {
 	return (
 		<div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-			{/* Title skeleton */}
+			{/* Title skeleton — matches text-2xl sm:text-3xl font-bold */}
 			<div className="animate-pulse mb-8">
-				<div className="h-8 bg-gray-200 rounded w-48" />
-			</div>
-
-			{/* Step indicator skeleton */}
-			<div className="animate-pulse flex justify-center gap-4 mb-8">
-				<div className="h-7 w-7 bg-gray-200 rounded-full" />
-				<div className="h-px w-12 bg-gray-200 self-center" />
-				<div className="h-7 w-7 bg-gray-200 rounded-full" />
-				<div className="h-px w-12 bg-gray-200 self-center" />
-				<div className="h-7 w-7 bg-gray-200 rounded-full" />
+				<div className="h-7 sm:h-9 bg-gray-200 rounded w-48" />
 			</div>
 
 			<div className="lg:grid lg:grid-cols-12 lg:gap-x-12 xl:gap-x-16">
-				{/* Left column skeleton */}
-				<div className="lg:col-span-7 animate-pulse space-y-4">
-					<div className="h-5 bg-gray-200 rounded w-32" />
-					<div className="h-12 bg-gray-200 rounded" />
-					<div className="h-12 bg-gray-200 rounded" />
+				{/* Left column skeleton — matches CheckoutForm layout */}
+				<div className="lg:col-span-7 animate-pulse">
+					<div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+						{/* Email field */}
+						<div className="space-y-2">
+							<div className="h-4 bg-gray-200 rounded w-32" />
+							<div className="h-12 bg-gray-200 rounded" />
+						</div>
+						{/* Address field */}
+						<div className="space-y-2">
+							<div className="h-4 bg-gray-200 rounded w-40" />
+							<div className="h-10 bg-gray-200 rounded" />
+							<div className="h-10 bg-gray-200 rounded" />
+						</div>
+						{/* Payment field */}
+						<div className="space-y-2">
+							<div className="h-4 bg-gray-200 rounded w-28" />
+							<div className="h-10 bg-gray-200 rounded" />
+						</div>
+						{/* Submit button */}
+						<div className="h-12 bg-gray-200 rounded" />
+					</div>
 				</div>
 
-				{/* Right column skeleton */}
+				{/* Right column skeleton — matches OrderSummary layout */}
 				<div className="mt-10 lg:mt-0 lg:col-span-5 animate-pulse">
 					<div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
 						<div className="h-5 bg-gray-200 rounded w-24" />
@@ -83,7 +92,7 @@ function CheckoutPageContent() {
 							>
 								{t('errors.retry')}
 						</button>
-						<a href="/cart" className="text-sm text-gray-500 hover:text-gray-700 min-h-[44px] flex items-center justify-center">
+						<a href="/cart" className="text-sm text-gray-600 hover:text-gray-800 min-h-[44px] flex items-center justify-center">
 							{t('checkout.returnToCart')}
 						</a>
 					</div>
@@ -111,6 +120,8 @@ function CheckoutPageContent() {
 				{t('checkout.title')}
 			</h1>
 
+			<CheckoutSteps currentStep="payment" />
+
 			{error && (
 				<div className="mb-6 rounded-md bg-red-50 p-4" role="alert">
 					<p className="text-sm text-red-800">{error}</p>
@@ -124,6 +135,8 @@ function CheckoutPageContent() {
 						clientSecret={clientSecret}
 						orderToken={orderToken}
 						publishableKey={publishableKey}
+						items={cartItems}
+						breakdown={breakdown}
 					/>
 				</div>
 

@@ -132,7 +132,8 @@
     "shippingConfigError": "配送設定の読み込みに失敗しました",
     "checkoutBlockedByShipping": "配送料が確認できるまでチェックアウトできません",
     "retry": "再試行",
-    "maxStock": "在庫上限: {stock}個"
+    "maxStock": "在庫上限: {stock}個",
+    "stockInsufficient": "在庫が不足しています（残り{stock}点）"
   },
   "checkout": {
     "pageTitle": "チェックアウト - Led Kikaku",
@@ -190,10 +191,15 @@
       "email": "メールアドレス",
       "payment": "お支払い"
     },
+    "orderConfirmationTitle": "ご注文内容の確認",
+    "confirmAndPay": "確認して支払う",
     "paymentProcessing": "お支払い処理中",
     "paymentProcessingDescription": "お支払いを処理しています。確認メールが間もなく届きます。",
     "orderNotFoundGuidance": "注文情報を取得できませんでした。確認メールをご確認ください。問題が解決しない場合は、サポートにお問い合わせください。",
     "contactSupport": "サポートに連絡",
+    "pollingChecking": "注文情報を確認しています...",
+    "pollingError": "注文状況の確認に失敗しました",
+    "pollingRetry": "再試行",
     "pollingMaxRetriesExceeded": "注文状況の確認に時間がかかっています。確認メールをお待ちいただくか、サポートにお問い合わせください。",
     "stripeLoadFailed": "決済サービスの読み込みに失敗しました",
     "stripeLoadFailedDescription": "ページを再読み込みしてください。問題が続く場合はサポートにお問い合わせください。",
@@ -712,7 +718,8 @@
     "validationEmailInvalid": "有効なメールアドレスを入力してください",
     "validationSubject": "件名を入力してください",
     "validationBody": "お問い合わせ内容を入力してください",
-    "submitError": "送信に失敗しました。しばらくしてからもう一度お試しください。"
+    "submitError": "送信に失敗しました。しばらくしてからもう一度お試しください。",
+    "csrfError": "セキュリティトークンの取得に失敗しました。ページを再読み込みしてください。"
   },
   "account": {
     "dashboard": "ダッシュボード",
@@ -891,6 +898,8 @@
     "serverErrorCode": "500",
     "serverErrorMessage": "サーバーで問題が発生しました。しばらくしてからもう一度お試しください。",
     "reload": "再読み込み",
+    "errorTrackingId": "エラー追跡ID: {id}",
+    "contactSupport": "問題が解決しない場合は、上記のエラー追跡IDを添えてサポートまでお問い合わせください。",
     "componentError": "表示中にエラーが発生しました。ページを再読み込みしてください。",
     "error": "エラー",
     "failedToLoadNewsletter": "ニュースレター登録者の読み込みに失敗しました。",

@@ -29,10 +29,12 @@ export default function SearchModal() {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const resultsRef = useRef<HTMLDivElement>(null);
 	const modalRef = useRef<HTMLDivElement>(null);
+	const triggerRef = useRef<HTMLElement | null>(null);
 
 	// Listen for open-search event
 	useEffect(() => {
 		const handleOpen = () => {
+			triggerRef.current = document.activeElement as HTMLElement | null;
 			setIsOpen(true);
 			setQuery('');
 			setResults([]);
@@ -44,11 +46,14 @@ export default function SearchModal() {
 		return () => window.removeEventListener('open-search', handleOpen);
 	}, []);
 
-	// Focus input when modal opens
+	// Focus input when modal opens; restore focus on close
 	useEffect(() => {
 		if (isOpen) {
 			const timer = setTimeout(() => inputRef.current?.focus(), 50);
 			return () => clearTimeout(timer);
+		} else if (triggerRef.current) {
+			triggerRef.current.focus();
+			triggerRef.current = null;
 		}
 	}, [isOpen]);
 

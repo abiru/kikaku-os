@@ -147,7 +147,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
       <button
         type="submit"
         disabled={submitting || rating === 0}
-        className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="rounded-lg bg-brand h-12 px-6 py-3 text-base font-semibold text-white hover:bg-brand-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]"
       >
         {submitting ? t('reviews.submitting') : t('reviews.submit')}
       </button>

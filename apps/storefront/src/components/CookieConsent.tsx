@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 
 const STORAGE_KEY = 'cookie-consent-accepted';
@@ -27,10 +27,13 @@ export default function CookieConsent() {
 	const [visible, setVisible] = useState(false);
 	const [showPreferences, setShowPreferences] = useState(false);
 	const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
+	const bannerRef = useRef<HTMLDivElement>(null);
+	const triggerRef = useRef<HTMLElement | null>(null);
 
 	useEffect(() => {
 		const consent = getStoredConsent();
 		if (consent === 'undecided') {
+			triggerRef.current = document.activeElement as HTMLElement | null;
 			const timer = setTimeout(() => setVisible(true), 500);
 			return () => clearTimeout(timer);
 		}
@@ -39,15 +42,64 @@ export default function CookieConsent() {
 		}
 	}, []);
 
+	// Focus first interactive element when banner becomes visible
+	useEffect(() => {
+		if (!visible || !bannerRef.current) return;
+		const firstFocusable = bannerRef.current.querySelector<HTMLElement>(
+			'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+		);
+		firstFocusable?.focus();
+	}, [visible, showPreferences]);
+
+	// Focus trap: Tab/Shift+Tab cycles within banner
+	const handleFocusTrap = useCallback((e: KeyboardEvent) => {
+		if (e.key !== 'Tab' || !bannerRef.current) return;
+
+		const focusable = bannerRef.current.querySelectorAll<HTMLElement>(
+			'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+		);
+		if (focusable.length === 0) return;
+
+		const first = focusable[0]!;
+		const last = focusable[focusable.length - 1]!;
+
+		if (e.shiftKey) {
+			if (document.activeElement === first) {
+				e.preventDefault();
+				last.focus();
+			}
+		} else {
+			if (document.activeElement === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
+	}, []);
+
+	useEffect(() => {
+		if (!visible) return;
+		document.addEventListener('keydown', handleFocusTrap);
+		return () => document.removeEventListener('keydown', handleFocusTrap);
+	}, [visible, handleFocusTrap]);
+
+	const restoreFocus = () => {
+		if (triggerRef.current && triggerRef.current !== document.body) {
+			triggerRef.current.focus();
+		}
+		triggerRef.current = null;
+	};
+
 	const handleAccept = () => {
 		localStorage.setItem(STORAGE_KEY, 'accepted');
 		setVisible(false);
+		restoreFocus();
 	};
 
 	const handleReject = () => {
 		localStorage.setItem(STORAGE_KEY, 'rejected');
 		disableAnalytics();
 		setVisible(false);
+		restoreFocus();
 	};
 
 	const handleSavePreferences = () => {
@@ -59,14 +111,16 @@ export default function CookieConsent() {
 		}
 		setVisible(false);
 		setShowPreferences(false);
+		restoreFocus();
 	};
 
 	if (!visible) return null;
 
 	return (
 		<div
+			ref={bannerRef}
 			className="fixed bottom-0 left-0 right-0 z-[9999] animate-slideUp"
-			role="dialog"
+			role="alertdialog"
 			aria-label={t('cookie.title')}
 		>
 			<div className="mx-auto max-w-5xl px-4 pb-4">
@@ -100,7 +154,7 @@ export default function CookieConsent() {
 								<button
 									type="button"
 									onClick={handleSavePreferences}
-									className="rounded-full bg-brand px-5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-brand-hover active:bg-brand-active"
+									className="rounded-lg bg-brand h-12 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]"
 								>
 									{t('cookie.savePreferences')}
 								</button>
@@ -142,7 +196,7 @@ export default function CookieConsent() {
 								<button
 									type="button"
 									onClick={handleAccept}
-									className="shrink-0 rounded-full bg-brand px-5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-brand-hover active:bg-brand-active"
+									className="shrink-0 rounded-lg bg-brand h-12 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]"
 								>
 									{t('cookie.accept')}
 								</button>

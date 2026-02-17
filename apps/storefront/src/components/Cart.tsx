@@ -28,9 +28,9 @@ function EmptyCart() {
 				<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
 			</svg>
 			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('cart.empty')}</h2>
-			<p className="mt-2 text-sm text-gray-500">{t('cart.emptyDescription')}</p>
+			<p className="mt-2 text-sm text-gray-600">{t('cart.emptyDescription')}</p>
 			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-full bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
+				<a href="/products" className="inline-flex items-center rounded-lg bg-brand h-12 px-6 py-3 text-base font-semibold text-white hover:bg-brand-hover transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]">
 					{t('cart.browseProducts')}
 				</a>
 			</div>
@@ -49,7 +49,9 @@ function buildQuantityOptions(currentQuantity: number, stock?: number): number[]
 
 function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HTMLLIElement> }) {
 	const { t } = useTranslation();
+	const [stockError, setStockError] = useState<string | null>(null);
 	const quantityOptions = buildQuantityOptions(item.quantity, item.stock);
+	const isAtStockLimit = item.stock !== undefined && item.quantity >= item.stock;
 
 	return (
 		<li ref={itemRef} className="flex py-6 sm:py-10">
@@ -85,7 +87,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 						</div>
 						{item.variantTitle && item.variantTitle !== 'Default' && (
 							<div className="mt-1 flex text-sm">
-								<p className="text-gray-500">{item.variantTitle}</p>
+								<p className="text-gray-600">{item.variantTitle}</p>
 							</div>
 						)}
 						<p className="mt-1 text-sm font-medium text-gray-900">{formatPrice(item.price, item.currency)}</p>
@@ -99,13 +101,21 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 									const val = Number(e.target.value);
 									if (val > 0 && (item.stock === undefined || val <= item.stock)) {
 										updateQuantity(item.variantId, val);
+										setStockError(null);
+									} else if (item.stock !== undefined && val > item.stock) {
+										setStockError(
+											t('cart.stockInsufficient', { stock: String(item.stock) })
+										);
 									}
 								}}
+								disabled={isAtStockLimit && quantityOptions.length <= 1}
 								aria-label={t('cart.quantityLabel', { title: item.title })}
-								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand sm:text-sm"
+								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand disabled:bg-gray-100 disabled:cursor-not-allowed sm:text-sm"
 							>
 								{quantityOptions.map((n) => (
-									<option key={n} value={n}>{n}</option>
+									<option key={n} value={n} disabled={item.stock !== undefined && n > item.stock}>
+										{n}
+									</option>
 								))}
 							</select>
 							<svg className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -113,11 +123,22 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 							</svg>
 						</div>
 
+						{isAtStockLimit && (
+							<p className="mt-1 text-xs text-amber-600" role="alert">
+								{t('cart.stockInsufficient', { stock: String(item.stock) })}
+							</p>
+						)}
+						{stockError && !isAtStockLimit && (
+							<p className="mt-1 text-xs text-red-600" role="alert">
+								{stockError}
+							</p>
+						)}
+
 						<div className="absolute top-0 right-0">
 							<button
 								type="button"
 								onClick={() => removeFromCart(item.variantId)}
-								className="-m-2 inline-flex p-2 text-gray-400 hover:text-gray-500"
+								className="-m-2 inline-flex p-2 text-gray-500 hover:text-gray-700"
 							>
 								<span className="sr-only">{t('common.remove')}</span>
 								<svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -210,58 +231,78 @@ function CartContent() {
 	}
 
 	return (
-		<div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
-			<div aria-live="polite" className="sr-only">
-				{t('cart.itemCount', { count: items.length })}
-				{' '}
-				{t('cart.orderTotal')}: {formatPrice(grandTotal, currency)}
-			</div>
-			<section aria-labelledby="cart-heading" className="lg:col-span-7">
-				<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
-				<ul role="list" className="divide-y divide-gray-200 border-t border-b border-gray-200">
-					{items.map((item) => (
-						<CartItemRow
-							key={item.variantId}
-							item={item}
-							itemRef={(el: HTMLLIElement | null) => {
-								if (el) {
-									itemRefs.current.set(item.variantId, el);
-								} else {
-									itemRefs.current.delete(item.variantId);
-								}
-							}}
-						/>
-					))}
-				</ul>
-			</section>
+		<>
+			<div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16 pb-24 lg:pb-0">
+				<div aria-live="polite" className="sr-only">
+					{t('cart.itemCount', { count: items.length })}
+					{' '}
+					{t('cart.orderTotal')}: {formatPrice(grandTotal, currency)}
+				</div>
+				<section aria-labelledby="cart-heading" className="lg:col-span-7">
+					<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
+					<ul role="list" className="divide-y divide-gray-200 border-t border-b border-gray-200">
+						{items.map((item) => (
+							<CartItemRow
+								key={item.variantId}
+								item={item}
+								itemRef={(el: HTMLLIElement | null) => {
+									if (el) {
+										itemRefs.current.set(item.variantId, el);
+									} else {
+										itemRefs.current.delete(item.variantId);
+									}
+								}}
+							/>
+						))}
+					</ul>
+				</section>
 
-			<div className="lg:col-span-5">
-				{shippingState === 'error' && (
-					<div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-center">
-						<p className="text-sm text-red-800">{t('cart.shippingConfigError')}</p>
-						<p className="mt-1 text-xs text-red-600">{t('cart.checkoutBlockedByShipping')}</p>
-						<button
-							type="button"
-							onClick={retryShipping}
-							className="mt-2 text-sm font-medium text-red-700 underline hover:text-red-900"
-						>
-							{t('cart.retry')}
-						</button>
-					</div>
-				)}
-				<CartOrderSummary
-					subtotal={subtotal}
-					taxAmount={taxAmount}
-					cartTotal={cartTotal}
-					discount={discount}
-					shipping={shipping}
-					grandTotal={grandTotal}
-					currency={currency}
-					onCheckout={handleCheckout}
-					checkoutDisabled={shippingState === 'error'}
-				/>
+				<div className="lg:col-span-5">
+					{shippingState === 'error' && (
+						<div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-center">
+							<p className="text-sm text-red-800">{t('cart.shippingConfigError')}</p>
+							<p className="mt-1 text-xs text-red-600">{t('cart.checkoutBlockedByShipping')}</p>
+							<button
+								type="button"
+								onClick={retryShipping}
+								className="mt-2 text-sm font-medium text-red-700 underline hover:text-red-900"
+							>
+								{t('cart.retry')}
+							</button>
+						</div>
+					)}
+					<CartOrderSummary
+						subtotal={subtotal}
+						taxAmount={taxAmount}
+						cartTotal={cartTotal}
+						discount={discount}
+						shipping={shipping}
+						grandTotal={grandTotal}
+						currency={currency}
+						onCheckout={handleCheckout}
+						checkoutDisabled={shippingState === 'error'}
+					/>
+				</div>
 			</div>
-		</div>
+
+			{/* Mobile sticky bottom bar - visible below lg breakpoint */}
+			<div className="fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] lg:hidden">
+				<div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
+					<div className="min-w-0">
+						<p className="text-xs text-gray-500">{t('cart.orderTotal')}</p>
+						<p className="text-lg font-bold text-gray-900">{formatPrice(grandTotal, currency)}</p>
+					</div>
+					<button
+						type="button"
+						onClick={handleCheckout}
+						disabled={shippingState === 'error'}
+						className="shrink-0 rounded-lg bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+					>
+						{t('cart.checkout')}
+					</button>
+				</div>
+			</div>
+		</>
 	);
 }
 

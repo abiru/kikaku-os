@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
 import { Link } from '../catalyst/link'
@@ -96,6 +96,46 @@ export default function ProductsTable({
     }
   }
 
+  const executeBulkArchive = useCallback(async (targetIds: ReadonlySet<number>, clearSelection: () => void) => {
+    await executeBulk(async () => {
+      let successCount = 0
+      const failedIds: number[] = []
+
+      for (const pid of targetIds) {
+        try {
+          const res = await fetch(`/api/admin/products/${pid}`, { method: 'DELETE' })
+          if (res.ok) successCount++
+          else failedIds.push(pid)
+        } catch {
+          failedIds.push(pid)
+        }
+      }
+
+      if (failedIds.length === 0) {
+        setBulkMessage({ type: 'success', text: `${successCount}件のアーカイブに成功しました` })
+        setProducts(prev => prev.map(p => targetIds.has(p.id) ? { ...p, status: 'archived' } : p))
+        clearSelection()
+      } else {
+        const failedNames = products
+          .filter(p => failedIds.includes(p.id))
+          .map(p => p.title)
+        const detail = failedNames.length > 0
+          ? failedNames.join(', ')
+          : failedIds.map(id => `#${id}`).join(', ')
+        setBulkMessage({
+          type: 'error',
+          text: `${successCount}件成功、${failedIds.length}件失敗しました（${detail}）`,
+          failedIds,
+          action: 'archive',
+        })
+        if (successCount > 0) {
+          const succeededIds = new Set([...targetIds].filter(id => !failedIds.includes(id)))
+          setProducts(prev => prev.map(p => succeededIds.has(p.id) ? { ...p, status: 'archived' } : p))
+        }
+      }
+    })
+  }, [products, executeBulk, setBulkMessage])
+
   const handleBulkAction = async (action: string, selectedIds: ReadonlySet<number>, clearSelection: () => void) => {
     if (!action) return
     if (action === 'archive') {
@@ -110,28 +150,16 @@ export default function ProductsTable({
         : window.confirm(t('admin.confirm.bulkArchiveProducts', { count: selectedIds.size }))
       if (!confirmed) return
 
-      await executeBulk(async () => {
-        let success = 0
-        let fail = 0
-        for (const pid of selectedIds) {
-          try {
-            const res = await fetch(`/api/admin/products/${pid}`, { method: 'DELETE' })
-            if (res.ok) success++
-            else fail++
-          } catch {
-            fail++
-          }
-        }
-        if (fail === 0) {
-          setBulkMessage({ type: 'success', text: `${success}件のアーカイブに成功しました` })
-          setProducts(prev => prev.map(p => selectedIds.has(p.id) ? { ...p, status: 'archived' } : p))
-          clearSelection()
-        } else {
-          setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
-        }
-      })
+      await executeBulkArchive(selectedIds, clearSelection)
     }
   }
+
+  const handleRetryFailed = useCallback((clearSelection: () => void) => {
+    if (!bulkMessage?.failedIds || bulkMessage.failedIds.length === 0) return
+    const retryIds = new Set(bulkMessage.failedIds)
+    setBulkMessage(null)
+    executeBulkArchive(retryIds, clearSelection)
+  }, [bulkMessage, executeBulkArchive, setBulkMessage])
 
   const columns: Column<Product>[] = useMemo(() => [
     {
@@ -223,9 +251,19 @@ export default function ProductsTable({
           {bulkLoading && (
             <span className="text-sm text-indigo-600 animate-pulse">処理中...</span>
           )}
+          {bulkMessage?.failedIds && bulkMessage.failedIds.length > 0 && (
+            <Button
+              plain
+              onClick={() => handleRetryFailed(clearSelection)}
+              className="text-sm text-red-600 hover:text-red-800 font-medium"
+              disabled={bulkLoading}
+            >
+              失敗した{bulkMessage.failedIds.length}件をリトライ
+            </Button>
+          )}
         </>
       )}
-      message={bulkMessage}
+      message={bulkMessage ? { type: bulkMessage.type, text: bulkMessage.text } : null}
       pagination={{
         currentPage,
         totalPages,
