@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './catalyst/button';
 import { Input } from './catalyst/input';
 import { Textarea } from './catalyst/textarea';
@@ -40,9 +40,39 @@ function ContactFormContent() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [honeypot, setHoneypot] = useState('');
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const [csrfError, setCsrfError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchCsrfToken = async () => {
+      try {
+        const base = getApiBase();
+        const res = await fetch(`${base}/csrf-token`, {
+          credentials: 'include',
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          setCsrfError(true);
+          return;
+        }
+        const data = await res.json();
+        if (typeof data.token !== 'string' || !data.token) {
+          setCsrfError(true);
+          return;
+        }
+        setCsrfToken(data.token);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        setCsrfError(true);
+      }
+    };
+    fetchCsrfToken();
+    return () => controller.abort();
+  }, []);
 
   const handleChange = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -70,12 +100,14 @@ function ContactFormContent() {
       return;
     }
 
+    if (!csrfToken) {
+      setSubmitError(t('contact.csrfError'));
+      return;
+    }
+
     setSubmitting(true);
     try {
       const base = getApiBase();
-      const csrfRes = await fetch(`${base}/csrf-token`, { credentials: 'include' });
-      const { token: csrfToken } = await csrfRes.json();
-
       const url = buildStoreUrl('/contact', base);
       const res = await fetch(url, {
         method: 'POST',
@@ -125,6 +157,12 @@ function ContactFormContent() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {csrfError && (
+        <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+          {t('contact.csrfError')}
+        </div>
+      )}
+
       {submitError && (
         <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
           {submitError}
@@ -210,7 +248,7 @@ function ContactFormContent() {
         {errors.body && <p id="contact-body-error" className="mt-1 text-sm text-red-600" role="alert">{errors.body}</p>}
       </Field>
 
-      <Button type="submit" color="dark/zinc" className="w-full" disabled={submitting}>
+      <Button type="submit" color="dark/zinc" className="w-full" disabled={submitting || csrfError}>
         {submitting ? t('contact.submitting') : t('contact.submit')}
       </Button>
     </form>
