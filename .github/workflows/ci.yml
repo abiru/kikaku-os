@@ -9,6 +9,7 @@ on:
       - 'apps/storefront/**'
       - 'packages/**'
       - 'scripts/**'
+      - '.github/workflows/**'
       - 'pnpm-lock.yaml'
       - 'package.json'
 
