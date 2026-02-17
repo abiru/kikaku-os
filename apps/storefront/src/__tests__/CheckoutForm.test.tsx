@@ -28,6 +28,11 @@ vi.mock('@stripe/stripe-js', () => ({
 
 import CheckoutForm from '../components/CheckoutForm';
 
+const defaultProps = {
+	items: [{ productId: 1, variantId: 1, title: 'Test Product', variantTitle: 'Default', price: 1000, currency: 'JPY', quantity: 1 }],
+	breakdown: { subtotal: 1000, taxAmount: 100, cartTotal: 1000, discount: 0, shippingFee: 500, grandTotal: 1600, currency: 'JPY' },
+};
+
 describe('CheckoutForm', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -39,6 +44,7 @@ describe('CheckoutForm', () => {
 				clientSecret={null}
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -53,6 +59,7 @@ describe('CheckoutForm', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey=""
+				{...defaultProps}
 			/>
 		);
 
@@ -66,6 +73,7 @@ describe('CheckoutForm', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -80,6 +88,7 @@ describe('CheckoutForm', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -95,6 +104,7 @@ describe('CheckoutForm', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -109,6 +119,7 @@ describe('CheckoutForm', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -121,6 +132,7 @@ describe('CheckoutForm', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
