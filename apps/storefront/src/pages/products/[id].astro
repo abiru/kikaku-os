@@ -76,7 +76,7 @@ const formatPriceWithTax = (amount: number, currency: string = 'JPY') => {
 		currency: currency,
 		minimumFractionDigits: 0,
 	}).format(amount);
-	return `${formatted} (税込)`;
+	return `${formatted} ${t('product.priceIncludesTax')}`;
 };
 
 const priceLabel = variant?.price
@@ -289,6 +289,9 @@ const jsonLdBreadcrumb = product ? {
 													</svg>
 													<p class="ml-2 text-sm text-gray-700">{t('product.inStock')} ({stockValue})</p>
 												</div>
+												{stockValue <= 3 && (
+													<p class="mt-1 text-sm font-medium text-orange-600">{t('product.lowStock', { stock: String(stockValue) })}</p>
+												)}
 											</>
 										) : (
 											<>

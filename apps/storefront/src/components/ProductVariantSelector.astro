@@ -46,6 +46,9 @@ const { variantId, addedToCartLabel } = Astro.props;
 			</svg>
 		</span>
 	</button>
+	{!variantId && (
+		<p class="mt-2 text-sm text-gray-500">{t('product.selectVariant')}</p>
+	)}
 </form>
 
 {/* Error message */}
