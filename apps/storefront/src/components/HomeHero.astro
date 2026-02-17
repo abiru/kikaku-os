@@ -32,7 +32,7 @@ const bgSmall = imageSmall || image || bgLarge;
   class="hero fade-in bg-subtle h-[500px] md:h-[692px] bg-cover bg-center bg-no-repeat"
   style={`--bg-large: url(${bgLarge}); --bg-small: url(${bgSmall});`}
 >
-  <div class="pt-8 md:pt-24 text-center">
+  <div class="hero-scrim pt-8 md:pt-24 text-center">
     <h2
       class="text-2xl font-extrabold tracking-tighter sm:text-5xl text-neutral-900"
     >
@@ -43,24 +43,24 @@ const bgSmall = imageSmall || image || bgLarge;
         {subtitle}
       </p>
     )}
-  </div>
-  <div class="mt-4 flex justify-center gap-2">
-    {ctaPrimaryText && ctaPrimaryUrl && (
-      <a
-        href={ctaPrimaryUrl}
-        class="rounded-full bg-brand px-5 py-2.5 min-h-[44px] inline-flex items-center text-sm font-semibold text-white hover:bg-brand-active transition-colors"
-      >
-        {ctaPrimaryText}
-      </a>
-    )}
-    {ctaSecondaryText && ctaSecondaryUrl && (
-      <a
-        href={ctaSecondaryUrl}
-        class="rounded-full border border-brand px-5 py-2.5 min-h-[44px] inline-flex items-center text-sm font-semibold text-brand hover:bg-brand hover:text-white transition-colors"
-      >
-        {ctaSecondaryText}
-      </a>
-    )}
+    <div class="mt-4 flex flex-col sm:flex-row justify-center gap-2">
+      {ctaPrimaryText && ctaPrimaryUrl && (
+        <a
+          href={ctaPrimaryUrl}
+          class="w-full sm:w-auto h-12 px-6 py-3 rounded-lg bg-brand inline-flex items-center justify-center text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
+        >
+          {ctaPrimaryText}
+        </a>
+      )}
+      {ctaSecondaryText && ctaSecondaryUrl && (
+        <a
+          href={ctaSecondaryUrl}
+          class="w-full sm:w-auto h-12 px-6 py-3 rounded-lg border border-brand inline-flex items-center justify-center text-base font-semibold text-brand hover:bg-brand hover:text-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
+        >
+          {ctaSecondaryText}
+        </a>
+      )}
+    </div>
   </div>
 </section>
 
@@ -73,6 +73,14 @@ const bgSmall = imageSmall || image || bgLarge;
     .hero {
       background-image: var(--bg-small);
     }
+  }
+
+  /* テキスト視認性のためのスクリム */
+  .hero-scrim {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.6) 100%);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 2rem;
   }
 
   /* フェードイン初期状態 */
@@ -89,6 +97,16 @@ const bgSmall = imageSmall || image || bgLarge;
   .fade-in.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  /* モーション低減設定時はアニメーション無効化 */
+  @media (prefers-reduced-motion: reduce) {
+    .fade-in {
+      opacity: 1;
+      transform: none;
+      transition: none;
+      will-change: auto;
+    }
   }
 </style>
 
