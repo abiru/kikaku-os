@@ -177,6 +177,7 @@
     "confirmationEmailSent": "確認メールが送信されました。配送の詳細と追跡情報が記載されています。",
     "returnToHome": "ホームに戻る",
     "shippingAddress": "配送先住所",
+    "japanOnlyShipping": "現在、日本国内のみ配送を承っております。",
     "phone": "電話番号",
     "paymentMethodLabel": "お支払い方法",
     "paymentMethodCard": "カード決済",

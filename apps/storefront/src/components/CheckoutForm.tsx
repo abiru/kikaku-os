@@ -133,6 +133,9 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 				<label className="block text-sm font-medium text-gray-700 mb-2">
 					{t('checkout.shippingAddress')}
 				</label>
+				<p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 mb-3" role="note">
+					{t('checkout.japanOnlyShipping')}
+				</p>
 				<AddressElement
 					options={{
 						mode: 'shipping',
