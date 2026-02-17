@@ -1,9 +1,7 @@
-import { useState, useCallback } from 'react'
-import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
+import { useState } from 'react'
 import { Badge } from '../catalyst/badge'
 import { Link } from '../catalyst/link'
-import AdminPagination from './AdminPagination'
-import SortIcon from './SortIcon'
+import AdminTable, { type Column, type SelectionState } from './AdminTable'
 import { formatPrice } from '../../lib/format'
 import { getOrderBadgeColor, getPaymentStatusLabel, getFulfillmentStatusLabel, getFulfillmentBadgeColor } from '../../lib/adminUtils'
 import TableEmptyState from './TableEmptyState'
@@ -18,9 +16,6 @@ type Order = {
   total_net: number
   currency: string
 }
-
-type SortField = 'id' | 'created_at' | 'total_net' | 'status'
-type SortOrder = 'asc' | 'desc'
 
 type Props = {
   orders: Order[]
@@ -58,77 +53,34 @@ const confirmDialog = (window as any).__confirmDialog as
   | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
   | undefined
 
+const sortComparator = (a: Order, b: Order, field: string): number => {
+  switch (field) {
+    case 'id':
+      return a.id - b.id
+    case 'created_at':
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    case 'total_net':
+      return a.total_net - b.total_net
+    case 'status':
+      return a.status.localeCompare(b.status)
+    default:
+      return 0
+  }
+}
+
 export default function OrdersTable({ orders: initialOrders, currentPage, totalPages, searchQuery }: Props) {
   const [orders, setOrders] = useState(initialOrders)
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(new Set())
-  const [sortField, setSortField] = useState<SortField>('id')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [bulkLoading, setBulkLoading] = useState(false)
-  const [bulkError, setBulkError] = useState<string | null>(null)
-  const [bulkSuccess, setBulkSuccess] = useState<string | null>(null)
+  const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const sortedOrders = [...orders].sort((a, b) => {
-    let cmp = 0
-    switch (sortField) {
-      case 'id':
-        cmp = a.id - b.id
-        break
-      case 'created_at':
-        cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        break
-      case 'total_net':
-        cmp = a.total_net - b.total_net
-        break
-      case 'status':
-        cmp = a.status.localeCompare(b.status)
-        break
-    }
-    return sortOrder === 'asc' ? cmp : -cmp
-  })
-
-  const allIds = sortedOrders.map((o) => o.id)
-  const allSelected = sortedOrders.length > 0 && allIds.every((id) => selectedIds.has(id))
-  const someSelected = selectedIds.size > 0
-
-  const toggleAll = useCallback(() => {
-    setSelectedIds((prev) => {
-      const allCurrentlySelected = allIds.every((id) => prev.has(id))
-      return allCurrentlySelected ? new Set() : new Set(allIds)
-    })
-  }, [allIds])
-
-  const toggleOne = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
-  }, [])
-
-  const handleSort = useCallback((field: SortField) => {
-    setSortField((prev) => {
-      if (prev === field) {
-        setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))
-        return prev
-      }
-      setSortOrder('desc')
-      return field
-    })
-  }, [])
-
-  const handleBulkAction = useCallback(async (action: string) => {
+  const handleBulkAction = async (action: string, selectedIds: ReadonlySet<number>, clearSelection: () => void) => {
     if (!action) return
-    setBulkError(null)
-    setBulkSuccess(null)
+    setBulkMessage(null)
 
     if (action === 'export') {
       exportOrdersCSV(orders, selectedIds)
-      setBulkSuccess(t('admin.bulkExportSuccess', { count: selectedIds.size }))
-      setTimeout(() => setBulkSuccess(null), 3000)
+      setBulkMessage({ type: 'success', text: t('admin.bulkExportSuccess', { count: selectedIds.size }) })
+      setTimeout(() => setBulkMessage(null), 3000)
       return
     }
 
@@ -167,42 +119,94 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
 
       setBulkLoading(false)
       if (failCount === 0) {
-        setBulkSuccess(t('admin.bulkFulfillSuccess', { count: successCount }))
+        setBulkMessage({ type: 'success', text: t('admin.bulkFulfillSuccess', { count: successCount }) })
         setOrders(prev => prev.map(o =>
           selectedIds.has(o.id) ? { ...o, fulfillment_status: 'shipped' } : o
         ))
-        setSelectedIds(new Set())
+        clearSelection()
       } else {
-        setBulkError(t('admin.bulkPartialFail', { succeeded: successCount, failed: failCount }))
+        setBulkMessage({ type: 'error', text: t('admin.bulkPartialFail', { succeeded: successCount, failed: failCount }) })
       }
     }
-  }, [orders, selectedIds])
-
-  if (sortedOrders.length === 0) {
-    return (
-      <TableEmptyState
-        icon="shopping-cart"
-        message={t('admin.emptyOrders')}
-        description={t('admin.emptyOrdersDesc')}
-      />
-    )
   }
 
-  return (
-    <div>
-      {/* Bulk action bar */}
-      {someSelected && (
-        <div className="mb-4 flex items-center gap-4 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3">
-          <span className="text-sm font-medium text-indigo-900">
-            {t('admin.selectedCount', { count: selectedIds.size })}
+  const columns: Column<Order>[] = [
+    {
+      id: 'id',
+      header: t('admin.order'),
+      sortable: true,
+      className: 'font-medium',
+      cell: (o) => (
+        <Link href={`/admin/orders/${o.id}`} className="text-indigo-600 hover:text-indigo-800">
+          #{o.id}
+        </Link>
+      ),
+    },
+    {
+      id: 'created_at',
+      header: t('admin.date'),
+      sortable: true,
+      className: 'text-zinc-500 tabular-nums',
+      cell: (o) => (
+        <>
+          {new Date(o.created_at).toLocaleDateString('ja-JP')}{' '}
+          <span className="text-xs">
+            {new Date(o.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
           </span>
+        </>
+      ),
+    },
+    {
+      id: 'customer',
+      header: t('admin.customer'),
+      cell: (o) => (
+        <div className="text-zinc-950">{o.customer_email || t('admin.guest')}</div>
+      ),
+    },
+    {
+      id: 'status',
+      header: t('admin.payment'),
+      sortable: true,
+      cell: (o) => (
+        <Badge color={getOrderBadgeColor(o.status)}>{getPaymentStatusLabel(o.status)}</Badge>
+      ),
+    },
+    {
+      id: 'fulfillment',
+      header: t('admin.fulfillment'),
+      cell: (o) => (
+        <Badge color={getFulfillmentBadgeColor(o.fulfillment_status)}>
+          {getFulfillmentStatusLabel(o.fulfillment_status)}
+        </Badge>
+      ),
+    },
+    {
+      id: 'total_net',
+      header: t('admin.total'),
+      sortable: true,
+      headerClassName: 'text-right',
+      className: 'text-right font-medium tabular-nums',
+      cell: (o) => formatPrice(o.total_net, o.currency),
+    },
+  ]
+
+  return (
+    <AdminTable
+      data={orders}
+      columns={columns}
+      defaultSortField="id"
+      defaultSortOrder="desc"
+      sortComparator={sortComparator}
+      itemLabel={(o) => t('admin.selectOrder', { id: o.id })}
+      renderBulkActions={({ selectedIds, clearSelection }: SelectionState) => (
+        <>
           <select
             className="rounded-md border-gray-300 text-sm py-1.5 pl-3 pr-8 focus:border-indigo-500 focus:ring-indigo-500"
             defaultValue=""
             onChange={(e) => {
               const val = e.target.value
               e.target.value = ''
-              handleBulkAction(val)
+              handleBulkAction(val, selectedIds, clearSelection)
             }}
             disabled={bulkLoading}
           >
@@ -213,154 +217,51 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
           {bulkLoading && (
             <span className="text-sm text-indigo-600 animate-pulse">{t('admin.processing')}</span>
           )}
-          <button
-            type="button"
-            onClick={() => setSelectedIds(new Set())}
-            className="ml-auto text-sm text-indigo-600 hover:text-indigo-800"
-          >
-            {t('admin.deselect')}
-          </button>
-        </div>
+        </>
       )}
-
-      {bulkError && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {bulkError}
-        </div>
+      message={bulkMessage}
+      pagination={{
+        currentPage,
+        totalPages,
+        buildHref: (page) => `?page=${page}&q=${searchQuery}`,
+      }}
+      renderMobileCard={(order) => (
+        <a
+          href={`/admin/orders/${order.id}`}
+          className="block rounded-lg border border-zinc-200 bg-white p-4 shadow-sm hover:border-indigo-200 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-indigo-600">#{order.id}</span>
+            <span className="text-sm font-medium tabular-nums">
+              {formatPrice(order.total_net, order.currency)}
+            </span>
+          </div>
+          <div className="mt-2 text-sm text-zinc-600">
+            {order.customer_email || t('admin.guest')}
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge color={getOrderBadgeColor(order.status)}>{getPaymentStatusLabel(order.status)}</Badge>
+              <Badge color={getFulfillmentBadgeColor(order.fulfillment_status)}>
+                {getFulfillmentStatusLabel(order.fulfillment_status)}
+              </Badge>
+            </div>
+            <span className="text-xs text-zinc-400 tabular-nums">
+              {new Date(order.created_at).toLocaleDateString('ja-JP')}
+            </span>
+          </div>
+        </a>
       )}
-
-      {bulkSuccess && (
-        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-          {bulkSuccess}
-        </div>
-      )}
-
-      {/* Mobile card layout */}
-      <div className="block md:hidden space-y-3">
-        {sortedOrders.map((order) => (
-          <a
-            key={order.id}
-            href={`/admin/orders/${order.id}`}
-            className="block rounded-lg border border-zinc-200 bg-white p-4 shadow-sm hover:border-indigo-200 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-indigo-600">#{order.id}</span>
-              <span className="text-sm font-medium tabular-nums">
-                {formatPrice(order.total_net, order.currency)}
-              </span>
-            </div>
-            <div className="mt-2 text-sm text-zinc-600">
-              {order.customer_email || t('admin.guest')}
-            </div>
-            <div className="mt-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge color={getOrderBadgeColor(order.status)}>{getPaymentStatusLabel(order.status)}</Badge>
-                <Badge color={getFulfillmentBadgeColor(order.fulfillment_status)}>
-                  {getFulfillmentStatusLabel(order.fulfillment_status)}
-                </Badge>
-              </div>
-              <span className="text-xs text-zinc-400 tabular-nums">
-                {new Date(order.created_at).toLocaleDateString('ja-JP')}
-              </span>
-            </div>
-          </a>
-        ))}
-      </div>
-
-      {/* Desktop table layout */}
-      <div className="hidden md:block">
-        <Table striped>
-          <TableHead>
-            <TableRow>
-              <TableHeader className="w-10">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleAll}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  aria-label={t('admin.selectAll')}
-                />
-              </TableHeader>
-              <TableHeader>
-                <button type="button" onClick={() => handleSort('id')} className="inline-flex items-center hover:text-indigo-600">
-                  {t('admin.order')}
-                  <SortIcon field="id" sortField={sortField} sortOrder={sortOrder} />
-                </button>
-              </TableHeader>
-              <TableHeader>
-                <button type="button" onClick={() => handleSort('created_at')} className="inline-flex items-center hover:text-indigo-600">
-                  {t('admin.date')}
-                  <SortIcon field="created_at" sortField={sortField} sortOrder={sortOrder} />
-                </button>
-              </TableHeader>
-              <TableHeader>{t('admin.customer')}</TableHeader>
-              <TableHeader>
-                <button type="button" onClick={() => handleSort('status')} className="inline-flex items-center hover:text-indigo-600">
-                  {t('admin.payment')}
-                  <SortIcon field="status" sortField={sortField} sortOrder={sortOrder} />
-                </button>
-              </TableHeader>
-              <TableHeader>{t('admin.fulfillment')}</TableHeader>
-              <TableHeader className="text-right">
-                <button type="button" onClick={() => handleSort('total_net')} className="inline-flex items-center hover:text-indigo-600">
-                  {t('admin.total')}
-                  <SortIcon field="total_net" sortField={sortField} sortOrder={sortOrder} />
-                </button>
-              </TableHeader>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sortedOrders.map((order) => (
-              <TableRow key={order.id} href={`/admin/orders/${order.id}`} title={`${t('admin.order')} #${order.id}`}>
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(order.id)}
-                    onChange={(e) => {
-                      e.stopPropagation()
-                      toggleOne(order.id)
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    aria-label={t('admin.selectOrder', { id: order.id })}
-                  />
-                </TableCell>
-                <TableCell className="font-medium">
-                  <Link href={`/admin/orders/${order.id}`} className="text-indigo-600 hover:text-indigo-800">
-                    #{order.id}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-zinc-500 tabular-nums">
-                  {new Date(order.created_at).toLocaleDateString('ja-JP')}{' '}
-                  <span className="text-xs">
-                    {new Date(order.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="text-zinc-950">{order.customer_email || t('admin.guest')}</div>
-                </TableCell>
-                <TableCell>
-                  <Badge color={getOrderBadgeColor(order.status)}>{getPaymentStatusLabel(order.status)}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge color={getFulfillmentBadgeColor(order.fulfillment_status)}>
-                    {getFulfillmentStatusLabel(order.fulfillment_status)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right font-medium tabular-nums">
-                  {formatPrice(order.total_net, order.currency)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <AdminPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        buildHref={(page) => `?page=${page}&q=${searchQuery}`}
-      />
-    </div>
+      emptyState={
+        <TableEmptyState
+          icon="shopping-cart"
+          message={t('admin.emptyOrders')}
+          description={t('admin.emptyOrdersDesc')}
+        />
+      }
+      rowHref={(o) => `/admin/orders/${o.id}`}
+      rowTitle={(o) => `${t('admin.order')} #${o.id}`}
+      striped
+    />
   )
 }

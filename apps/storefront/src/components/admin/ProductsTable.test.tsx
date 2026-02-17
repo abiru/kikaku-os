@@ -147,9 +147,9 @@ describe('ProductsTable', () => {
         statusFilter=""
       />
     )
-    const selectAll = screen.getByLabelText('全て選択')
+    const selectAll = screen.getByLabelText('admin.selectAll')
     fireEvent.click(selectAll)
-    expect(screen.getByText(/件選択中/)).toBeDefined()
+    expect(screen.getByText('admin.selectedCount')).toBeDefined()
   })
 
   it('shows archive button for active products', () => {
@@ -188,11 +188,11 @@ describe('ProductsTable', () => {
         statusFilter=""
       />
     )
-    const selectAll = screen.getByLabelText('全て選択')
+    const selectAll = screen.getByLabelText('admin.selectAll')
     fireEvent.click(selectAll)
-    expect(screen.getByText(/件選択中/)).toBeDefined()
+    expect(screen.getByText('admin.selectedCount')).toBeDefined()
 
-    fireEvent.click(screen.getByText('選択解除'))
-    expect(screen.queryByText(/件選択中/)).toBeNull()
+    fireEvent.click(screen.getByText('admin.deselect'))
+    expect(screen.queryByText('admin.selectedCount')).toBeNull()
   })
 })
