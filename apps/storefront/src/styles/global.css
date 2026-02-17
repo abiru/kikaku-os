@@ -52,12 +52,17 @@
   body {
     @apply bg-subtle text-primary antialiased selection:bg-brand selection:text-white;
     font-feature-settings: "kern", "palt";
-    line-height: 1.8;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
+  }
+
+  /* Japanese-optimised line-height for prose/body text only */
+  p, li, dd, blockquote, .prose {
+    line-height: 1.8;
   }
 
   /* Keyboard focus indicator */
@@ -67,11 +72,7 @@
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
+@layer components {
   .typo-h1 {
     font-size: var(--text-h1);
     font-weight: var(--text-h1-weight);
@@ -119,6 +120,12 @@
     font-weight: var(--text-price-weight);
     line-height: var(--text-price-lh);
     letter-spacing: var(--text-price-ls);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
