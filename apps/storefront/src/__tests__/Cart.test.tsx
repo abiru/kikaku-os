@@ -487,6 +487,7 @@ describe('Cart accessibility', () => {
 		const removeButton = screen.getByText('common.remove');
 		expect(removeButton).toBeInTheDocument();
 		expect(removeButton.tagName).toBe('BUTTON');
+		expect(removeButton).toHaveAttribute('type', 'button');
 	});
 
 	it('has aria-live region for cart updates', () => {

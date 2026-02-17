@@ -151,6 +151,7 @@ describe('CheckoutForm edge cases', () => {
 				clientSecret={null}
 				orderToken="tok_123"
 				publishableKey=""
+				{...defaultProps}
 			/>
 		);
 
@@ -165,6 +166,7 @@ describe('CheckoutForm edge cases', () => {
 				clientSecret="pi_secret_123"
 				orderToken={null}
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -178,6 +180,7 @@ describe('CheckoutForm edge cases', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -191,6 +194,7 @@ describe('CheckoutForm edge cases', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -212,6 +216,7 @@ describe('CheckoutForm accessibility', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -228,6 +233,7 @@ describe('CheckoutForm accessibility', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -242,6 +248,7 @@ describe('CheckoutForm accessibility', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -255,6 +262,7 @@ describe('CheckoutForm accessibility', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -270,6 +278,7 @@ describe('CheckoutForm accessibility', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 
@@ -282,6 +291,7 @@ describe('CheckoutForm accessibility', () => {
 				clientSecret="pi_secret_123"
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
+				{...defaultProps}
 			/>
 		);
 

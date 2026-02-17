@@ -1,6 +1,12 @@
 import { addToCart } from '../lib/cart';
 import { addToRecentlyViewed } from '../lib/recentlyViewed';
 
+declare global {
+	interface Window {
+		dataLayer: Record<string, unknown>[];
+	}
+}
+
 const page = document.getElementById('product-page');
 if (page) {
 	const variantId = page.dataset.variantId ? Number(page.dataset.variantId) : null;

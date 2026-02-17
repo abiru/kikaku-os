@@ -146,6 +146,7 @@ describe('RestockNotification', () => {
 		expect(screen.getByText('restock.invalidEmail')).toBeInTheDocument();
 
 		fireEvent.change(input, { target: { value: 'test@example.com' } });
+		fireEvent.blur(input);
 
 		expect(screen.queryByText('restock.invalidEmail')).not.toBeInTheDocument();
 	});
