@@ -88,7 +88,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('reviews.yourNamePlaceholder')}
-            className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
+            className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
             required
             maxLength={100}
           />
@@ -103,7 +103,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t('reviews.yourEmailPlaceholder')}
-            className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
+            className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
             required
             maxLength={255}
           />
@@ -120,7 +120,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t('reviews.reviewTitlePlaceholder')}
-          className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
+          className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
           required
           maxLength={200}
         />
@@ -136,7 +136,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={t('reviews.reviewBodyPlaceholder')}
-          className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-[#0071e3] focus:ring-[#0071e3]"
+          className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
           required
           maxLength={5000}
         />
@@ -147,7 +147,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
       <button
         type="submit"
         disabled={submitting || rating === 0}
-        className="rounded-md bg-[#0071e3] px-4 py-2 text-sm font-medium text-white hover:bg-[#005bb5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {submitting ? t('reviews.submitting') : t('reviews.submit')}
       </button>
@@ -219,7 +219,7 @@ export default function ReviewSection({ productId }: Props) {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="text-sm font-medium text-[#0071e3] hover:text-[#005bb5]"
+            className="text-sm font-medium text-brand hover:text-brand-hover"
           >
             {t('reviews.writeReview')}
           </button>
@@ -259,7 +259,7 @@ export default function ReviewSection({ productId }: Props) {
             <button
               type="button"
               onClick={() => setShowForm(true)}
-              className="mt-4 text-sm font-medium text-[#0071e3] hover:text-[#005bb5]"
+              className="mt-4 text-sm font-medium text-brand hover:text-brand-hover"
             >
               {t('reviews.beFirstToReview')}
             </button>
