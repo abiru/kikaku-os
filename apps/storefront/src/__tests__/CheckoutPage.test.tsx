@@ -304,6 +304,141 @@ describe('CheckoutPage', () => {
 		});
 	});
 
+	it('passes AbortController signal to fetch calls', async () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Signal Test Product',
+				variantTitle: 'Default',
+				price: 3000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.1,
+			},
+		});
+
+		mockFetchJson
+			.mockResolvedValueOnce(mockQuoteResponse)
+			.mockResolvedValueOnce(mockIntentResponse);
+
+		await act(async () => {
+			render(<CheckoutPage />);
+		});
+
+		await waitFor(() => {
+			expect(mockFetchJson).toHaveBeenCalledTimes(2);
+			// Both calls should include an AbortSignal
+			const quoteCallOptions = mockFetchJson.mock.calls[0]?.[1];
+			const intentCallOptions = mockFetchJson.mock.calls[1]?.[1];
+			expect(quoteCallOptions?.signal).toBeInstanceOf(AbortSignal);
+			expect(intentCallOptions?.signal).toBeInstanceOf(AbortSignal);
+		});
+	});
+
+	it('ignores AbortError when cart changes during fetch', async () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Abort Test Product',
+				variantTitle: 'Default',
+				price: 3000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.1,
+			},
+		});
+
+		// First call rejects with AbortError (simulating cart change during fetch)
+		mockFetchJson.mockRejectedValueOnce(
+			new DOMException('The operation was aborted.', 'AbortError')
+		);
+
+		// Second round (after cart change) succeeds
+		mockFetchJson
+			.mockResolvedValueOnce(mockQuoteResponse)
+			.mockResolvedValueOnce(mockIntentResponse);
+
+		await act(async () => {
+			render(<CheckoutPage />);
+		});
+
+		// Change cart to trigger re-creation
+		await act(async () => {
+			$cartItems.set({
+				'1': {
+					variantId: 1,
+					productId: 100,
+					title: 'Abort Test Product',
+					variantTitle: 'Default',
+					price: 3000,
+					currency: 'JPY',
+					quantity: 2,
+					taxRate: 0.1,
+				},
+			});
+		});
+
+		// Should eventually show the checkout form (not an error state)
+		await waitFor(() => {
+			expect(screen.getByRole('heading', { level: 1, name: 'checkout.title' })).toBeInTheDocument();
+			expect(screen.getByTestId('stripe-elements')).toBeInTheDocument();
+		});
+	});
+
+	it('resets clientSecret and orderToken when cart changes', async () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Reset Test Product',
+				variantTitle: 'Default',
+				price: 3000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.1,
+			},
+		});
+
+		mockFetchJson
+			.mockResolvedValueOnce(mockQuoteResponse)
+			.mockResolvedValueOnce(mockIntentResponse);
+
+		await act(async () => {
+			render(<CheckoutPage />);
+		});
+
+		// Wait for initial load
+		await waitFor(() => {
+			expect(screen.getByTestId('stripe-elements')).toBeInTheDocument();
+		});
+
+		// Now change cart - should trigger re-creation with loading state
+		mockFetchJson.mockReturnValue(new Promise(() => {})); // Never resolves
+
+		await act(async () => {
+			$cartItems.set({
+				'1': {
+					variantId: 1,
+					productId: 100,
+					title: 'Reset Test Product',
+					variantTitle: 'Default',
+					price: 3000,
+					currency: 'JPY',
+					quantity: 3,
+					taxRate: 0.1,
+				},
+			});
+		});
+
+		// Should show loading skeleton while new quote is being created
+		await waitFor(() => {
+			const skeleton = document.querySelector('.animate-pulse');
+			expect(skeleton).toBeInTheDocument();
+		});
+	});
+
 	it('renders order summary with items', async () => {
 		$cartItems.set({
 			'1': {
