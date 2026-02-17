@@ -16,7 +16,7 @@ const { productId, images } = Astro.props;
 		{images.length > 0 ? (
 			images.map((image, index) => (
 				<img
-					id={index === 0 ? 'main-image' : undefined}
+					id={image.primary ? 'main-image' : undefined}
 					alt={image.alt}
 					src={image.src}
 					loading={image.primary ? 'eager' : 'lazy'}
