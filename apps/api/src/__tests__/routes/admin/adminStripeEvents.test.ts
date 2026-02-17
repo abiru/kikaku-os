@@ -395,7 +395,7 @@ describe('Admin Stripe Events API', () => {
 
       expect(res.status).toBe(500);
       expect(json.ok).toBe(false);
-      expect(json.message).toContain('Retry failed: Handler failed');
+      expect(json.message).toBe('Event retry failed. Check event details for more information.');
     });
   });
 });

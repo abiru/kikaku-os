@@ -152,12 +152,13 @@ app.use('*', async (c, next) => {
 // Production request logging (after CORS, before auth)
 app.use('*', requestLogger);
 
-// Rate limiting: general API (120 req/min), stricter for sensitive endpoints
+// Rate limiting: stricter for sensitive endpoints, moderate for storefront, relaxed global
 app.use('/payments/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'pay' }));
-app.use('/checkout/*', rateLimit({ max: 20, windowSeconds: 60, prefix: 'co' }));
+app.use('/checkout/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'co' }));
 app.use('/store/contact', rateLimit({ max: 5, windowSeconds: 60, prefix: 'contact' }));
 app.use('/store/newsletter/*', rateLimit({ max: 5, windowSeconds: 60, prefix: 'nl' }));
 app.use('/store/products/*/notify', rateLimit({ max: 5, windowSeconds: 60, prefix: 'restock' }));
+app.use('/store/*', rateLimit({ max: 60, windowSeconds: 60, prefix: 'store' }));
 app.use('/quotations', rateLimit({ max: 10, windowSeconds: 60, prefix: 'quot' }));
 app.use('/quotations/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'quot' }));
 app.use('/ai/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'ai' }));

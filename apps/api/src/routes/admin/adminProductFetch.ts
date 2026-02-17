@@ -13,11 +13,13 @@ import { launch, type BrowserWorker } from '@cloudflare/playwright';
 import { Env } from '../../env';
 import { jsonOk, jsonError } from '../../lib/http';
 import { escapeHtml } from '../../lib/html';
+import { createLogger } from '../../lib/logger';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
 import { PERMISSIONS } from '../../lib/schemas';
 
+const logger = createLogger('admin-product-fetch');
 const app = new Hono<Env>();
 
 // Apply RBAC middleware to all routes in this file
@@ -436,8 +438,8 @@ app.post(
 
       return jsonOk(c, result);
     } catch (e) {
-      const error = e instanceof Error ? e.message : 'Unknown error';
-      return jsonError(c, `Failed to fetch product: ${error}`);
+      logger.error('Failed to fetch product', { error: String(e), url });
+      return jsonError(c, 'Failed to fetch product data');
     }
   }
 );
