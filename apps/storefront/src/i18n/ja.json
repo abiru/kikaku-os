@@ -211,6 +211,7 @@
     "paymentTimeoutGuidance": "決済が完了している場合はメールが届きます",
     "paymentTimeoutChecking": "決済状況を確認しています...",
     "paymentTimeoutConfirmed": "決済が確認されました。リダイレクトしています...",
+    "serviceUnavailable": "一時的に決済サービスが利用できません。しばらく後にお試しください。",
     "stripeErrors": {
       "card_declined": "カードが拒否されました。別のカードをお試しください。",
       "insufficient_funds": "残高不足です。別のカードをお試しください。",
