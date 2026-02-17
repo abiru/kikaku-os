@@ -24,6 +24,7 @@ export default function SearchModal() {
 	const [query, setQuery] = useState('');
 	const [results, setResults] = useState<SearchResult[]>([]);
 	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const resultsRef = useRef<HTMLDivElement>(null);
@@ -35,6 +36,7 @@ export default function SearchModal() {
 			setIsOpen(true);
 			setQuery('');
 			setResults([]);
+			setError(null);
 			setSelectedIndex(0);
 		};
 
@@ -45,34 +47,51 @@ export default function SearchModal() {
 	// Focus input when modal opens
 	useEffect(() => {
 		if (isOpen) {
-			setTimeout(() => inputRef.current?.focus(), 50);
+			const timer = setTimeout(() => inputRef.current?.focus(), 50);
+			return () => clearTimeout(timer);
 		}
 	}, [isOpen]);
 
-	// Debounced search
+	// Debounced search with AbortController
 	useEffect(() => {
 		if (!query || query.length < 2) {
 			setResults([]);
+			setError(null);
 			return;
 		}
 
+		const abortController = new AbortController();
 		setLoading(true);
+
 		const timer = setTimeout(async () => {
 			try {
 				const apiBase = getApiBase();
-				const res = await fetch(`${apiBase}/store/products?q=${encodeURIComponent(query)}`);
+				const res = await fetch(
+					`${apiBase}/store/products?q=${encodeURIComponent(query)}`,
+					{ signal: abortController.signal }
+				);
 				const data = await res.json();
 				setResults(data.products || []);
+				setError(null);
 				setSelectedIndex(0);
-			} catch {
+			} catch (err) {
+				if (err instanceof DOMException && err.name === 'AbortError') {
+					return;
+				}
 				setResults([]);
+				setError(t('errors.networkError'));
 			} finally {
-				setLoading(false);
+				if (!abortController.signal.aborted) {
+					setLoading(false);
+				}
 			}
 		}, 300);
 
-		return () => clearTimeout(timer);
-	}, [query]);
+		return () => {
+			clearTimeout(timer);
+			abortController.abort();
+		};
+	}, [query, t]);
 
 	// Keyboard navigation
 	useEffect(() => {
@@ -191,12 +210,47 @@ export default function SearchModal() {
 						{query.length >= 2 && !loading && (
 							results.length > 0
 								? t('search.resultCount', { count: results.length })
-								: t('common.noResults')
+								: error
+									? error
+									: t('common.noResults')
 						)}
 					</div>
 					{query.length >= 2 && (
 						<div className="border-t border-gray-100">
-							{results.length > 0 ? (
+							{error && !loading ? (
+								<div className="px-4 py-8 text-center">
+									<svg
+										className="mx-auto h-12 w-12 text-red-400"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={1.5}
+											d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+										/>
+									</svg>
+									<p className="mt-2 text-sm text-red-600">
+										{error}
+									</p>
+									<p className="mt-1 text-xs text-gray-500">
+										{t('errors.networkErrorDescription')}
+									</p>
+									<button
+										type="button"
+										className="mt-3 inline-flex items-center rounded-md bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+										onClick={() => {
+											setError(null);
+											setQuery(prev => prev + ' ');
+											setTimeout(() => setQuery(prev => prev.trimEnd()), 0);
+										}}
+									>
+										{t('errors.retry')}
+									</button>
+								</div>
+							) : results.length > 0 ? (
 								<div ref={resultsRef} className="max-h-80 overflow-y-auto py-2">
 									{results.map((product, index) => {
 										const price = product.variants[0]?.price;

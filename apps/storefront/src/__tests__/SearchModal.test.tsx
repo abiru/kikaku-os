@@ -217,4 +217,147 @@ describe('SearchModal', () => {
 			expect(link).toHaveAttribute('href', '/products/42');
 		});
 	});
+
+	it('cleans up event listeners on unmount', () => {
+		const addSpy = vi.spyOn(window, 'addEventListener');
+		const removeSpy = vi.spyOn(window, 'removeEventListener');
+
+		const { unmount } = render(<SearchModal />);
+
+		act(() => {
+			window.dispatchEvent(new Event('open-search'));
+		});
+
+		const addedListeners = addSpy.mock.calls
+			.filter(([type]) => type === 'keydown' || type === 'open-search')
+			.map(([type]) => type);
+
+		unmount();
+
+		const removedListeners = removeSpy.mock.calls
+			.filter(([type]) => type === 'keydown' || type === 'open-search')
+			.map(([type]) => type);
+
+		// Every added listener should have a corresponding removal
+		for (const listener of addedListeners) {
+			expect(removedListeners).toContain(listener);
+		}
+
+		addSpy.mockRestore();
+		removeSpy.mockRestore();
+	});
+
+	it('shows error message on network failure', async () => {
+		(global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+			new TypeError('Failed to fetch')
+		);
+
+		render(<SearchModal />);
+
+		act(() => {
+			window.dispatchEvent(new Event('open-search'));
+		});
+
+		const input = screen.getByPlaceholderText('common.searchProducts');
+		fireEvent.change(input, { target: { value: 'test query' } });
+
+		await act(async () => {
+			vi.advanceTimersByTime(350);
+		});
+
+		await waitFor(() => {
+			expect(screen.getByText('errors.networkError')).toBeInTheDocument();
+			expect(screen.getByText('errors.networkErrorDescription')).toBeInTheDocument();
+			expect(screen.getByText('errors.retry')).toBeInTheDocument();
+		});
+	});
+
+	it('aborts in-flight fetch when query changes', async () => {
+		const abortSpy = vi.spyOn(AbortController.prototype, 'abort');
+
+		(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(
+			() => new Promise(() => {}) // never resolves
+		);
+
+		render(<SearchModal />);
+
+		act(() => {
+			window.dispatchEvent(new Event('open-search'));
+		});
+
+		const input = screen.getByPlaceholderText('common.searchProducts');
+		fireEvent.change(input, { target: { value: 'first' } });
+
+		await act(async () => {
+			vi.advanceTimersByTime(350);
+		});
+
+		// Change query — should abort previous request
+		fireEvent.change(input, { target: { value: 'second' } });
+
+		expect(abortSpy).toHaveBeenCalled();
+
+		abortSpy.mockRestore();
+	});
+
+	it('aborts fetch on unmount', async () => {
+		const abortSpy = vi.spyOn(AbortController.prototype, 'abort');
+
+		(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(
+			() => new Promise(() => {})
+		);
+
+		const { unmount } = render(<SearchModal />);
+
+		act(() => {
+			window.dispatchEvent(new Event('open-search'));
+		});
+
+		const input = screen.getByPlaceholderText('common.searchProducts');
+		fireEvent.change(input, { target: { value: 'test' } });
+
+		await act(async () => {
+			vi.advanceTimersByTime(350);
+		});
+
+		unmount();
+
+		expect(abortSpy).toHaveBeenCalled();
+
+		abortSpy.mockRestore();
+	});
+
+	it('clears error state when reopened', async () => {
+		(global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+			new TypeError('Failed to fetch')
+		);
+
+		render(<SearchModal />);
+
+		act(() => {
+			window.dispatchEvent(new Event('open-search'));
+		});
+
+		const input = screen.getByPlaceholderText('common.searchProducts');
+		fireEvent.change(input, { target: { value: 'test' } });
+
+		await act(async () => {
+			vi.advanceTimersByTime(350);
+		});
+
+		await waitFor(() => {
+			expect(screen.getByText('errors.networkError')).toBeInTheDocument();
+		});
+
+		// Close and reopen
+		act(() => {
+			window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+		});
+
+		act(() => {
+			window.dispatchEvent(new Event('open-search'));
+		});
+
+		expect(screen.queryByText('errors.networkError')).not.toBeInTheDocument();
+	});
 });
