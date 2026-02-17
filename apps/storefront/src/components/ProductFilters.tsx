@@ -254,7 +254,7 @@ export default function ProductFilters() {
 					type="button"
 					onClick={applyFilters}
 					disabled={applying}
-					className="w-full px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors disabled:opacity-60"
+					className="w-full px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{applying ? (
 						<span className="inline-flex items-center gap-2">
@@ -273,7 +273,7 @@ export default function ProductFilters() {
 						type="button"
 						onClick={clearFilters}
 						disabled={applying}
-						className="w-full px-4 py-2 text-sm font-medium text-brand bg-white border border-brand rounded-lg hover:bg-subtle transition-colors disabled:opacity-60"
+						className="w-full px-4 py-2 text-sm font-medium text-brand bg-white border border-brand rounded-lg hover:bg-subtle transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						{t('filters.clearAll')}
 					</button>
