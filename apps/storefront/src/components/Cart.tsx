@@ -18,23 +18,19 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import { ErrorBoundary } from './ErrorBoundary';
 import { CartOrderSummary } from './CartOrderSummary';
+import { EmptyStateReact } from './EmptyStateReact';
 import { formatPrice } from '../lib/format';
 
 function EmptyCart() {
 	const { t } = useTranslation();
 	return (
-		<div className="text-center py-16">
-			<svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-				<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-			</svg>
-			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('cart.empty')}</h2>
-			<p className="mt-2 text-sm text-gray-600">{t('cart.emptyDescription')}</p>
-			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-full bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
-					{t('cart.browseProducts')}
-				</a>
-			</div>
-		</div>
+		<EmptyStateReact
+			icon="cart"
+			title={t('cart.empty')}
+			description={t('cart.emptyDescription')}
+			ctaLabel={t('cart.browseProducts')}
+			ctaHref="/products"
+		/>
 	);
 }
 

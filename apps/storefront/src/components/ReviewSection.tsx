@@ -3,6 +3,7 @@ import { StarRatingDisplay, StarRatingInput } from './StarRating';
 import { getApiBase, fetchJson } from '../lib/api';
 import { formatDate } from '../lib/format';
 import { useTranslation } from '../i18n';
+import { EmptyStateReact } from './EmptyStateReact';
 
 type Review = {
   id: number;
@@ -252,18 +253,25 @@ export default function ReviewSection({ productId }: Props) {
           ))}
         </div>
       ) : (
-        <div className="mt-6 text-center py-8">
-          <p className="text-sm text-gray-500">{t('reviews.noReviews')}</p>
-          <p className="mt-1 text-sm text-gray-500">{t('reviews.noReviewsDescription')}</p>
-          {!showForm && (
-            <button
-              type="button"
-              onClick={() => setShowForm(true)}
-              className="mt-4 text-sm font-medium text-brand hover:text-brand-hover"
-            >
-              {t('reviews.beFirstToReview')}
-            </button>
-          )}
+        <div className="mt-6">
+          <EmptyStateReact
+            icon="review"
+            title={t('reviews.noReviews')}
+            description={t('reviews.noReviewsDescription')}
+            compact
+          >
+            {!showForm && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  className="text-sm font-medium text-brand hover:text-brand-active"
+                >
+                  {t('reviews.beFirstToReview')}
+                </button>
+              </div>
+            )}
+          </EmptyStateReact>
         </div>
       )}
     </div>
