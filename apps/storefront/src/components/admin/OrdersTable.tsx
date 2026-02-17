@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Badge } from '../catalyst/badge'
+import { Button } from '../catalyst/button'
 import { Link } from '../catalyst/link'
 import AdminTable, { type Column, type SelectionState } from './AdminTable'
 import { formatPrice } from '../../lib/format'
@@ -67,6 +68,59 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
   const { bulkLoading, bulkMessage, setBulkMessage, executeBulk } = useBulkActions()
   const { sortComparator } = useTableSort<Order>(sortFieldTypes)
 
+  const executeBulkFulfill = useCallback(async (targetIds: ReadonlySet<number>, clearSelection: () => void) => {
+    await executeBulk(async () => {
+      let successCount = 0
+      const failedIds: number[] = []
+
+      for (const orderId of targetIds) {
+        try {
+          const res = await fetch(`/api/admin/orders/${orderId}/fulfillments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'shipped' }),
+          })
+          if (res.ok) {
+            successCount++
+          } else {
+            failedIds.push(orderId)
+          }
+        } catch {
+          failedIds.push(orderId)
+        }
+      }
+
+      if (failedIds.length === 0) {
+        setBulkMessage({ type: 'success', text: t('admin.bulkFulfillSuccess', { count: successCount }) })
+        setOrders(prev => prev.map(o =>
+          targetIds.has(o.id) ? { ...o, fulfillment_status: 'shipped' } : o
+        ))
+        clearSelection()
+      } else {
+        const detail = failedIds.map(id => `#${id}`).join(', ')
+        setBulkMessage({
+          type: 'error',
+          text: `${successCount}件成功、${failedIds.length}件失敗しました（${detail}）`,
+          failedIds,
+          action: 'fulfill',
+        })
+        if (successCount > 0) {
+          const succeededIds = new Set([...targetIds].filter(id => !failedIds.includes(id)))
+          setOrders(prev => prev.map(o =>
+            succeededIds.has(o.id) ? { ...o, fulfillment_status: 'shipped' } : o
+          ))
+        }
+      }
+    })
+  }, [executeBulk, setBulkMessage])
+
+  const handleRetryFailed = useCallback((clearSelection: () => void) => {
+    if (!bulkMessage?.failedIds || bulkMessage.failedIds.length === 0) return
+    const retryIds = new Set(bulkMessage.failedIds)
+    setBulkMessage(null)
+    executeBulkFulfill(retryIds, clearSelection)
+  }, [bulkMessage, executeBulkFulfill, setBulkMessage])
+
   const handleBulkAction = async (action: string, selectedIds: ReadonlySet<number>, clearSelection: () => void) => {
     if (!action) return
 
@@ -89,37 +143,7 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
         : window.confirm(t('admin.confirm.bulkFulfill', { count: selectedIds.size }))
       if (!confirmed) return
 
-      await executeBulk(async () => {
-        let successCount = 0
-        let failCount = 0
-
-        for (const orderId of selectedIds) {
-          try {
-            const res = await fetch(`/api/admin/orders/${orderId}/fulfillments`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ status: 'shipped' }),
-            })
-            if (res.ok) {
-              successCount++
-            } else {
-              failCount++
-            }
-          } catch {
-            failCount++
-          }
-        }
-
-        if (failCount === 0) {
-          setBulkMessage({ type: 'success', text: t('admin.bulkFulfillSuccess', { count: successCount }) })
-          setOrders(prev => prev.map(o =>
-            selectedIds.has(o.id) ? { ...o, fulfillment_status: 'shipped' } : o
-          ))
-          clearSelection()
-        } else {
-          setBulkMessage({ type: 'error', text: t('admin.bulkPartialFail', { succeeded: successCount, failed: failCount }) })
-        }
-      })
+      await executeBulkFulfill(selectedIds, clearSelection)
     }
   }
 
@@ -210,9 +234,19 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
           {bulkLoading && (
             <span className="text-sm text-indigo-600 animate-pulse">{t('admin.processing')}</span>
           )}
+          {bulkMessage?.failedIds && bulkMessage.failedIds.length > 0 && (
+            <Button
+              plain
+              onClick={() => handleRetryFailed(clearSelection)}
+              className="text-sm text-red-600 hover:text-red-800 font-medium"
+              disabled={bulkLoading}
+            >
+              失敗した{bulkMessage.failedIds.length}件をリトライ
+            </Button>
+          )}
         </>
       )}
-      message={bulkMessage}
+      message={bulkMessage ? { type: bulkMessage.type, text: bulkMessage.text } : null}
       pagination={{
         currentPage,
         totalPages,
