@@ -14,17 +14,26 @@ const { images } = Astro.props;
 	<div class="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-3 lg:gap-8">
 		{images.length > 0 ? (
 			images.map((image, index) => (
-				<img
-					id={index === 0 ? 'main-image' : undefined}
-					alt={image.alt}
-					src={image.src}
-					loading={image.primary ? 'eager' : 'lazy'}
-					fetchpriority={image.primary ? 'high' : undefined}
-					class:list={[
-						'rounded-lg object-cover w-full',
-						image.primary ? 'lg:col-span-2 lg:row-span-2 aspect-square' : 'hidden lg:block aspect-square',
-					]}
-				/>
+				image.primary ? (
+					<img
+						id="main-image"
+						alt={image.alt}
+						src={image.src}
+						loading="eager"
+						fetchpriority="high"
+						class="rounded-lg object-cover w-full lg:col-span-2 lg:row-span-2 aspect-square"
+					/>
+				) : (
+					<picture class="hidden lg:block aspect-square">
+						<source media="(min-width: 1024px)" srcset={image.src} />
+						<img
+							alt={image.alt}
+							src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+							loading="lazy"
+							class="rounded-lg object-cover w-full aspect-square"
+						/>
+					</picture>
+				)
 			))
 		) : (
 			<div class="lg:col-span-2 lg:row-span-2 aspect-square rounded-lg bg-gray-100 flex items-center justify-center">
