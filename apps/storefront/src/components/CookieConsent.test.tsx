@@ -33,7 +33,7 @@ describe('CookieConsent', () => {
 
   it('does not show banner immediately', () => {
     render(<CookieConsent />)
-    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('alertdialog')).toBeNull()
   })
 
   it('shows banner after delay when consent not given', () => {
@@ -41,7 +41,7 @@ describe('CookieConsent', () => {
     act(() => {
       vi.advanceTimersByTime(600)
     })
-    expect(screen.getByRole('dialog')).toBeDefined()
+    expect(screen.getByRole('alertdialog')).toBeDefined()
     expect(screen.getByText('cookie.message')).toBeDefined()
   })
 
@@ -51,7 +51,7 @@ describe('CookieConsent', () => {
     act(() => {
       vi.advanceTimersByTime(600)
     })
-    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('alertdialog')).toBeNull()
   })
 
   it('hides banner and stores consent on accept', () => {
@@ -63,7 +63,7 @@ describe('CookieConsent', () => {
     const acceptButton = screen.getByText('cookie.accept')
     fireEvent.click(acceptButton)
 
-    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('alertdialog')).toBeNull()
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith('cookie-consent-accepted', 'accepted')
   })
 
