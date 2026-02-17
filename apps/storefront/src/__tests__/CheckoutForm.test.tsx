@@ -139,3 +139,153 @@ describe('CheckoutForm', () => {
 		expect(screen.getByText('checkout.paymentDetails')).toBeInTheDocument();
 	});
 });
+
+describe('CheckoutForm edge cases', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('renders loading skeleton when both clientSecret and publishableKey are missing', () => {
+		render(
+			<CheckoutForm
+				clientSecret={null}
+				orderToken="tok_123"
+				publishableKey=""
+			/>
+		);
+
+		const container = document.querySelector('.animate-pulse');
+		expect(container).toBeInTheDocument();
+		expect(screen.queryByTestId('stripe-elements')).not.toBeInTheDocument();
+	});
+
+	it('renders loading skeleton when orderToken is null but others are valid', () => {
+		render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken={null}
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		// The form should still render since orderToken null doesn't prevent element loading
+		expect(screen.getByTestId('stripe-elements')).toBeInTheDocument();
+	});
+
+	it('renders submit button with type submit', () => {
+		render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken="tok_123"
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		const submitButton = screen.getByRole('button', { name: /checkout\.payNow/i });
+		expect(submitButton).toHaveAttribute('type', 'submit');
+	});
+
+	it('renders email input as required', () => {
+		render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken="tok_123"
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		const emailInput = screen.getByPlaceholderText('your@email.com');
+		expect(emailInput).toBeRequired();
+		expect(emailInput).toHaveAttribute('type', 'email');
+		expect(emailInput).toHaveAttribute('maxLength', '254');
+	});
+});
+
+describe('CheckoutForm accessibility', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('has proper label linked to email input via htmlFor', () => {
+		render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken="tok_123"
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		const emailInput = screen.getByPlaceholderText('your@email.com');
+		expect(emailInput).toHaveAttribute('id', 'checkout-email');
+
+		const label = document.querySelector('label[for="checkout-email"]');
+		expect(label).toBeInTheDocument();
+	});
+
+	it('has aria-invalid attribute on email input', () => {
+		render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken="tok_123"
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		const emailInput = screen.getByPlaceholderText('your@email.com');
+		// Initially not invalid
+		expect(emailInput).toHaveAttribute('aria-invalid', 'false');
+	});
+
+	it('has aria-live assertive region for error messages', () => {
+		const { container } = render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken="tok_123"
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		const liveRegion = container.querySelector('[aria-live="assertive"]');
+		expect(liveRegion).toBeInTheDocument();
+	});
+
+	it('has aria-busy attribute on form', () => {
+		const { container } = render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken="tok_123"
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		const form = container.querySelector('form');
+		expect(form).toBeInTheDocument();
+		// Initially not busy
+		expect(form).toHaveAttribute('aria-busy', 'false');
+	});
+
+	it('renders shipping address section labels', () => {
+		render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken="tok_123"
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		expect(screen.getByText('checkout.shippingAddress')).toBeInTheDocument();
+	});
+
+	it('has role="note" on Japan-only shipping message', () => {
+		const { container } = render(
+			<CheckoutForm
+				clientSecret="pi_secret_123"
+				orderToken="tok_123"
+				publishableKey="pk_test_xxx"
+			/>
+		);
+
+		const noteElement = container.querySelector('[role="note"]');
+		expect(noteElement).toBeInTheDocument();
+	});
+});

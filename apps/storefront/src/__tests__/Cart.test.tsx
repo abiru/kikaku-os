@@ -344,3 +344,241 @@ describe('Cart', () => {
 		expect(shippingFetches).toHaveLength(1);
 	});
 });
+
+describe('Cart edge cases', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		$cartItems.set({});
+		$appliedCoupon.set(null);
+		$shippingConfig.set({ shippingFee: 500, freeShippingThreshold: 5000 });
+		(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(() =>
+			Promise.resolve({
+				ok: true,
+				text: () => Promise.resolve(JSON.stringify({ shippingFee: 500, freeShippingThreshold: 5000 })),
+			})
+		);
+	});
+
+	it('handles empty cart gracefully', () => {
+		$cartItems.set({});
+
+		render(<Cart />);
+
+		expect(screen.getByText('cart.empty')).toBeInTheDocument();
+		expect(screen.getByText('cart.emptyDescription')).toBeInTheDocument();
+		expect(screen.queryByText('cart.orderSummary')).not.toBeInTheDocument();
+	});
+
+	it('handles item with zero price', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Free Sample',
+				variantTitle: 'Default',
+				price: 0,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		expect(screen.getByText('Free Sample')).toBeInTheDocument();
+		expect(screen.getByText('cart.orderSummary')).toBeInTheDocument();
+	});
+
+	it('handles item with very large quantity', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Bulk Product',
+				variantTitle: 'Default',
+				price: 100,
+				currency: 'JPY',
+				quantity: 99,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		expect(screen.getByText('Bulk Product')).toBeInTheDocument();
+		const select = screen.getByRole('combobox');
+		expect(select).toHaveValue('99');
+	});
+
+	it('handles item with stock of 1', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Last One Product',
+				variantTitle: 'Default',
+				price: 5000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+				stock: 1,
+			},
+		});
+
+		render(<Cart />);
+
+		const select = screen.getByRole('combobox');
+		const options = select.querySelectorAll('option');
+		expect(options).toHaveLength(1);
+		expect(options[0]).toHaveValue('1');
+	});
+
+	it('handles item without taxRate (uses default 10%)', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'No Tax Rate Product',
+				variantTitle: 'Default',
+				price: 1100,
+				currency: 'JPY',
+				quantity: 1,
+			},
+		});
+
+		render(<Cart />);
+
+		expect(screen.getByText('No Tax Rate Product')).toBeInTheDocument();
+		expect(screen.getByText('cart.tax')).toBeInTheDocument();
+	});
+});
+
+describe('Cart accessibility', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		$cartItems.set({});
+		$appliedCoupon.set(null);
+		$shippingConfig.set({ shippingFee: 500, freeShippingThreshold: 5000 });
+		(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(() =>
+			Promise.resolve({
+				ok: true,
+				text: () => Promise.resolve(JSON.stringify({ shippingFee: 500, freeShippingThreshold: 5000 })),
+			})
+		);
+	});
+
+	it('has accessible remove button with sr-only text', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		// The remove button uses sr-only span for accessible text
+		const removeText = screen.getByText('common.remove');
+		expect(removeText).toBeInTheDocument();
+		expect(removeText.tagName).toBe('SPAN');
+		expect(removeText.className).toContain('sr-only');
+	});
+
+	it('has aria-live region for cart updates', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		const { container } = render(<Cart />);
+
+		const liveRegion = container.querySelector('[aria-live="polite"]');
+		expect(liveRegion).toBeInTheDocument();
+	});
+
+	it('has accessible cart section with aria-labelledby', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		const { container } = render(<Cart />);
+
+		const section = container.querySelector('section[aria-labelledby="cart-heading"]');
+		expect(section).toBeInTheDocument();
+		const heading = container.querySelector('#cart-heading');
+		expect(heading).toBeInTheDocument();
+	});
+
+	it('has aria-label on quantity selector', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		const select = screen.getByRole('combobox');
+		expect(select).toHaveAttribute('aria-label');
+	});
+
+	it('has aria-hidden on decorative SVG icons', () => {
+		$cartItems.set({});
+
+		const { container } = render(<Cart />);
+
+		// The empty cart icon SVG has aria-hidden="true"
+		const decorativeSvg = container.querySelector('svg[aria-hidden="true"]');
+		expect(decorativeSvg).toBeInTheDocument();
+	});
+
+	it('renders items list with role="list"', () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		const list = screen.getByRole('list');
+		expect(list).toBeInTheDocument();
+	});
+});

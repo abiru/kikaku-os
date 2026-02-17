@@ -373,3 +373,268 @@ describe('OrderTracking', () => {
 		expect(screen.queryByText('orderTracking.email')).not.toBeInTheDocument();
 	});
 });
+
+describe('OrderTracking edge cases', () => {
+	it('handles order with no tracking number in shipped fulfillment', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			paid_at: '2026-01-15T11:00:00Z',
+			fulfillments: [
+				{
+					id: 1,
+					status: 'shipped',
+					tracking_number: null,
+					carrier: 'ヤマト運輸',
+					created_at: '2026-01-16T09:00:00Z',
+					updated_at: '2026-01-17T10:00:00Z',
+				},
+			],
+		};
+
+		render(<OrderTracking order={order} />);
+
+		// Carrier should still appear
+		expect(screen.getByText('ヤマト運輸')).toBeInTheDocument();
+		// Tracking number row should not appear
+		expect(screen.queryByText('orderTracking.trackingNumber')).not.toBeInTheDocument();
+		// Track link should not appear without tracking number
+		expect(screen.queryByText('orderTracking.trackTracking')).not.toBeInTheDocument();
+	});
+
+	it('handles order with no carrier in shipped fulfillment', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			paid_at: '2026-01-15T11:00:00Z',
+			fulfillments: [
+				{
+					id: 1,
+					status: 'shipped',
+					tracking_number: '1234567890',
+					carrier: null,
+					created_at: '2026-01-16T09:00:00Z',
+					updated_at: '2026-01-17T10:00:00Z',
+				},
+			],
+		};
+
+		render(<OrderTracking order={order} />);
+
+		// Tracking number should appear
+		expect(screen.getByText('1234567890')).toBeInTheDocument();
+		// Carrier row should not appear
+		expect(screen.queryByText('orderTracking.carrier')).not.toBeInTheDocument();
+		// Track link should not appear without carrier URL mapping
+		expect(screen.queryByText('orderTracking.trackTracking')).not.toBeInTheDocument();
+	});
+
+	it('renders tracking link for 佐川急便', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			paid_at: '2026-01-15T11:00:00Z',
+			fulfillments: [
+				{
+					id: 1,
+					status: 'shipped',
+					tracking_number: 'SGW123',
+					carrier: '佐川急便',
+					created_at: '2026-01-16T09:00:00Z',
+					updated_at: '2026-01-17T10:00:00Z',
+				},
+			],
+		};
+
+		render(<OrderTracking order={order} />);
+
+		const trackLink = screen.getByText('orderTracking.trackTracking');
+		expect(trackLink.closest('a')).toHaveAttribute(
+			'href',
+			expect.stringContaining('sagawa-exp.co.jp')
+		);
+	});
+
+	it('renders tracking link for 日本郵便', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			paid_at: '2026-01-15T11:00:00Z',
+			fulfillments: [
+				{
+					id: 1,
+					status: 'shipped',
+					tracking_number: 'JP123',
+					carrier: '日本郵便',
+					created_at: '2026-01-16T09:00:00Z',
+					updated_at: '2026-01-17T10:00:00Z',
+				},
+			],
+		};
+
+		render(<OrderTracking order={order} />);
+
+		const trackLink = screen.getByText('orderTracking.trackTracking');
+		expect(trackLink.closest('a')).toHaveAttribute(
+			'href',
+			expect.stringContaining('japanpost.jp')
+		);
+	});
+
+	it('does not render tracking link for unknown carrier', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			paid_at: '2026-01-15T11:00:00Z',
+			fulfillments: [
+				{
+					id: 1,
+					status: 'shipped',
+					tracking_number: 'UNK123',
+					carrier: 'Unknown Carrier',
+					created_at: '2026-01-16T09:00:00Z',
+					updated_at: '2026-01-17T10:00:00Z',
+				},
+			],
+		};
+
+		render(<OrderTracking order={order} />);
+
+		expect(screen.getByText('Unknown Carrier')).toBeInTheDocument();
+		expect(screen.getByText('UNK123')).toBeInTheDocument();
+		expect(screen.queryByText('orderTracking.trackTracking')).not.toBeInTheDocument();
+	});
+
+	it('handles order with empty items array', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			items: [],
+		};
+
+		render(<OrderTracking order={order} />);
+
+		expect(screen.getByText('orderTracking.items')).toBeInTheDocument();
+		expect(screen.getByText('orderTracking.title')).toBeInTheDocument();
+	});
+
+	it('handles fulfilled order status', () => {
+		render(<OrderTracking order={{ ...baseOrder, status: 'fulfilled' }} />);
+
+		const badge = screen.getByTestId('badge');
+		expect(badge).toHaveTextContent('orderTracking.fulfilled');
+		expect(badge).toHaveAttribute('data-color', 'blue');
+	});
+
+	it('handles unknown order status as pending', () => {
+		render(<OrderTracking order={{ ...baseOrder, status: 'unknown_status' }} />);
+
+		const badge = screen.getByTestId('badge');
+		expect(badge).toHaveTextContent('orderTracking.pending');
+		expect(badge).toHaveAttribute('data-color', 'yellow');
+	});
+
+	it('shows shipping address without line2', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			paid_at: '2026-01-15T11:00:00Z',
+			shipping: {
+				name: 'Hanako Tanaka',
+				phone: '03-1234-5678',
+				address: {
+					postal_code: '150-0001',
+					state: '東京都',
+					city: '渋谷区',
+					line1: '2-2-2',
+				},
+			},
+		};
+
+		render(<OrderTracking order={order} />);
+
+		expect(screen.getByText('Hanako Tanaka')).toBeInTheDocument();
+		expect(screen.getByText('東京都渋谷区')).toBeInTheDocument();
+		expect(screen.getByText('2-2-2')).toBeInTheDocument();
+	});
+
+	it('shows shipping with phone number', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			paid_at: '2026-01-15T11:00:00Z',
+			shipping: {
+				name: 'Taro Test',
+				phone: '090-0000-0000',
+				address: {
+					postal_code: '100-0001',
+					state: '東京都',
+					city: '千代田区',
+					line1: '1-1-1',
+				},
+			},
+		};
+
+		render(<OrderTracking order={order} />);
+
+		expect(screen.getByText('090-0000-0000')).toBeInTheDocument();
+	});
+});
+
+describe('OrderTracking accessibility', () => {
+	it('has progress navigation with aria-label', () => {
+		render(<OrderTracking order={{ ...baseOrder, status: 'pending' }} />);
+
+		const nav = screen.getByRole('navigation', { name: 'Progress' });
+		expect(nav).toBeInTheDocument();
+	});
+
+	it('has ordered list within progress navigation', () => {
+		const { container } = render(<OrderTracking order={{ ...baseOrder, status: 'pending' }} />);
+
+		const nav = container.querySelector('nav[aria-label="Progress"]');
+		expect(nav).toBeInTheDocument();
+		const ol = nav?.querySelector('ol');
+		expect(ol).toBeInTheDocument();
+	});
+
+	it('has proper heading hierarchy', () => {
+		render(<OrderTracking order={{ ...baseOrder, status: 'paid', paid_at: '2026-01-15T11:00:00Z' }} />);
+
+		// h1 for title
+		const h1 = screen.getByText('orderTracking.title');
+		expect(h1.tagName).toBe('H1');
+
+		// h2 for items section
+		const h2Items = screen.getByText('orderTracking.items');
+		expect(h2Items.tagName).toBe('H2');
+
+		// h2 for price breakdown
+		const h2Price = screen.getByText('orderTracking.priceBreakdown');
+		expect(h2Price.tagName).toBe('H2');
+	});
+
+	it('tracking link opens in new tab with security attributes', () => {
+		const order = {
+			...baseOrder,
+			status: 'paid',
+			paid_at: '2026-01-15T11:00:00Z',
+			fulfillments: [
+				{
+					id: 1,
+					status: 'shipped',
+					tracking_number: 'ABC123',
+					carrier: 'ヤマト運輸',
+					created_at: '2026-01-16T09:00:00Z',
+					updated_at: '2026-01-17T10:00:00Z',
+				},
+			],
+		};
+
+		render(<OrderTracking order={order} />);
+
+		const trackLink = screen.getByText('orderTracking.trackTracking').closest('a');
+		expect(trackLink).toHaveAttribute('target', '_blank');
+		expect(trackLink).toHaveAttribute('rel', 'noopener noreferrer');
+	});
+});
