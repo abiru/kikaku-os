@@ -33,7 +33,7 @@ aiWorkflows.post(
       });
     } catch (err) {
       logger.error('Inbox triage failed', { error: String(err) });
-      return jsonError(c, (err as Error).message, 500);
+      return jsonError(c, 'Internal server error', 500);
     }
   }
 );
@@ -61,7 +61,7 @@ aiWorkflows.post(
       });
     } catch (err) {
       logger.error('Draft response failed', { error: String(err) });
-      return jsonError(c, (err as Error).message, 500);
+      return jsonError(c, 'Internal server error', 500);
     }
   }
 );

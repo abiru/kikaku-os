@@ -117,7 +117,8 @@ dailyCloseArtifacts.post('/daily-close/:date/artifacts', requirePermission(PERMI
     const result = await runDailyCloseForDate(c.env, date, force);
 
     if (result.status === 'failed') {
-      return jsonError(c, result.errorMessage || 'Failed to create artifacts');
+      logger.error('Daily close failed', { errorMessage: result.errorMessage });
+      return jsonError(c, 'Failed to create artifacts');
     }
 
     return jsonOk(c, {

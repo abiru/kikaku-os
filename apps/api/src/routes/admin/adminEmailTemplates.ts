@@ -176,7 +176,8 @@ app.post(
       ).run();
 
       if (!result.success) {
-        return jsonError(c, result.error || 'Failed to send preview email', 500);
+        logger.error('Preview email send failed', { error: result.error });
+        return jsonError(c, 'Failed to send preview email', 500);
       }
 
       return jsonOk(c, {

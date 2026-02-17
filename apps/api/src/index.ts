@@ -153,7 +153,7 @@ app.use('*', async (c, next) => {
 app.use('*', requestLogger);
 
 // Rate limiting: stricter for sensitive endpoints, moderate for storefront, relaxed global
-app.use('/payments/*', rateLimit({ max: 5, windowSeconds: 60, prefix: 'pay' }));
+app.use('/payments/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'pay' }));
 app.use('/checkout/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'co' }));
 app.use('/store/contact', rateLimit({ max: 5, windowSeconds: 60, prefix: 'contact' }));
 app.use('/store/newsletter/*', rateLimit({ max: 5, windowSeconds: 60, prefix: 'nl' }));

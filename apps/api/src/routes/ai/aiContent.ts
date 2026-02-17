@@ -54,7 +54,7 @@ aiContent.post(
       });
     } catch (err) {
       logger.error('Content generation failed', { error: String(err) });
-      return jsonError(c, (err as Error).message, 500);
+      return jsonError(c, 'Internal server error', 500);
     }
   }
 );
@@ -178,7 +178,7 @@ aiContent.post(
     });
     } catch (err) {
       logger.error('Content regeneration failed', { error: String(err) });
-      return jsonError(c, (err as Error).message, 500);
+      return jsonError(c, 'Internal server error', 500);
     }
   }
 );

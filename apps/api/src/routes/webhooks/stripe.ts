@@ -22,7 +22,7 @@ const handleWebhook = async (c: Context<Env>) => {
     return jsonError(c, 'STRIPE_WEBHOOK_SECRET is not configured', 500);
   }
 
-  const toleranceSeconds = parseInt(c.env.STRIPE_WEBHOOK_TOLERANCE_SECONDS ?? '60', 10) || 60;
+  const toleranceSeconds = Math.max(30, Math.min(parseInt(c.env.STRIPE_WEBHOOK_TOLERANCE_SECONDS ?? '60', 10) || 60, 300));
   const valid = await verifyStripeSignature(payload, signature, secret, {
     toleranceSeconds
   });
