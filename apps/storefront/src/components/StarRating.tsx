@@ -1,4 +1,4 @@
-import { useState, useId } from 'react';
+import { useState, useId, useRef, useEffect } from 'react';
 import { t } from '../i18n';
 
 type DisplayProps = {
@@ -87,17 +87,52 @@ type InputProps = {
 
 export function StarRatingInput({ value, onChange, size = 'lg' }: InputProps) {
   const [hovered, setHovered] = useState(0);
+  const groupRef = useRef<HTMLDivElement>(null);
+  const focusPending = useRef(false);
+
+  useEffect(() => {
+    if (focusPending.current && groupRef.current) {
+      const active = groupRef.current.querySelector<HTMLButtonElement>('[tabindex="0"]');
+      active?.focus();
+      focusPending.current = false;
+    }
+  }, [value]);
+
+  const handleKeyDown = (e: React.KeyboardEvent, star: number) => {
+    let next = star;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      next = star < 5 ? star + 1 : 1;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      next = star > 1 ? star - 1 : 5;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      next = 1;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      next = 5;
+    } else {
+      return;
+    }
+    focusPending.current = true;
+    onChange(next);
+  };
 
   return (
-    <div className="flex items-center gap-1">
+    <div ref={groupRef} className="flex items-center gap-1" role="radiogroup" aria-label={t('reviews.rating')}>
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
           type="button"
+          role="radio"
+          aria-checked={star === value}
+          tabIndex={star === (value || 1) ? 0 : -1}
           onClick={() => onChange(star)}
+          onKeyDown={(e) => handleKeyDown(e, star)}
           onMouseEnter={() => setHovered(star)}
           onMouseLeave={() => setHovered(0)}
-          className="focus:outline-none transition-transform hover:scale-110"
+          className="transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-sm"
           aria-label={`${star}${t('reviews.stars')}`}
         >
           <Star

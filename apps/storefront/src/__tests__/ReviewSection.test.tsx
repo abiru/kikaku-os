@@ -202,7 +202,7 @@ describe('ReviewSection', () => {
 		fireEvent.click(screen.getByText('reviews.beFirstToReview'));
 
 		// Click a star to enable submit
-			const starButtons = screen.getAllByRole('button').filter((b) =>
+			const starButtons = screen.getAllByRole('radio').filter((b) =>
 				b.getAttribute('aria-label')?.includes('reviews.stars')
 			);
 			const fifthStar = starButtons.at(4);
@@ -244,7 +244,7 @@ describe('ReviewSection', () => {
 		fireEvent.click(screen.getByText('reviews.beFirstToReview'));
 
 		// Click 5 stars
-			const starButtons = screen.getAllByRole('button').filter((b) =>
+			const starButtons = screen.getAllByRole('radio').filter((b) =>
 				b.getAttribute('aria-label')?.includes('reviews.stars')
 			);
 			const fifthStar = starButtons.at(4);
@@ -295,7 +295,7 @@ describe('ReviewSection', () => {
 		fireEvent.click(screen.getByText('reviews.beFirstToReview'));
 
 		// Click 5 stars
-			const starButtons = screen.getAllByRole('button').filter((b) =>
+			const starButtons = screen.getAllByRole('radio').filter((b) =>
 				b.getAttribute('aria-label')?.includes('reviews.stars')
 			);
 			const fifthStar = starButtons.at(4);
@@ -344,8 +344,8 @@ describe('ReviewSection', () => {
 		fireEvent.click(screen.getByText('reviews.writeReview'));
 
 		expect(screen.getByText('reviews.rating')).toBeInTheDocument();
-		// Should have 5 star buttons
-		const starButtons = screen.getAllByRole('button').filter((b) =>
+		// Should have 5 star radio buttons in radiogroup
+		const starButtons = screen.getAllByRole('radio').filter((b) =>
 			b.getAttribute('aria-label')?.includes('reviews.stars')
 		);
 		expect(starButtons).toHaveLength(5);

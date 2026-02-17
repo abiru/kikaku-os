@@ -348,11 +348,12 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 					type="submit"
 					disabled={!stripe || isProcessing || !paymentElementReady || timeoutState.active}
 					aria-busy={isProcessing}
+					aria-label={isProcessing ? t('checkout.processing') : t('checkout.payNow')}
 					className="w-full rounded-lg bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 				>
 					{isProcessing ? (
 						<span className="inline-flex items-center gap-2">
-							<svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-label="処理中">
+							<svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
 								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
 							</svg>

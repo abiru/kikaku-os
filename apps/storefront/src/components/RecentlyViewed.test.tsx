@@ -12,11 +12,11 @@ vi.mock('../lib/format', () => ({
 }));
 
 import RecentlyViewed from './RecentlyViewed';
-import { $recentlyViewedList } from '../lib/recentlyViewed';
+import { $recentlyViewed } from '../lib/recentlyViewed';
 
 describe('RecentlyViewed', () => {
 	beforeEach(() => {
-		$recentlyViewedList.set([]);
+		$recentlyViewed.set([]);
 	});
 
 	it('renders nothing when there are no items', () => {
@@ -25,7 +25,7 @@ describe('RecentlyViewed', () => {
 	});
 
 	it('renders section with title when items exist', () => {
-		$recentlyViewedList.set([
+		$recentlyViewed.set([
 			{ id: 1, name: 'Product A', price: 1000, currency: 'JPY', image: '/img/a.jpg', viewedAt: Date.now() },
 		]);
 
@@ -35,7 +35,7 @@ describe('RecentlyViewed', () => {
 	});
 
 	it('renders product links with correct href', () => {
-		$recentlyViewedList.set([
+		$recentlyViewed.set([
 			{ id: 42, name: 'Product B', price: 2000, currency: 'JPY', image: '/img/b.jpg', viewedAt: Date.now() },
 		]);
 
@@ -46,7 +46,7 @@ describe('RecentlyViewed', () => {
 	});
 
 	it('renders product name and formatted price', () => {
-		$recentlyViewedList.set([
+		$recentlyViewed.set([
 			{ id: 1, name: 'Fancy Item', price: 5000, currency: 'JPY', image: '/img/fancy.jpg', viewedAt: Date.now() },
 		]);
 
@@ -57,7 +57,7 @@ describe('RecentlyViewed', () => {
 	});
 
 	it('renders product image when available', () => {
-		$recentlyViewedList.set([
+		$recentlyViewed.set([
 			{ id: 1, name: 'With Image', price: 1000, currency: 'JPY', image: '/img/product.jpg', viewedAt: Date.now() },
 		]);
 
@@ -68,7 +68,7 @@ describe('RecentlyViewed', () => {
 	});
 
 	it('renders placeholder when image is missing', () => {
-		$recentlyViewedList.set([
+		$recentlyViewed.set([
 			{ id: 1, name: 'No Image', price: 1000, currency: 'JPY', image: '', viewedAt: Date.now() },
 		]);
 
@@ -79,7 +79,7 @@ describe('RecentlyViewed', () => {
 	});
 
 	it('excludes item with matching excludeId', () => {
-		$recentlyViewedList.set([
+		$recentlyViewed.set([
 			{ id: 1, name: 'Keep This', price: 1000, currency: 'JPY', image: '/img/a.jpg', viewedAt: Date.now() },
 			{ id: 2, name: 'Exclude This', price: 2000, currency: 'JPY', image: '/img/b.jpg', viewedAt: Date.now() },
 		]);
@@ -91,7 +91,7 @@ describe('RecentlyViewed', () => {
 	});
 
 	it('renders nothing when all items are excluded', () => {
-		$recentlyViewedList.set([
+		$recentlyViewed.set([
 			{ id: 1, name: 'Only Item', price: 1000, currency: 'JPY', image: '/img/a.jpg', viewedAt: Date.now() },
 		]);
 
@@ -100,7 +100,7 @@ describe('RecentlyViewed', () => {
 	});
 
 	it('renders multiple items', () => {
-		$recentlyViewedList.set([
+		$recentlyViewed.set([
 			{ id: 1, name: 'Item One', price: 1000, currency: 'JPY', image: '/img/1.jpg', viewedAt: Date.now() },
 			{ id: 2, name: 'Item Two', price: 2000, currency: 'JPY', image: '/img/2.jpg', viewedAt: Date.now() },
 			{ id: 3, name: 'Item Three', price: 3000, currency: 'JPY', image: '/img/3.jpg', viewedAt: Date.now() },

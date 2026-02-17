@@ -106,7 +106,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 								}}
 								disabled={isAtStockLimit && quantityOptions.length <= 1}
 								aria-label={t('cart.quantityLabel', { title: item.title })}
-								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-neutral-900 outline outline-1 -outline-offset-1 outline-neutral-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand disabled:bg-neutral-100 disabled:cursor-not-allowed sm:text-sm"
+								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-neutral-900 outline outline-1 -outline-offset-1 outline-neutral-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand disabled:bg-neutral-100 disabled:cursor-not-allowed sm:text-sm min-h-[44px]"
 							>
 								{quantityOptions.map((n) => (
 									<option key={n} value={n} disabled={item.stock !== undefined && n > item.stock}>
@@ -134,7 +134,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 							<button
 								type="button"
 								onClick={() => removeFromCart(item.variantId)}
-								className="min-h-[44px] inline-flex items-center -m-2 p-2 text-sm font-medium text-brand hover:text-brand-active transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+								className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center -m-2 p-2 text-sm font-medium text-brand hover:text-brand-active transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
 							>
 								{t('common.remove')}
 							</button>
@@ -192,27 +192,69 @@ function CartContent() {
 	const currency = useStore($cartCurrency);
 	const itemRefs = useRef<Map<number, HTMLLIElement>>(new Map());
 	const prevItemsRef = useRef<CartItem[]>([]);
+	const [announcement, setAnnouncement] = useState('');
+	const announcementTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const { state: shippingState, retry: retryShipping } = useShippingConfig();
 
-	// Track item deletions and move focus to next item
+	// Track item deletions / quantity changes: move focus + announce
 	useEffect(() => {
 		const prevItems = prevItemsRef.current;
-		if (prevItems.length > items.length && items.length > 0) {
-			const removedIndex = prevItems.findIndex(
+		let newAnnouncement = '';
+
+		if (prevItems.length > items.length) {
+			// Item removed
+			const removed = prevItems.find(
 				(prev) => !items.some((curr) => curr.variantId === prev.variantId)
 			);
-			if (removedIndex >= 0) {
-				const focusIndex = Math.min(removedIndex, items.length - 1);
-				const targetItem = items[focusIndex];
-				if (targetItem) {
-					const el = itemRefs.current.get(targetItem.variantId);
-					const focusable = el?.querySelector<HTMLElement>('a, button, select, input');
-					focusable?.focus();
+			if (removed) {
+				newAnnouncement = t('cart.itemRemoved', { title: removed.title });
+			}
+			// Focus management
+			if (items.length > 0) {
+				const removedIndex = prevItems.findIndex(
+					(prev) => !items.some((curr) => curr.variantId === prev.variantId)
+				);
+				if (removedIndex >= 0) {
+					const focusIndex = Math.min(removedIndex, items.length - 1);
+					const targetItem = items[focusIndex];
+					if (targetItem) {
+						const el = itemRefs.current.get(targetItem.variantId);
+						const focusable = el?.querySelector<HTMLElement>('a, button, select, input');
+						focusable?.focus();
+					}
 				}
 			}
+		} else if (prevItems.length === items.length && prevItems.length > 0) {
+			// Quantity change
+			const changed = items.find((curr) => {
+				const prev = prevItems.find((p) => p.variantId === curr.variantId);
+				return prev && prev.quantity !== curr.quantity;
+			});
+			if (changed) {
+				newAnnouncement = t('cart.quantityChanged', { title: changed.title, quantity: String(changed.quantity) });
+			}
 		}
+
+		if (newAnnouncement) {
+			// Debounce: clear any pending timeout before setting new announcement
+			if (announcementTimeoutRef.current) {
+				clearTimeout(announcementTimeoutRef.current);
+			}
+			setAnnouncement(newAnnouncement);
+			// Auto-clear announcement after 3 seconds to prevent stale screen reader content
+			announcementTimeoutRef.current = setTimeout(() => {
+				setAnnouncement('');
+			}, 3000);
+		}
+
 		prevItemsRef.current = items;
-	}, [items]);
+
+		return () => {
+			if (announcementTimeoutRef.current) {
+				clearTimeout(announcementTimeoutRef.current);
+			}
+		};
+	}, [items, t]);
 
 	const handleCheckout = () => {
 		if (items.length === 0) return;
@@ -230,6 +272,9 @@ function CartContent() {
 					{t('cart.itemCount', { count: items.length })}
 					{' '}
 					{t('cart.orderTotal')}: {formatPrice(grandTotal, currency)}
+				</div>
+				<div aria-live="assertive" role="status" className="sr-only">
+					{announcement}
 				</div>
 				<section aria-labelledby="cart-heading" className="lg:col-span-7">
 					<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
@@ -258,7 +303,7 @@ function CartContent() {
 							<button
 								type="button"
 								onClick={retryShipping}
-								className="mt-2 text-sm font-medium text-danger underline hover:opacity-80"
+								className="mt-2 text-sm font-medium text-danger underline hover:opacity-80 min-h-[44px] inline-flex items-center"
 							>
 								{t('cart.retry')}
 							</button>
@@ -289,7 +334,7 @@ function CartContent() {
 						type="button"
 						onClick={handleCheckout}
 						disabled={shippingState === 'error'}
-						className="shrink-0 rounded-lg bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-active active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+						className="shrink-0 rounded-lg bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-active active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
 					>
 						{t('cart.checkout')}
 					</button>

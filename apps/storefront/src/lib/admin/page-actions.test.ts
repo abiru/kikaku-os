@@ -113,7 +113,7 @@ describe('handlePageUpdate', () => {
 
 		await handlePageUpdate(fd, apiBase, apiKey, id, mockT);
 
-		const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+		const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]!;
 		const body = JSON.parse(fetchCall[1].body);
 		expect(body.meta_title).toBeNull();
 		expect(body.meta_description).toBeNull();
@@ -175,7 +175,7 @@ describe('handlePageUpdate', () => {
 		const fd = createFormData({ slug: '  About-Us  ', title: 'About' });
 		await handlePageUpdate(fd, apiBase, apiKey, id, mockT);
 
-		const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+		const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]!;
 		const body = JSON.parse(fetchCall[1].body);
 		expect(body.slug).toBe('about-us');
 	});
