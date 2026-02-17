@@ -132,7 +132,8 @@
     "shippingConfigError": "配送設定の読み込みに失敗しました",
     "checkoutBlockedByShipping": "配送料が確認できるまでチェックアウトできません",
     "retry": "再試行",
-    "maxStock": "在庫上限: {stock}個"
+    "maxStock": "在庫上限: {stock}個",
+    "stockInsufficient": "在庫が不足しています（残り{stock}点）"
   },
   "checkout": {
     "pageTitle": "チェックアウト - Led Kikaku",
