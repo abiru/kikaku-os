@@ -70,7 +70,7 @@ test.describe('Product Search and Category', () => {
     await expect(modal).toBeVisible();
 
     // Click the backdrop (the fixed overlay behind the modal content)
-    const backdrop = modal.locator('.fixed.inset-0.bg-gray-500\\/75');
+    const backdrop = page.locator('[data-testid="search-backdrop"]');
     await backdrop.click({ position: { x: 10, y: 10 } });
     await expect(modal).toBeHidden();
   });
@@ -87,12 +87,10 @@ test.describe('Product Search and Category', () => {
     // Type a single character (less than 2 chars required)
     await searchInput.fill('a');
 
-    // Wait briefly to ensure no results appear
-    await page.waitForTimeout(500);
-
-    // No results section (border-t) should appear for short queries
-    const resultsSection = modal.locator('.border-t.border-gray-100');
-    await expect(resultsSection).toBeHidden();
+    // Results section should not appear for queries shorter than 2 chars.
+    // Use a short timeout since we are asserting absence (no event to wait for).
+    const resultsSection = modal.locator('[data-testid="search-results"]');
+    await expect(resultsSection).toHaveCount(0, { timeout: 1_000 });
   });
 
   test('search with no matching results shows empty state', async ({ page }) => {
@@ -107,11 +105,14 @@ test.describe('Product Search and Category', () => {
     // Type a query that should return no results
     await searchInput.fill('zzzznonexistentproduct99999');
 
-    // Wait for debounced search (300ms) + network
-    await page.waitForTimeout(1000);
+    // Wait for the debounced API call to complete instead of a hardcoded timeout
+    await page.waitForResponse(
+      (resp) => resp.url().includes('/store/products?q=') && resp.status() === 200,
+      { timeout: 10_000 },
+    );
 
     // Empty state should show the "no results" message
-    const emptyState = modal.locator('.text-center');
+    const emptyState = modal.locator('[data-testid="search-empty-state"]');
     await expect(emptyState).toBeVisible();
   });
 });
@@ -257,11 +258,10 @@ test.describe('Filter sidebar', () => {
     const sidebar = page.locator('aside[aria-label]');
     await expect(sidebar).toBeVisible();
 
-    // Category radios are rendered inside the sidebar
+    // Category radios are rendered inside the sidebar; wait for React hydration
     const categoryRadios = sidebar.locator('input[name="category"]');
-    // May have 0 categories if API is not seeded, so just verify the count is non-negative
-    const count = await categoryRadios.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    // Verify at least 1 category radio renders (requires seeded data)
+    await expect(categoryRadios.first()).toBeVisible({ timeout: 10_000 });
   });
 });
 
