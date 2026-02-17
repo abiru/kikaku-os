@@ -28,7 +28,7 @@ function EmptyCart() {
 				<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
 			</svg>
 			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('cart.empty')}</h2>
-			<p className="mt-2 text-sm text-gray-500">{t('cart.emptyDescription')}</p>
+			<p className="mt-2 text-sm text-gray-600">{t('cart.emptyDescription')}</p>
 			<div className="mt-6">
 				<a href="/products" className="inline-flex items-center rounded-full bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
 					{t('cart.browseProducts')}
@@ -85,7 +85,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 						</div>
 						{item.variantTitle && item.variantTitle !== 'Default' && (
 							<div className="mt-1 flex text-sm">
-								<p className="text-gray-500">{item.variantTitle}</p>
+								<p className="text-gray-600">{item.variantTitle}</p>
 							</div>
 						)}
 						<p className="mt-1 text-sm font-medium text-gray-900">{formatPrice(item.price, item.currency)}</p>
@@ -117,7 +117,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 							<button
 								type="button"
 								onClick={() => removeFromCart(item.variantId)}
-								className="-m-2 inline-flex p-2 text-gray-400 hover:text-gray-500"
+								className="-m-2 inline-flex p-2 text-gray-500 hover:text-gray-700"
 							>
 								<span className="sr-only">{t('common.remove')}</span>
 								<svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

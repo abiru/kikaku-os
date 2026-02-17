@@ -83,7 +83,7 @@ function CheckoutPageContent() {
 							>
 								{t('errors.retry')}
 						</button>
-						<a href="/cart" className="text-sm text-gray-500 hover:text-gray-700 min-h-[44px] flex items-center justify-center">
+						<a href="/cart" className="text-sm text-gray-600 hover:text-gray-800 min-h-[44px] flex items-center justify-center">
 							{t('checkout.returnToCart')}
 						</a>
 					</div>
