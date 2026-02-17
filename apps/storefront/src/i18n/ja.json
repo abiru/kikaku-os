@@ -796,7 +796,10 @@
     "domesticShipping": "国内発送",
     "domesticShippingDescription": "2〜3日でお届け",
     "internationalShipping": "海外発送",
-    "internationalShippingDescription": "10日程度でお届け"
+    "internationalShippingDescription": "10日程度でお届け",
+    "priceIncludesTax": "（税込）",
+    "lowStock": "残り {stock} 個 - お早めに！",
+    "selectVariant": "バリアントを選択してください"
   },
   "recentlyViewed": {
     "title": "最近チェックした商品"
