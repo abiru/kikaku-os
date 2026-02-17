@@ -116,11 +116,15 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 						<button
 							id="mobile-filter-btn"
 							type="button"
-							class="lg:hidden inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-sm font-medium text-primary bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-gray-50 transition-colors"
+							class="lg:hidden inline-flex items-center gap-2 px-4 py-2 min-h-[44px] text-sm font-medium text-primary bg-white rounded-full shadow-sm ring-1 ring-black/5 hover:bg-gray-50 transition-colors relative"
 							aria-label={t('filters.showFilters')}
 						>
 							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
 							{t('filters.showFilters')}
+							<span
+								id="mobile-filter-count"
+								class="hidden absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-brand rounded-full"
+							></span>
 						</button>
 						<Badge color="green" client:load>{t('products.newArrivals')}</Badge>
 					</div>

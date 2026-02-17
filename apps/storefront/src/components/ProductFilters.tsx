@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getApiBase } from '../lib/api';
 import { useTranslation } from '../i18n';
 
@@ -16,10 +16,36 @@ type CurrentFilters = {
 	maxPrice: number | null;
 };
 
+function parseFiltersFromUrl(): { filters: CurrentFilters; minPriceInput: string; maxPriceInput: string } {
+	const params = new URLSearchParams(window.location.search);
+	const category = params.get('category');
+	const minPrice = params.get('minPrice');
+	const maxPrice = params.get('maxPrice');
+
+	return {
+		filters: {
+			category,
+			minPrice: minPrice ? Number(minPrice) : null,
+			maxPrice: maxPrice ? Number(maxPrice) : null
+		},
+		minPriceInput: minPrice || '',
+		maxPriceInput: maxPrice || ''
+	};
+}
+
+function countActiveFilters(filters: CurrentFilters): number {
+	let count = 0;
+	if (filters.category) count++;
+	if (filters.minPrice) count++;
+	if (filters.maxPrice) count++;
+	return count;
+}
+
 export default function ProductFilters() {
 	const { t } = useTranslation();
 	const [options, setOptions] = useState<FilterOptions | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [applying, setApplying] = useState(false);
 	const [filters, setFilters] = useState<CurrentFilters>({
 		category: null,
 		minPrice: null,
@@ -28,7 +54,14 @@ export default function ProductFilters() {
 	const [minPriceInput, setMinPriceInput] = useState('');
 	const [maxPriceInput, setMaxPriceInput] = useState('');
 
-	// Load filter options and current filters from URL
+	const syncStateFromUrl = useCallback(() => {
+		const parsed = parseFiltersFromUrl();
+		setFilters(parsed.filters);
+		setMinPriceInput(parsed.minPriceInput);
+		setMaxPriceInput(parsed.maxPriceInput);
+	}, []);
+
+	// Load filter options and sync state from URL
 	useEffect(() => {
 		const loadFilters = async () => {
 			try {
@@ -43,24 +76,34 @@ export default function ProductFilters() {
 			}
 		};
 
-		// Parse current URL params
-		const params = new URLSearchParams(window.location.search);
-		const category = params.get('category');
-		const minPrice = params.get('minPrice');
-		const maxPrice = params.get('maxPrice');
-
-		setFilters({
-			category,
-			minPrice: minPrice ? Number(minPrice) : null,
-			maxPrice: maxPrice ? Number(maxPrice) : null
-		});
-		setMinPriceInput(minPrice || '');
-		setMaxPriceInput(maxPrice || '');
-
+		syncStateFromUrl();
 		loadFilters();
-	}, []);
+	}, [syncStateFromUrl]);
+
+	// Sync filter state on browser back/forward
+	useEffect(() => {
+		const handlePopstate = () => {
+			syncStateFromUrl();
+			setApplying(false);
+		};
+
+		window.addEventListener('popstate', handlePopstate);
+		return () => window.removeEventListener('popstate', handlePopstate);
+	}, [syncStateFromUrl]);
+
+	// Expose active filter count for mobile badge
+	useEffect(() => {
+		const count = countActiveFilters(filters);
+		const badge = document.getElementById('mobile-filter-count');
+		if (badge) {
+			badge.textContent = count > 0 ? String(count) : '';
+			badge.classList.toggle('hidden', count === 0);
+		}
+	}, [filters]);
 
 	const applyFilters = () => {
+		setApplying(true);
+
 		const params = new URLSearchParams(window.location.search);
 
 		// Preserve search query if exists
@@ -83,6 +126,8 @@ export default function ProductFilters() {
 	};
 
 	const clearFilters = () => {
+		setApplying(true);
+
 		const params = new URLSearchParams(window.location.search);
 		const q = params.get('q');
 
@@ -126,6 +171,7 @@ export default function ProductFilters() {
 										checked={filters.category === cat}
 										onChange={() => setFilters((prev) => ({ ...prev, category: cat }))}
 										className="h-4 w-4 text-brand border-gray-300 focus:ring-brand"
+										disabled={applying}
 									/>
 									<span className="text-sm text-primary/80 group-hover:text-primary capitalize">
 										{cat}
@@ -144,6 +190,7 @@ export default function ProductFilters() {
 								type="button"
 								onClick={() => setFilters((prev) => ({ ...prev, category: null }))}
 								className="text-xs text-brand hover:underline mt-1"
+								disabled={applying}
 							>
 								{t('filters.clearCategory')}
 							</button>
@@ -167,6 +214,7 @@ export default function ProductFilters() {
 									value={minPriceInput}
 									onChange={(e) => setMinPriceInput(e.target.value)}
 									className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+									disabled={applying}
 								/>
 							</div>
 							<span className="text-gray-500" aria-hidden="true">-</span>
@@ -179,6 +227,7 @@ export default function ProductFilters() {
 									value={maxPriceInput}
 									onChange={(e) => setMaxPriceInput(e.target.value)}
 									className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+									disabled={applying}
 								/>
 							</div>
 						</div>
@@ -197,15 +246,27 @@ export default function ProductFilters() {
 				<button
 					type="button"
 					onClick={applyFilters}
-					className="w-full px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors"
+					disabled={applying}
+					className="w-full px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover transition-colors disabled:opacity-60"
 				>
-					{t('filters.applyFilters')}
+					{applying ? (
+						<span className="inline-flex items-center gap-2">
+							<svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+							</svg>
+							{t('filters.applying')}
+						</span>
+					) : (
+						t('filters.applyFilters')
+					)}
 				</button>
 				{hasActiveFilters && (
 					<button
 						type="button"
 						onClick={clearFilters}
-						className="w-full px-4 py-2 text-sm font-medium text-brand bg-white border border-brand rounded-lg hover:bg-subtle transition-colors"
+						disabled={applying}
+						className="w-full px-4 py-2 text-sm font-medium text-brand bg-white border border-brand rounded-lg hover:bg-subtle transition-colors disabled:opacity-60"
 					>
 						{t('filters.clearAll')}
 					</button>

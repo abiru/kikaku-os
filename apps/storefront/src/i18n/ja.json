@@ -819,7 +819,8 @@
     "maxPrice": "最高価格",
     "showFilters": "フィルター",
     "closeFilters": "フィルターを閉じる",
-    "activeFilters": "フィルターが適用されています"
+    "activeFilters": "フィルターが適用されています",
+    "applying": "適用中..."
   },
   "search": {
     "tryDifferent": "別の検索キーワードを試してください",
