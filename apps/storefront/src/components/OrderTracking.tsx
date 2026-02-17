@@ -50,7 +50,7 @@ type Props = {
   order: Order;
 };
 
-import { DATE_FORMATS } from '../lib/constants';
+import { CARRIER_TRACKING_URLS, DATE_FORMATS } from '../lib/constants';
 
 const dateTimeLongOpts = DATE_FORMATS.DATETIME_LONG;
 
@@ -163,16 +163,9 @@ function OrderSteps({ steps }: { steps: Step[] }) {
 
 const getTrackingUrl = (carrier: string | null, trackingNumber: string): string | null => {
   if (!carrier || !trackingNumber) return null;
-  switch (carrier) {
-    case 'ヤマト運輸':
-      return `https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number=${encodeURIComponent(trackingNumber)}`;
-    case '佐川急便':
-      return `https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=${encodeURIComponent(trackingNumber)}`;
-    case '日本郵便':
-      return `https://trackings.post.japanpost.jp/services/srv/search/?requestNo1=${encodeURIComponent(trackingNumber)}`;
-    default:
-      return null;
-  }
+  const template = CARRIER_TRACKING_URLS[carrier];
+  if (!template) return null;
+  return template.replace('{{trackingNumber}}', encodeURIComponent(trackingNumber));
 };
 
 function FulfillmentInfo({ fulfillment, t }: { fulfillment: Fulfillment; t: (key: string) => string }) {

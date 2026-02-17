@@ -48,7 +48,7 @@ export default function OrderSummary({ items, breakdown, onCouponApply }: OrderS
 	const currency = breakdown?.currency || 'JPY';
 
 	return (
-		<div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
+		<div className="bg-white rounded-lg shadow-sm p-6 md:sticky md:top-8">
 			<h2 className="text-lg font-medium text-gray-900 mb-6">
 				{t('checkout.orderSummary')}
 			</h2>

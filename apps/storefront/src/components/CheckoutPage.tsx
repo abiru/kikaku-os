@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
 	$cartArray,
 	$appliedCoupon
@@ -89,20 +89,40 @@ function CheckoutPageContent() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	// Fix 1: Stable fingerprint of cart contents for dependency tracking
+	// Stable fingerprint of cart contents for dependency tracking
 	const cartFingerprint = useMemo(
 		() => cartItems.map(i => `${i.variantId}:${i.quantity}`).sort().join(','),
 		[cartItems]
 	);
+
+	// Ref to access latest fingerprint inside async functions
+	const cartFingerprintRef = useRef(cartFingerprint);
+	cartFingerprintRef.current = cartFingerprint;
+
+	// Ref to abort in-flight requests when cart changes
+	const abortControllerRef = useRef<AbortController | null>(null);
 
 	useEffect(() => {
 		// Reset payment state when cart changes
 		setClientSecret(null);
 		setOrderToken(null);
 		createQuoteAndIntent();
+
+		return () => {
+			// Abort in-flight requests on cleanup (cart change or unmount)
+			abortControllerRef.current?.abort();
+		};
 	}, [cartFingerprint]);
 
 	const createQuoteAndIntent = async (couponCode?: string) => {
+		// Cancel any previous in-flight request
+		abortControllerRef.current?.abort();
+		const controller = new AbortController();
+		abortControllerRef.current = controller;
+
+		// Snapshot the fingerprint at call time for post-async verification
+		const snapshotFingerprint = cartFingerprintRef.current;
+
 		try {
 			setLoading(true);
 			setError(null);
@@ -126,12 +146,18 @@ function CheckoutPageContent() {
 					body: JSON.stringify({
 						items,
 						couponCode: couponCode || appliedCoupon?.code || undefined
-					})
+					}),
+					signal: controller.signal
 				}
 			);
 
 			if (!quoteData.ok) {
 				throw new Error('Failed to create quote');
+			}
+
+			// Verify cart hasn't changed during quote creation
+			if (snapshotFingerprint !== cartFingerprintRef.current) {
+				return;
 			}
 
 			setBreakdown(quoteData.breakdown);
@@ -145,7 +171,8 @@ function CheckoutPageContent() {
 						quoteId: quoteData.quoteId,
 						email: 'customer@checkout.pending',
 						paymentMethod: 'auto'
-					})
+					}),
+					signal: controller.signal
 				}
 			);
 
@@ -155,6 +182,11 @@ function CheckoutPageContent() {
 
 			if (!intentData.orderPublicToken) {
 				throw new Error('Public order token is missing');
+			}
+
+			// Final verification: discard if cart changed during intent creation
+			if (snapshotFingerprint !== cartFingerprintRef.current) {
+				return;
 			}
 
 			setClientSecret(intentData.clientSecret);
@@ -167,6 +199,9 @@ function CheckoutPageContent() {
 			setPublishableKey(pubKey);
 			setLoading(false);
 		} catch (err) {
+			// Ignore abort errors (cart changed, new request supersedes)
+			if (err instanceof DOMException && err.name === 'AbortError') return;
+
 			if (err instanceof TypeError && err.message.includes('fetch')) {
 				setError(t('errors.networkError'));
 			} else {

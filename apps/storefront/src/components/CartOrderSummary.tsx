@@ -13,6 +13,7 @@ type CartOrderSummaryProps = {
 	grandTotal: number;
 	currency: string;
 	onCheckout: () => void;
+	checkoutDisabled?: boolean;
 };
 
 export function CartOrderSummary({
@@ -24,6 +25,7 @@ export function CartOrderSummary({
 	grandTotal,
 	currency,
 	onCheckout,
+	checkoutDisabled = false,
 }: CartOrderSummaryProps) {
 	const { t } = useTranslation();
 	const shippingConfig = useStore($shippingConfig);
@@ -88,6 +90,15 @@ export function CartOrderSummary({
 					</dd>
 				</div>
 
+				{/* Free Shipping Threshold Message */}
+				{remainingForFreeShipping > 0 && (
+					<div className="border-t border-gray-200 pt-4 text-sm text-blue-600 text-center font-medium">
+						{t('cart.addForFreeShipping', {
+							amount: formatPrice(remainingForFreeShipping, currency),
+						})}
+					</div>
+				)}
+
 				{/* Order Total */}
 				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
 					<dt className="text-base font-medium text-gray-900">
@@ -99,19 +110,12 @@ export function CartOrderSummary({
 				</div>
 			</dl>
 
-			{remainingForFreeShipping > 0 && (
-				<div className="mt-4 text-sm text-gray-500 text-center">
-					{t('cart.addForFreeShipping', {
-						amount: formatPrice(remainingForFreeShipping, currency),
-					})}
-				</div>
-			)}
-
 			<div className="mt-6 space-y-3">
 				<button
 					type="button"
 					onClick={onCheckout}
-					className="w-full rounded-full border border-transparent bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors"
+					disabled={checkoutDisabled}
+					className={`w-full rounded-full border border-transparent px-4 py-3 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors ${checkoutDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand hover:bg-brand-active'}`}
 				>
 					{t('cart.checkout')}
 				</button>

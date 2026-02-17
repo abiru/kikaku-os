@@ -34,6 +34,8 @@ export default function RecentlyViewed({ excludeId }: Props) {
 								<img
 									src={item.image}
 									alt={item.name}
+									width={192}
+									height={192}
 									loading="lazy"
 									className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 								/>

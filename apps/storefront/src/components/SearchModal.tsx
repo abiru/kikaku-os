@@ -168,6 +168,7 @@ export default function SearchModal() {
 			{/* Backdrop */}
 			<div
 				className="fixed inset-0 bg-gray-500/75 backdrop-blur-sm"
+				data-testid="search-backdrop"
 				onClick={() => setIsOpen(false)}
 			/>
 
@@ -216,7 +217,7 @@ export default function SearchModal() {
 						)}
 					</div>
 					{query.length >= 2 && (
-						<div className="border-t border-gray-100">
+						<div className="border-t border-gray-100" data-testid="search-results">
 							{error && !loading ? (
 								<div className="px-4 py-8 text-center">
 									<svg
@@ -267,6 +268,8 @@ export default function SearchModal() {
 														<img
 															src={product.image}
 															alt={product.title}
+															width={64}
+															height={64}
 															className="h-full w-full object-cover"
 														/>
 													) : (
@@ -296,7 +299,7 @@ export default function SearchModal() {
 									})}
 								</div>
 							) : !loading ? (
-								<div className="px-4 py-8 text-center">
+								<div className="px-4 py-8 text-center" data-testid="search-empty-state">
 									<svg
 										className="mx-auto h-12 w-12 text-gray-400"
 										fill="none"

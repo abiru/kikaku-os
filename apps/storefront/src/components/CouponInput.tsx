@@ -80,6 +80,7 @@ export function CouponInput() {
 					value={code}
 					onChange={(e) => setCode(e.target.value.toUpperCase())}
 					placeholder={t('cart.couponPlaceholder')}
+					maxLength={20}
 					className="flex-1 rounded-md border-gray-300 px-4 py-2 text-sm focus:border-brand focus:ring-brand"
 					disabled={isApplying}
 				/>

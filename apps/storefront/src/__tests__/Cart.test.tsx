@@ -254,4 +254,87 @@ describe('Cart', () => {
 		});
 		expect(screen.getByText('cart.retry')).toBeInTheDocument();
 	});
+
+	it('disables checkout button when shipping config fetch fails', async () => {
+		(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(() =>
+			Promise.resolve({
+				ok: false,
+				status: 500,
+				statusText: 'Internal Server Error',
+				text: () => Promise.resolve('Server error'),
+			})
+		);
+
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		await waitFor(() => {
+			expect(screen.getByText('cart.shippingConfigError')).toBeInTheDocument();
+		});
+
+		const checkoutButton = screen.getByText('cart.checkout');
+		expect(checkoutButton).toBeDisabled();
+		expect(screen.getByText('cart.checkoutBlockedByShipping')).toBeInTheDocument();
+	});
+
+	it('enables checkout button when shipping config loads successfully', async () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		await waitFor(() => {
+			const checkoutButton = screen.getByText('cart.checkout');
+			expect(checkoutButton).not.toBeDisabled();
+		});
+	});
+
+	it('does not make duplicate concurrent shipping config fetches', async () => {
+		$cartItems.set({
+			'1': {
+				variantId: 1,
+				productId: 100,
+				title: 'Test Product',
+				variantTitle: 'Default',
+				price: 1000,
+				currency: 'JPY',
+				quantity: 1,
+				taxRate: 0.10,
+			},
+		});
+
+		render(<Cart />);
+
+		await waitFor(() => {
+			expect(screen.getByText('cart.checkout')).toBeInTheDocument();
+		});
+
+		// fetch should only be called once for the shipping config
+		const shippingFetches = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
+			(call) => String(call[0]).includes('/checkout/config')
+		);
+		expect(shippingFetches).toHaveLength(1);
+	});
 });

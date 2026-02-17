@@ -130,6 +130,7 @@
     "quantityLabel": "{title}の数量",
     "shippingConfigLoading": "配送設定を読み込み中...",
     "shippingConfigError": "配送設定の読み込みに失敗しました",
+    "checkoutBlockedByShipping": "配送料が確認できるまでチェックアウトできません",
     "retry": "再試行",
     "maxStock": "在庫上限: {stock}個"
   },
@@ -176,6 +177,7 @@
     "confirmationEmailSent": "確認メールが送信されました。配送の詳細と追跡情報が記載されています。",
     "returnToHome": "ホームに戻る",
     "shippingAddress": "配送先住所",
+    "japanOnlyShipping": "現在、日本国内のみ配送を承っております。",
     "phone": "電話番号",
     "paymentMethodLabel": "お支払い方法",
     "paymentMethodCard": "カード決済",
@@ -795,7 +797,10 @@
     "domesticShipping": "国内発送",
     "domesticShippingDescription": "2〜3日でお届け",
     "internationalShipping": "海外発送",
-    "internationalShippingDescription": "10日程度でお届け"
+    "internationalShippingDescription": "10日程度でお届け",
+    "priceIncludesTax": "（税込）",
+    "lowStock": "残り {stock} 個 - お早めに！",
+    "selectVariant": "バリアントを選択してください"
   },
   "recentlyViewed": {
     "title": "最近チェックした商品"
