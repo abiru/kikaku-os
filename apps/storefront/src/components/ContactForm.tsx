@@ -151,6 +151,7 @@ function ContactFormContent() {
           value={form.name}
           onChange={(e) => handleChange('name', e.target.value)}
           placeholder={t('contact.namePlaceholder')}
+          maxLength={100}
           invalid={!!errors.name}
           aria-required="true"
           aria-invalid={!!errors.name}
@@ -167,6 +168,7 @@ function ContactFormContent() {
           value={form.email}
           onChange={(e) => handleChange('email', e.target.value)}
           placeholder={t('contact.emailPlaceholder')}
+          maxLength={254}
           invalid={!!errors.email}
           aria-required="true"
           aria-invalid={!!errors.email}
@@ -182,6 +184,7 @@ function ContactFormContent() {
           value={form.subject}
           onChange={(e) => handleChange('subject', e.target.value)}
           placeholder={t('contact.subjectPlaceholder')}
+          maxLength={200}
           invalid={!!errors.subject}
           aria-required="true"
           aria-invalid={!!errors.subject}
@@ -197,6 +200,7 @@ function ContactFormContent() {
           value={form.body}
           onChange={(e) => handleChange('body', e.target.value)}
           placeholder={t('contact.bodyPlaceholder')}
+          maxLength={5000}
           rows={6}
           invalid={!!errors.body}
           aria-required="true"
