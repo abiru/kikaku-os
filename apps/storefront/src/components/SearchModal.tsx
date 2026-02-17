@@ -305,23 +305,26 @@ export default function SearchModal() {
 								</div>
 							) : !loading ? (
 								<div className="px-4 py-8 text-center" data-testid="search-empty-state">
-									<svg
-										className="mx-auto h-12 w-12 text-gray-400"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
+									<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500">
+										<svg
+											className="h-6 w-6"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
 											strokeWidth={1.5}
-											d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-										/>
-									</svg>
-									<p className="mt-2 text-sm text-gray-500">
+											aria-hidden="true"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z"
+											/>
+										</svg>
+									</div>
+									<p className="typo-h3 mt-4 text-primary">
 										{t('common.noResults')}
 									</p>
-									<p className="mt-1 text-xs text-gray-500">
+									<p className="mt-2 text-sm text-secondary">
 										{t('search.tryDifferent')}
 									</p>
 								</div>
