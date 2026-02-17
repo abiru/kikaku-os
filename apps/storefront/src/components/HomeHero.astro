@@ -47,7 +47,7 @@ const bgSmall = imageSmall || image || bgLarge;
       {ctaPrimaryText && ctaPrimaryUrl && (
         <a
           href={ctaPrimaryUrl}
-          class="w-full sm:w-auto h-12 px-6 py-3 rounded-lg bg-brand inline-flex items-center justify-center text-sm font-semibold text-white hover:bg-brand-active transition-colors"
+          class="w-full sm:w-auto h-12 px-6 py-3 rounded-lg bg-brand inline-flex items-center justify-center text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
         >
           {ctaPrimaryText}
         </a>
@@ -55,7 +55,7 @@ const bgSmall = imageSmall || image || bgLarge;
       {ctaSecondaryText && ctaSecondaryUrl && (
         <a
           href={ctaSecondaryUrl}
-          class="w-full sm:w-auto h-12 px-6 py-3 rounded-lg border border-brand inline-flex items-center justify-center text-sm font-semibold text-brand hover:bg-brand hover:text-white transition-colors"
+          class="w-full sm:w-auto h-12 px-6 py-3 rounded-lg border border-brand inline-flex items-center justify-center text-base font-semibold text-brand hover:bg-brand hover:text-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
         >
           {ctaSecondaryText}
         </a>
