@@ -79,7 +79,7 @@ export default function NewsletterForm() {
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </button>

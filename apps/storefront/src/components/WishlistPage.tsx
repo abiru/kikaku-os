@@ -102,7 +102,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 						<button
 							type="button"
 							onClick={handleAddToCart}
-							className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-active transition-colors disabled:opacity-50"
+							className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							disabled={addedToCart}
 						>
 							{addedToCart ? t('wishlist.addedToCart') : t('wishlist.addToCart')}

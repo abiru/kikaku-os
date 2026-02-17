@@ -47,9 +47,9 @@ export default function RestockNotification({ productId }: Props) {
 
   if (status === 'success') {
     return (
-      <div className="mt-4 rounded-md bg-green-50 p-4">
+      <div className="mt-4 rounded-md bg-success-light p-4">
         <div className="flex">
-          <svg className="size-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+          <svg className="size-5 text-success" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
           </svg>
           <p className="ml-3 text-sm font-medium text-green-800">
@@ -82,19 +82,19 @@ export default function RestockNotification({ productId }: Props) {
             }}
             placeholder={t('restock.emailPlaceholder')}
             maxLength={254}
-            className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
             disabled={status === 'submitting'}
           />
           <button
             type="submit"
             disabled={status === 'submitting'}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-md hover:bg-brand-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           >
             {status === 'submitting' ? t('restock.submitting') : t('restock.subscribe')}
           </button>
         </div>
         {errorMessage && (
-          <p className="mt-2 text-xs text-red-500">{errorMessage}</p>
+          <p className="mt-2 text-xs text-danger">{errorMessage}</p>
         )}
       </form>
     </div>

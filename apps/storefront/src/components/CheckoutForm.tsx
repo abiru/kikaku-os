@@ -250,7 +250,7 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 						aria-describedby={emailError ? 'checkout-email-error' : undefined}
 					/>
 					{emailError && (
-						<p id="checkout-email-error" className="mt-1 text-sm text-red-600" role="alert">{emailError}</p>
+						<p id="checkout-email-error" className="mt-1 text-sm text-danger" role="alert">{emailError}</p>
 					)}
 				</div>
 
@@ -258,7 +258,7 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 					<label className="block text-sm font-medium text-gray-700 mb-2">
 						{t('checkout.shippingAddress')}
 					</label>
-					<p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 mb-3" role="note">
+					<p className="text-sm text-brand bg-brand/5 border border-brand/20 rounded-md px-3 py-2 mb-3" role="note">
 						{t('checkout.japanOnlyShipping')}
 					</p>
 					<AddressElement
@@ -337,8 +337,8 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 				{/* Error message */}
 				<div aria-live="assertive">
 					{errorMessage && !timeoutState.active && (
-						<div className="rounded-md bg-red-50 p-4" role="alert">
-							<p className="text-sm text-red-800">{errorMessage}</p>
+						<div className="rounded-md bg-danger-light p-4" role="alert">
+							<p className="text-sm text-danger">{errorMessage}</p>
 						</div>
 					)}
 				</div>
@@ -348,7 +348,7 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 					type="submit"
 					disabled={!stripe || isProcessing || !paymentElementReady || timeoutState.active}
 					aria-busy={isProcessing}
-					className="w-full rounded-lg bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+					className="w-full rounded-lg bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 				>
 					{isProcessing ? (
 						<span className="inline-flex items-center gap-2">
@@ -391,7 +391,7 @@ export default function CheckoutForm({
 	if (stripeLoadError) {
 		return (
 			<div className="bg-white rounded-lg shadow-sm p-6 text-center">
-				<div className="text-red-600 mb-4">
+				<div className="text-danger mb-4">
 					<svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 					</svg>
