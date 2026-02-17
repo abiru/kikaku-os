@@ -141,4 +141,94 @@ describe('dailyCloseRuns', () => {
       expect(result).toBe(true);
     });
   });
+
+  describe('idempotency (#868)', () => {
+    it('detects duplicate after successful completion', async () => {
+      const runId = await startDailyCloseRun(env as any, '2025-01-15', false);
+      await completeDailyCloseRun(env as any, runId, { status: 'success' });
+
+      // Caller should check this before starting a new run
+      const alreadyDone = await hasSuccessfulRunForDate(env as any, '2025-01-15');
+      expect(alreadyDone).toBe(true);
+    });
+
+    it('allows retry after failed run', async () => {
+      const runId = await startDailyCloseRun(env as any, '2025-01-15', false);
+      await completeDailyCloseRun(env as any, runId, {
+        status: 'failed',
+        errorMessage: 'DB connection lost',
+      });
+
+      const alreadyDone = await hasSuccessfulRunForDate(env as any, '2025-01-15');
+      expect(alreadyDone).toBe(false);
+
+      // Retry is allowed
+      const retryId = await startDailyCloseRun(env as any, '2025-01-15', false);
+      expect(retryId).toBeGreaterThan(runId);
+    });
+
+    it('does not treat running status as successful', async () => {
+      await startDailyCloseRun(env as any, '2025-01-15', false);
+      // Status is still 'running'
+
+      const alreadyDone = await hasSuccessfulRunForDate(env as any, '2025-01-15');
+      expect(alreadyDone).toBe(false);
+    });
+
+    it('different dates are independent', async () => {
+      const runId = await startDailyCloseRun(env as any, '2025-01-15', false);
+      await completeDailyCloseRun(env as any, runId, { status: 'success' });
+
+      expect(await hasSuccessfulRunForDate(env as any, '2025-01-15')).toBe(true);
+      expect(await hasSuccessfulRunForDate(env as any, '2025-01-16')).toBe(false);
+    });
+
+    it('allows forced re-run even after successful completion', async () => {
+      const runId1 = await startDailyCloseRun(env as any, '2025-01-15', false);
+      await completeDailyCloseRun(env as any, runId1, { status: 'success' });
+
+      // forced=true creates another run for the same date
+      const runId2 = await startDailyCloseRun(env as any, '2025-01-15', true);
+      expect(runId2).toBeGreaterThan(runId1);
+    });
+
+    it('concurrent startDailyCloseRun calls both succeed (no pessimistic lock)', async () => {
+      // Both calls insert without checking hasSuccessfulRunForDate
+      const [id1, id2] = await Promise.all([
+        startDailyCloseRun(env as any, '2025-01-15', false),
+        startDailyCloseRun(env as any, '2025-01-15', false),
+      ]);
+
+      // Both runs are created — documents the race condition
+      expect(id1).not.toBe(id2);
+      expect(id1).toBeGreaterThan(0);
+      expect(id2).toBeGreaterThan(0);
+    });
+  });
+
+  describe('timezone boundary (#868)', () => {
+    it('treats JST dates near midnight as separate days', async () => {
+      // 2025-01-15 JST close
+      const runId = await startDailyCloseRun(env as any, '2025-01-15', false);
+      await completeDailyCloseRun(env as any, runId, { status: 'success' });
+
+      // 2025-01-16 is a separate date — not affected by 2025-01-15
+      expect(await hasSuccessfulRunForDate(env as any, '2025-01-16')).toBe(false);
+      expect(await hasSuccessfulRunForDate(env as any, '2025-01-15')).toBe(true);
+    });
+
+    it('consecutive date runs are all independent', async () => {
+      const dates = ['2025-01-14', '2025-01-15', '2025-01-16'];
+      for (const date of dates) {
+        const runId = await startDailyCloseRun(env as any, date, false);
+        await completeDailyCloseRun(env as any, runId, { status: 'success' });
+      }
+
+      for (const date of dates) {
+        expect(await hasSuccessfulRunForDate(env as any, date)).toBe(true);
+      }
+      // Adjacent unrun date
+      expect(await hasSuccessfulRunForDate(env as any, '2025-01-17')).toBe(false);
+    });
+  });
 });

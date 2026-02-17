@@ -928,4 +928,106 @@ describe('POST /payments/intent', () => {
     expect(cachedBody.ok).toBe(true);
     expect(cachedBody.clientSecret).toBe('pi_store_cache_secret');
   });
+
+  describe('negative / edge cases (#866)', () => {
+    it('returns 400 for empty quoteId string', async () => {
+      const app = new Hono();
+      app.route('/', payments);
+
+      const res = await app.request(
+        'http://localhost/payments/intent',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ quoteId: '', email: 'test@example.com' })
+        },
+        { DB: createMockDb(), STRIPE_SECRET_KEY: 'sk_test_123' } as any
+      );
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 for out-of-stock variant', async () => {
+      const app = new Hono();
+      app.route('/', payments);
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+      const env = {
+        DB: createMockDb({
+          quoteRow: {
+            id: 'quote_oos',
+            items_json: JSON.stringify([{ variantId: 10, quantity: 5 }]),
+            coupon_code: null,
+            coupon_id: null,
+            subtotal: 5000,
+            tax_amount: 500,
+            cart_total: 5500,
+            discount: 0,
+            shipping_fee: 500,
+            grand_total: 6000,
+            currency: 'JPY',
+            expires_at: expiresAt
+          },
+          customerRow: { id: 789, email: 'test@example.com', stripe_customer_id: 'cus_existing' },
+          stockByVariant: { 10: 2 }  // Only 2 in stock, need 5
+        }),
+        STRIPE_SECRET_KEY: 'sk_test_123'
+      } as any;
+
+      const res = await app.request(
+        'http://localhost/payments/intent',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ quoteId: 'quote_oos', email: 'test@example.com' })
+        },
+        env
+      );
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.ok).toBe(false);
+      expect(json.outOfStock).toBeDefined();
+    });
+
+    it('returns 400 for invalid paymentMethod value', async () => {
+      const app = new Hono();
+      app.route('/', payments);
+
+      const res = await app.request(
+        'http://localhost/payments/intent',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            quoteId: 'quote_123',
+            email: 'test@example.com',
+            paymentMethod: 'bitcoin'
+          })
+        },
+        { DB: createMockDb(), STRIPE_SECRET_KEY: 'sk_test_123' } as any
+      );
+
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 for non-JSON body', async () => {
+      const app = new Hono();
+      app.route('/', payments);
+
+      const res = await app.request(
+        'http://localhost/payments/intent',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: 'not json'
+        },
+        { DB: createMockDb(), STRIPE_SECRET_KEY: 'sk_test_123' } as any
+      );
+
+      expect(res.status).toBe(400);
+    });
+  });
 });

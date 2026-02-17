@@ -45,10 +45,20 @@ adminOrders.get(
       const sql = `
         SELECT o.id, o.status, o.total_net, o.currency, o.created_at, o.paid_at,
                c.email as customer_email,
-               (SELECT status FROM fulfillments f WHERE f.order_id = o.id LIMIT 1) as fulfillment_status,
-               (SELECT COUNT(*) FROM payments p WHERE p.order_id = o.id) as payment_count
+               f_agg.fulfillment_status,
+               COALESCE(p_agg.payment_count, 0) as payment_count
         FROM orders o
         LEFT JOIN customers c ON c.id = o.customer_id
+        LEFT JOIN (
+          SELECT order_id, MIN(status) as fulfillment_status
+          FROM fulfillments
+          GROUP BY order_id
+        ) f_agg ON f_agg.order_id = o.id
+        LEFT JOIN (
+          SELECT order_id, COUNT(*) as payment_count
+          FROM payments
+          GROUP BY order_id
+        ) p_agg ON p_agg.order_id = o.id
         ${where}
         ORDER BY o.created_at DESC
         LIMIT ? OFFSET ?
