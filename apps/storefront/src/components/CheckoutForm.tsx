@@ -80,6 +80,7 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 		checking: false,
 		confirmed: false,
 	});
+	const formRef = useRef<HTMLFormElement>(null);
 	const pollAbortRef = useRef<AbortController | null>(null);
 
 	const pollPaymentStatus = useCallback(async (token: string) => {
@@ -227,7 +228,7 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 				/>
 			)}
 
-			<form onSubmit={handleSubmit} className="space-y-6" aria-busy={isProcessing}>
+			<form ref={formRef} onSubmit={handleSubmit} className="space-y-6" aria-busy={isProcessing}>
 				<div>
 					<label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
 						{t('checkout.email')}
@@ -334,11 +335,21 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 					</div>
 				)}
 
-				{/* Error message */}
+				{/* Error message with retry action */}
 				<div aria-live="assertive">
 					{errorMessage && !timeoutState.active && (
 						<div className="rounded-md bg-danger-light p-4" role="alert">
 							<p className="text-sm text-danger">{errorMessage}</p>
+							<button
+								type="button"
+								onClick={() => {
+									setErrorMessage(null);
+									formRef.current?.requestSubmit();
+								}}
+								className="mt-2 text-sm font-medium text-danger underline hover:text-danger/80"
+							>
+								{t('errors.retry')}
+							</button>
 						</div>
 					)}
 				</div>

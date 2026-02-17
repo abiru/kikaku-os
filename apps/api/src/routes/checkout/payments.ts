@@ -14,6 +14,12 @@ import {
 
 const logger = createLogger('payments');
 
+/** Classify Stripe HTTP errors as transient (retriable) or permanent */
+function isTransientStripeError(status: number): boolean {
+  // 429 = rate limited, 500/502/503/504 = server errors
+  return status === 429 || status >= 500;
+}
+
 const paymentIntentSchema = z.object({
   quoteId: z.string().min(1, 'quoteId is required'),
   email: z.string().email('Valid email is required').optional(),
@@ -444,8 +450,17 @@ payments.post('/payments/intent', async (c) => {
 
   if (!stripeRes.ok) {
     const text = await stripeRes.text();
-    logger.error('Stripe PaymentIntent creation failed', { error: text });
+    const status = stripeRes.status;
+    logger.error('Stripe PaymentIntent creation failed', { error: text, status });
     await cleanupFailedOrder(c.env.DB, orderId);
+
+    if (isTransientStripeError(status)) {
+      return c.json(
+        { ok: false, message: 'Payment service temporarily unavailable', code: 'SERVICE_UNAVAILABLE' },
+        { status: 503, headers: { 'Retry-After': '10' } }
+      );
+    }
+
     return jsonError(c, 'Failed to create payment intent', 500);
   }
 

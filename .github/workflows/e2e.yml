@@ -2,22 +2,37 @@
 name: E2E
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/storefront/**'
+      - 'apps/api/**'
+      - 'tests/e2e/**'
+      - '.github/workflows/e2e.yml'
+      - 'pnpm-lock.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/storefront/**'
+      - 'apps/api/**'
+      - 'tests/e2e/**'
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# On PRs: run critical-path specs only (fast feedback)
+# On main push / manual: run full suite
+env:
+  E2E_SPECS: ${{ github.event_name == 'pull_request' && 'tests/e2e/checkout-flow.spec.ts tests/e2e/cart.spec.ts tests/e2e/admin-flow.spec.ts' || 'tests/e2e/' }}
+
 jobs:
   e2e:
     name: E2E - Playwright Tests
-    # Toggle: self-hosted ↔ ubuntu-latest
-    runs-on: self-hosted
-    timeout-minutes: 25
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Clean workspace
-        run: git clean -ffdx || true
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -48,7 +63,6 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
-        # NOTE: 理想は Playwright バージョンベースのキーだが今週は許容
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -64,7 +78,6 @@ jobs:
           EOF
 
       - name: Apply D1 migrations (local)
-        # 元コマンド: pnpm -C apps/api exec wrangler d1 migrations apply ledkikaku-os --local
         run: pnpm db:migrate
 
       - name: Create storefront .env for Astro

@@ -29,6 +29,17 @@ const logger = createLogger('app');
 
 const app = new Hono<Env>();
 
+/** Detect D1/database errors from error messages */
+const isD1Error = (err: Error): boolean => {
+  const msg = err.message.toLowerCase();
+  return msg.includes('d1_error') ||
+    msg.includes('database') ||
+    msg.includes('sql') ||
+    msg.includes('no such table') ||
+    msg.includes('connection') ||
+    (err.name === 'Error' && msg.includes('prepare'));
+};
+
 // Global error handler - ensures all errors return JSON
 app.onError((err, c) => {
   // Handle known application errors with appropriate status codes
@@ -52,6 +63,26 @@ app.onError((err, c) => {
     return c.json(
       { ok: false, message, code },
       status as 400 | 401 | 403 | 404 | 409 | 500 | 501 | 502 | 503
+    );
+  }
+
+  // D1/database errors → 503 Service Unavailable with Retry-After
+  if (isD1Error(err)) {
+    logger.error('Database error - returning 503', { error: String(err), path: c.req.path });
+    captureException(err, {
+      path: c.req.path,
+      method: c.req.method,
+      env: c.env
+    });
+    // Non-blocking alert for DB failures
+    c.executionCtx.waitUntil(
+      sendAlert(c.env, 'critical', `Database error on ${c.req.method} ${c.req.path}`, {
+        error: err.message
+      })
+    );
+    return c.json(
+      { ok: false, message: 'Service temporarily unavailable', code: 'DB_UNAVAILABLE' },
+      { status: 503, headers: { 'Retry-After': '30' } }
     );
   }
 

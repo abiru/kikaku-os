@@ -52,12 +52,37 @@ import { t } from '../../i18n';
 		const currentCart = localStorage.getItem('led-kikaku-cart');
 		const backup = sessionStorage.getItem('led-kikaku-cart-backup');
 
+		let restored = false;
+
 		// Only restore if cart is empty or missing
 		if (backup && (!currentCart || currentCart === '{}')) {
-			localStorage.setItem('led-kikaku-cart', backup);
+			try {
+				// Validate backup is valid JSON before restoring
+				JSON.parse(backup);
+				localStorage.setItem('led-kikaku-cart', backup);
+
+				// Verify the restore succeeded
+				const verification = localStorage.getItem('led-kikaku-cart');
+				restored = verification === backup;
+			} catch {
+				// Invalid JSON in backup — discard it silently
+			}
 		}
 
-		// Clear backup after restoration
+		// Clear backup after restoration attempt
 		sessionStorage.removeItem('led-kikaku-cart-backup');
+
+		// Show user feedback if restore failed and backup existed
+		if (backup && !restored && (!currentCart || currentCart === '{}')) {
+			const card = document.querySelector('.rounded-3xl');
+			if (card) {
+				const warning = document.createElement('p');
+				warning.className = 'mt-4 text-sm text-yellow-700';
+				warning.textContent = document.documentElement.lang === 'ja'
+					? 'カートの復元に失敗しました。お手数ですが、再度商品をカートに追加してください。'
+					: 'Cart could not be restored. Please add items to your cart again.';
+				card.appendChild(warning);
+			}
+		}
 	}
 </script>

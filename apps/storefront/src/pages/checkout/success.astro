@@ -13,7 +13,12 @@ let order = null;
 
 if (orderToken) {
 	try {
-		const response = await fetch(buildStoreOrderUrl(apiBase, orderToken));
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 5000);
+		const response = await fetch(buildStoreOrderUrl(apiBase, orderToken), {
+			signal: controller.signal,
+		});
+		clearTimeout(timeoutId);
 		if (response.ok) {
 			const data = await response.json();
 			order = data.order || null;

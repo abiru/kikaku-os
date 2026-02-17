@@ -152,8 +152,13 @@ export function useCheckout(): UseCheckoutReturn {
 			// Ignore abort errors (cart changed, new request supersedes)
 			if (err instanceof DOMException && err.name === 'AbortError') return;
 
+			const httpStatus = (err as { status?: number }).status;
+			const payloadCode = (err as { payload?: { code?: string } }).payload?.code;
+
 			if (err instanceof TypeError && err.message.includes('fetch')) {
 				setError(t('errors.networkError'));
+			} else if (httpStatus === 503 || payloadCode === 'SERVICE_UNAVAILABLE') {
+				setError(t('checkout.serviceUnavailable'));
 			} else {
 				setError(err instanceof Error ? err.message : t('errors.checkoutFailed'));
 			}

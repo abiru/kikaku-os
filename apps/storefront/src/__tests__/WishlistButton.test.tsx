@@ -88,10 +88,10 @@ describe('WishlistButton', () => {
 	it('shows outline heart icon when not wishlisted', () => {
 		const { container } = render(<WishlistButton product={mockProduct} />);
 
-		// Outline heart has fill="none" and text-gray-400
+		// Outline heart has fill="none" and text-neutral-400
 		const svg = container.querySelector('svg');
 		expect(svg).toHaveAttribute('fill', 'none');
-		expect(svg?.className.baseVal).toContain('text-gray-400');
+		expect(svg?.className.baseVal).toContain('text-neutral-400');
 	});
 
 	it('toggles visual state on click', () => {
