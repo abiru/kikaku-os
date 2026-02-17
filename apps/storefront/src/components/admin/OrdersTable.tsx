@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Badge } from '../catalyst/badge'
 import { Link } from '../catalyst/link'
 import AdminTable, { type Column, type SelectionState } from './AdminTable'
@@ -6,6 +6,8 @@ import { formatPrice } from '../../lib/format'
 import { getOrderBadgeColor, getPaymentStatusLabel, getFulfillmentStatusLabel, getFulfillmentBadgeColor } from '../../lib/adminUtils'
 import TableEmptyState from './TableEmptyState'
 import { t } from '../../i18n'
+import { useTableSort } from '../../hooks/useTableSort'
+import { useBulkActions } from '../../hooks/useBulkActions'
 
 type Order = {
   id: number
@@ -53,29 +55,20 @@ const confirmDialog = (window as any).__confirmDialog as
   | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
   | undefined
 
-const sortComparator = (a: Order, b: Order, field: string): number => {
-  switch (field) {
-    case 'id':
-      return a.id - b.id
-    case 'created_at':
-      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    case 'total_net':
-      return a.total_net - b.total_net
-    case 'status':
-      return a.status.localeCompare(b.status)
-    default:
-      return 0
-  }
+const sortFieldTypes = {
+  id: 'number' as const,
+  created_at: 'date' as const,
+  total_net: 'number' as const,
+  status: 'string' as const,
 }
 
 export default function OrdersTable({ orders: initialOrders, currentPage, totalPages, searchQuery }: Props) {
   const [orders, setOrders] = useState(initialOrders)
-  const [bulkLoading, setBulkLoading] = useState(false)
-  const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const { bulkLoading, bulkMessage, setBulkMessage, executeBulk } = useBulkActions()
+  const { sortComparator } = useTableSort<Order>(sortFieldTypes)
 
   const handleBulkAction = async (action: string, selectedIds: ReadonlySet<number>, clearSelection: () => void) => {
     if (!action) return
-    setBulkMessage(null)
 
     if (action === 'export') {
       exportOrdersCSV(orders, selectedIds)
@@ -96,41 +89,41 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
         : window.confirm(t('admin.confirm.bulkFulfill', { count: selectedIds.size }))
       if (!confirmed) return
 
-      setBulkLoading(true)
-      let successCount = 0
-      let failCount = 0
+      await executeBulk(async () => {
+        let successCount = 0
+        let failCount = 0
 
-      for (const orderId of selectedIds) {
-        try {
-          const res = await fetch(`/api/admin/orders/${orderId}/fulfillments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 'shipped' }),
-          })
-          if (res.ok) {
-            successCount++
-          } else {
+        for (const orderId of selectedIds) {
+          try {
+            const res = await fetch(`/api/admin/orders/${orderId}/fulfillments`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'shipped' }),
+            })
+            if (res.ok) {
+              successCount++
+            } else {
+              failCount++
+            }
+          } catch {
             failCount++
           }
-        } catch {
-          failCount++
         }
-      }
 
-      setBulkLoading(false)
-      if (failCount === 0) {
-        setBulkMessage({ type: 'success', text: t('admin.bulkFulfillSuccess', { count: successCount }) })
-        setOrders(prev => prev.map(o =>
-          selectedIds.has(o.id) ? { ...o, fulfillment_status: 'shipped' } : o
-        ))
-        clearSelection()
-      } else {
-        setBulkMessage({ type: 'error', text: t('admin.bulkPartialFail', { succeeded: successCount, failed: failCount }) })
-      }
+        if (failCount === 0) {
+          setBulkMessage({ type: 'success', text: t('admin.bulkFulfillSuccess', { count: successCount }) })
+          setOrders(prev => prev.map(o =>
+            selectedIds.has(o.id) ? { ...o, fulfillment_status: 'shipped' } : o
+          ))
+          clearSelection()
+        } else {
+          setBulkMessage({ type: 'error', text: t('admin.bulkPartialFail', { succeeded: successCount, failed: failCount }) })
+        }
+      })
     }
   }
 
-  const columns: Column<Order>[] = [
+  const columns: Column<Order>[] = useMemo(() => [
     {
       id: 'id',
       header: t('admin.order'),
@@ -188,7 +181,7 @@ export default function OrdersTable({ orders: initialOrders, currentPage, totalP
       className: 'text-right font-medium tabular-nums',
       cell: (o) => formatPrice(o.total_net, o.currency),
     },
-  ]
+  ], [])
 
   return (
     <AdminTable

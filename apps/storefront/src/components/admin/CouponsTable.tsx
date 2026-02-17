@@ -4,6 +4,7 @@ import { formatDate } from '../../lib/format'
 import AdminTable, { type Column, type SelectionState } from './AdminTable'
 import TableEmptyState from './TableEmptyState'
 import { t } from '../../i18n'
+import { useBulkActions } from '../../hooks/useBulkActions'
 
 type Coupon = {
   id: number
@@ -48,8 +49,7 @@ const confirmDialog = (window as any).__confirmDialog as
 
 export default function CouponsTable({ coupons: initialCoupons }: Props) {
   const [coupons, setCoupons] = useState(initialCoupons)
-  const [bulkLoading, setBulkLoading] = useState(false)
-  const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const { bulkLoading, bulkMessage, setBulkMessage, executeBulk } = useBulkActions()
 
   const deletableIds = coupons.filter((c) => c.current_uses === 0).map((c) => c.id)
 
@@ -73,29 +73,28 @@ export default function CouponsTable({ coupons: initialCoupons }: Props) {
       : window.confirm(message)
     if (!confirmed) return
 
-    setBulkLoading(true)
-    setBulkMessage(null)
-    let success = 0
-    let fail = 0
+    await executeBulk(async () => {
+      let success = 0
+      let fail = 0
 
-    for (const id of selectedDeletable) {
-      try {
-        const res = await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' })
-        if (res.ok) success++
-        else fail++
-      } catch {
-        fail++
+      for (const id of selectedDeletable) {
+        try {
+          const res = await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' })
+          if (res.ok) success++
+          else fail++
+        } catch {
+          fail++
+        }
       }
-    }
 
-    setBulkLoading(false)
-    if (fail === 0) {
-      setBulkMessage({ type: 'success', text: `${success}件のクーポンを削除しました` })
-      setCoupons(prev => prev.filter(c => !selectedIds.has(c.id)))
-      clearSelection()
-    } else {
-      setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
-    }
+      if (fail === 0) {
+        setBulkMessage({ type: 'success', text: `${success}件のクーポンを削除しました` })
+        setCoupons(prev => prev.filter(c => !selectedIds.has(c.id)))
+        clearSelection()
+      } else {
+        setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
+      }
+    })
   }
 
   const columns: Column<Coupon>[] = [

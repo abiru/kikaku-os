@@ -4,12 +4,14 @@ import { Badge } from '../catalyst/badge';
 import { Button } from '../catalyst/button';
 import { Select } from '../catalyst/select';
 import { Field, Label } from '../catalyst/fieldset';
-import { Input } from '../catalyst/input';
 import { Link } from '../catalyst/link';
 import { StarRatingDisplay } from '../StarRating';
 import TableSkeleton from './TableSkeleton';
 import { useTranslation } from '../../i18n';
 import { formatDate } from '../../lib/format';
+import { getReviewBadgeColor, getReviewStatusLabel } from '../../lib/adminUtils';
+import { useTableSelection } from '../../hooks/useTableSelection';
+import { useBulkActions } from '../../hooks/useBulkActions';
 
 type Review = {
   id: number;
@@ -25,8 +27,6 @@ type Review = {
   updated_at: string;
 };
 
-import { getReviewBadgeColor, getReviewStatusLabel } from '../../lib/adminUtils';
-
 export default function ReviewsTable({ apiBase }: { apiBase: string }) {
   const { t } = useTranslation();
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -36,8 +36,9 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [productFilter, setProductFilter] = useState('');
   const [actioningId, setActioningId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [bulkActioning, setBulkActioning] = useState(false);
+
+  const { selectedIds, someSelected, toggleAll, toggleOne, clearSelection } = useTableSelection();
+  const { bulkLoading: bulkActioning, executeBulk } = useBulkActions();
 
   const fetchReviews = async () => {
     setLoading(true);
@@ -49,7 +50,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
       if (!data.ok) throw new Error(data.message || 'Failed to load reviews');
       setReviews(data.reviews || []);
       setTotal(data.total || 0);
-      setSelectedIds(new Set());
+      clearSelection();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load reviews');
     } finally {
@@ -77,6 +78,9 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
     return Array.from(names).sort();
   }, [reviews]);
 
+  const allFilteredIds = useMemo(() => filteredReviews.map((r) => r.id), [filteredReviews]);
+  const allSelected = filteredReviews.length > 0 && allFilteredIds.every((id) => selectedIds.has(id));
+
   const handleAction = async (reviewId: number, action: 'approve' | 'reject') => {
     setActioningId(reviewId);
     try {
@@ -95,42 +99,21 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
 
   const handleBulkAction = async (action: 'approve' | 'reject') => {
     if (selectedIds.size === 0) return;
-    setBulkActioning(true);
     setError('');
-    try {
-      const promises = Array.from(selectedIds).map(async (id) => {
-        const res = await fetch(`${apiBase}/admin/reviews/${id}/${action}`, {
-          method: 'POST',
+    await executeBulk(async () => {
+      try {
+        const promises = Array.from(selectedIds).map(async (id) => {
+          const res = await fetch(`${apiBase}/admin/reviews/${id}/${action}`, {
+            method: 'POST',
+          });
+          return res.json() as Promise<{ ok: boolean; message?: string }>;
         });
-        return res.json() as Promise<{ ok: boolean; message?: string }>;
-      });
-      await Promise.all(promises);
-      await fetchReviews();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : `Failed to bulk ${action}`);
-    } finally {
-      setBulkActioning(false);
-    }
-  };
-
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
+        await Promise.all(promises);
+        await fetchReviews();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : `Failed to bulk ${action}`);
       }
-      return next;
     });
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIds.size === filteredReviews.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredReviews.map((r) => r.id)));
-    }
   };
 
   const pendingSelected = filteredReviews.filter(
@@ -178,7 +161,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
       </div>
 
       {/* Bulk Action Bar */}
-      {selectedIds.size > 0 && (
+      {someSelected && (
         <div className="mb-4 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-3">
           <span className="text-sm font-medium text-indigo-800">
             {t('admin.selectedCount', { count: selectedIds.size })}
@@ -226,8 +209,8 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
               <TableHeader>
                 <input
                   type="checkbox"
-                  checked={selectedIds.size === filteredReviews.length && filteredReviews.length > 0}
-                  onChange={toggleSelectAll}
+                  checked={allSelected}
+                  onChange={() => toggleAll(allFilteredIds)}
                   className="rounded border-zinc-300"
                 />
               </TableHeader>
@@ -247,7 +230,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
                   <input
                     type="checkbox"
                     checked={selectedIds.has(review.id)}
-                    onChange={() => toggleSelect(review.id)}
+                    onChange={() => toggleOne(review.id)}
                     className="rounded border-zinc-300"
                   />
                 </TableCell>
