@@ -32,53 +32,8 @@ const h1 = [t('home.heroCopy1'), t('home.heroCopy2')];
 
 <style>
   .gradient-text {
-    background: linear-gradient(
-      90deg,
-      #dc2626 0%,
-      #ef4444 10%,
-      #1a1a1a 20%,
-      #f59e0b 35%,
-      #dc2626 45%,
-      #0f172a 55%,
-      #8b5cf6 70%,
-      #dc2626 80%,
-      #3b82f6 90%,
-      #dc2626 100%
-    );
-    background-size: 300% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: gradient-shift 60s ease-in-out infinite;
     line-height: 1.2;
     padding-bottom: 0.1em;
-  }
-
-  @keyframes gradient-shift {
-    0% {
-      background-position: 0% center;
-    }
-    15% {
-      background-position: 80% center;
-    }
-    30% {
-      background-position: 35% center;
-    }
-    45% {
-      background-position: 95% center;
-    }
-    60% {
-      background-position: 20% center;
-    }
-    75% {
-      background-position: 65% center;
-    }
-    90% {
-      background-position: 45% center;
-    }
-    100% {
-      background-position: 0% center;
-    }
   }
 
   .embossed-text {
