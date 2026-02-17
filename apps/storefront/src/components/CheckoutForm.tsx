@@ -232,7 +232,7 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 					type="submit"
 					disabled={!stripe || isProcessing || !paymentElementReady}
 					aria-busy={isProcessing}
-					className="w-full rounded-lg bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+					className="w-full rounded-lg bg-brand px-6 py-3 h-12 text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 				>
 					{isProcessing ? (
 						<span className="inline-flex items-center gap-2">
