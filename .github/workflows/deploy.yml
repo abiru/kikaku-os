@@ -8,8 +8,13 @@ on:
   workflow_dispatch:  # Allow manual deployment
 
 permissions:
-  contents: read
+  contents: write
   actions: read
+  pull-requests: write
+
+env:
+  API_WORKER_NAME: kikaku-os-api
+  STOREFRONT_PROJECT_NAME: kikaku-storefront
 
 jobs:
   validate-config:
@@ -258,7 +263,7 @@ jobs:
     name: Auto-Rollback on Smoke Test Failure
     runs-on: ubuntu-latest
     needs: [smoke-test]
-    if: failure()
+    if: ${{ always() && needs.smoke-test.result == 'failure' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -284,15 +289,15 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           echo "Fetching deployment history..."
-          DEPLOYMENTS=$(pnpm -C apps/api exec wrangler deployments list --name kikaku-os-api 2>&1) || true
+          DEPLOYMENTS=$(pnpm -C apps/api exec wrangler deployments list --name "$API_WORKER_NAME" 2>&1) || true
           echo "$DEPLOYMENTS"
 
           echo "Attempting rollback to previous version..."
           # wrangler rollback rolls back to the previous deployment
-          pnpm -C apps/api exec wrangler rollback --name kikaku-os-api --message "Auto-rollback: smoke tests failed in run ${{ github.run_id }}" 2>&1 || {
+          pnpm -C apps/api exec wrangler rollback --name "$API_WORKER_NAME" --message "Auto-rollback: smoke tests failed in run ${{ github.run_id }}" 2>&1 || {
             echo "::warning::API rollback via wrangler rollback failed. Manual intervention may be required."
             echo "api_status=failed" >> $GITHUB_OUTPUT
-            exit 0
+            exit 1
           }
           echo "api_status=success" >> $GITHUB_OUTPUT
 
@@ -315,13 +320,13 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           echo "Fetching Pages deployment history..."
-          DEPLOYMENTS=$(pnpm -C apps/storefront exec wrangler pages deployment list --project-name=kikaku-storefront 2>&1) || true
+          DEPLOYMENTS=$(pnpm -C apps/storefront exec wrangler pages deployment list --project-name="$STOREFRONT_PROJECT_NAME" 2>&1) || true
           echo "$DEPLOYMENTS"
 
           # Pages does not have a direct rollback command.
           # The recommended approach is to re-deploy the previous production commit.
           echo "::warning::Cloudflare Pages does not support direct rollback via CLI."
-          echo "::warning::To rollback storefront, use Cloudflare Dashboard -> Pages -> kikaku-storefront -> Deployments -> Rollback."
+          echo "::warning::To rollback storefront, use Cloudflare Dashboard -> Pages -> $STOREFRONT_PROJECT_NAME -> Deployments -> Rollback."
           echo "storefront_status=manual_required" >> $GITHUB_OUTPUT
 
       - name: Notify via Slack
