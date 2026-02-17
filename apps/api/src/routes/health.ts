@@ -18,8 +18,41 @@ const OPTIONAL_SECRETS = [
   'RESEND_FROM_EMAIL',
 ] as const;
 
+const WEAK_ADMIN_KEYS = ['CHANGE_ME', 'changeme', 'admin', 'password', 'secret', 'test'] as const;
+const MIN_ADMIN_KEY_LENGTH = 32;
+
 function isConfigured(env: Record<string, unknown>, key: string): boolean {
   return typeof env[key] === 'string' && env[key] !== '';
+}
+
+function checkAdminKeyStrength(env: Record<string, unknown>): { ok: boolean; warnings: string[] } {
+  const key = env.ADMIN_API_KEY;
+  const warnings: string[] = [];
+
+  if (typeof key !== 'string' || key === '') {
+    return { ok: false, warnings: ['ADMIN_API_KEY is not configured'] };
+  }
+
+  if (WEAK_ADMIN_KEYS.some((weak) => key.toLowerCase() === weak.toLowerCase())) {
+    warnings.push('ADMIN_API_KEY uses a known weak/default value');
+  }
+
+  if (key.length < MIN_ADMIN_KEY_LENGTH) {
+    warnings.push(`ADMIN_API_KEY is too short (${key.length} chars, minimum ${MIN_ADMIN_KEY_LENGTH})`);
+  }
+
+  return { ok: warnings.length === 0, warnings };
+}
+
+function checkDevMode(env: Record<string, unknown>): { ok: boolean; warnings: string[] } {
+  const warnings: string[] = [];
+  const devMode = env.DEV_MODE;
+
+  if (devMode === 'true') {
+    warnings.push('DEV_MODE is enabled — dev endpoints (/dev/*) are accessible');
+  }
+
+  return { ok: devMode !== 'true', warnings };
 }
 
 function checkSecrets(env: Record<string, unknown>): {
@@ -53,7 +86,15 @@ health.get('/health', async (c) => {
     return jsonError(c, 'Unauthorized', 401);
   }
 
-  const secretsResult = checkSecrets(c.env as unknown as Record<string, unknown>);
+  const envRecord = c.env as unknown as Record<string, unknown>;
+  const secretsResult = checkSecrets(envRecord);
+  const adminKeyResult = checkAdminKeyStrength(envRecord);
+  const devModeResult = checkDevMode(envRecord);
+
+  const warnings: string[] = [
+    ...adminKeyResult.warnings,
+    ...devModeResult.warnings,
+  ];
 
   const checks: Record<string, unknown> = {
     api: 'ok',
@@ -79,7 +120,8 @@ health.get('/health', async (c) => {
   }
 
   const allHealthy =
-    checks.database === 'ok' && checks.r2 === 'ok' && secretsResult.allConfigured;
+    checks.database === 'ok' && checks.r2 === 'ok' && secretsResult.allConfigured
+    && adminKeyResult.ok && devModeResult.ok;
 
   // Unauthenticated: return only status
   if (!authenticated) {
@@ -89,6 +131,10 @@ health.get('/health', async (c) => {
   }
 
   // Authenticated: return full details
+  if (authenticated && warnings.length > 0) {
+    checks.warnings = warnings;
+  }
+
   if (detailed) {
     checks.secretsDetail = {
       required: Object.fromEntries(
@@ -97,6 +143,10 @@ health.get('/health', async (c) => {
       optional: Object.fromEntries(
         Object.entries(secretsResult.optional).map(([k, v]) => [k, { configured: v }])
       ),
+    };
+    checks.security = {
+      adminKeyStrength: adminKeyResult.ok ? 'ok' : 'warning',
+      devMode: devModeResult.ok ? 'ok' : 'warning',
     };
   }
 

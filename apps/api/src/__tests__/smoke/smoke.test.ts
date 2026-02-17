@@ -53,14 +53,17 @@ const createMockR2 = () => ({
   put: vi.fn(async () => undefined),
 });
 
+// Use a strong API key (>= 32 chars) so security checks pass
+const STRONG_ADMIN_KEY = 'a'.repeat(32);
+
 const BASE_ENV = {
-  ADMIN_API_KEY: 'test-admin-key',
+  ADMIN_API_KEY: STRONG_ADMIN_KEY,
   STRIPE_SECRET_KEY: 'sk_test_xxx',
   STRIPE_WEBHOOK_SECRET: 'whsec_xxx',
   STRIPE_PUBLISHABLE_KEY: 'pk_test_xxx',
   STOREFRONT_BASE_URL: 'http://localhost:4321',
   CLERK_SECRET_KEY: 'sk_clerk_xxx',
-  DEV_MODE: 'true',
+  DEV_MODE: 'false',
   DB: createMockDb(),
   R2: createMockR2(),
 };
@@ -211,7 +214,7 @@ describe('Smoke Tests', () => {
     it('admin endpoints work with valid x-admin-key', async () => {
       const { fetch } = createSmokeApp();
       const res = await fetch('/inbox?status=open', {
-        headers: { 'x-admin-key': 'test-admin-key' },
+        headers: { 'x-admin-key': STRONG_ADMIN_KEY },
       });
       expect(res.status).toBe(200);
 
@@ -300,7 +303,7 @@ describe('Smoke Tests', () => {
     it('GET /reports/daily with auth returns 200', async () => {
       const { fetch } = createSmokeApp();
       const res = await fetch('/reports/daily?date=2026-01-15', {
-        headers: { 'x-admin-key': 'test-admin-key' },
+        headers: { 'x-admin-key': STRONG_ADMIN_KEY },
       });
       expect(res.status).toBe(200);
     });
@@ -386,7 +389,7 @@ describe('Smoke Tests', () => {
   // -----------------------------------------------------------------------
   describe('Dev Endpoints', () => {
     it('GET /dev/ping returns 200 in dev mode', async () => {
-      const { fetch } = createSmokeApp();
+      const { fetch } = createSmokeApp({ DEV_MODE: 'true' });
       const res = await fetch('/dev/ping');
       expect(res.status).toBe(200);
 

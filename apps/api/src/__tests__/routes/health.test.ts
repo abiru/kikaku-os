@@ -26,13 +26,16 @@ const createApp = (env: Record<string, unknown>) => {
   };
 };
 
+// Use a strong API key (>= 32 chars) so security checks pass
+const STRONG_ADMIN_KEY = 'a'.repeat(32);
+
 const BASE_ENV = {
-  ADMIN_API_KEY: 'test-admin-key',
+  ADMIN_API_KEY: STRONG_ADMIN_KEY,
   STRIPE_SECRET_KEY: 'sk_test_xxx',
   STRIPE_WEBHOOK_SECRET: 'whsec_xxx',
   CLERK_SECRET_KEY: 'sk_clerk_xxx',
   STOREFRONT_BASE_URL: 'http://localhost:4321',
-  DEV_MODE: 'true',
+  DEV_MODE: 'false',
 };
 
 describe('Health Check', () => {
@@ -111,7 +114,7 @@ describe('Health Check', () => {
       });
 
       const res = await fetch('/health', {
-        headers: { 'x-admin-key': 'test-admin-key' },
+        headers: { 'x-admin-key': STRONG_ADMIN_KEY },
       });
       const json = (await res.json()) as any;
 
@@ -121,7 +124,7 @@ describe('Health Check', () => {
       expect(json.database).toBe('ok');
       expect(json.r2).toBe('ok');
       expect(json.secrets).toBe('ok');
-      expect(json.environment).toBe('development');
+      expect(json.environment).toBe('production');
       expect(typeof json.timestamp).toBe('string');
     });
 
@@ -134,7 +137,7 @@ describe('Health Check', () => {
       });
 
       const res = await fetch('/health', {
-        headers: { 'x-admin-key': 'test-admin-key' },
+        headers: { 'x-admin-key': STRONG_ADMIN_KEY },
       });
       const json = (await res.json()) as any;
 
@@ -149,7 +152,7 @@ describe('Health Check', () => {
       });
 
       const res = await fetch('/health', {
-        headers: { 'x-admin-key': 'test-admin-key' },
+        headers: { 'x-admin-key': STRONG_ADMIN_KEY },
       });
       const json = (await res.json()) as any;
 
@@ -159,7 +162,7 @@ describe('Health Check', () => {
   });
 
   describe('GET /health?detailed=true', () => {
-    it('returns secrets detail with valid admin key', async () => {
+    it('returns secrets detail and security info with valid admin key', async () => {
       const { fetch } = createApp({
         ...BASE_ENV,
         DB: createMockDb(),
@@ -167,7 +170,7 @@ describe('Health Check', () => {
       });
 
       const res = await fetch('/health?detailed=true', {
-        headers: { 'x-admin-key': 'test-admin-key' },
+        headers: { 'x-admin-key': STRONG_ADMIN_KEY },
       });
       const json = (await res.json()) as any;
 
@@ -176,6 +179,9 @@ describe('Health Check', () => {
       expect(json.secretsDetail).toBeDefined();
       expect(json.secretsDetail.required.ADMIN_API_KEY.configured).toBe(true);
       expect(json.secretsDetail.required.STRIPE_SECRET_KEY.configured).toBe(true);
+      expect(json.security).toBeDefined();
+      expect(json.security.adminKeyStrength).toBe('ok');
+      expect(json.security.devMode).toBe('ok');
     });
 
     it('returns 401 without admin key', async () => {
@@ -210,14 +216,14 @@ describe('Health Check', () => {
 
     it('shows unconfigured secrets in detail', async () => {
       const { fetch } = createApp({
-        ADMIN_API_KEY: 'test-admin-key',
+        ADMIN_API_KEY: STRONG_ADMIN_KEY,
         DB: createMockDb(),
         R2: createMockR2(),
-        DEV_MODE: 'true',
+        DEV_MODE: 'false',
       });
 
       const res = await fetch('/health?detailed=true', {
-        headers: { 'x-admin-key': 'test-admin-key' },
+        headers: { 'x-admin-key': STRONG_ADMIN_KEY },
       });
       const json = (await res.json()) as any;
 
@@ -225,6 +231,84 @@ describe('Health Check', () => {
       expect(res.status).toBe(503);
       expect(json.secretsDetail.required.STRIPE_SECRET_KEY.configured).toBe(false);
       expect(json.secretsDetail.required.CLERK_SECRET_KEY.configured).toBe(false);
+    });
+  });
+
+  describe('Security checks', () => {
+    it('returns 503 when ADMIN_API_KEY is too short', async () => {
+      const shortKey = 'short-key';
+      const { fetch } = createApp({
+        ...BASE_ENV,
+        ADMIN_API_KEY: shortKey,
+        DB: createMockDb(),
+        R2: createMockR2(),
+      });
+
+      const res = await fetch('/health', {
+        headers: { 'x-admin-key': shortKey },
+      });
+      const json = (await res.json()) as any;
+
+      expect(res.status).toBe(503);
+      expect(json.warnings).toBeDefined();
+      expect(json.warnings.some((w: string) => w.includes('too short'))).toBe(true);
+    });
+
+    it('returns 503 when ADMIN_API_KEY uses a weak default value', async () => {
+      const weakKey = 'CHANGE_ME';
+      const { fetch } = createApp({
+        ...BASE_ENV,
+        ADMIN_API_KEY: weakKey,
+        DB: createMockDb(),
+        R2: createMockR2(),
+      });
+
+      const res = await fetch('/health', {
+        headers: { 'x-admin-key': weakKey },
+      });
+      const json = (await res.json()) as any;
+
+      expect(res.status).toBe(503);
+      expect(json.warnings).toBeDefined();
+      expect(json.warnings.some((w: string) => w.includes('known weak'))).toBe(true);
+    });
+
+    it('returns 503 when DEV_MODE is enabled', async () => {
+      const { fetch } = createApp({
+        ...BASE_ENV,
+        DEV_MODE: 'true',
+        DB: createMockDb(),
+        R2: createMockR2(),
+      });
+
+      const res = await fetch('/health', {
+        headers: { 'x-admin-key': STRONG_ADMIN_KEY },
+      });
+      const json = (await res.json()) as any;
+
+      expect(res.status).toBe(503);
+      expect(json.warnings).toBeDefined();
+      expect(json.warnings.some((w: string) => w.includes('DEV_MODE'))).toBe(true);
+    });
+
+    it('reports security status in detailed view', async () => {
+      const shortKey = 'weak';
+      const { fetch } = createApp({
+        ...BASE_ENV,
+        ADMIN_API_KEY: shortKey,
+        DEV_MODE: 'true',
+        DB: createMockDb(),
+        R2: createMockR2(),
+      });
+
+      const res = await fetch('/health?detailed=true', {
+        headers: { 'x-admin-key': shortKey },
+      });
+      const json = (await res.json()) as any;
+
+      expect(res.status).toBe(503);
+      expect(json.security.adminKeyStrength).toBe('warning');
+      expect(json.security.devMode).toBe('warning');
     });
   });
 });
