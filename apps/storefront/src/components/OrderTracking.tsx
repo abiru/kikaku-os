@@ -50,13 +50,9 @@ type Props = {
   order: Order;
 };
 
-const dateTimeLongOpts: Intl.DateTimeFormatOptions = {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-};
+import { DATE_FORMATS } from '../lib/constants';
+
+const dateTimeLongOpts = DATE_FORMATS.DATETIME_LONG;
 
 type StepStatus = 'completed' | 'current' | 'upcoming';
 

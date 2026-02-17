@@ -6,6 +6,7 @@ import { Badge } from '../../../components/catalyst/badge';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
+import { DATE_FORMATS } from '../../../lib/constants';
 import { Heading, Subheading } from '../../../components/catalyst/heading';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../../../components/catalyst/table';
 import FulfillmentModals from '../../../components/admin/FulfillmentModals.astro';
@@ -107,13 +108,7 @@ const formatCurrency = (amount: number, currency: string) => {
 	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);
 };
 
-const dateTimeOpts: Intl.DateTimeFormatOptions = {
-	year: 'numeric',
-	month: '2-digit',
-	day: '2-digit',
-	hour: '2-digit',
-	minute: '2-digit'
-};
+const dateTimeOpts = DATE_FORMATS.DATETIME;
 
 const getStatusColor = (status: string) => {
 	switch (status) {

@@ -273,7 +273,7 @@ export default function ReviewsTable({ apiBase }: { apiBase: string }) {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-zinc-500 whitespace-nowrap tabular-nums">
-                  {formatDate(review.created_at, { year: 'numeric', month: 'short', day: 'numeric' })}
+                  {formatDate(review.created_at, 'DATE_MONTH_SHORT')}
                 </TableCell>
                 <TableCell>
                   {review.status === 'pending' && (

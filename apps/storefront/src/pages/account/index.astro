@@ -147,7 +147,7 @@ const statusLabels: Record<string, string> = {
                     {t('account.orderNumber')} #{order.id}
                   </div>
                   <div class="text-sm text-secondary mt-1">
-                    {formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    {formatDate(order.created_at, 'DATE_LONG')}
                   </div>
                 </div>
                 <div class="text-right">

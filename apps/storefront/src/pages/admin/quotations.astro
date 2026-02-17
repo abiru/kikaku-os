@@ -140,10 +140,10 @@ const buildFilterUrl = (params: Record<string, string>) => {
 											{formatCurrency(q.total_amount, q.currency)}
 										</TableCell>
 										<TableCell className="text-zinc-500 tabular-nums whitespace-nowrap">
-											{formatDate(q.valid_until, { year: 'numeric', month: '2-digit', day: '2-digit' })}
+											{formatDate(q.valid_until, 'DATE_SHORT')}
 										</TableCell>
 										<TableCell className="text-zinc-500 tabular-nums whitespace-nowrap">
-											{formatDate(q.created_at, { year: 'numeric', month: '2-digit', day: '2-digit' })}
+											{formatDate(q.created_at, 'DATE_SHORT')}
 										</TableCell>
 									</TableRow>
 								);

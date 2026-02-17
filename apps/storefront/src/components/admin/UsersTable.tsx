@@ -28,13 +28,9 @@ type Props = {
 	activeFilter: string;
 };
 
-const dateTimeOpts: Intl.DateTimeFormatOptions = {
-	year: 'numeric',
-	month: '2-digit',
-	day: '2-digit',
-	hour: '2-digit',
-	minute: '2-digit'
-};
+import { DATE_FORMATS } from '../../lib/constants';
+
+const dateTimeOpts = DATE_FORMATS.DATETIME;
 
 const getRoleBadgeColor = (roleId: string): 'amber' | 'blue' | 'green' | 'zinc' => {
 	switch (roleId) {

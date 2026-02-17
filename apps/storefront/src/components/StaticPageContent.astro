@@ -62,7 +62,7 @@ const legalNoticeRows = isLegalSlug ? [
 				</h1>
 				{page && (
 					<p class="mt-6 text-center text-secondary text-lg font-medium">
-						{t('cms.lastUpdated', { date: formatDate(page.updated_at, { year: 'numeric', month: 'long', day: 'numeric' }) })}
+						{t('cms.lastUpdated', { date: formatDate(page.updated_at, 'DATE_LONG') })}
 					</p>
 				)}
 			</Container>
