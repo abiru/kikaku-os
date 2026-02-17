@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { $cartArray, $appliedCoupon } from '../lib/cart';
 import { getApiBase, fetchJson } from '../lib/api';
 import { useTranslation } from '../i18n';
@@ -57,7 +57,22 @@ export function useCheckout(): UseCheckoutReturn {
 		[cartItems]
 	);
 
+	// Ref to access latest fingerprint inside async functions
+	const cartFingerprintRef = useRef(cartFingerprint);
+	cartFingerprintRef.current = cartFingerprint;
+
+	// Ref to abort in-flight requests when cart changes
+	const abortControllerRef = useRef<AbortController | null>(null);
+
 	const createQuoteAndIntent = useCallback(async (couponCode?: string) => {
+		// Cancel any previous in-flight request
+		abortControllerRef.current?.abort();
+		const controller = new AbortController();
+		abortControllerRef.current = controller;
+
+		// Snapshot the fingerprint at call time for post-async verification
+		const snapshotFingerprint = cartFingerprintRef.current;
+
 		try {
 			setLoading(true);
 			setError(null);
@@ -81,12 +96,18 @@ export function useCheckout(): UseCheckoutReturn {
 					body: JSON.stringify({
 						items,
 						couponCode: couponCode || appliedCoupon?.code || undefined
-					})
+					}),
+					signal: controller.signal
 				}
 			);
 
 			if (!quoteData.ok) {
 				throw new Error('Failed to create quote');
+			}
+
+			// Verify cart hasn't changed during quote creation
+			if (snapshotFingerprint !== cartFingerprintRef.current) {
+				return;
 			}
 
 			setBreakdown(quoteData.breakdown);
@@ -100,7 +121,8 @@ export function useCheckout(): UseCheckoutReturn {
 						quoteId: quoteData.quoteId,
 						email: 'customer@checkout.pending',
 						paymentMethod: 'auto'
-					})
+					}),
+					signal: controller.signal
 				}
 			);
 
@@ -110,6 +132,11 @@ export function useCheckout(): UseCheckoutReturn {
 
 			if (!intentData.orderPublicToken) {
 				throw new Error('Public order token is missing');
+			}
+
+			// Final verification: discard if cart changed during intent creation
+			if (snapshotFingerprint !== cartFingerprintRef.current) {
+				return;
 			}
 
 			setClientSecret(intentData.clientSecret);
@@ -122,6 +149,9 @@ export function useCheckout(): UseCheckoutReturn {
 			setPublishableKey(pubKey);
 			setLoading(false);
 		} catch (err) {
+			// Ignore abort errors (cart changed, new request supersedes)
+			if (err instanceof DOMException && err.name === 'AbortError') return;
+
 			if (err instanceof TypeError && err.message.includes('fetch')) {
 				setError(t('errors.networkError'));
 			} else {
@@ -132,9 +162,15 @@ export function useCheckout(): UseCheckoutReturn {
 	}, [cartItems, appliedCoupon, t]);
 
 	useEffect(() => {
+		// Reset payment state when cart changes
 		setClientSecret(null);
 		setOrderToken(null);
 		createQuoteAndIntent();
+
+		return () => {
+			// Abort in-flight requests on cleanup (cart change or unmount)
+			abortControllerRef.current?.abort();
+		};
 	}, [cartFingerprint]);
 
 	const createQuote = useCallback(async (couponCode?: string) => {
