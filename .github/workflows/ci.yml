@@ -13,21 +13,15 @@ on:
       - 'package.json'
 
 concurrency:
-  # NOTE: PR-only trigger 前提。push を戻す場合は
-  # github.event.pull_request.number || github.ref に変更すること
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   api:
     name: API - Typecheck / Test / Integration / Build
-    # Toggle: self-hosted ↔ ubuntu-latest
-    runs-on: self-hosted
-    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Clean workspace
-        run: git clean -ffdx || true
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -73,13 +67,9 @@ jobs:
 
   storefront:
     name: Storefront - Typecheck / Test / Build
-    # Toggle: self-hosted ↔ ubuntu-latest
-    runs-on: self-hosted
-    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Clean workspace
-        run: git clean -ffdx || true
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
