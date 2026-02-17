@@ -1,3 +1,4 @@
+import { useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import { formatPrice } from '../lib/format';
 import type { CartItem } from '../lib/cart';
@@ -45,6 +46,45 @@ export default function OrderConfirmationModal({
 }: OrderConfirmationModalProps) {
 	const { t } = useTranslation();
 	const currency = breakdown.currency || 'JPY';
+	const modalRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === 'Escape' && !isProcessing) {
+				onCancel();
+			}
+		};
+		document.addEventListener('keydown', handleKeyDown);
+		return () => document.removeEventListener('keydown', handleKeyDown);
+	}, [isProcessing, onCancel]);
+
+	const handleFocusTrap = useCallback((e: KeyboardEvent) => {
+		if (e.key !== 'Tab' || !modalRef.current) return;
+		const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+			'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+		);
+		if (focusable.length === 0) return;
+		const first = focusable[0]!;
+		const last = focusable[focusable.length - 1]!;
+		if (e.shiftKey) {
+			if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+		} else {
+			if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+		}
+	}, []);
+
+	useEffect(() => {
+		document.addEventListener('keydown', handleFocusTrap);
+		return () => document.removeEventListener('keydown', handleFocusTrap);
+	}, [handleFocusTrap]);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			const btn = modalRef.current?.querySelector<HTMLElement>('button');
+			btn?.focus();
+		}, 50);
+		return () => clearTimeout(timer);
+	}, []);
 
 	return (
 		<div
@@ -53,7 +93,7 @@ export default function OrderConfirmationModal({
 			aria-modal="true"
 			aria-label={t('checkout.orderConfirmationTitle')}
 		>
-			<div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+			<div ref={modalRef} className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
 				<h2 className="text-xl font-bold text-gray-900 mb-6">
 					{t('checkout.orderConfirmationTitle')}
 				</h2>
@@ -143,7 +183,7 @@ export default function OrderConfirmationModal({
 						type="button"
 						onClick={onConfirm}
 						disabled={isProcessing}
-						className="w-full rounded-full bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+						className="w-full rounded-lg bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 					>
 						{isProcessing ? (
 							<span className="inline-flex items-center justify-center gap-2">
@@ -159,7 +199,7 @@ export default function OrderConfirmationModal({
 						type="button"
 						onClick={onCancel}
 						disabled={isProcessing}
-						className="w-full rounded-full border border-gray-300 px-4 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+						className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 					>
 						{t('checkout.goBack')}
 					</button>
