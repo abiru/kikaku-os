@@ -13,7 +13,8 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 import { t } from '../../../i18n';
-import { logError } from '../../../lib/logger';
+import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
+import { adminFormHandler } from '../../../lib/admin/form-helpers';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -53,80 +54,44 @@ let successMessage: string | null = null;
 
 // Handle POST - Update customer
 if (Astro.request.method === 'POST' && apiKey) {
-	try {
-		const formData = await Astro.request.formData();
-		const name = formData.get('name')?.toString().trim() || '';
-		const email = formData.get('email')?.toString().trim() || null;
-
-		if (!name) {
-			error = t('errors.nameRequired');
-		} else {
-			const res = await fetch(`${apiBase}/admin/customers/${id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-admin-key': apiKey
-				},
-				body: JSON.stringify({ name, email })
-			});
-
-			const data = await res.json();
-
-			if (!res.ok) {
-				error = data.message || t('errors.failedToUpdateCustomer');
-			} else {
-				customer = data.customer;
-				successMessage = t('admin.customerUpdated');
-			}
-		}
-	} catch (e) {
-		logError('Failed to update customer', e, { page: 'admin/customers/[id]', action: 'updateCustomer', resourceId: id });
-		error = t('errors.failedToUpdateCustomer');
+	const result = await adminFormHandler<{ customer: Customer }>({
+		request: Astro.request,
+		apiBase,
+		apiKey,
+		resource: 'customers',
+		id: id!,
+		errorMessage: t('errors.failedToUpdateCustomer'),
+		transformFormData: (fd) => {
+			const name = fd.get('name')?.toString().trim() || '';
+			if (!name) throw new Error(t('errors.nameRequired'));
+			return { name, email: fd.get('email')?.toString().trim() || null };
+		},
+	});
+	if (result.success && result.data) {
+		customer = result.data.customer;
+		successMessage = t('admin.customerUpdated');
 	}
+	error = result.error;
 }
 
-// Fetch customer data (if not already set from POST)
-if (!customer && apiKey) {
-	try {
-		const res = await fetch(`${apiBase}/admin/customers/${id}`, {
-			headers: { 'x-admin-key': apiKey }
-		});
+// Fetch customer data (if not already set from POST, or re-fetch for orders/stats)
+type CustomerResponse = { customer: Customer; orders: Order[]; stats: Stats }
 
-		if (!res.ok) {
-			if (res.status === 404) {
-				error = t('errors.customerNotFound');
-			} else {
-				const data = await res.json();
-				error = data.message || `API Error: ${res.status}`;
-			}
-		} else {
-			const data = await res.json();
-			customer = data.customer;
-			orders = data.orders || [];
-			stats = data.stats || { total_orders: 0, total_spent: 0, avg_order_value: 0 };
-		}
-	} catch (e) {
-		logError('Failed to load customer', e, { page: 'admin/customers/[id]', action: 'fetchCustomer', resourceId: id });
-		error = error || t('errors.failedToLoadCustomer');
+if (apiKey) {
+	const { data, error: fetchError } = await fetchAdminResource<CustomerResponse>({
+		apiBase,
+		apiKey,
+		resource: 'customers',
+		id: id!,
+		notFoundMessage: t('errors.customerNotFound'),
+		errorMessage: t('errors.failedToLoadCustomer'),
+	});
+	if (data) {
+		if (!customer) customer = data.customer;
+		orders = data.orders || [];
+		stats = data.stats || { total_orders: 0, total_spent: 0, avg_order_value: 0 };
 	}
-} else if (!apiKey) {
-	error = t('errors.adminKeyMissing');
-}
-
-// Re-fetch orders and stats if customer was updated via POST
-if (customer && successMessage && apiKey) {
-	try {
-		const res = await fetch(`${apiBase}/admin/customers/${id}`, {
-			headers: { 'x-admin-key': apiKey }
-		});
-		if (res.ok) {
-			const data = await res.json();
-			orders = data.orders || [];
-			stats = data.stats || { total_orders: 0, total_spent: 0, avg_order_value: 0 };
-		}
-	} catch (e) {
-		logError('Failed to re-fetch orders', e, { page: 'admin/customers/[id]', action: 'refetchOrders', resourceId: id });
-	}
+	if (!customer) error = error || fetchError;
 }
 
 const dateTimeOpts: Intl.DateTimeFormatOptions = {

@@ -13,7 +13,8 @@ import { Field, Label } from '../../../components/catalyst/fieldset';
 import { Button as CatalystButton } from '../../../components/catalyst/button';
 import { getCsrfToken, validateCsrfToken, CSRF_FIELD_NAME } from '../../../lib/csrf';
 import { t } from '../../../i18n';
-import { logError } from '../../../lib/logger';
+import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
+import { adminFormHandler } from '../../../lib/admin/form-helpers';
 
 const { slug } = Astro.params;
 const apiBase = getApiBase();
@@ -37,72 +38,47 @@ let successMessage: string | null = null;
 
 // Handle POST - Update template
 if (Astro.request.method === 'POST' && apiKey) {
-	try {
-		const formData = await Astro.request.formData();
-
-		if (!validateCsrfToken(Astro.request, formData)) {
-			error = 'Invalid CSRF token. Please reload and try again.';
-		} else {
-			const subject = formData.get('subject')?.toString().trim() || '';
-			const body_html = formData.get('body_html')?.toString() || '';
-			const body_text = formData.get('body_text')?.toString() || '';
-
-			if (!subject) {
-				error = t('errors.subjectRequired');
-			} else {
-				const res = await fetch(`${apiBase}/admin/email-templates/${slug}`, {
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json',
-						'x-admin-key': apiKey
-					},
-					body: JSON.stringify({
-						subject,
-						body_html,
-						body_text
-					})
-				});
-
-				const data = await res.json();
-
-				if (!res.ok) {
-					error = data.message || t('errors.failedToUpdateTemplate');
-				} else {
-					template = data.template;
-					successMessage = t('admin.templateUpdated');
-				}
+	const result = await adminFormHandler<{ template: EmailTemplate }>({
+		request: Astro.request,
+		apiBase,
+		apiKey,
+		resource: 'email-templates',
+		id: slug!,
+		errorMessage: t('errors.failedToUpdateTemplate'),
+		transformFormData: (fd) => {
+			if (!validateCsrfToken(Astro.request, fd)) {
+				throw new Error('Invalid CSRF token. Please reload and try again.');
 			}
-		}
-	} catch (e) {
-		logError('Failed to update template', e, { page: 'admin/email-templates/[slug]', action: 'updateTemplate' });
-		error = t('errors.failedToUpdateTemplate');
+			const subject = fd.get('subject')?.toString().trim() || '';
+			if (!subject) throw new Error(t('errors.subjectRequired'));
+			return {
+				subject,
+				body_html: fd.get('body_html')?.toString() || '',
+				body_text: fd.get('body_text')?.toString() || '',
+			};
+		},
+	});
+	if (result.success && result.data) {
+		template = result.data.template;
+		successMessage = t('admin.templateUpdated');
 	}
+	error = result.error;
 }
 
 // Fetch template data
-if (!template && apiKey) {
-	try {
-		const res = await fetch(`${apiBase}/admin/email-templates/${slug}`, {
-			headers: { 'x-admin-key': apiKey }
-		});
-
-		if (!res.ok) {
-			if (res.status === 404) {
-				error = t('errors.templateNotFound');
-			} else {
-				const data = await res.json();
-				error = data.message || `API Error: ${res.status}`;
-			}
-		} else {
-			const data = await res.json();
-			template = data.template;
-		}
-	} catch (e) {
-		logError('Failed to load template', e, { page: 'admin/email-templates/[slug]', action: 'fetchTemplate' });
-		error = error || t('errors.failedToLoadTemplate');
+if (!template) {
+	const { data, error: fetchError } = await fetchAdminResource<{ template: EmailTemplate }>({
+		apiBase,
+		apiKey: apiKey || '',
+		resource: 'email-templates',
+		id: slug!,
+		notFoundMessage: t('errors.templateNotFound'),
+		errorMessage: t('errors.failedToLoadTemplate'),
+	});
+	if (data) {
+		template = data.template;
 	}
-} else if (!apiKey) {
-	error = t('errors.adminKeyMissing');
+	error = error || fetchError;
 }
 
 const dateTimeOpts: Intl.DateTimeFormatOptions = {

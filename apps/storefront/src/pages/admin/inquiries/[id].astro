@@ -5,30 +5,27 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
 import InquiryDetail from '../../../components/admin/InquiryDetail';
 import { getApiBase } from '../../../lib/api';
-import { logError } from '../../../lib/logger';
+import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
 
 const apiBase = getApiBase();
 const apiKey = import.meta.env.ADMIN_API_KEY;
 const { id } = Astro.params;
 
 let inquiry: any = null;
-let error = null;
+let error: string | null = null;
 
-if (apiKey && id) {
-	try {
-		const res = await fetch(`${apiBase}/admin/inquiries/${id}`, {
-			headers: { 'x-admin-key': apiKey },
-		});
-		if (!res.ok) throw new Error(`API Error: ${res.status}`);
-		const data = await res.json();
-		inquiry = data.inquiry || null;
-	} catch (e) {
-		logError('Failed to fetch inquiry', e, { page: 'admin/inquiries/[id]', action: 'fetchInquiry', resourceId: id });
-		error = 'お問い合わせの読み込みに失敗しました。';
-	}
-} else if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing.';
+const { data, error: fetchError } = await fetchAdminResource<{ inquiry: any }>({
+	apiBase,
+	apiKey: apiKey || '',
+	resource: 'inquiries',
+	id: id!,
+	notFoundMessage: 'お問い合わせが見つかりません。',
+	errorMessage: 'お問い合わせの読み込みに失敗しました。',
+});
+if (data) {
+	inquiry = data.inquiry || null;
 }
+error = fetchError;
 ---
 
 <AdminLayout title={inquiry ? `お問い合わせ #${id} - Admin` : 'お問い合わせ - Admin'}>
