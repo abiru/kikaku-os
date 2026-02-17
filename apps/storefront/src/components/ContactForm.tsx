@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './catalyst/button';
 import { Input } from './catalyst/input';
 import { Textarea } from './catalyst/textarea';
@@ -40,9 +40,33 @@ function ContactFormContent() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [honeypot, setHoneypot] = useState('');
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const [csrfError, setCsrfError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      try {
+        const base = getApiBase();
+        const res = await fetch(`${base}/csrf-token`, { credentials: 'include' });
+        if (!res.ok) {
+          setCsrfError(true);
+          return;
+        }
+        const data = await res.json();
+        if (typeof data.token !== 'string' || !data.token) {
+          setCsrfError(true);
+          return;
+        }
+        setCsrfToken(data.token);
+      } catch {
+        setCsrfError(true);
+      }
+    };
+    fetchCsrfToken();
+  }, []);
 
   const handleChange = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -70,12 +94,14 @@ function ContactFormContent() {
       return;
     }
 
+    if (!csrfToken) {
+      setSubmitError(t('contact.csrfError'));
+      return;
+    }
+
     setSubmitting(true);
     try {
       const base = getApiBase();
-      const csrfRes = await fetch(`${base}/csrf-token`, { credentials: 'include' });
-      const { token: csrfToken } = await csrfRes.json();
-
       const url = buildStoreUrl('/contact', base);
       const res = await fetch(url, {
         method: 'POST',

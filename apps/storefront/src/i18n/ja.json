@@ -707,7 +707,8 @@
     "validationEmailInvalid": "有効なメールアドレスを入力してください",
     "validationSubject": "件名を入力してください",
     "validationBody": "お問い合わせ内容を入力してください",
-    "submitError": "送信に失敗しました。しばらくしてからもう一度お試しください。"
+    "submitError": "送信に失敗しました。しばらくしてからもう一度お試しください。",
+    "csrfError": "セキュリティトークンの取得に失敗しました。ページを再読み込みしてください。"
   },
   "account": {
     "dashboard": "ダッシュボード",
