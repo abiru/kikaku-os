@@ -204,6 +204,84 @@ describe('Tax Service', () => {
     });
   });
 
+  describe('calculateLineItemTax - edge cases (#865)', () => {
+    it('should handle 1 yen product (minimum price)', () => {
+      const result = calculateLineItemTax({ unitPrice: 1, quantity: 1, taxRate: 0.10 });
+      // floor(1 * 100 / 110) = floor(0.909...) = 0
+      expect(result.subtotal).toBe(0);
+      expect(result.taxAmount).toBe(1);
+      expect(result.totalAmount).toBe(1);
+    });
+
+    it('should handle very large quantity (10000 units)', () => {
+      const result = calculateLineItemTax({ unitPrice: 1100, quantity: 10000, taxRate: 0.10 });
+      // total = 11,000,000
+      // subtotal = floor(11000000 * 100 / 110) = 10,000,000
+      expect(result.subtotal).toBe(10_000_000);
+      expect(result.taxAmount).toBe(1_000_000);
+      expect(result.totalAmount).toBe(11_000_000);
+    });
+
+    it('should not overflow with high-value items', () => {
+      // ¥999,999 x 9999 = 9,998,990,001
+      const result = calculateLineItemTax({ unitPrice: 999_999, quantity: 9999, taxRate: 0.10 });
+      expect(result.totalAmount).toBe(999_999 * 9999);
+      expect(result.subtotal + result.taxAmount).toBe(result.totalAmount);
+      expect(result.subtotal).toBeGreaterThan(0);
+    });
+
+    it('should floor correctly for amounts producing repeating decimals', () => {
+      // 333 / 1.10 = 302.7272... -> floor = 302
+      const result = calculateLineItemTax({ unitPrice: 333, quantity: 1, taxRate: 0.10 });
+      expect(result.subtotal).toBe(302);
+      expect(result.taxAmount).toBe(31);
+    });
+
+    it('should handle 8% reduced rate with fractional result', () => {
+      // 999 / 1.08 = 925.0 -> floor = 925
+      const result = calculateLineItemTax({ unitPrice: 999, quantity: 1, taxRate: 0.08 });
+      expect(result.subtotal).toBe(925);
+      expect(result.taxAmount).toBe(74);
+      expect(result.subtotal + result.taxAmount).toBe(999);
+    });
+
+    it('should produce consistent results: subtotal + tax always equals total', () => {
+      // Test a range of prices to ensure invariant holds
+      for (let price = 1; price <= 200; price++) {
+        const result = calculateLineItemTax({ unitPrice: price, quantity: 1, taxRate: 0.10 });
+        expect(result.subtotal + result.taxAmount).toBe(result.totalAmount);
+      }
+    });
+  });
+
+  describe('calculateOrderTax - edge cases (#865)', () => {
+    it('should handle mixed standard + reduced rate with many items', () => {
+      const items: TaxCalculationInput[] = [
+        { unitPrice: 1100, quantity: 3, taxRate: 0.10 },  // standard
+        { unitPrice: 540, quantity: 5, taxRate: 0.08 },    // reduced
+        { unitPrice: 2200, quantity: 1, taxRate: 0.10 },   // standard
+      ];
+      const result = calculateOrderTax(items);
+
+      // Item 1: total=3300, subtotal=floor(3300*100/110)=3000, tax=300
+      // Item 2: total=2700, subtotal=floor(2700*100/108)=2500, tax=200
+      // Item 3: total=2200, subtotal=floor(2200*100/110)=2000, tax=200
+      expect(result.subtotal).toBe(3000 + 2500 + 2000);
+      expect(result.taxAmount).toBe(300 + 200 + 200);
+      expect(result.totalAmount).toBe(3300 + 2700 + 2200);
+    });
+
+    it('should handle single item cart', () => {
+      const items: TaxCalculationInput[] = [
+        { unitPrice: 110, quantity: 1, taxRate: 0.10 },
+      ];
+      const result = calculateOrderTax(items);
+      expect(result.subtotal).toBe(100);
+      expect(result.taxAmount).toBe(10);
+      expect(result.itemBreakdown).toHaveLength(1);
+    });
+  });
+
   describe('formatPriceWithTax', () => {
     it('should format JPY price with tax indicator', () => {
       const formatted = formatPriceWithTax(1100, 'JPY');
