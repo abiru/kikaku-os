@@ -38,6 +38,44 @@
   --color-success-light: #f0fdf4;
   --color-warning: #ff9500;
   --color-warning-light: #fffbeb;
+  --color-error: #ff3b30;
+  --color-border: #d2d2d7;
+
+  /* --- Typography scale tokens --- */
+  --text-h1: 2.25rem;
+  --text-h1-weight: 700;
+  --text-h1-lh: 1.2;
+  --text-h1-ls: -0.025em;
+
+  --text-h2: 1.75rem;
+  --text-h2-weight: 700;
+  --text-h2-lh: 1.25;
+  --text-h2-ls: -0.02em;
+
+  --text-h3: 1.25rem;
+  --text-h3-weight: 600;
+  --text-h3-lh: 1.3;
+  --text-h3-ls: -0.01em;
+
+  --text-body: 1rem;
+  --text-body-weight: 400;
+  --text-body-lh: 1.6;
+  --text-body-ls: 0;
+
+  --text-small: 0.875rem;
+  --text-small-weight: 400;
+  --text-small-lh: 1.5;
+  --text-small-ls: 0;
+
+  --text-caption: 0.75rem;
+  --text-caption-weight: 500;
+  --text-caption-lh: 1.4;
+  --text-caption-ls: 0.02em;
+
+  --text-price: 1.5rem;
+  --text-price-weight: 700;
+  --text-price-lh: 1.2;
+  --text-price-ls: -0.01em;
 
   /* --- Border Radius --- */
   --radius-sm: 6px;
@@ -63,7 +101,7 @@
 @layer base {
   body {
     @apply bg-subtle text-primary antialiased selection:bg-brand selection:text-white;
-    font-feature-settings: "kern";
+    font-feature-settings: "kern", "palt";
     -webkit-font-smoothing: antialiased;
     line-height: 1.8;
   }
@@ -73,10 +111,66 @@
     line-height: 1.5;
   }
 
+  /* Japanese-optimised line-height for prose/body text only */
+  p, li, dd, blockquote, .prose {
+    line-height: 1.8;
+  }
+
   /* Keyboard focus indicator (fallback for unstyled elements) */
   :focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--color-subtle), 0 0 0 4px var(--color-brand);
+  }
+}
+
+@layer components {
+  .typo-h1 {
+    font-size: var(--text-h1);
+    font-weight: var(--text-h1-weight);
+    line-height: var(--text-h1-lh);
+    letter-spacing: var(--text-h1-ls);
+  }
+
+  .typo-h2 {
+    font-size: var(--text-h2);
+    font-weight: var(--text-h2-weight);
+    line-height: var(--text-h2-lh);
+    letter-spacing: var(--text-h2-ls);
+  }
+
+  .typo-h3 {
+    font-size: var(--text-h3);
+    font-weight: var(--text-h3-weight);
+    line-height: var(--text-h3-lh);
+    letter-spacing: var(--text-h3-ls);
+  }
+
+  .typo-body {
+    font-size: var(--text-body);
+    font-weight: var(--text-body-weight);
+    line-height: var(--text-body-lh);
+    letter-spacing: var(--text-body-ls);
+  }
+
+  .typo-small {
+    font-size: var(--text-small);
+    font-weight: var(--text-small-weight);
+    line-height: var(--text-small-lh);
+    letter-spacing: var(--text-small-ls);
+  }
+
+  .typo-caption {
+    font-size: var(--text-caption);
+    font-weight: var(--text-caption-weight);
+    line-height: var(--text-caption-lh);
+    letter-spacing: var(--text-caption-ls);
+  }
+
+  .typo-price {
+    font-size: var(--text-price);
+    font-weight: var(--text-price-weight);
+    line-height: var(--text-price-lh);
+    letter-spacing: var(--text-price-ls);
   }
 }
 
@@ -96,6 +190,15 @@
   background: linear-gradient(90deg, var(--color-neutral-100) 25%, var(--color-neutral-200) 50%, var(--color-neutral-100) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Responsive typography overrides */
+@media (max-width: 1023px) {
+  :root {
+    --text-h1: 1.75rem;
+    --text-h2: 1.375rem;
+    --text-price: 1.25rem;
+  }
 }
 
 /* View Transition Animations */

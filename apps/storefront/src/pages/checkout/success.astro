@@ -37,7 +37,7 @@ if (orderToken) {
 					</svg>
 				</div>
 
-				<h1 class="mt-8 text-4xl font-semibold tracking-tight text-primary md:text-5xl">
+				<h1 class="mt-8 typo-h1 text-primary">
 					{t('checkout.thankYou')}
 				</h1>
 				<p class="mt-4 text-xl text-secondary">
@@ -96,9 +96,11 @@ if (orderToken) {
 									{order.shipping.name && <p>{order.shipping.name}</p>}
 									{order.shipping.address && (
 										<>
-											{order.shipping.address.postal_code && <p>〒{order.shipping.address.postal_code}</p>}
-											{order.shipping.address.state && order.shipping.address.city && (
-												<p>{order.shipping.address.state}{order.shipping.address.city}</p>
+											{order.shipping.address.postal_code && (
+												<p>{`\u3012${order.shipping.address.postal_code}`}</p>
+											)}
+											{(order.shipping.address.state || order.shipping.address.city) && (
+												<p>{[order.shipping.address.state, order.shipping.address.city].filter(Boolean).join('')}</p>
 											)}
 											{order.shipping.address.line1 && <p>{order.shipping.address.line1}</p>}
 											{order.shipping.address.line2 && <p>{order.shipping.address.line2}</p>}
@@ -144,7 +146,7 @@ if (orderToken) {
 	</div>
 </Layout>
 
-<script define:vars={{ apiBase, order, paymentProcessingLabel: t('checkout.paymentProcessing'), paymentProcessingDesc: t('checkout.paymentProcessingDescription'), confirmedLabel: t('checkout.confirmed'), pollingMaxRetriesLabel: t('checkout.pollingMaxRetriesExceeded'), contactSupportLabel: t('checkout.contactSupport') }}>
+<script define:vars={{ apiBase, order, paymentProcessingLabel: t('checkout.paymentProcessing'), paymentProcessingDesc: t('checkout.paymentProcessingDescription'), confirmedLabel: t('checkout.confirmed'), pollingMaxRetriesLabel: t('checkout.pollingMaxRetriesExceeded'), contactSupportLabel: t('checkout.contactSupport'), pollingCheckingLabel: t('checkout.pollingChecking'), pollingErrorLabel: t('checkout.pollingError'), pollingRetryLabel: t('checkout.pollingRetry') }}>
 	window.__CHECKOUT_SUCCESS_API_BASE__ = apiBase;
 	window.__CHECKOUT_ORDER__ = order;
 	window.__I18N_PAYMENT_PROCESSING__ = paymentProcessingLabel;
@@ -152,6 +154,9 @@ if (orderToken) {
 	window.__I18N_CONFIRMED__ = confirmedLabel;
 	window.__I18N_POLLING_MAX_RETRIES__ = pollingMaxRetriesLabel;
 	window.__I18N_CONTACT_SUPPORT__ = contactSupportLabel;
+	window.__I18N_POLLING_CHECKING__ = pollingCheckingLabel;
+	window.__I18N_POLLING_ERROR__ = pollingErrorLabel;
+	window.__I18N_POLLING_RETRY__ = pollingRetryLabel;
 </script>
 
 <script>
@@ -166,6 +171,9 @@ if (orderToken) {
 			__I18N_CONFIRMED__?: string;
 			__I18N_POLLING_MAX_RETRIES__?: string;
 			__I18N_CONTACT_SUPPORT__?: string;
+			__I18N_POLLING_CHECKING__?: string;
+			__I18N_POLLING_ERROR__?: string;
+			__I18N_POLLING_RETRY__?: string;
 			dataLayer: Record<string, unknown>[];
 		}
 	}
@@ -218,24 +226,88 @@ if (orderToken) {
 			const MAX_DELAY_MS = 30_000; // Max 30s between polls
 			const pollStartTime = Date.now();
 
+			const SANITIZE_OPTS = {
+				ADD_TAGS: ['svg', 'path', 'circle', 'button'],
+				ADD_ATTR: ['viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd', 'href', 'class', 'cx', 'cy', 'r', 'data-poll-retry', 'type'],
+			};
+
+			const showPollingProgress = () => {
+				const container = document.querySelector('[data-order-container]');
+				if (container) {
+					container.innerHTML = DOMPurify.sanitize(`
+						<div class="text-center py-6" role="status" aria-live="polite">
+							<div class="mx-auto h-10 w-10 mb-4">
+								<svg class="w-full h-full animate-spin text-brand" viewBox="0 0 24 24" fill="none">
+									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+								</svg>
+							</div>
+							<p class="text-lg text-gray-900 font-medium mb-1">${window.__I18N_POLLING_CHECKING__ || 'Checking order status...'}</p>
+							<p class="text-sm text-gray-500">${window.__I18N_PAYMENT_PROCESSING_DESC__ || ''}</p>
+						</div>
+					`, SANITIZE_OPTS);
+				}
+			};
+
+			const showPollingError = () => {
+				const container = document.querySelector('[data-order-container]');
+				if (container) {
+					container.innerHTML = DOMPurify.sanitize(`
+						<div class="text-center py-6" role="alert">
+							<div class="mx-auto h-12 w-12 text-red-400 mb-4">
+								<svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+								</svg>
+							</div>
+							<p class="text-lg text-gray-900 font-medium mb-2">${window.__I18N_POLLING_ERROR__ || 'Failed to check order status'}</p>
+							<button type="button" data-poll-retry class="inline-flex items-center rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover transition-colors mt-2">${window.__I18N_POLLING_RETRY__ || 'Retry'}</button>
+							<div class="mt-3">
+								<a href="/contact" class="inline-flex items-center text-sm text-gray-500 hover:underline">${window.__I18N_CONTACT_SUPPORT__ || 'Contact support'} &rarr;</a>
+							</div>
+						</div>
+					`, SANITIZE_OPTS);
+
+					const retryBtn = container.querySelector('[data-poll-retry]');
+					if (retryBtn) {
+						retryBtn.addEventListener('click', () => {
+							attempts = 0;
+							pollOrder();
+						});
+					}
+				}
+			};
+
 			const showPollingExhausted = () => {
 				const container = document.querySelector('[data-order-container]');
 				if (container) {
 					container.innerHTML = DOMPurify.sanitize(`
-						<div class="text-center py-4">
+						<div class="text-center py-6" role="alert">
 							<div class="mx-auto h-12 w-12 text-yellow-500 mb-4">
 								<svg class="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
 							</div>
 							<p class="text-lg text-gray-900 font-medium mb-2">${window.__I18N_POLLING_MAX_RETRIES__ || window.__I18N_PAYMENT_PROCESSING__ || 'Payment processing'}</p>
-							<a href="/contact" class="inline-flex items-center text-sm text-blue-600 hover:underline mt-2">${window.__I18N_CONTACT_SUPPORT__ || 'Contact support'} →</a>
+							<button type="button" data-poll-retry class="inline-flex items-center rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover transition-colors mt-2">${window.__I18N_POLLING_RETRY__ || 'Retry'}</button>
+							<div class="mt-3">
+								<a href="/contact" class="inline-flex items-center text-sm text-gray-500 hover:underline">${window.__I18N_CONTACT_SUPPORT__ || 'Contact support'} &rarr;</a>
+							</div>
 						</div>
-					`, { ADD_TAGS: ['svg', 'path'], ADD_ATTR: ['viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'd', 'href', 'class'] });
+					`, SANITIZE_OPTS);
+
+					const retryBtn = container.querySelector('[data-poll-retry]');
+					if (retryBtn) {
+						retryBtn.addEventListener('click', () => {
+							attempts = 0;
+							pollOrder();
+						});
+					}
 				}
 			};
 
 			const pollOrder = async () => {
+				showPollingProgress();
+
 				if (attempts >= MAX_ATTEMPTS) {
 					showPollingExhausted();
 					return;
@@ -272,14 +344,12 @@ if (orderToken) {
 							}
 						}
 					} else {
-						// Non-retriable server error, retry with backoff
-						attempts++;
-						pollOrder();
+						// Server error - show error with retry
+						showPollingError();
 					}
-				} catch (err) {
-					// Network error - retry with backoff
-					attempts++;
-					pollOrder();
+				} catch {
+					// Network error - show error with retry
+					showPollingError();
 				}
 			};
 

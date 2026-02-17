@@ -205,7 +205,7 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 				{user ? (user.name || user.email) : 'User'}
 			</Heading>
 			{user && (
-				<Badge color={getRoleBadgeColor(user.role_id)} client:load>
+				<Badge color={getRoleBadgeColor(user.role_id)} client:idle>
 					{user.role_name}
 				</Badge>
 			)}
@@ -220,7 +220,7 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 		{error && !user && (
 			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
 				<div class="text-red-600 mb-4">{error}</div>
-				<Button href="/admin/users" outline client:load>
+				<Button href="/admin/users" outline client:idle>
 					Back to Users
 				</Button>
 			</div>
@@ -238,7 +238,7 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
 					<Subheading>User Details</Subheading>
 
-					<Fieldset client:load>
+					<Fieldset client:idle>
 						<Field>
 							<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Clerk User ID</label>
 							<Input
@@ -304,10 +304,10 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 					</div>
 
 					<div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-						<Button href="/admin/users" outline client:load>
+						<Button href="/admin/users" outline client:idle>
 							Back
 						</Button>
-						<Button type="submit" color="indigo" client:load>
+						<Button type="submit" color="indigo" client:idle>
 							Save Changes
 						</Button>
 					</div>
@@ -321,7 +321,7 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 							<h3 class="font-medium text-red-600">Danger Zone</h3>
 							<p class="text-sm text-zinc-500">Permanently delete this user. This action cannot be undone.</p>
 						</div>
-						<Button type="submit" color="red" client:load>
+						<Button type="submit" color="red" client:idle>
 							Delete User
 						</Button>
 					</div>
@@ -341,7 +341,7 @@ const groupedPermissions = permissions.reduce((acc, perm) => {
 									<h4 class="font-medium text-zinc-900 capitalize mb-2">{resource}</h4>
 									<div class="flex flex-wrap gap-1">
 										{perms.map(perm => (
-											<Badge color="zinc" client:load>{perm.action}</Badge>
+											<Badge color="zinc" client:idle>{perm.action}</Badge>
 										))}
 									</div>
 								</div>

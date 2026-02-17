@@ -171,7 +171,7 @@ describe('CheckoutPage', () => {
 		});
 	});
 
-	it('does not render wizard step navigation', async () => {
+	it('renders checkout step navigation', async () => {
 		$cartItems.set({
 			'1': {
 				variantId: 1,
@@ -195,7 +195,7 @@ describe('CheckoutPage', () => {
 
 		await waitFor(() => {
 			const nav = screen.queryByRole('navigation', { name: /checkout steps/i });
-			expect(nav).not.toBeInTheDocument();
+			expect(nav).toBeInTheDocument();
 		});
 	});
 

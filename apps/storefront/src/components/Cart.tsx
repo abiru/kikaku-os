@@ -18,35 +18,36 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import { ErrorBoundary } from './ErrorBoundary';
 import { CartOrderSummary } from './CartOrderSummary';
+import { EmptyStateReact } from './EmptyStateReact';
 import { formatPrice } from '../lib/format';
 
 function EmptyCart() {
 	const { t } = useTranslation();
 	return (
-		<div className="text-center py-24 px-4">
-			<svg className="mx-auto h-20 w-20 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1" aria-hidden="true">
-				<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-			</svg>
-			<h2 className="mt-6 text-xl font-semibold text-neutral-900">{t('cart.empty')}</h2>
-			<p className="mt-2 text-base text-neutral-500 max-w-sm mx-auto">{t('cart.emptyDescription')}</p>
-			<div className="mt-8">
-				<a href="/products" className="inline-flex items-center rounded-full bg-brand px-6 py-3 text-base font-medium text-white hover:bg-brand-active transition-colors">
-					{t('cart.browseProducts')}
-				</a>
-			</div>
-		</div>
+		<EmptyStateReact
+			icon="cart"
+			title={t('cart.empty')}
+			description={t('cart.emptyDescription')}
+			ctaLabel={t('cart.browseProducts')}
+			ctaHref="/products"
+		/>
 	);
 }
 
 const MAX_QUANTITY = 99;
 
-function getMaxQuantity(stock?: number): number {
-	return stock !== undefined ? Math.min(stock, MAX_QUANTITY) : MAX_QUANTITY;
+function buildQuantityOptions(currentQuantity: number, stock?: number): number[] {
+	const max = stock !== undefined ? Math.min(stock, MAX_QUANTITY) : MAX_QUANTITY;
+	const safeMax = Math.max(max, currentQuantity);
+	const count = Math.min(safeMax, MAX_QUANTITY);
+	return Array.from({ length: count }, (_, i) => i + 1);
 }
 
 function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HTMLLIElement> }) {
 	const { t } = useTranslation();
-	const maxQty = getMaxQuantity(item.stock);
+	const [stockError, setStockError] = useState<string | null>(null);
+	const quantityOptions = buildQuantityOptions(item.quantity, item.stock);
+	const isAtStockLimit = item.stock !== undefined && item.quantity >= item.stock;
 
 	return (
 		<li ref={itemRef} className="flex py-6 sm:py-10">
@@ -89,47 +90,51 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 					</div>
 
 					<div className="mt-4 sm:mt-0 sm:pr-9">
-						<div className="flex items-center gap-2" role="group" aria-label={t('cart.quantityLabel', { title: item.title })}>
-							<button
-								type="button"
-								onClick={() => {
-									if (item.quantity > 1) {
-										updateQuantity(item.variantId, item.quantity - 1);
+						<div className="grid w-full max-w-16 grid-cols-1">
+							<select
+								value={item.quantity}
+								onChange={(e) => {
+									const val = Number(e.target.value);
+									if (val > 0 && (item.stock === undefined || val <= item.stock)) {
+										updateQuantity(item.variantId, val);
+										setStockError(null);
+									} else if (item.stock !== undefined && val > item.stock) {
+										setStockError(
+											t('cart.stockInsufficient', { stock: String(item.stock) })
+										);
 									}
 								}}
-								disabled={item.quantity <= 1}
-								aria-label={t('cart.decreaseQuantity')}
-								className="min-h-[44px] min-w-[44px] rounded-full ring-1 ring-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+								disabled={isAtStockLimit && quantityOptions.length <= 1}
+								aria-label={t('cart.quantityLabel', { title: item.title })}
+								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-neutral-900 outline outline-1 -outline-offset-1 outline-neutral-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand disabled:bg-neutral-100 disabled:cursor-not-allowed sm:text-sm"
 							>
-								<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-									<path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-								</svg>
-							</button>
-							<span className="min-w-[2rem] text-center text-sm font-medium text-neutral-900" aria-live="polite">
-								{item.quantity}
-							</span>
-							<button
-								type="button"
-								onClick={() => {
-									if (item.quantity < maxQty) {
-										updateQuantity(item.variantId, item.quantity + 1);
-									}
-								}}
-								disabled={item.quantity >= maxQty}
-								aria-label={t('cart.increaseQuantity')}
-								className="min-h-[44px] min-w-[44px] rounded-full ring-1 ring-neutral-300 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-							>
-								<svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-									<path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m7-7H5" />
-								</svg>
-							</button>
+								{quantityOptions.map((n) => (
+									<option key={n} value={n} disabled={item.stock !== undefined && n > item.stock}>
+										{n}
+									</option>
+								))}
+							</select>
+							<svg className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-neutral-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+								<path fillRule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+							</svg>
 						</div>
 
-						<div className="mt-2 sm:absolute sm:top-0 sm:right-0 sm:mt-0">
+						{isAtStockLimit && (
+							<p className="mt-1 text-xs text-warning" role="alert">
+								{t('cart.stockInsufficient', { stock: String(item.stock) })}
+							</p>
+						)}
+						{stockError && !isAtStockLimit && (
+							<p className="mt-1 text-xs text-danger" role="alert">
+								{stockError}
+							</p>
+						)}
+
+						<div className="absolute top-0 right-0">
 							<button
 								type="button"
 								onClick={() => removeFromCart(item.variantId)}
-								className="min-h-[44px] inline-flex items-center text-sm font-medium text-brand hover:text-brand-active transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+								className="min-h-[44px] inline-flex items-center -m-2 p-2 text-sm font-medium text-brand hover:text-brand-active transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
 							>
 								{t('common.remove')}
 							</button>
@@ -219,58 +224,78 @@ function CartContent() {
 	}
 
 	return (
-		<div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
-			<div aria-live="polite" className="sr-only">
-				{t('cart.itemCount', { count: items.length })}
-				{' '}
-				{t('cart.orderTotal')}: {formatPrice(grandTotal, currency)}
-			</div>
-			<section aria-labelledby="cart-heading" className="lg:col-span-7">
-				<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
-				<ul role="list" className="divide-y divide-neutral-200 border-t border-b border-neutral-200">
-					{items.map((item) => (
-						<CartItemRow
-							key={item.variantId}
-							item={item}
-							itemRef={(el: HTMLLIElement | null) => {
-								if (el) {
-									itemRefs.current.set(item.variantId, el);
-								} else {
-									itemRefs.current.delete(item.variantId);
-								}
-							}}
-						/>
-					))}
-				</ul>
-			</section>
+		<>
+			<div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16 pb-24 lg:pb-0">
+				<div aria-live="polite" className="sr-only">
+					{t('cart.itemCount', { count: items.length })}
+					{' '}
+					{t('cart.orderTotal')}: {formatPrice(grandTotal, currency)}
+				</div>
+				<section aria-labelledby="cart-heading" className="lg:col-span-7">
+					<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
+					<ul role="list" className="divide-y divide-neutral-200 border-t border-b border-neutral-200">
+						{items.map((item) => (
+							<CartItemRow
+								key={item.variantId}
+								item={item}
+								itemRef={(el: HTMLLIElement | null) => {
+									if (el) {
+										itemRefs.current.set(item.variantId, el);
+									} else {
+										itemRefs.current.delete(item.variantId);
+									}
+								}}
+							/>
+						))}
+					</ul>
+				</section>
 
-			<div className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
-				{shippingState === 'error' && (
-					<div className="mb-4 rounded-md bg-danger-light border border-danger/20 p-4 text-center">
-						<p className="text-sm text-danger">{t('cart.shippingConfigError')}</p>
-						<p className="mt-1 text-xs text-danger">{t('cart.checkoutBlockedByShipping')}</p>
-						<button
-							type="button"
-							onClick={retryShipping}
-							className="mt-2 text-sm font-medium text-danger underline hover:opacity-80"
-						>
-							{t('cart.retry')}
-						</button>
-					</div>
-				)}
-				<CartOrderSummary
-					subtotal={subtotal}
-					taxAmount={taxAmount}
-					cartTotal={cartTotal}
-					discount={discount}
-					shipping={shipping}
-					grandTotal={grandTotal}
-					currency={currency}
-					onCheckout={handleCheckout}
-					checkoutDisabled={shippingState === 'error'}
-				/>
+				<div className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
+					{shippingState === 'error' && (
+						<div className="mb-4 rounded-md bg-danger-light border border-danger/20 p-4 text-center">
+							<p className="text-sm text-danger">{t('cart.shippingConfigError')}</p>
+							<p className="mt-1 text-xs text-danger">{t('cart.checkoutBlockedByShipping')}</p>
+							<button
+								type="button"
+								onClick={retryShipping}
+								className="mt-2 text-sm font-medium text-danger underline hover:opacity-80"
+							>
+								{t('cart.retry')}
+							</button>
+						</div>
+					)}
+					<CartOrderSummary
+						subtotal={subtotal}
+						taxAmount={taxAmount}
+						cartTotal={cartTotal}
+						discount={discount}
+						shipping={shipping}
+						grandTotal={grandTotal}
+						currency={currency}
+						onCheckout={handleCheckout}
+						checkoutDisabled={shippingState === 'error'}
+					/>
+				</div>
 			</div>
-		</div>
+
+			{/* Mobile sticky bottom bar - visible below lg breakpoint */}
+			<div className="fixed bottom-0 inset-x-0 z-40 border-t border-neutral-200 bg-white px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] lg:hidden">
+				<div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
+					<div className="min-w-0">
+						<p className="text-xs text-neutral-500">{t('cart.orderTotal')}</p>
+						<p className="text-lg font-bold text-neutral-900">{formatPrice(grandTotal, currency)}</p>
+					</div>
+					<button
+						type="button"
+						onClick={handleCheckout}
+						disabled={shippingState === 'error'}
+						className="shrink-0 rounded-lg bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-active active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+					>
+						{t('cart.checkout')}
+					</button>
+				</div>
+			</div>
+		</>
 	);
 }
 

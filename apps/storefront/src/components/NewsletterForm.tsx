@@ -51,7 +51,7 @@ export default function NewsletterForm() {
 
   if (status === 'success') {
     return (
-      <p className="text-xs text-green-600 font-medium">
+      <p className="text-xs text-success font-medium">
         {t('newsletter.success')}
       </p>
     );
@@ -79,13 +79,13 @@ export default function NewsletterForm() {
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 whitespace-nowrap"
+          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </button>
       </div>
       {errorMessage && (
-        <p className="text-xs text-red-500">{errorMessage}</p>
+        <p className="text-xs text-danger">{errorMessage}</p>
       )}
     </form>
   );

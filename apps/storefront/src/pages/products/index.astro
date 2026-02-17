@@ -133,7 +133,7 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 						</button>
 					</div>
 					<div class="overflow-y-auto p-6" style="max-height: calc(85vh - 65px);">
-						<ProductFilters client:only="react" />
+						<ProductFilters client:visible />
 					</div>
 				</div>
 
@@ -142,7 +142,7 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 					<aside class="hidden lg:block w-64 flex-shrink-0" aria-label={t('products.filters')}>
 						<div class="sticky top-24 bg-white rounded-2xl p-6 shadow-sm ring-1 ring-black/5">
 							<h2 class="text-lg font-semibold text-primary mb-4">{t('products.filters')}</h2>
-							<ProductFilters client:only="react" />
+							<ProductFilters client:idle />
 						</div>
 					</aside>
 

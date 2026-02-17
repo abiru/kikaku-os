@@ -5,7 +5,7 @@ import { jsonOk, jsonError } from '../../lib/http';
 import { getActor } from '../../middleware/clerkAuth';
 import { loadRbac, requirePermission } from '../../middleware/rbac';
 import { validationErrorHandler } from '../../lib/validation';
-import { putImage, deleteKey } from '../../lib/r2';
+import { putImage, deleteKey, createR2FailureAlert } from '../../lib/r2';
 import { getExtensionFromContentType } from '../../lib/image';
 import {
   productIdParamSchema,
@@ -162,7 +162,21 @@ app.post(
         const r2Key = `products/${id}/${uuid}.${ext}`;
 
         const arrayBuffer = await file.arrayBuffer();
-        await putImage(c.env.R2, r2Key, arrayBuffer, file.type);
+        try {
+          await putImage(c.env.R2, r2Key, arrayBuffer, file.type);
+        } catch (uploadErr) {
+          logger.error('R2 image upload failed after retries', {
+            key: r2Key,
+            filename: file.name,
+            error: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+          });
+          await createR2FailureAlert(c.env.DB, 'image-upload', r2Key, uploadErr);
+          return jsonError(
+            c,
+            `Image upload failed for "${file.name}". The storage service is temporarily unavailable. Please try again later.`,
+            503
+          );
+        }
 
         const result = await c.env.DB.prepare(
           `INSERT INTO product_images (product_id, r2_key, filename, content_type, size_bytes, position, created_at, updated_at)

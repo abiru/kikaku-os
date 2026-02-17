@@ -242,18 +242,18 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			</Heading>
 		</div>
 			{successMessage && (
-				<Alert color="green" client:load>
+				<Alert color="green" client:idle>
 					{successMessage}
 				</Alert>
 			)}
 
 			{error && !product && (
 				<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center">
-					<Alert color="red" client:load>
+					<Alert color="red" client:idle>
 						{error}
 					</Alert>
 					<div class="mt-4">
-						<Button href="/admin/products" outline client:load>
+						<Button href="/admin/products" outline client:idle>
 							Back to Products
 						</Button>
 					</div>
@@ -261,17 +261,17 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 			)}
 
 			{error && product && (
-				<Alert color="red" client:load>
+				<Alert color="red" client:idle>
 					{error}
 				</Alert>
 			)}
 
 			{product && (
 				<form method="POST" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-					<Fieldset client:load>
+					<Fieldset client:idle>
 						<Field>
 							<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Title *</label>
-							<Input client:load type="text" name="title" required value={product.title} />
+							<Input client:idle type="text" name="title" required value={product.title} />
 						</Field>
 
 						<Field>
@@ -289,7 +289,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 						<Field>
 							<label data-slot="label" class="text-base/6 font-medium text-zinc-950 select-none sm:text-sm/6">Status</label>
-							<Select client:load name="status">
+							<Select client:idle name="status">
 								<option value="active" selected={product.status === 'active'}>Active</option>
 								<option value="draft" selected={product.status === 'draft'}>Draft</option>
 								<option value="archived" selected={product.status === 'archived'}>Archived</option>
@@ -298,7 +298,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 						<Field>
 							<div class="flex items-center gap-2">
-								<Checkbox client:load id="featured" name="featured" checked={product.featured === 1} />
+								<Checkbox client:idle id="featured" name="featured" checked={product.featured === 1} />
 								<label for="featured" class="text-base/6 text-zinc-950 select-none sm:text-sm/6">
 									ホームページに表示（Featured）
 								</label>
@@ -308,7 +308,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 						<Field>
 							<Label>Category</Label>
-							<Input client:load type="text" name="category" list="category-list" value={product.category || ''} placeholder="Select or enter a category" />
+							<Input client:idle type="text" name="category" list="category-list" value={product.category || ''} placeholder="Select or enter a category" />
 							<datalist id="category-list">
 								{categories.map((cat) => (
 									<option value={cat.category} />
@@ -319,7 +319,7 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 
 						<Field>
 							<Label>Tax Rate</Label>
-							<Select client:load name="tax_rate_id">
+							<Select client:idle name="tax_rate_id">
 								<option value="">Select tax rate...</option>
 								{taxRates.map((rate) => (
 									<option value={rate.id} selected={product.tax_rate_id === rate.id}>
@@ -366,10 +366,10 @@ const externalImageUrl = product ? getExternalImageUrl(product.metadata) : null;
 						)}
 					</div>
 					<div class="flex gap-3">
-						<Button href="/admin/products" outline client:load>
+						<Button href="/admin/products" outline client:idle>
 							Back
 						</Button>
-						<Button type="submit" color="indigo" client:load>
+						<Button type="submit" color="indigo" client:idle>
 							Save Changes
 						</Button>
 					</div>

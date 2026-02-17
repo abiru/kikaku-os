@@ -75,6 +75,8 @@ export default function RestockNotification({ productId }: Props) {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
+            }}
+            onBlur={() => {
               if (errorMessage) setErrorMessage('');
               if (status === 'error') setStatus('idle');
             }}

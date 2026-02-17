@@ -6,7 +6,7 @@ import Layout from '../layouts/Layout.astro';
 import { t } from '../i18n';
 ---
 
-<Layout title={t('pages.orderStatus.pageTitle')}>
+<Layout title={t('pages.orderStatus.pageTitle')} disableViewTransitions>
 	<div class="bg-white min-h-screen">
 		<section class="pt-24 pb-20 md:pt-32 md:pb-28">
 			<Container class="max-w-3xl">
@@ -39,7 +39,7 @@ import { t } from '../i18n';
 							</div>
 							<button
 								type="submit"
-								class="inline-flex items-center rounded-full bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-hover transition-colors"
+								class="inline-flex items-center rounded-lg bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-hover transition-colors"
 							>
 								{t('pages.orderStatus.searchButton')}
 							</button>
@@ -52,10 +52,10 @@ import { t } from '../i18n';
 							{t('pages.orderStatus.checkViaAccountDescription')}
 						</p>
 						<div class="flex flex-wrap gap-3">
-							<a href="/account/orders" class="inline-flex items-center rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-hover">
+							<a href="/account/orders" class="inline-flex items-center rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-hover">
 								{t('pages.orderStatus.viewOrderHistory')}
 							</a>
-							<a href="/sign-in" class="inline-flex items-center rounded-full border border-gray-300 px-5 py-2.5 text-sm font-medium text-primary hover:bg-gray-50">
+							<a href="/sign-in" class="inline-flex items-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-primary hover:bg-gray-50">
 								{t('pages.orderStatus.login')}
 							</a>
 						</div>

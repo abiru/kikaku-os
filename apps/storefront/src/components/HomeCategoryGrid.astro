@@ -1,5 +1,6 @@
 ---
 import { t } from '../i18n';
+import { FOCUS_RING } from '../lib/focusRing';
 
 interface FeaturedProduct {
   id: number;
@@ -47,20 +48,20 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
               </p>
             </div>
 
-            <div class="mt-4 flex gap-2">
-              <a
-                href={`/products?category=${encodeURIComponent(product.category || '')}`}
-                class="rounded-full bg-brand px-5 py-2.5 min-h-[44px] inline-flex items-center text-sm font-semibold text-white hover:bg-brand-active transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
-              >
-                {t('home.viewProducts')}
-              </a>
-              <a
-                href={`/products/${product.id}`}
-                class="rounded-full bg-white/15 backdrop-blur-sm border border-white/25 px-5 py-2.5 min-h-[44px] inline-flex items-center text-sm font-semibold text-white hover:bg-white/25 transition-colors focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2"
-              >
-                {t('home.viewDetails')}
-              </a>
-            </div>
+          <div class="category-text mt-4 flex gap-2">
+            <a
+              href={`/products?category=${encodeURIComponent(product.category || '')}`}
+              class={`rounded-lg bg-brand px-6 py-3 min-h-[44px] inline-flex items-center text-base font-semibold text-white hover:bg-brand-active active:scale-[0.98] ${FOCUS_RING} transition-colors`}
+            >
+              {t('home.viewProducts')}
+            </a>
+            <a
+              href={`/products/${product.id}`}
+              class={`rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 px-6 py-3 min-h-[44px] inline-flex items-center text-base font-semibold text-white hover:bg-white/25 active:scale-[0.98] ${FOCUS_RING} transition-colors`}
+            >
+              {t('home.viewDetails')}
+            </a>
+          </div>
           </div>
         </article>
       );

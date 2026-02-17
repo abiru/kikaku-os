@@ -172,21 +172,11 @@ const {
 		}
 	};
 
-	// Initial update
-	updateCartBadge();
-	updateWishlistBadge();
-
-	// Subscribe to changes
+	// Subscribe to store changes (persists across SPA navigations)
 	$cartCount.subscribe(updateCartBadge);
 	$wishlistCount.subscribe(updateWishlistBadge);
 
-	// Search functionality
-	const searchBtn = document.getElementById('search-btn');
-	searchBtn?.addEventListener('click', () => {
-		window.dispatchEvent(new CustomEvent('open-search'));
-	});
-
-	// Cmd+K / Ctrl+K shortcut
+	// Cmd+K / Ctrl+K shortcut (registered once, persists across navigations)
 	document.addEventListener('keydown', (e) => {
 		if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 			e.preventDefault();
@@ -194,98 +184,83 @@ const {
 		}
 	});
 
-	// Mobile menu
-	const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-	const mobileMenu = document.getElementById('mobile-menu');
-	const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
-	const mobileMenuClose = document.getElementById('mobile-menu-close');
+	// Re-bind DOM elements on each page load (initial + SPA navigations)
+	function initSiteHeader() {
+		// Update badges for current DOM
+		updateCartBadge();
+		updateWishlistBadge();
 
-	if (mobileMenuBtn && mobileMenu) {
-		const getFocusableElements = (): HTMLElement[] => {
-			const selector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
-			return Array.from(mobileMenu.querySelectorAll<HTMLElement>(selector));
-		};
-
-		const handleTrapKeydown = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') {
-				closeMobileMenu();
-				return;
-			}
-			if (e.key !== 'Tab') return;
-			const focusable = getFocusableElements();
-			if (focusable.length === 0) return;
-			const first = focusable[0]!;
-			const last = focusable[focusable.length - 1]!
-			if (e.shiftKey) {
-				if (document.activeElement === first) {
-					e.preventDefault();
-					last.focus();
-				}
-			} else {
-				if (document.activeElement === last) {
-					e.preventDefault();
-					first.focus();
-				}
-			}
-		};
-
-		const openMobileMenu = () => {
-			mobileMenu.classList.remove('translate-x-full');
-			mobileMenuOverlay?.classList.remove('hidden');
-			mobileMenuBtn.setAttribute('aria-expanded', 'true');
-			document.body.style.overflow = 'hidden';
-			document.addEventListener('keydown', handleTrapKeydown);
-			mobileMenuClose?.focus();
-		};
-
-		const closeMobileMenu = () => {
-			mobileMenu.classList.add('translate-x-full');
-			mobileMenuOverlay?.classList.add('hidden');
-			mobileMenuBtn.setAttribute('aria-expanded', 'false');
-			document.body.style.overflow = '';
-			document.removeEventListener('keydown', handleTrapKeydown);
-			mobileMenuBtn.focus();
-		};
-
-		mobileMenuBtn.addEventListener('click', openMobileMenu);
-		mobileMenuClose?.addEventListener('click', closeMobileMenu);
-		mobileMenuOverlay?.addEventListener('click', closeMobileMenu);
-
-		// Close menu when navigation links are tapped
-		mobileMenu.addEventListener('click', (e) => {
-			const anchor = (e.target as HTMLElement).closest('a[href]');
-			if (anchor) {
-				closeMobileMenu();
-			}
+		// Search functionality
+		const searchBtn = document.getElementById('search-btn');
+		searchBtn?.addEventListener('click', () => {
+			window.dispatchEvent(new CustomEvent('open-search'));
 		});
 
-		// Reset menu state after View Transitions page swap
-		document.addEventListener('astro:after-swap', () => {
-			mobileMenu.classList.add('translate-x-full');
-			mobileMenuOverlay?.classList.add('hidden');
-			mobileMenuBtn.setAttribute('aria-expanded', 'false');
-			document.body.style.overflow = '';
-			document.removeEventListener('keydown', handleTrapKeydown);
-		});
-	}
+		// Mobile menu
+		const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+		const mobileMenu = document.getElementById('mobile-menu');
+		const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+		const mobileMenuClose = document.getElementById('mobile-menu-close');
 
-	// Remove clerk skeleton placeholder when Clerk initializes
-	const clerkSkeleton = document.getElementById('clerk-skeleton');
-	if (clerkSkeleton) {
-		const container = clerkSkeleton.parentElement;
-		if (container) {
-			const removeSkeleton = () => {
-				if (clerkSkeleton.parentElement) clerkSkeleton.remove();
+		if (mobileMenuBtn && mobileMenu) {
+			const openMobileMenu = () => {
+				mobileMenu.classList.remove('translate-x-full');
+				mobileMenuOverlay?.classList.remove('hidden');
+				mobileMenuBtn.setAttribute('aria-expanded', 'true');
+				document.body.style.overflow = 'hidden';
+				mobileMenuClose?.focus();
 			};
-			const observer = new MutationObserver(() => {
-				if (container.querySelector('[class*="cl-"], a[href="/sign-in"]')) {
-					removeSkeleton();
-					observer.disconnect();
+
+			const closeMobileMenu = () => {
+				mobileMenu.classList.add('translate-x-full');
+				mobileMenuOverlay?.classList.add('hidden');
+				mobileMenuBtn.setAttribute('aria-expanded', 'false');
+				document.body.style.overflow = '';
+				mobileMenuBtn.focus();
+			};
+
+			mobileMenuBtn.addEventListener('click', openMobileMenu);
+			mobileMenuClose?.addEventListener('click', closeMobileMenu);
+			mobileMenuOverlay?.addEventListener('click', closeMobileMenu);
+
+			// Close menu when navigation links are tapped
+			mobileMenu.addEventListener('click', (e) => {
+				const anchor = (e.target as HTMLElement).closest('a[href]');
+				if (anchor) {
+					closeMobileMenu();
 				}
 			});
-			observer.observe(container, { childList: true, subtree: true });
-			// Fallback: remove skeleton if Clerk fails to load
-			setTimeout(removeSkeleton, 5000);
+
+			// Reset menu state after View Transitions page swap
+			document.addEventListener('astro:after-swap', () => {
+				mobileMenu.classList.add('translate-x-full');
+				mobileMenuOverlay?.classList.add('hidden');
+				mobileMenuBtn.setAttribute('aria-expanded', 'false');
+				document.body.style.overflow = '';
+			});
+		}
+
+		// Remove clerk skeleton placeholder when Clerk initializes
+		const clerkSkeleton = document.getElementById('clerk-skeleton');
+		if (clerkSkeleton) {
+			const container = clerkSkeleton.parentElement;
+			if (container) {
+				const removeSkeleton = () => {
+					if (clerkSkeleton.parentElement) clerkSkeleton.remove();
+				};
+				const observer = new MutationObserver(() => {
+					if (container.querySelector('[class*="cl-"], a[href="/sign-in"]')) {
+						removeSkeleton();
+						observer.disconnect();
+					}
+				});
+				observer.observe(container, { childList: true, subtree: true });
+				// Fallback: remove skeleton if Clerk fails to load
+				setTimeout(removeSkeleton, 2500);
+			}
 		}
 	}
+
+	// Run on initial load and on every SPA navigation
+	document.addEventListener('astro:page-load', initSiteHeader);
 </script>

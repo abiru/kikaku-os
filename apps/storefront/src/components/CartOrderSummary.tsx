@@ -124,7 +124,7 @@ export function CartOrderSummary({
 					type="button"
 					onClick={onCheckout}
 					disabled={checkoutDisabled}
-					className={`w-full rounded-full border border-transparent px-4 py-4 text-lg font-medium text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors inline-flex items-center justify-center gap-2 ${checkoutDisabled ? 'bg-neutral-400 cursor-not-allowed' : 'bg-brand hover:bg-brand-active active:scale-[0.98]'}`}
+					className={`w-full rounded-lg px-6 py-3 h-12 text-base font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors inline-flex items-center justify-center gap-2 ${checkoutDisabled ? 'bg-neutral-400 cursor-not-allowed' : 'bg-brand hover:bg-brand-active active:scale-[0.98]'}`}
 				>
 					<svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
 						<path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -133,7 +133,7 @@ export function CartOrderSummary({
 				</button>
 				<a
 					href="/quotations/new"
-					className="w-full block rounded-full border border-neutral-300 bg-white px-4 py-3 text-base font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors text-center"
+					className="w-full rounded-lg border border-neutral-300 bg-white px-6 py-3 h-12 inline-flex items-center justify-center text-base font-semibold text-neutral-700 shadow-sm hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors text-center"
 				>
 					{t('cart.createQuotation')}
 				</a>

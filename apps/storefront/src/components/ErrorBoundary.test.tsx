@@ -57,6 +57,21 @@ describe('ErrorBoundary', () => {
     expect(reloadButton.tagName).toBe('BUTTON')
   })
 
+  it('logs error details to console when child throws', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>
+    );
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[ErrorBoundary] Component error:',
+      expect.any(Error),
+      expect.any(String)
+    );
+    errorSpy.mockRestore();
+  })
+
   it('resets error state on retry button click', () => {
     const { rerender } = render(
       <ErrorBoundary>

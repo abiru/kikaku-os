@@ -29,10 +29,12 @@ export default function SearchModal() {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const resultsRef = useRef<HTMLDivElement>(null);
 	const modalRef = useRef<HTMLDivElement>(null);
+	const triggerRef = useRef<HTMLElement | null>(null);
 
 	// Listen for open-search event
 	useEffect(() => {
 		const handleOpen = () => {
+			triggerRef.current = document.activeElement as HTMLElement | null;
 			setIsOpen(true);
 			setQuery('');
 			setResults([]);
@@ -44,11 +46,14 @@ export default function SearchModal() {
 		return () => window.removeEventListener('open-search', handleOpen);
 	}, []);
 
-	// Focus input when modal opens
+	// Focus input when modal opens; restore focus on close
 	useEffect(() => {
 		if (isOpen) {
 			const timer = setTimeout(() => inputRef.current?.focus(), 50);
 			return () => clearTimeout(timer);
+		} else if (triggerRef.current) {
+			triggerRef.current.focus();
+			triggerRef.current = null;
 		}
 	}, [isOpen]);
 
@@ -221,7 +226,7 @@ export default function SearchModal() {
 							{error && !loading ? (
 								<div className="px-4 py-8 text-center">
 									<svg
-										className="mx-auto h-12 w-12 text-red-400"
+										className="mx-auto h-12 w-12 text-danger"
 										fill="none"
 										viewBox="0 0 24 24"
 										stroke="currentColor"
@@ -233,7 +238,7 @@ export default function SearchModal() {
 											d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
 										/>
 									</svg>
-									<p className="mt-2 text-sm text-red-600">
+									<p className="mt-2 text-sm text-danger">
 										{error}
 									</p>
 									<p className="mt-1 text-xs text-neutral-500">
@@ -241,7 +246,7 @@ export default function SearchModal() {
 									</p>
 									<button
 										type="button"
-										className="mt-3 inline-flex items-center rounded-md bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+										className="mt-3 inline-flex items-center rounded-md bg-danger-light px-3 py-1.5 text-xs font-medium text-danger hover:opacity-80"
 										onClick={() => {
 											setError(null);
 											setQuery(prev => prev + ' ');
@@ -300,23 +305,26 @@ export default function SearchModal() {
 								</div>
 							) : !loading ? (
 								<div className="px-4 py-8 text-center" data-testid="search-empty-state">
-									<svg
-										className="mx-auto h-12 w-12 text-neutral-400"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
+									<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
+										<svg
+											className="h-6 w-6"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
 											strokeWidth={1.5}
-											d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-										/>
-									</svg>
-									<p className="mt-2 text-sm text-neutral-500">
+											aria-hidden="true"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z"
+											/>
+										</svg>
+									</div>
+									<p className="typo-h3 mt-4 text-primary">
 										{t('common.noResults')}
 									</p>
-									<p className="mt-1 text-xs text-neutral-500">
+									<p className="mt-2 text-sm text-secondary">
 										{t('search.tryDifferent')}
 									</p>
 								</div>

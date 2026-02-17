@@ -22,10 +22,12 @@ const createMockDb = (overrides: {
   customers?: Map<number, any>;
   stockByVariant?: Record<number, number>;
   variantPrices?: Record<number, { unitPrice: number; taxRate?: number }>;
+  idempotencyCache?: Map<string, { status_code: number; response_body: string }>;
 } = {}) => {
   const customers = overrides.customers || new Map();
   const stockByVariant = overrides.stockByVariant || {};
   const variantPrices = overrides.variantPrices || {};
+  const idempotencyCache = overrides.idempotencyCache || new Map<string, { status_code: number; response_body: string }>();
   const stock = new Map<number, number>(
     Object.entries(stockByVariant).map(([id, qty]) => [Number(id), qty])
   );
@@ -46,6 +48,12 @@ const createMockDb = (overrides: {
           return statement;
         },
         first: async <T>() => {
+          // Idempotency cache lookup
+          if (sql.includes('FROM idempotency_keys')) {
+            const key = String(boundArgs[0]);
+            const cached = idempotencyCache.get(key);
+            return (cached || null) as T;
+          }
           // Quote lookup
           if (sql.includes('FROM checkout_quotes')) {
             return (overrides.quoteRow || null) as T;
@@ -82,6 +90,14 @@ const createMockDb = (overrides: {
           return { results: [], success: true, meta: {} } as MockDbResult;
         },
         run: async () => {
+          // Idempotency cache insert
+          if (sql.includes('INSERT') && sql.includes('idempotency_keys')) {
+            const key = String(boundArgs[0]);
+            const statusCode = Number(boundArgs[2]);
+            const responseBody = String(boundArgs[3]);
+            idempotencyCache.set(key, { status_code: statusCode, response_body: responseBody });
+            return { success: true, meta: { changes: 1 } };
+          }
           // Order insert
           if (sql.includes('INSERT INTO orders')) {
             return {
@@ -628,5 +644,288 @@ describe('POST /payments/intent', () => {
     const params = new URLSearchParams(body);
     expect(params.get('metadata[couponId]')).toBe('42');
     expect(params.get('metadata[discountAmount]')).toBe('1000');
+  });
+
+  it('forwards Idempotency-Key header to Stripe', async () => {
+    const app = new Hono();
+    app.route('/', payments);
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'cus_existing' })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'pi_idem_123',
+          client_secret: 'pi_idem_123_secret'
+        })
+      });
+
+    globalThis.fetch = fetchMock as any;
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+    const env = {
+      DB: createMockDb({
+        quoteRow: {
+          id: 'quote_idem',
+          items_json: JSON.stringify([{ variantId: 10, quantity: 1 }]),
+          coupon_code: null,
+          coupon_id: null,
+          subtotal: 5000,
+          tax_amount: 500,
+          cart_total: 5500,
+          discount: 0,
+          shipping_fee: 500,
+          grand_total: 6000,
+          currency: 'JPY',
+          expires_at: expiresAt
+        },
+        customerRow: {
+          id: 789,
+          email: 'test@example.com',
+          stripe_customer_id: 'cus_existing'
+        },
+        stockByVariant: { 10: 10 }
+      }),
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STRIPE_PUBLISHABLE_KEY: 'pk_test_123'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/payments/intent',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'Idempotency-Key': 'idem-key-abc-123'
+        },
+        body: JSON.stringify({
+          quoteId: 'quote_idem',
+          email: 'test@example.com'
+        })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(json.clientSecret).toBe('pi_idem_123_secret');
+
+    // Verify Idempotency-Key was forwarded to Stripe
+    const paymentIntentCall = fetchMock.mock.calls[1];
+    const stripeHeaders = paymentIntentCall[1]?.headers as Record<string, string>;
+    expect(stripeHeaders['Idempotency-Key']).toBe('idem-key-abc-123');
+  });
+
+  it('returns cached response for duplicate idempotency key', async () => {
+    const app = new Hono();
+    app.route('/', payments);
+
+    const cachedResponse = JSON.stringify({
+      ok: true,
+      clientSecret: 'pi_cached_secret',
+      orderId: 999,
+      orderPublicToken: 'cached_token',
+      publishableKey: 'pk_test_123'
+    });
+
+    const idempotencyCache = new Map<string, { status_code: number; response_body: string }>();
+    idempotencyCache.set('idem-duplicate-key', {
+      status_code: 200,
+      response_body: cachedResponse
+    });
+
+    // fetch should NOT be called when returning cached response
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock as any;
+
+    const env = {
+      DB: createMockDb({
+        idempotencyCache
+      }),
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STRIPE_PUBLISHABLE_KEY: 'pk_test_123'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/payments/intent',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'Idempotency-Key': 'idem-duplicate-key'
+        },
+        body: JSON.stringify({
+          quoteId: 'quote_123',
+          email: 'test@example.com'
+        })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(json.clientSecret).toBe('pi_cached_secret');
+    expect(json.orderId).toBe(999);
+
+    // Verify Stripe was NOT called (cached response used)
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('processes normally without Idempotency-Key header', async () => {
+    const app = new Hono();
+    app.route('/', payments);
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'cus_existing' })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'pi_no_idem',
+          client_secret: 'pi_no_idem_secret'
+        })
+      });
+
+    globalThis.fetch = fetchMock as any;
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+    const env = {
+      DB: createMockDb({
+        quoteRow: {
+          id: 'quote_no_idem',
+          items_json: JSON.stringify([{ variantId: 10, quantity: 1 }]),
+          coupon_code: null,
+          coupon_id: null,
+          subtotal: 5000,
+          tax_amount: 500,
+          cart_total: 5500,
+          discount: 0,
+          shipping_fee: 500,
+          grand_total: 6000,
+          currency: 'JPY',
+          expires_at: expiresAt
+        },
+        customerRow: {
+          id: 789,
+          email: 'test@example.com',
+          stripe_customer_id: 'cus_existing'
+        },
+        stockByVariant: { 10: 10 }
+      }),
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STRIPE_PUBLISHABLE_KEY: 'pk_test_123'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/payments/intent',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          quoteId: 'quote_no_idem',
+          email: 'test@example.com'
+        })
+      },
+      env
+    );
+
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.ok).toBe(true);
+
+    // Verify Stripe was called without Idempotency-Key
+    const paymentIntentCall = fetchMock.mock.calls[1];
+    const stripeHeaders = paymentIntentCall[1]?.headers as Record<string, string>;
+    expect(stripeHeaders['Idempotency-Key']).toBeUndefined();
+  });
+
+  it('stores response in idempotency cache after successful creation', async () => {
+    const app = new Hono();
+    app.route('/', payments);
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'cus_existing' })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'pi_store_cache',
+          client_secret: 'pi_store_cache_secret'
+        })
+      });
+
+    globalThis.fetch = fetchMock as any;
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+    const idempotencyCache = new Map<string, { status_code: number; response_body: string }>();
+
+    const env = {
+      DB: createMockDb({
+        quoteRow: {
+          id: 'quote_store',
+          items_json: JSON.stringify([{ variantId: 10, quantity: 1 }]),
+          coupon_code: null,
+          coupon_id: null,
+          subtotal: 5000,
+          tax_amount: 500,
+          cart_total: 5500,
+          discount: 0,
+          shipping_fee: 500,
+          grand_total: 6000,
+          currency: 'JPY',
+          expires_at: expiresAt
+        },
+        customerRow: {
+          id: 789,
+          email: 'test@example.com',
+          stripe_customer_id: 'cus_existing'
+        },
+        stockByVariant: { 10: 10 },
+        idempotencyCache
+      }),
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STRIPE_PUBLISHABLE_KEY: 'pk_test_123'
+    } as any;
+
+    const res = await app.request(
+      'http://localhost/payments/intent',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'Idempotency-Key': 'idem-store-key'
+        },
+        body: JSON.stringify({
+          quoteId: 'quote_store',
+          email: 'test@example.com'
+        })
+      },
+      env
+    );
+
+    expect(res.status).toBe(200);
+
+    // Verify the response was stored in the idempotency cache
+    const cached = idempotencyCache.get('idem-store-key');
+    expect(cached).toBeDefined();
+    expect(cached!.status_code).toBe(200);
+    const cachedBody = JSON.parse(cached!.response_body);
+    expect(cachedBody.ok).toBe(true);
+    expect(cachedBody.clientSecret).toBe('pi_store_cache_secret');
   });
 });

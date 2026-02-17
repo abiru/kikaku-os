@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react'
 
-export type BulkMessage = { type: 'success' | 'error'; text: string } | null
+export type BulkMessage = {
+  type: 'success' | 'error'
+  text: string
+  failedIds?: readonly number[]
+  action?: string
+} | null
 
 export type BulkActions = {
   bulkLoading: boolean
