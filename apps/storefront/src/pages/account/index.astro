@@ -22,37 +22,37 @@ let recentOrders: Array<{
 }> = [];
 let error = null;
 
-try {
-  const response = await fetch(`${API_BASE}/store/account`, {
-    headers: {
-      'Authorization': authHeader || '',
-    },
-  });
+const headers = { 'Authorization': authHeader || '' };
 
-  if (response.ok) {
-    const data = await response.json();
-    if (data.ok) {
-      account = data.account;
-      stats = data.stats;
-    }
-  }
+const [accountResult, ordersResult] = await Promise.all([
+  fetch(`${API_BASE}/store/account`, { headers })
+    .then(async (res) => {
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok) return { account: data.account, stats: data.stats };
+      }
+      return null;
+    })
+    .catch(() => null),
+  fetch(`${API_BASE}/store/account/orders?perPage=5`, { headers })
+    .then(async (res) => {
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok) return data.orders || [];
+      }
+      return [];
+    })
+    .catch(() => []),
+]);
 
-  // Get recent orders
-  const ordersResponse = await fetch(`${API_BASE}/store/account/orders?perPage=5`, {
-    headers: {
-      'Authorization': authHeader || '',
-    },
-  });
-
-  if (ordersResponse.ok) {
-    const ordersData = await ordersResponse.json();
-    if (ordersData.ok) {
-      recentOrders = ordersData.orders || [];
-    }
-  }
-} catch (e) {
+if (accountResult) {
+  account = accountResult.account;
+  stats = accountResult.stats;
+} else {
   error = t('account.loadError');
 }
+
+recentOrders = ordersResult;
 
 const formatCurrency = (amount: number, currency = 'JPY') => {
   return new Intl.NumberFormat('ja-JP', {
