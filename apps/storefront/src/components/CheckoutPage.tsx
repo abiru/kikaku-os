@@ -1,6 +1,7 @@
 import { useTranslation } from '../i18n';
 import { useCheckout } from '../hooks/useCheckout';
 import CheckoutForm from './CheckoutForm';
+import CheckoutSteps from './CheckoutSteps';
 import OrderSummary from './OrderSummary';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -111,6 +112,8 @@ function CheckoutPageContent() {
 				{t('checkout.title')}
 			</h1>
 
+			<CheckoutSteps currentStep="payment" />
+
 			{error && (
 				<div className="mb-6 rounded-md bg-red-50 p-4" role="alert">
 					<p className="text-sm text-red-800">{error}</p>
@@ -124,6 +127,8 @@ function CheckoutPageContent() {
 						clientSecret={clientSecret}
 						orderToken={orderToken}
 						publishableKey={publishableKey}
+						items={cartItems}
+						breakdown={breakdown}
 					/>
 				</div>
 
