@@ -20,7 +20,7 @@ const errorTrackingId = `ERR-${Date.now()}-${Math.random().toString(36).slice(2,
 					{t('errors.serverErrorMessage')}
 				</p>
 				<p class="mt-4 text-xs text-muted font-mono">
-					{t('errors.errorTrackingId').replace('{id}', errorTrackingId)}
+					{t('errors.errorTrackingId', { id: errorTrackingId })}
 				</p>
 				<p class="mt-2 text-xs text-secondary">
 					{t('errors.contactSupport')}{' '}
