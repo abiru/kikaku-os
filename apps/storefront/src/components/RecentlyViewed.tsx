@@ -19,7 +19,7 @@ export default function RecentlyViewed({ excludeId }: Props) {
 
 	return (
 		<section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-			<h2 className="text-xl font-semibold text-primary mb-6">
+			<h2 className="typo-h3 text-primary mb-6">
 				{t('recentlyViewed.title')}
 			</h2>
 			<div className="relative">
