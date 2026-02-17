@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Badge } from '../catalyst/badge'
 import { Button } from '../catalyst/button'
 import { Link } from '../catalyst/link'
@@ -6,6 +6,8 @@ import AdminTable, { type Column, type SelectionState } from './AdminTable'
 import { getProductBadgeColor } from '../../lib/adminUtils'
 import TableEmptyState from './TableEmptyState'
 import { t } from '../../i18n'
+import { useTableSort } from '../../hooks/useTableSort'
+import { useBulkActions } from '../../hooks/useBulkActions'
 
 type Product = {
   id: number
@@ -27,17 +29,10 @@ const confirmDialog = (window as any).__confirmDialog as
   | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
   | undefined
 
-const sortComparator = (a: Product, b: Product, field: string): number => {
-  switch (field) {
-    case 'title':
-      return a.title.localeCompare(b.title)
-    case 'status':
-      return a.status.localeCompare(b.status)
-    case 'updated_at':
-      return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime()
-    default:
-      return 0
-  }
+const sortFieldTypes = {
+  title: 'string' as const,
+  status: 'string' as const,
+  updated_at: 'date' as const,
 }
 
 export default function ProductsTable({
@@ -48,8 +43,8 @@ export default function ProductsTable({
   statusFilter,
 }: Props) {
   const [products, setProducts] = useState(initialProducts)
-  const [bulkLoading, setBulkLoading] = useState(false)
-  const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const { bulkLoading, bulkMessage, setBulkMessage, executeBulk } = useBulkActions()
+  const { sortComparator } = useTableSort<Product>(sortFieldTypes)
 
   const handleArchive = async (productId: number, productTitle: string) => {
     const confirmed = confirmDialog
@@ -103,7 +98,6 @@ export default function ProductsTable({
 
   const handleBulkAction = async (action: string, selectedIds: ReadonlySet<number>, clearSelection: () => void) => {
     if (!action) return
-    setBulkMessage(null)
     if (action === 'archive') {
       const confirmed = confirmDialog
         ? await confirmDialog({
@@ -116,30 +110,30 @@ export default function ProductsTable({
         : window.confirm(t('admin.confirm.bulkArchiveProducts', { count: selectedIds.size }))
       if (!confirmed) return
 
-      setBulkLoading(true)
-      let success = 0
-      let fail = 0
-      for (const pid of selectedIds) {
-        try {
-          const res = await fetch(`/api/admin/products/${pid}`, { method: 'DELETE' })
-          if (res.ok) success++
-          else fail++
-        } catch {
-          fail++
+      await executeBulk(async () => {
+        let success = 0
+        let fail = 0
+        for (const pid of selectedIds) {
+          try {
+            const res = await fetch(`/api/admin/products/${pid}`, { method: 'DELETE' })
+            if (res.ok) success++
+            else fail++
+          } catch {
+            fail++
+          }
         }
-      }
-      setBulkLoading(false)
-      if (fail === 0) {
-        setBulkMessage({ type: 'success', text: `${success}件のアーカイブに成功しました` })
-        setProducts(prev => prev.map(p => selectedIds.has(p.id) ? { ...p, status: 'archived' } : p))
-        clearSelection()
-      } else {
-        setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
-      }
+        if (fail === 0) {
+          setBulkMessage({ type: 'success', text: `${success}件のアーカイブに成功しました` })
+          setProducts(prev => prev.map(p => selectedIds.has(p.id) ? { ...p, status: 'archived' } : p))
+          clearSelection()
+        } else {
+          setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
+        }
+      })
     }
   }
 
-  const columns: Column<Product>[] = [
+  const columns: Column<Product>[] = useMemo(() => [
     {
       id: 'title',
       header: t('admin.title'),
@@ -201,7 +195,7 @@ export default function ProductsTable({
         </div>
       ),
     },
-  ]
+  ], [])
 
   return (
     <AdminTable
