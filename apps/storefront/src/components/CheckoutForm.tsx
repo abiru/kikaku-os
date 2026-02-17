@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Elements, PaymentElement, AddressElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { useTranslation } from '../i18n';
 import OrderConfirmationModal, { type AddressData } from './OrderConfirmationModal';
 import type { CartItem } from '../lib/cart';
+import { getApiBase } from '../lib/api';
 
 // Singleton cache: loadStripe should only be called once per publishable key
 const stripePromiseCache = new Map<string, Promise<Stripe | null>>();
@@ -30,6 +31,8 @@ const getStripeErrorMessage = (error: { type?: string; code?: string; decline_co
 };
 
 const PAYMENT_TIMEOUT_MS = 30_000;
+const STATUS_POLL_INTERVAL_MS = 3_000;
+const STATUS_POLL_MAX_ATTEMPTS = 20;
 
 type QuoteBreakdown = {
 	subtotal: number;
@@ -55,6 +58,12 @@ type CheckoutFormInnerProps = {
 	breakdown: QuoteBreakdown | null;
 };
 
+type TimeoutState = {
+	active: boolean;
+	checking: boolean;
+	confirmed: boolean;
+};
+
 function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerProps) {
 	const { t } = useTranslation();
 	const stripe = useStripe();
@@ -66,6 +75,64 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 	const [emailError, setEmailError] = useState<string | null>(null);
 	const [showConfirmation, setShowConfirmation] = useState(false);
 	const [addressData, setAddressData] = useState<AddressData | null>(null);
+	const [timeoutState, setTimeoutState] = useState<TimeoutState>({
+		active: false,
+		checking: false,
+		confirmed: false,
+	});
+	const pollAbortRef = useRef<AbortController | null>(null);
+
+	const pollPaymentStatus = useCallback(async (token: string) => {
+		// Cancel any existing poll before starting a new one
+		if (pollAbortRef.current) {
+			pollAbortRef.current.abort();
+		}
+		const controller = new AbortController();
+		pollAbortRef.current = controller;
+
+		setTimeoutState(prev => ({ ...prev, active: true, checking: true, confirmed: false }));
+
+		const base = getApiBase();
+		let attempts = 0;
+
+		while (attempts < STATUS_POLL_MAX_ATTEMPTS && !controller.signal.aborted) {
+			try {
+				const encoded = encodeURIComponent(token);
+				const res = await fetch(`${base}/store/orders/${encoded}?poll=true`, {
+					signal: controller.signal,
+				});
+
+				if (res.ok) {
+					setTimeoutState(prev => ({ ...prev, checking: false, confirmed: true }));
+					setTimeout(() => {
+						window.location.href = `/checkout/success?order_id=${encodeURIComponent(token)}`;
+					}, 1500);
+					return;
+				}
+
+				if (res.status !== 202) {
+					break;
+				}
+			} catch (err) {
+				if (controller.signal.aborted) return;
+				// Handle network errors gracefully - continue polling
+				console.error('Poll request failed:', err);
+			}
+
+			attempts += 1;
+			await new Promise(resolve => setTimeout(resolve, STATUS_POLL_INTERVAL_MS));
+		}
+
+		if (!controller.signal.aborted) {
+			setTimeoutState(prev => ({ ...prev, checking: false, confirmed: false }));
+		}
+	}, []);
+
+	useEffect(() => {
+		return () => {
+			pollAbortRef.current?.abort();
+		};
+	}, []);
 
 	const validateEmail = (value: string) => {
 		if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -132,11 +199,16 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 			// If successful, user will be redirected by Stripe
 		} catch (err) {
 			if (err instanceof Error && err.message === 'PAYMENT_TIMEOUT') {
-				setErrorMessage(t('checkout.paymentTimeout'));
+				if (orderToken) {
+					pollPaymentStatus(orderToken);
+				} else {
+					setErrorMessage(t('checkout.paymentTimeout'));
+					setIsProcessing(false);
+				}
 			} else {
 				setErrorMessage(err instanceof Error ? err.message : t('checkout.stripeErrors.default'));
+				setIsProcessing(false);
 			}
-			setIsProcessing(false);
 			setShowConfirmation(false);
 		}
 	};
@@ -218,9 +290,53 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 					/>
 				</div>
 
+				{/* Timeout status UI */}
+				{timeoutState.active && (
+					<div className="rounded-md bg-yellow-50 border border-yellow-200 p-4" role="status" aria-live="polite">
+						{timeoutState.confirmed ? (
+							<div className="flex items-center gap-3">
+								<svg className="h-5 w-5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+								</svg>
+								<p className="text-sm text-green-800 font-medium">{t('checkout.paymentTimeoutConfirmed')}</p>
+							</div>
+						) : (
+							<div className="space-y-2">
+								<div className="flex items-center gap-3">
+									{timeoutState.checking ? (
+										<svg className="h-5 w-5 animate-spin text-yellow-600 shrink-0" viewBox="0 0 24 24" fill="none" aria-label="読み込み中">
+											<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+											<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+										</svg>
+									) : (
+										<svg className="h-5 w-5 text-yellow-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+										</svg>
+									)}
+									<p className="text-sm text-yellow-800 font-medium">
+										{timeoutState.checking
+											? t('checkout.paymentTimeoutChecking')
+											: t('checkout.paymentTimeoutProcessing')}
+									</p>
+								</div>
+								<p className="text-sm text-yellow-700 ml-8">{t('checkout.paymentTimeoutGuidance')}</p>
+								{!timeoutState.checking && orderToken && (
+									<button
+										type="button"
+										onClick={() => pollPaymentStatus(orderToken)}
+										className="ml-8 text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+									>
+										{t('errors.retry')}
+									</button>
+								)}
+							</div>
+						)}
+					</div>
+				)}
+
 				{/* Error message */}
 				<div aria-live="assertive">
-					{errorMessage && (
+					{errorMessage && !timeoutState.active && (
 						<div className="rounded-md bg-red-50 p-4" role="alert">
 							<p className="text-sm text-red-800">{errorMessage}</p>
 						</div>
@@ -230,13 +346,13 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 				{/* Submit button */}
 				<button
 					type="submit"
-					disabled={!stripe || isProcessing || !paymentElementReady}
+					disabled={!stripe || isProcessing || !paymentElementReady || timeoutState.active}
 					aria-busy={isProcessing}
 					className="w-full rounded-lg bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 				>
 					{isProcessing ? (
 						<span className="inline-flex items-center gap-2">
-							<svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+							<svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-label="処理中">
 								<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
 								<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
 							</svg>
