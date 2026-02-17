@@ -231,58 +231,78 @@ function CartContent() {
 	}
 
 	return (
-		<div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
-			<div aria-live="polite" className="sr-only">
-				{t('cart.itemCount', { count: items.length })}
-				{' '}
-				{t('cart.orderTotal')}: {formatPrice(grandTotal, currency)}
-			</div>
-			<section aria-labelledby="cart-heading" className="lg:col-span-7">
-				<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
-				<ul role="list" className="divide-y divide-gray-200 border-t border-b border-gray-200">
-					{items.map((item) => (
-						<CartItemRow
-							key={item.variantId}
-							item={item}
-							itemRef={(el: HTMLLIElement | null) => {
-								if (el) {
-									itemRefs.current.set(item.variantId, el);
-								} else {
-									itemRefs.current.delete(item.variantId);
-								}
-							}}
-						/>
-					))}
-				</ul>
-			</section>
+		<>
+			<div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16 pb-24 lg:pb-0">
+				<div aria-live="polite" className="sr-only">
+					{t('cart.itemCount', { count: items.length })}
+					{' '}
+					{t('cart.orderTotal')}: {formatPrice(grandTotal, currency)}
+				</div>
+				<section aria-labelledby="cart-heading" className="lg:col-span-7">
+					<h2 id="cart-heading" className="sr-only">{t('cart.itemsInCart')}</h2>
+					<ul role="list" className="divide-y divide-gray-200 border-t border-b border-gray-200">
+						{items.map((item) => (
+							<CartItemRow
+								key={item.variantId}
+								item={item}
+								itemRef={(el: HTMLLIElement | null) => {
+									if (el) {
+										itemRefs.current.set(item.variantId, el);
+									} else {
+										itemRefs.current.delete(item.variantId);
+									}
+								}}
+							/>
+						))}
+					</ul>
+				</section>
 
-			<div className="lg:col-span-5">
-				{shippingState === 'error' && (
-					<div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-center">
-						<p className="text-sm text-red-800">{t('cart.shippingConfigError')}</p>
-						<p className="mt-1 text-xs text-red-600">{t('cart.checkoutBlockedByShipping')}</p>
-						<button
-							type="button"
-							onClick={retryShipping}
-							className="mt-2 text-sm font-medium text-red-700 underline hover:text-red-900"
-						>
-							{t('cart.retry')}
-						</button>
-					</div>
-				)}
-				<CartOrderSummary
-					subtotal={subtotal}
-					taxAmount={taxAmount}
-					cartTotal={cartTotal}
-					discount={discount}
-					shipping={shipping}
-					grandTotal={grandTotal}
-					currency={currency}
-					onCheckout={handleCheckout}
-					checkoutDisabled={shippingState === 'error'}
-				/>
+				<div className="lg:col-span-5">
+					{shippingState === 'error' && (
+						<div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-center">
+							<p className="text-sm text-red-800">{t('cart.shippingConfigError')}</p>
+							<p className="mt-1 text-xs text-red-600">{t('cart.checkoutBlockedByShipping')}</p>
+							<button
+								type="button"
+								onClick={retryShipping}
+								className="mt-2 text-sm font-medium text-red-700 underline hover:text-red-900"
+							>
+								{t('cart.retry')}
+							</button>
+						</div>
+					)}
+					<CartOrderSummary
+						subtotal={subtotal}
+						taxAmount={taxAmount}
+						cartTotal={cartTotal}
+						discount={discount}
+						shipping={shipping}
+						grandTotal={grandTotal}
+						currency={currency}
+						onCheckout={handleCheckout}
+						checkoutDisabled={shippingState === 'error'}
+					/>
+				</div>
 			</div>
-		</div>
+
+			{/* Mobile sticky bottom bar - visible below lg breakpoint */}
+			<div className="fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] lg:hidden">
+				<div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
+					<div className="min-w-0">
+						<p className="text-xs text-gray-500">{t('cart.orderTotal')}</p>
+						<p className="text-lg font-bold text-gray-900">{formatPrice(grandTotal, currency)}</p>
+					</div>
+					<button
+						type="button"
+						onClick={handleCheckout}
+						disabled={shippingState === 'error'}
+						className="shrink-0 rounded-lg bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+					>
+						{t('cart.checkout')}
+					</button>
+				</div>
+			</div>
+		</>
 	);
 }
 

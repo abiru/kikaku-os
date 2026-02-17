@@ -137,7 +137,8 @@ describe('Cart', () => {
 		expect(screen.getByText('cart.orderSummary')).toBeInTheDocument();
 		expect(screen.getByText('cart.subtotal')).toBeInTheDocument();
 		expect(screen.getByText('cart.tax')).toBeInTheDocument();
-		expect(screen.getByText('cart.checkout')).toBeInTheDocument();
+		// Desktop summary + mobile sticky bar both render checkout button
+		expect(screen.getAllByText('cart.checkout').length).toBeGreaterThanOrEqual(1);
 	});
 
 	it('renders remove button for each item', () => {
@@ -284,8 +285,11 @@ describe('Cart', () => {
 			expect(screen.getByText('cart.shippingConfigError')).toBeInTheDocument();
 		});
 
-		const checkoutButton = screen.getByText('cart.checkout');
-		expect(checkoutButton).toBeDisabled();
+		// Both desktop and mobile checkout buttons should be disabled
+		const checkoutButtons = screen.getAllByText('cart.checkout');
+		for (const btn of checkoutButtons) {
+			expect(btn).toBeDisabled();
+		}
 		expect(screen.getByText('cart.checkoutBlockedByShipping')).toBeInTheDocument();
 	});
 
@@ -306,8 +310,10 @@ describe('Cart', () => {
 		render(<Cart />);
 
 		await waitFor(() => {
-			const checkoutButton = screen.getByText('cart.checkout');
-			expect(checkoutButton).not.toBeDisabled();
+			const checkoutButtons = screen.getAllByText('cart.checkout');
+			for (const btn of checkoutButtons) {
+				expect(btn).not.toBeDisabled();
+			}
 		});
 	});
 
@@ -328,7 +334,7 @@ describe('Cart', () => {
 		render(<Cart />);
 
 		await waitFor(() => {
-			expect(screen.getByText('cart.checkout')).toBeInTheDocument();
+			expect(screen.getAllByText('cart.checkout').length).toBeGreaterThanOrEqual(1);
 		});
 
 		// fetch should only be called once for the shipping config
