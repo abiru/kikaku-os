@@ -145,7 +145,7 @@ describe('handleCouponPost', () => {
 
 			await handleCouponPost(fd, apiBase, apiKey, id, mockT);
 
-			const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+			const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]!;
 			const body = JSON.parse(fetchCall[1].body);
 			expect(body.code).toBe('SUMMER');
 			expect(body.value).toBe(20);
@@ -170,7 +170,7 @@ describe('handleCouponPost', () => {
 
 			await handleCouponPost(fd, apiBase, apiKey, id, mockT);
 
-			const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+			const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]!;
 			const body = JSON.parse(fetchCall[1].body);
 			expect(body.max_uses).toBeNull();
 			expect(body.starts_at).toBeNull();

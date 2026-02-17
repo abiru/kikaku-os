@@ -101,7 +101,7 @@ describe('adminFormHandler', () => {
 			},
 		});
 
-		const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+		const fetchCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]!;
 		const body = JSON.parse(fetchCall[1].body);
 		expect(body).toEqual({ name: 'Alice' });
 	});

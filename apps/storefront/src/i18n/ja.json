@@ -133,7 +133,9 @@
     "checkoutBlockedByShipping": "配送料が確認できるまでチェックアウトできません",
     "retry": "再試行",
     "maxStock": "在庫上限: {stock}個",
-    "stockInsufficient": "在庫が不足しています（残り{stock}点）"
+    "stockInsufficient": "在庫が不足しています（残り{stock}点）",
+    "itemRemoved": "{title}をカートから削除しました",
+    "quantityChanged": "{title}の数量を{quantity}に変更しました"
   },
   "checkout": {
     "pageTitle": "チェックアウト - Led Kikaku",
@@ -648,6 +650,7 @@
     "basedOnReviews": "{count}件のレビューに基づく",
     "outOf5": "/ 5",
     "stars": "つ星",
+    "rating": "評価",
     "adminTitle": "レビュー管理",
     "approve": "承認",
     "reject": "却下",

@@ -34,18 +34,19 @@ describe('StarRatingDisplay', () => {
 })
 
 describe('StarRatingInput', () => {
-  it('renders 5 clickable star buttons', () => {
+  it('renders 5 star radio buttons in a radiogroup', () => {
     const onChange = vi.fn()
     render(<StarRatingInput value={0} onChange={onChange} />)
-    const buttons = screen.getAllByRole('button')
-    expect(buttons.length).toBe(5)
+    expect(screen.getByRole('radiogroup')).toBeDefined()
+    const radios = screen.getAllByRole('radio')
+    expect(radios.length).toBe(5)
   })
 
   it('calls onChange with correct star value when clicked', () => {
     const onChange = vi.fn()
     render(<StarRatingInput value={0} onChange={onChange} />)
-    const buttons = screen.getAllByRole('button')
-    fireEvent.click(buttons[2]!)
+    const radios = screen.getAllByRole('radio')
+    fireEvent.click(radios[2]!)
     expect(onChange).toHaveBeenCalledWith(3)
   })
 
@@ -54,5 +55,33 @@ describe('StarRatingInput', () => {
     render(<StarRatingInput value={0} onChange={onChange} />)
     expect(screen.getByLabelText('1reviews.stars')).toBeDefined()
     expect(screen.getByLabelText('5reviews.stars')).toBeDefined()
+  })
+
+  it('marks the selected star as aria-checked', () => {
+    const onChange = vi.fn()
+    render(<StarRatingInput value={3} onChange={onChange} />)
+    const radios = screen.getAllByRole('radio')
+    expect(radios[2]!.getAttribute('aria-checked')).toBe('true')
+    expect(radios[0]!.getAttribute('aria-checked')).toBe('false')
+  })
+
+  it('supports arrow key navigation', () => {
+    const onChange = vi.fn()
+    render(<StarRatingInput value={3} onChange={onChange} />)
+    const radios = screen.getAllByRole('radio')
+    fireEvent.keyDown(radios[2]!, { key: 'ArrowRight' })
+    expect(onChange).toHaveBeenCalledWith(4)
+    onChange.mockClear()
+    fireEvent.keyDown(radios[2]!, { key: 'ArrowLeft' })
+    expect(onChange).toHaveBeenCalledWith(2)
+  })
+
+  it('implements roving tabindex', () => {
+    const onChange = vi.fn()
+    render(<StarRatingInput value={3} onChange={onChange} />)
+    const radios = screen.getAllByRole('radio')
+    expect(radios[2]!.getAttribute('tabindex')).toBe('0')
+    expect(radios[0]!.getAttribute('tabindex')).toBe('-1')
+    expect(radios[4]!.getAttribute('tabindex')).toBe('-1')
   })
 })

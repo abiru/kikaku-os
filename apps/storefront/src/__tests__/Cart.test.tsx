@@ -483,11 +483,10 @@ describe('Cart accessibility', () => {
 
 		render(<Cart />);
 
-		// The remove button uses sr-only span for accessible text
-		const removeText = screen.getByText('common.remove');
-		expect(removeText).toBeInTheDocument();
-		expect(removeText.tagName).toBe('SPAN');
-		expect(removeText.className).toContain('sr-only');
+		// The remove button has accessible text
+		const removeButton = screen.getByText('common.remove');
+		expect(removeButton).toBeInTheDocument();
+		expect(removeButton.tagName).toBe('BUTTON');
 	});
 
 	it('has aria-live region for cart updates', () => {
