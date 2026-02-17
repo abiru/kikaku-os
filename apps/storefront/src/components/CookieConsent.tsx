@@ -154,7 +154,7 @@ export default function CookieConsent() {
 								<button
 									type="button"
 									onClick={handleSavePreferences}
-									className="rounded-full bg-brand px-5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-brand-hover active:bg-brand-active"
+									className="rounded-lg bg-brand h-12 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]"
 								>
 									{t('cookie.savePreferences')}
 								</button>
@@ -196,7 +196,7 @@ export default function CookieConsent() {
 								<button
 									type="button"
 									onClick={handleAccept}
-									className="shrink-0 rounded-full bg-brand px-5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-brand-hover active:bg-brand-active"
+									className="shrink-0 rounded-lg bg-brand h-12 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]"
 								>
 									{t('cookie.accept')}
 								</button>
