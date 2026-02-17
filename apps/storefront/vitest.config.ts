@@ -19,8 +19,10 @@ export default defineConfig({
 				'src/components/catalyst/**'
 			],
 			thresholds: {
-				lines: 28,
-				statements: 28
+				lines: 50,
+				statements: 50,
+				branches: 40,
+				functions: 40
 			}
 		}
 	}
