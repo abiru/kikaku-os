@@ -64,7 +64,7 @@ export function CouponInput() {
 				</div>
 				<button
 					onClick={removeCoupon}
-					className="text-sm text-green-700 hover:text-green-900"
+					className="rounded-lg px-2 py-1 text-sm font-medium text-green-700 hover:text-green-900 hover:bg-green-100 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
 				>
 					{t('cart.removeCoupon')}
 				</button>
@@ -87,7 +87,7 @@ export function CouponInput() {
 				<button
 					onClick={handleApply}
 					disabled={isApplying || !code.trim()}
-					className="px-4 py-2 bg-gray-100 text-sm font-medium rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					className="rounded-lg border border-border bg-transparent px-4 py-2 h-8 text-sm font-medium text-primary hover:bg-subtle active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 				>
 					{isApplying ? t('cart.applying') : t('cart.applyCoupon')}
 				</button>

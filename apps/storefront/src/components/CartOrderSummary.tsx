@@ -115,13 +115,13 @@ export function CartOrderSummary({
 					type="button"
 					onClick={onCheckout}
 					disabled={checkoutDisabled}
-					className={`w-full rounded-full border border-transparent px-4 py-3 text-base font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors ${checkoutDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand hover:bg-brand-active'}`}
+					className="w-full rounded-lg bg-brand px-6 py-3 h-12 text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 				>
 					{t('cart.checkout')}
 				</button>
 				<a
 					href="/quotations/new"
-					className="w-full block rounded-full border border-gray-300 bg-white px-4 py-3 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 focus:ring-offset-gray-50 transition-colors text-center"
+					className="w-full rounded-lg border border-border bg-transparent px-6 py-3 h-12 inline-flex items-center justify-center text-base font-semibold text-primary hover:bg-subtle active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
 				>
 					{t('cart.createQuotation')}
 				</a>

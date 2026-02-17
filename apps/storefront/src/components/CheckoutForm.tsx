@@ -173,7 +173,7 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 			<button
 				type="submit"
 				disabled={!stripe || isProcessing || !paymentElementReady}
-				className="w-full rounded-full bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+				className="w-full rounded-lg bg-brand px-6 py-3 h-12 text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 			>
 				{isProcessing ? (
 					<span className="inline-flex items-center gap-2">
@@ -226,7 +226,7 @@ export default function CheckoutForm({
 					stripePromiseCache.delete(publishableKey);
 					setStripeLoadError(false);
 				}}
-					className="text-brand hover:text-brand-active font-medium min-h-[44px]"
+					className="rounded-lg bg-transparent px-5 py-2.5 h-10 inline-flex items-center justify-center text-sm font-semibold text-brand hover:bg-subtle active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
 				>
 					{t('errors.reload')}
 				</button>
