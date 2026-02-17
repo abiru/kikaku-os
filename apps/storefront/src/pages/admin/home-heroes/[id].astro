@@ -58,7 +58,7 @@ if (Astro.request.method === 'POST' && hero) {
 
 		{hero && (
 			<div class="flex items-center justify-between">
-				<h1 class="text-2xl font-semibold text-gray-900">Edit Hero Section</h1>
+				<h1 class="typo-h2 text-gray-900">Edit Hero Section</h1>
 				<div class="flex items-center gap-2">
 					{hero.status === 'draft' ? (
 						<Badge color="zinc" client:load>Draft</Badge>
@@ -227,7 +227,7 @@ if (Astro.request.method === 'POST' && hero) {
 
 		{hero && (
 			<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-				<h2 class="text-lg font-semibold text-gray-900">Hero Images</h2>
+				<h2 class="typo-h3 text-gray-900">Hero Images</h2>
 
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					{/* Main Image */}

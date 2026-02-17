@@ -226,7 +226,7 @@ export default function OrderTracking({ order }: Props) {
       <div className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+            <h1 className="typo-h2 text-gray-900">
               {t('orderTracking.title')}
             </h1>
             <p className="mt-1 text-sm text-gray-500">
@@ -255,7 +255,7 @@ export default function OrderTracking({ order }: Props) {
 
       {/* Order Items */}
       <div className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <h2 className="typo-h3 text-gray-900 mb-4">
           {t('orderTracking.items')}
         </h2>
         <div className="divide-y divide-gray-100">
@@ -277,7 +277,7 @@ export default function OrderTracking({ order }: Props) {
 
       {/* Price Breakdown */}
       <div className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <h2 className="typo-h3 text-gray-900 mb-4">
           {t('orderTracking.priceBreakdown')}
         </h2>
         <div className="space-y-3 text-sm">
@@ -315,7 +315,7 @@ export default function OrderTracking({ order }: Props) {
         <div className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
           {order.shipping && (
             <div className="mb-6 last:mb-0">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              <h2 className="typo-h3 text-gray-900 mb-3">
                 {t('orderTracking.shippingAddress')}
               </h2>
               <div className="text-sm text-gray-600 space-y-1">

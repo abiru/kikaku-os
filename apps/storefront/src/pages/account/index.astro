@@ -84,7 +84,7 @@ const statusLabels: Record<string, string> = {
 
       {/* Welcome Section */}
       <div class="mb-8">
-        <h1 class="text-2xl font-semibold text-primary">
+        <h1 class="typo-h2 text-primary">
           {t('account.welcome')}、{account?.name || 'お客様'}
         </h1>
         <p class="text-secondary mt-1">
@@ -98,7 +98,7 @@ const statusLabels: Record<string, string> = {
           <div class="text-secondary text-sm font-medium mb-1">
             {t('account.totalOrders')}
           </div>
-          <div class="text-3xl font-semibold text-primary">
+          <div class="typo-h1 text-primary">
             {stats?.total_orders || 0}
           </div>
         </div>
@@ -106,7 +106,7 @@ const statusLabels: Record<string, string> = {
           <div class="text-secondary text-sm font-medium mb-1">
             {t('account.totalSpent')}
           </div>
-          <div class="text-3xl font-semibold text-primary">
+          <div class="typo-h1 text-primary">
             {formatCurrency(stats?.total_spent || 0)}
           </div>
         </div>
@@ -115,7 +115,7 @@ const statusLabels: Record<string, string> = {
       {/* Recent Orders */}
       <div class="bg-white rounded-xl shadow-sm border border-gray-200">
         <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 class="text-lg font-semibold text-primary">
+          <h2 class="typo-h3 text-primary">
             {t('account.recentOrders')}
           </h2>
           {recentOrders.length > 0 && (
