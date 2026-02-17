@@ -154,10 +154,10 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 				{t('admin.orders')}
 			</a>
 			<Heading>{t('admin.order')} #{id}</Heading>
-			{order && <Badge color={getStatusColor(order.status)} client:load>{order.status}</Badge>}
+			{order && <Badge color={getStatusColor(order.status)} client:idle>{order.status}</Badge>}
 		</div>
 			{error && (
-				<Alert color="red" client:load>
+				<Alert color="red" client:idle>
 					{error}
 				</Alert>
 			)}
@@ -274,7 +274,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 										fulfillments.map((f) => (
 											<TableRow>
 												<TableCell>{f.id}</TableCell>
-												<TableCell><Badge color={getFulfillmentStatusColor(f.status)} client:load>{f.status}</Badge></TableCell>
+												<TableCell><Badge color={getFulfillmentStatusColor(f.status)} client:idle>{f.status}</Badge></TableCell>
 												<TableCell className="font-mono text-xs">{f.tracking_number || '-'}</TableCell>
 												<TableCell className="text-secondary tabular-nums">{formatDate(f.created_at, dateTimeOpts)}</TableCell>
 												<TableCell>
@@ -318,7 +318,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 										payments.map((p) => (
 											<TableRow>
 												<TableCell>{p.id}</TableCell>
-												<TableCell><Badge color={getStatusColor(p.status)} client:load>{p.status}</Badge></TableCell>
+												<TableCell><Badge color={getStatusColor(p.status)} client:idle>{p.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(p.amount, p.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{p.provider_payment_id || '-'}</TableCell>
 												<TableCell className="text-secondary tabular-nums">{formatDate(p.created_at, dateTimeOpts)}</TableCell>
@@ -369,7 +369,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 										refunds.map((r) => (
 											<TableRow>
 												<TableCell>{r.id}</TableCell>
-												<TableCell><Badge color={getStatusColor(r.status)} client:load>{r.status}</Badge></TableCell>
+												<TableCell><Badge color={getStatusColor(r.status)} client:idle>{r.status}</Badge></TableCell>
 												<TableCell className="tabular-nums">{formatCurrency(r.amount, r.currency)}</TableCell>
 												<TableCell className="font-mono text-xs">{r.provider_refund_id || '-'}</TableCell>
 												<TableCell className="text-secondary">{r.reason || '-'}</TableCell>
@@ -407,7 +407,7 @@ const apiKey = import.meta.env.ADMIN_API_KEY;
 											<TableRow>
 												<TableCell className="font-mono text-xs">{e.event_id}</TableCell>
 												<TableCell className="font-mono text-xs">{e.event_type}</TableCell>
-												<TableCell><Badge color={getStatusColor(e.processing_status)} client:load>{e.processing_status}</Badge></TableCell>
+												<TableCell><Badge color={getStatusColor(e.processing_status)} client:idle>{e.processing_status}</Badge></TableCell>
 												<TableCell className="text-xs text-red-600">{e.error || '-'}</TableCell>
 												<TableCell className="text-secondary tabular-nums">{formatDate(e.received_at, dateTimeOpts)}</TableCell>
 											</TableRow>
