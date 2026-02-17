@@ -149,6 +149,7 @@ export default function SearchModal() {
 			{/* Backdrop */}
 			<div
 				className="fixed inset-0 bg-gray-500/75 backdrop-blur-sm"
+				data-testid="search-backdrop"
 				onClick={() => setIsOpen(false)}
 			/>
 
@@ -195,7 +196,7 @@ export default function SearchModal() {
 						)}
 					</div>
 					{query.length >= 2 && (
-						<div className="border-t border-gray-100">
+						<div className="border-t border-gray-100" data-testid="search-results">
 							{results.length > 0 ? (
 								<div ref={resultsRef} className="max-h-80 overflow-y-auto py-2">
 									{results.map((product, index) => {
@@ -242,7 +243,7 @@ export default function SearchModal() {
 									})}
 								</div>
 							) : !loading ? (
-								<div className="px-4 py-8 text-center">
+								<div className="px-4 py-8 text-center" data-testid="search-empty-state">
 									<svg
 										className="mx-auto h-12 w-12 text-gray-400"
 										fill="none"
