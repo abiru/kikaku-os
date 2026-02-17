@@ -31,11 +31,15 @@ function maskValue(key: string, value: unknown): unknown {
   return `${value.slice(0, 4)}***`
 }
 
-function maskData(data: Record<string, unknown>): Record<string, unknown> {
+function maskData(data: unknown, seen = new WeakSet()): unknown {
+  if (data === null || data === undefined || typeof data !== 'object') return data
+  if (seen.has(data as object)) return '[Circular]'
+  seen.add(data as object)
+  if (Array.isArray(data)) return data.map(item => maskData(item, seen))
   const masked: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(data)) {
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      masked[key] = maskData(value as Record<string, unknown>)
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    if (typeof value === 'object' && value !== null) {
+      masked[key] = maskData(value, seen)
     } else {
       masked[key] = maskValue(key, value)
     }
