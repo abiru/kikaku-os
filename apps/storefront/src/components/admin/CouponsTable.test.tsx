@@ -112,19 +112,19 @@ describe('CouponsTable', () => {
 
   it('toggles select all checkbox', () => {
     render(<CouponsTable coupons={mockCoupons} />)
-    const selectAll = screen.getByLabelText('全て選択')
+    const selectAll = screen.getByLabelText('admin.selectAll')
     fireEvent.click(selectAll)
-    expect(screen.getByText(/件選択中/)).toBeDefined()
+    expect(screen.getByText('admin.selectedCount')).toBeDefined()
   })
 
   it('deselects all when clicking deselect button', () => {
     render(<CouponsTable coupons={mockCoupons} />)
-    const selectAll = screen.getByLabelText('全て選択')
+    const selectAll = screen.getByLabelText('admin.selectAll')
     fireEvent.click(selectAll)
-    expect(screen.getByText(/件選択中/)).toBeDefined()
+    expect(screen.getByText('admin.selectedCount')).toBeDefined()
 
-    fireEvent.click(screen.getByText('選択解除'))
-    expect(screen.queryByText(/件選択中/)).toBeNull()
+    fireEvent.click(screen.getByText('admin.deselect'))
+    expect(screen.queryByText('admin.selectedCount')).toBeNull()
   })
 
   it('shows min order amount for coupons with minimum', () => {

@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
-import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '../catalyst/table'
+import { useState } from 'react'
 import { Badge } from '../catalyst/badge'
 import { formatDate } from '../../lib/format'
+import AdminTable, { type Column, type SelectionState } from './AdminTable'
 import TableEmptyState from './TableEmptyState'
 import { t } from '../../i18n'
 
@@ -48,36 +48,13 @@ const confirmDialog = (window as any).__confirmDialog as
 
 export default function CouponsTable({ coupons: initialCoupons }: Props) {
   const [coupons, setCoupons] = useState(initialCoupons)
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkMessage, setBulkMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const allIds = coupons.map((c) => c.id)
   const deletableIds = coupons.filter((c) => c.current_uses === 0).map((c) => c.id)
-  const allSelected = coupons.length > 0 && allIds.every((id) => selectedIds.has(id))
-  const someSelected = selectedIds.size > 0
-  const selectedDeletable = [...selectedIds].filter((id) => deletableIds.includes(id))
 
-  const toggleAll = useCallback(() => {
-    setSelectedIds((prev) => {
-      const allCurrentlySelected = allIds.every((id) => prev.has(id))
-      return allCurrentlySelected ? new Set() : new Set(allIds)
-    })
-  }, [allIds])
-
-  const toggleOne = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
-  }, [])
-
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = async (selectedIds: ReadonlySet<number>, clearSelection: () => void) => {
+    const selectedDeletable = [...selectedIds].filter((id) => deletableIds.includes(id))
     if (selectedDeletable.length === 0) return
 
     const skipped = selectedIds.size - selectedDeletable.length
@@ -115,137 +92,106 @@ export default function CouponsTable({ coupons: initialCoupons }: Props) {
     if (fail === 0) {
       setBulkMessage({ type: 'success', text: `${success}件のクーポンを削除しました` })
       setCoupons(prev => prev.filter(c => !selectedIds.has(c.id)))
-      setSelectedIds(new Set())
+      clearSelection()
     } else {
       setBulkMessage({ type: 'error', text: `${success}件成功、${fail}件失敗しました` })
     }
   }
 
+  const columns: Column<Coupon>[] = [
+    {
+      id: 'code',
+      header: 'Code',
+      cell: (c) => (
+        <>
+          <div className="font-mono font-medium">{c.code}</div>
+          {c.min_order_amount > 0 && (
+            <div className="text-xs text-zinc-500">
+              Min: {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: c.currency, minimumFractionDigits: 0 }).format(c.min_order_amount)}
+            </div>
+          )}
+        </>
+      ),
+    },
+    {
+      id: 'type',
+      header: 'Type',
+      cell: (c) => (
+        <Badge color="zinc">
+          {c.type === 'percentage' ? 'Percentage' : 'Fixed'}
+        </Badge>
+      ),
+    },
+    {
+      id: 'value',
+      header: 'Value',
+      className: 'font-medium tabular-nums',
+      cell: (c) => formatValue(c),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      cell: (c) => {
+        if (isExpired(c)) return <Badge color="amber">Expired</Badge>
+        if (c.status === 'active') return <Badge color="lime">Active</Badge>
+        return <Badge color="zinc">Inactive</Badge>
+      },
+    },
+    {
+      id: 'usage',
+      header: 'Usage',
+      className: 'text-zinc-500 tabular-nums',
+      cell: (c) => <>{c.current_uses}{c.max_uses ? ` / ${c.max_uses}` : ''}</>,
+    },
+    {
+      id: 'expires',
+      header: 'Expires',
+      className: 'text-zinc-500 tabular-nums',
+      cell: (c) => formatDate(c.expires_at),
+    },
+    {
+      id: 'action',
+      header: 'Action',
+      cell: (c) => (
+        <a href={`/admin/coupons/${c.id}`} className="text-indigo-600 hover:underline font-medium">Edit</a>
+      ),
+    },
+  ]
+
   return (
-    <div>
-      {/* Bulk action bar */}
-      {someSelected && (
-        <div className="mb-4 flex items-center gap-4 rounded-lg bg-indigo-50 border border-indigo-200 px-4 py-3">
-          <span className="text-sm font-medium text-indigo-900">
-            {selectedIds.size}件選択中
-          </span>
-          <button
-            type="button"
-            onClick={handleBulkDelete}
-            disabled={bulkLoading || selectedDeletable.length === 0}
-            className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 disabled:opacity-50"
-          >
-            一括削除
-          </button>
-          {bulkLoading && (
-            <span className="text-sm text-indigo-600 animate-pulse">処理中...</span>
-          )}
-          <button
-            type="button"
-            onClick={() => setSelectedIds(new Set())}
-            className="ml-auto text-sm text-indigo-600 hover:text-indigo-800"
-          >
-            選択解除
-          </button>
-        </div>
-      )}
-
-      {bulkMessage && (
-        <div className={`mb-4 px-4 py-3 rounded-lg text-sm border ${
-          bulkMessage.type === 'success'
-            ? 'bg-green-50 border-green-200 text-green-700'
-            : 'bg-red-50 border-red-200 text-red-700'
-        }`}>
-          {bulkMessage.text}
-        </div>
-      )}
-
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableHeader className="w-10">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                onChange={toggleAll}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                aria-label="全て選択"
-              />
-            </TableHeader>
-            <TableHeader>Code</TableHeader>
-            <TableHeader>Type</TableHeader>
-            <TableHeader>Value</TableHeader>
-            <TableHeader>Status</TableHeader>
-            <TableHeader>Usage</TableHeader>
-            <TableHeader>Expires</TableHeader>
-            <TableHeader>Action</TableHeader>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {coupons.length > 0 ? (
-            coupons.map((coupon) => (
-              <TableRow key={coupon.id} href={`/admin/coupons/${coupon.id}`}>
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(coupon.id)}
-                    onChange={() => toggleOne(coupon.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    aria-label={`${coupon.code} を選択`}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="font-mono font-medium">{coupon.code}</div>
-                  {coupon.min_order_amount > 0 && (
-                    <div className="text-xs text-zinc-500">
-                      Min: {new Intl.NumberFormat('ja-JP', { style: 'currency', currency: coupon.currency, minimumFractionDigits: 0 }).format(coupon.min_order_amount)}
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Badge color="zinc">
-                    {coupon.type === 'percentage' ? 'Percentage' : 'Fixed'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-medium tabular-nums">
-                  {formatValue(coupon)}
-                </TableCell>
-                <TableCell>
-                  {isExpired(coupon) ? (
-                    <Badge color="amber">Expired</Badge>
-                  ) : coupon.status === 'active' ? (
-                    <Badge color="lime">Active</Badge>
-                  ) : (
-                    <Badge color="zinc">Inactive</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-zinc-500 tabular-nums">
-                  {coupon.current_uses}{coupon.max_uses ? ` / ${coupon.max_uses}` : ''}
-                </TableCell>
-                <TableCell className="text-zinc-500 tabular-nums">
-                  {formatDate(coupon.expires_at)}
-                </TableCell>
-                <TableCell>
-                  <a href={`/admin/coupons/${coupon.id}`} className="text-indigo-600 hover:underline font-medium">Edit</a>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={8}>
-                <TableEmptyState
-                  icon="tag"
-                  message={t('admin.emptyCoupons')}
-                  description={t('admin.emptyCouponsDesc')}
-                  actionLabel={t('admin.addFirstCoupon')}
-                  actionHref="/admin/coupons/new"
-                />
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+    <AdminTable
+      data={coupons}
+      columns={columns}
+      itemLabel={(c) => `${c.code} を選択`}
+      renderBulkActions={({ selectedIds, clearSelection }: SelectionState) => {
+        const selectedDeletable = [...selectedIds].filter((id) => deletableIds.includes(id))
+        return (
+          <>
+            <button
+              type="button"
+              onClick={() => handleBulkDelete(selectedIds, clearSelection)}
+              disabled={bulkLoading || selectedDeletable.length === 0}
+              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 disabled:opacity-50"
+            >
+              一括削除
+            </button>
+            {bulkLoading && (
+              <span className="text-sm text-indigo-600 animate-pulse">処理中...</span>
+            )}
+          </>
+        )
+      }}
+      message={bulkMessage}
+      rowHref={(c) => `/admin/coupons/${c.id}`}
+      emptyState={
+        <TableEmptyState
+          icon="tag"
+          message={t('admin.emptyCoupons')}
+          description={t('admin.emptyCouponsDesc')}
+          actionLabel={t('admin.addFirstCoupon')}
+          actionHref="/admin/coupons/new"
+        />
+      }
+    />
   )
 }
