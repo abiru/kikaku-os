@@ -49,7 +49,9 @@ function buildQuantityOptions(currentQuantity: number, stock?: number): number[]
 
 function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HTMLLIElement> }) {
 	const { t } = useTranslation();
+	const [stockError, setStockError] = useState<string | null>(null);
 	const quantityOptions = buildQuantityOptions(item.quantity, item.stock);
+	const isAtStockLimit = item.stock !== undefined && item.quantity >= item.stock;
 
 	return (
 		<li ref={itemRef} className="flex py-6 sm:py-10">
@@ -99,19 +101,38 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 									const val = Number(e.target.value);
 									if (val > 0 && (item.stock === undefined || val <= item.stock)) {
 										updateQuantity(item.variantId, val);
+										setStockError(null);
+									} else if (item.stock !== undefined && val > item.stock) {
+										setStockError(
+											t('cart.stockInsufficient', { stock: String(item.stock) })
+										);
 									}
 								}}
+								disabled={isAtStockLimit && quantityOptions.length <= 1}
 								aria-label={t('cart.quantityLabel', { title: item.title })}
-								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand sm:text-sm"
+								className="col-start-1 row-start-1 appearance-none rounded-md bg-white py-1.5 pr-8 pl-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand disabled:bg-gray-100 disabled:cursor-not-allowed sm:text-sm"
 							>
 								{quantityOptions.map((n) => (
-									<option key={n} value={n}>{n}</option>
+									<option key={n} value={n} disabled={item.stock !== undefined && n > item.stock}>
+										{n}
+									</option>
 								))}
 							</select>
 							<svg className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
 								<path fillRule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
 							</svg>
 						</div>
+
+						{isAtStockLimit && (
+							<p className="mt-1 text-xs text-amber-600" role="alert">
+								{t('cart.stockInsufficient', { stock: String(item.stock) })}
+							</p>
+						)}
+						{stockError && !isAtStockLimit && (
+							<p className="mt-1 text-xs text-red-600" role="alert">
+								{stockError}
+							</p>
+						)}
 
 						<div className="absolute top-0 right-0">
 							<button
