@@ -12,7 +12,7 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '.
 import FulfillmentModals from '../../../components/admin/FulfillmentModals.astro';
 import RefundModals from '../../../components/admin/RefundModals.astro';
 import { t } from '../../../i18n';
-import { logError } from '../../../lib/logger';
+import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -76,33 +76,31 @@ let stripeEvents: StripeEvent[] = [];
 let fulfillments: Fulfillment[] = [];
 let error: string | null = null;
 
-if (import.meta.env.ADMIN_API_KEY) {
-	try {
-		const res = await fetch(`${apiBase}/admin/orders/${id}`, {
-			headers: { 'x-admin-key': import.meta.env.ADMIN_API_KEY }
-		});
-
-		if (!res.ok) {
-			if (res.status === 404) {
-				error = t('errors.orderNotFound');
-			} else {
-				throw new Error(`API Error: ${res.status}`);
-			}
-		} else {
-			const data = await res.json();
-			order = data.order;
-			payments = data.payments || [];
-			refunds = data.refunds || [];
-			stripeEvents = data.stripeEvents || [];
-			fulfillments = data.fulfillments || [];
-		}
-	} catch (e) {
-		logError('Failed to load order details', e, { page: 'admin/orders/[id]', action: 'fetchOrder', resourceId: id });
-		error = t('errors.failedToLoadOrderDetails');
-	}
-} else {
-	error = t('errors.adminKeyMissing');
+type OrderResponse = {
+	order: OrderDetail
+	payments: Payment[]
+	refunds: Refund[]
+	stripeEvents: StripeEvent[]
+	fulfillments: Fulfillment[]
 }
+
+const { data, error: fetchError } = await fetchAdminResource<OrderResponse>({
+	apiBase,
+	apiKey: import.meta.env.ADMIN_API_KEY || '',
+	resource: 'orders',
+	id: id!,
+	notFoundMessage: t('errors.orderNotFound'),
+	errorMessage: t('errors.failedToLoadOrderDetails'),
+});
+
+if (data) {
+	order = data.order;
+	payments = data.payments || [];
+	refunds = data.refunds || [];
+	stripeEvents = data.stripeEvents || [];
+	fulfillments = data.fulfillments || [];
+}
+error = fetchError;
 
 const formatCurrency = (amount: number, currency: string) => {
 	return new Intl.NumberFormat('ja-JP', { style: 'currency', currency }).format(amount);

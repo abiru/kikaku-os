@@ -7,7 +7,7 @@ import { Button } from '../../../components/catalyst/button';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
 import { getApiBase } from '../../../lib/api';
 import type { AdDraft } from '../../../types/ads';
-import { logError } from '../../../lib/logger';
+import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
 
 const { id } = Astro.params;
 const apiKey = import.meta.env.ADMIN_API_KEY;
@@ -16,25 +16,18 @@ const apiBase = getApiBase();
 let draft: AdDraft | null = null;
 let error: string | null = null;
 
-if (apiKey && id) {
-  try {
-    const response = await fetch(`${apiBase}/admin/ads/drafts/${id}`, {
-      headers: { 'x-admin-key': apiKey },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      draft = data.draft;
-    } else if (response.status === 404) {
-      error = 'Ad draft not found';
-    } else {
-      error = 'Failed to load ad draft';
-    }
-  } catch (e) {
-    error = 'Failed to connect to API';
-    logError('Failed to fetch ad draft', e, { page: 'admin/ads/[id]', action: 'fetchDraft', resourceId: id });
-  }
+const { data, error: fetchError } = await fetchAdminResource<{ draft: AdDraft }>({
+  apiBase,
+  apiKey: apiKey || '',
+  resource: 'ads/drafts',
+  id: id!,
+  notFoundMessage: 'Ad draft not found',
+  errorMessage: 'Failed to load ad draft',
+});
+if (data) {
+  draft = data.draft;
 }
+error = fetchError;
 ---
 
 <AdminLayout title={draft ? `Edit: ${draft.campaign_name}` : 'Edit Ad Draft'}>

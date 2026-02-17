@@ -10,7 +10,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../../components/admin/ConfirmDialog.astro';
 import { getApiBase } from '../../../lib/api';
 import { handleHeroPost, type HeroDetail } from '../../../lib/admin/hero-actions';
-import { logError } from '../../../lib/logger';
+import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
 
 const { id } = Astro.params;
 const apiBase = getApiBase();
@@ -23,21 +23,18 @@ let imageUploadSuccess = false;
 let imageUploadError: string | null = null;
 
 // Fetch hero section data
-try {
-	const res = await fetch(`${apiBase}/admin/home/heroes/${id}`, {
-		headers: { 'x-admin-key': apiKey },
-	});
-
-	if (!res.ok) {
-		throw new Error('Hero section not found');
-	}
-
-	const data = await res.json();
-	hero = data.hero;
-} catch (e: unknown) {
-	logError('Failed to load hero section', e, { page: 'admin/home-heroes/[id]', action: 'fetchHero', resourceId: id });
-	error = e instanceof Error ? e.message : 'Failed to load hero section';
+const { data: heroData, error: fetchError } = await fetchAdminResource<{ hero: HeroDetail }>({
+	apiBase,
+	apiKey: apiKey || '',
+	resource: 'home/heroes',
+	id: id!,
+	notFoundMessage: 'Hero section not found',
+	errorMessage: 'Failed to load hero section',
+});
+if (heroData) {
+	hero = heroData.hero;
 }
+error = fetchError;
 
 // Handle form submission
 if (Astro.request.method === 'POST' && hero) {

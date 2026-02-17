@@ -14,7 +14,7 @@ import { getApiBase } from '../../../lib/api';
 import { formatDate } from '../../../lib/format';
 import { DATE_FORMATS } from '../../../lib/constants';
 import { handlePageUpdate } from '../../../lib/admin/page-actions';
-import { logError } from '../../../lib/logger';
+import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
 import { t } from '../../../i18n';
 
 const { id } = Astro.params;
@@ -47,46 +47,23 @@ if (Astro.request.method === 'POST' && apiKey) {
 	successMessage = result.successMessage;
 }
 
-// Fetch page data
-if (!page && apiKey) {
-	try {
-		const res = await fetch(`${apiBase}/admin/pages/${id}`, {
-			headers: { 'x-admin-key': apiKey }
-		});
+// Fetch page data (also re-fetches isCorePage after update)
+type PageResponse = { page: Page; isCorePage?: boolean }
 
-		if (!res.ok) {
-			if (res.status === 404) {
-				error = 'Page not found';
-			} else {
-				const data = await res.json();
-				error = data.message || `API Error: ${res.status}`;
-			}
-		} else {
-			const data = await res.json();
-			page = data.page;
-			isCorePage = data.isCorePage || false;
-		}
-	} catch (e) {
-		logError('Failed to load page', e, { page: 'admin/pages/[id]', action: 'fetchPage', resourceId: id });
-		error = error || 'Failed to load page. Please check your connection.';
+if (apiKey) {
+	const { data, error: fetchError } = await fetchAdminResource<PageResponse>({
+		apiBase,
+		apiKey,
+		resource: 'pages',
+		id: id!,
+		notFoundMessage: 'Page not found',
+		errorMessage: 'Failed to load page. Please check your connection.',
+	});
+	if (data) {
+		if (!page) page = data.page;
+		isCorePage = data.isCorePage || false;
 	}
-} else if (!apiKey) {
-	error = 'ADMIN_API_KEY is missing in server environment';
-}
-
-// Re-fetch isCorePage after update
-if (page && apiKey && successMessage) {
-	try {
-		const res = await fetch(`${apiBase}/admin/pages/${id}`, {
-			headers: { 'x-admin-key': apiKey }
-		});
-		if (res.ok) {
-			const data = await res.json();
-			isCorePage = data.isCorePage || false;
-		}
-	} catch (e) {
-		logError('Failed to fetch page info', e, { page: 'admin/pages/[id]', action: 'refetchPageInfo', resourceId: id });
-	}
+	if (!page) error = error || fetchError;
 }
 
 const dateTimeOpts = DATE_FORMATS.DATETIME;
