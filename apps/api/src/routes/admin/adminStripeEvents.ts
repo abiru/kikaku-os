@@ -133,10 +133,11 @@ adminStripeEvents.post("/stripe-events/:id/retry", requirePermission(PERMISSIONS
       return jsonOk(c, { retried: true, event_id: event.event_id, result });
     } catch (err: unknown) {
       const errMessage = err instanceof Error ? err.message : String(err);
+      logger.error('Stripe event retry failed', { eventId: event.event_id, error: errMessage });
       await c.env.DB.prepare(
         `UPDATE stripe_events SET processing_status='failed', error=?, processed_at=datetime('now') WHERE id=?`
       ).bind(errMessage, id).run();
-      return jsonError(c, `Retry failed: ${errMessage}`, 500);
+      return jsonError(c, 'Event retry failed. Check event details for more information.', 500);
     }
   } catch (err) {
     logger.error('Failed to retry stripe event', { error: String(err) });

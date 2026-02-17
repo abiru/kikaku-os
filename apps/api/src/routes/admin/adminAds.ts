@@ -67,7 +67,7 @@ app.post(
 
     } catch (error) {
       logger.error('Ad generation failed', { error: String(error) });
-      return jsonError(c, `Ad generation failed: ${(error as Error).message}`, 500);
+      return jsonError(c, 'Ad generation failed. Please try again later.', 500);
     }
   }
 );

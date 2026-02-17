@@ -35,6 +35,7 @@ export type Env = {
     STRIPE_SECRET_KEY: string;
     STRIPE_PUBLISHABLE_KEY?: string;
     STRIPE_WEBHOOK_SECRET: string;
+    STRIPE_WEBHOOK_TOLERANCE_SECONDS?: string;
     STOREFRONT_BASE_URL: string;
     SHIPPING_FEE_AMOUNT?: string;
     FREE_SHIPPING_THRESHOLD?: string;
