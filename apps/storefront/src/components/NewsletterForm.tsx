@@ -71,6 +71,7 @@ export default function NewsletterForm() {
             if (status === 'error') setStatus('idle');
           }}
           placeholder={t('newsletter.placeholder')}
+          maxLength={254}
           aria-label={t('newsletter.placeholder')}
           className="flex-1 min-w-0 px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
           disabled={status === 'submitting'}

@@ -43,6 +43,15 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [paymentElementReady, setPaymentElementReady] = useState(false);
 	const [email, setEmail] = useState('');
+	const [emailError, setEmailError] = useState<string | null>(null);
+
+	const validateEmail = (value: string) => {
+		if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+			setEmailError(t('checkout.emailInvalid'));
+		} else {
+			setEmailError(null);
+		}
+	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -103,11 +112,21 @@ function CheckoutFormInner({ orderToken }: { orderToken: string | null }) {
 					type="email"
 					autoComplete="email"
 					required
+					maxLength={254}
 					value={email}
-					onChange={(e) => setEmail(e.target.value)}
+					onChange={(e) => {
+						setEmail(e.target.value);
+						if (emailError) setEmailError(null);
+					}}
+					onBlur={(e) => validateEmail(e.target.value)}
 					placeholder="your@email.com"
-					className="block w-full rounded-md border border-gray-300 px-3 py-3 text-base shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand"
+					className={`block w-full rounded-md border px-3 py-3 text-base shadow-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand focus:ring-brand'}`}
+					aria-invalid={!!emailError}
+					aria-describedby={emailError ? 'checkout-email-error' : undefined}
 				/>
+				{emailError && (
+					<p id="checkout-email-error" className="mt-1 text-sm text-red-600" role="alert">{emailError}</p>
+				)}
 			</div>
 
 			<div>
