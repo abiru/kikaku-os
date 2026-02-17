@@ -98,6 +98,16 @@ const bgSmall = imageSmall || image || bgLarge;
     opacity: 1;
     transform: translateY(0);
   }
+
+  /* モーション低減設定時はアニメーション無効化 */
+  @media (prefers-reduced-motion: reduce) {
+    .fade-in {
+      opacity: 1;
+      transform: none;
+      transition: none;
+      will-change: auto;
+    }
+  }
 </style>
 
 <script>
