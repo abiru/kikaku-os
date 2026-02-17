@@ -58,22 +58,56 @@ if (orderToken) {
 
 						{/* Order Items */}
 						<div class="space-y-4 border-t border-gray-100 pt-6">
-							{order.items.map((item: { title: string; quantity: number; unit_price: number }) => (
-								<div class="flex justify-between">
-									<div>
-										<p class="font-medium text-primary">{item.title}</p>
-										<p class="text-sm text-secondary">{t('checkout.quantity')}: {item.quantity}</p>
+							{Array.isArray(order.items) && order.items.length > 0 ? (
+								order.items.map((item: { title?: string; quantity?: number; unit_price?: number }) => (
+									<div class="flex justify-between">
+										<div>
+											<p class="font-medium text-primary">{item.title || '—'}</p>
+											<p class="text-sm text-secondary">{t('checkout.quantity')}: {item.quantity ?? 0}</p>
+										</div>
+										<p class="font-medium text-primary">
+											{formatPrice((item.unit_price ?? 0) * (item.quantity ?? 0), order.currency)}
+										</p>
 									</div>
-									<p class="font-medium text-primary">
-										{formatPrice(item.unit_price * item.quantity, order.currency)}
-									</p>
-								</div>
-							))}
+								))
+							) : (
+								<p class="text-sm text-secondary">
+									{t('checkout.itemsUnavailable')}
+								</p>
+							)}
 						</div>
 
-						{/* Total */}
-						<div class="mt-6 border-t border-gray-100 pt-6">
-							<div class="flex justify-between text-lg font-semibold">
+						{/* Price Breakdown */}
+						<div class="mt-6 border-t border-gray-100 pt-6 space-y-2">
+							{order.subtotal != null && (
+								<div class="flex justify-between text-sm text-secondary">
+									<span>{t('checkout.subtotal')}</span>
+									<span>{formatPrice(order.subtotal, order.currency)}</span>
+								</div>
+							)}
+							{order.tax_amount != null && (
+								<div class="flex justify-between text-sm text-secondary">
+									<span>{t('checkout.tax')}</span>
+									<span>{formatPrice(order.tax_amount, order.currency)}</span>
+								</div>
+							)}
+							{order.shipping_fee != null && (
+								<div class="flex justify-between text-sm text-secondary">
+									<span>{t('checkout.shipping')}</span>
+									<span>
+										{order.shipping_fee === 0
+											? t('checkout.free')
+											: formatPrice(order.shipping_fee, order.currency)}
+									</span>
+								</div>
+							)}
+							{order.total_discount != null && order.total_discount > 0 && (
+								<div class="flex justify-between text-sm text-green-600">
+									<span>{t('checkout.discount')}</span>
+									<span>-{formatPrice(order.total_discount, order.currency)}</span>
+								</div>
+							)}
+							<div class="flex justify-between text-lg font-semibold pt-2 border-t border-gray-100">
 								<span>{t('checkout.total')}</span>
 								<span>{formatPrice(order.total_amount, order.currency)}</span>
 							</div>
@@ -165,7 +199,7 @@ if (orderToken) {
 	declare global {
 		interface Window {
 			__CHECKOUT_SUCCESS_API_BASE__?: string;
-			__CHECKOUT_ORDER__?: { id: number; total_amount: number; currency: string; items: Array<{ title: string; quantity: number; unit_price: number; product_id?: number; variant_title?: string }> } | null;
+			__CHECKOUT_ORDER__?: { id: number; total_amount: number; currency: string; items?: Array<{ title?: string; quantity?: number; unit_price?: number; product_id?: number; variant_title?: string }> } | null;
 			__I18N_PAYMENT_PROCESSING__?: string;
 			__I18N_PAYMENT_PROCESSING_DESC__?: string;
 			__I18N_CONFIRMED__?: string;
@@ -188,13 +222,15 @@ if (orderToken) {
 				transaction_id: String(orderData.id),
 				value: orderData.total_amount,
 				currency: orderData.currency || 'JPY',
-				items: orderData.items.map((item, index) => ({
-					item_id: String(item.product_id || index),
-					item_name: item.title,
-					item_variant: item.variant_title || '',
-					price: item.unit_price,
-					quantity: item.quantity,
-				})),
+				items: Array.isArray(orderData.items)
+					? orderData.items.map((item, index) => ({
+							item_id: String(item.product_id || index),
+							item_name: item.title || '',
+							item_variant: item.variant_title || '',
+							price: item.unit_price ?? 0,
+							quantity: item.quantity ?? 0,
+						}))
+					: [],
 			},
 		});
 	}
