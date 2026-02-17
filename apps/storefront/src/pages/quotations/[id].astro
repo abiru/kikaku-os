@@ -107,8 +107,8 @@ const canAccept = quotation.status === 'draft' || quotation.status === 'sent';
 
       <div class="info-card">
         <h2>{t('quotation.quotationInfo')}</h2>
-        <p><strong>{t('quotation.issueDate')}:</strong> {formatDate(quotation.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        <p><strong>{t('quotation.validUntil')}:</strong> {formatDate(quotation.valid_until, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <p><strong>{t('quotation.issueDate')}:</strong> {formatDate(quotation.created_at, 'DATE_LONG')}</p>
+        <p><strong>{t('quotation.validUntil')}:</strong> {formatDate(quotation.valid_until, 'DATE_LONG')}</p>
         <p><strong>{t('quotation.currency')}:</strong> {quotation.currency}</p>
       </div>
     </div>

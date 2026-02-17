@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StarRatingDisplay, StarRatingInput } from './StarRating';
 import { getApiBase, fetchJson } from '../lib/api';
+import { formatDate } from '../lib/format';
 import { useTranslation } from '../i18n';
 
 type Review = {
@@ -155,8 +156,7 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
 }
 
 function ReviewItem({ review }: { review: Review }) {
-  const date = new Date(review.created_at);
-  const formattedDate = date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+  const formattedDate = formatDate(review.created_at, 'DATE_LONG');
 
   return (
     <div className="border-b border-gray-200 py-6 last:border-0">

@@ -49,7 +49,7 @@ export default function ShippingTable({ orders, onShipClick }: Props) {
                   <div className="text-zinc-950">{order.customer_email || t('admin.guest')}</div>
                 </TableCell>
                 <TableCell className="text-zinc-500 tabular-nums">
-                  {formatDate(order.paid_at, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  {formatDate(order.paid_at, 'DATETIME')}
                 </TableCell>
                 <TableCell>
                   <Badge color={getShippingBadgeColor(order.fulfillment_status)}>

@@ -5,14 +5,9 @@ import { formatDate } from '../../lib/format';
 import AdminPagination from './AdminPagination';
 import { t } from '../../i18n';
 
-const dateTimeOpts: Intl.DateTimeFormatOptions = {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-};
+import { DATE_FORMATS } from '../../lib/constants';
+
+const dateTimeOpts = DATE_FORMATS.DATETIME_SECONDS;
 
 type AuditLog = {
   id: number;

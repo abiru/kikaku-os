@@ -5,6 +5,7 @@ import AccountLayout from '../../../layouts/AccountLayout.astro';
 import Container from '../../../components/Container.astro';
 import { t } from '../../../i18n';
 import { formatDate } from '../../../lib/format';
+import { DATE_FORMATS } from '../../../lib/constants';
 
 const API_BASE = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
 
@@ -74,13 +75,7 @@ const formatCurrency = (amount: number, currency = 'JPY') => {
   }).format(amount);
 };
 
-const dateTimeLongOpts: Intl.DateTimeFormatOptions = {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-};
+const dateTimeLongOpts = DATE_FORMATS.DATETIME_LONG;
 
 const statusLabels: Record<string, string> = {
   completed: t('account.completed'),

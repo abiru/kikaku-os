@@ -13,6 +13,7 @@ import { Table, TableHead, TableRow, TableCell, TableBody, TableHeader } from '.
 import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
+import { DATE_FORMATS } from '../../lib/constants';
 import type { AdDraft } from '../../types/ads';
 
 const q = Astro.url.searchParams.get('q') || '';
@@ -32,13 +33,7 @@ const totalCount = data?.meta?.totalCount || 0;
 const totalPages = data?.meta?.totalPages || 0;
 const error: string | null = fetchError ? t('errors.failedToLoadAdDrafts') : null;
 
-const dateTimeOpts: Intl.DateTimeFormatOptions = {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-};
+const dateTimeOpts = DATE_FORMATS.DATETIME;
 
 const getStatusColor = (status: string) => {
   if (status === 'ready') return 'lime';

@@ -7,6 +7,7 @@ import { Badge } from '../../../../components/catalyst/badge';
 import { Button } from '../../../../components/catalyst/button';
 import { getApiBase } from '../../../../lib/api';
 import { formatDate } from '../../../../lib/format';
+import { DATE_FORMATS } from '../../../../lib/constants';
 import { logError } from '../../../../lib/logger';
 
 const { id } = Astro.params;
@@ -46,13 +47,7 @@ if (apiKey && id) {
   }
 }
 
-const dateTimeOpts: Intl.DateTimeFormatOptions = {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-};
+const dateTimeOpts = DATE_FORMATS.DATETIME;
 ---
 
 <AdminLayout title={draft ? `History: ${draft.campaign_name}` : 'Generation History'}>

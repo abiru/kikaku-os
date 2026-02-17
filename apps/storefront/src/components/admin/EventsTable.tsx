@@ -6,14 +6,9 @@ import { getEventBadgeColor } from '../../lib/adminUtils';
 import TableEmptyState from './TableEmptyState';
 import { t } from '../../i18n';
 
-const dateTimeSecsOpts: Intl.DateTimeFormatOptions = {
-	year: 'numeric',
-	month: '2-digit',
-	day: '2-digit',
-	hour: '2-digit',
-	minute: '2-digit',
-	second: '2-digit',
-};
+import { DATE_FORMATS } from '../../lib/constants';
+
+const dateTimeSecsOpts = DATE_FORMATS.DATETIME_SECONDS;
 
 type StripeEvent = {
 	event_id: string;

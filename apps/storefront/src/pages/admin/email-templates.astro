@@ -73,7 +73,7 @@ const templateLabels: Record<string, string> = {
 						<p class="text-sm text-zinc-500 mb-4 truncate">{template.subject}</p>
 						<div class="flex items-center justify-between text-xs">
 							<Badge color="zinc" client:only="react">{templateLabels[template.slug] || template.slug}</Badge>
-							<span class="text-zinc-500 tabular-nums">{formatDate(template.updated_at, { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+							<span class="text-zinc-500 tabular-nums">{formatDate(template.updated_at, 'DATE_SHORT')}</span>
 						</div>
 					</a>
 				))

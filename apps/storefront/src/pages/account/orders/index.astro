@@ -105,7 +105,7 @@ const statusLabels: Record<string, string> = {
                     </div>
                   </div>
                   <div class="flex justify-between text-sm text-secondary">
-                    <div>{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div>{formatDate(order.created_at, 'DATE_LONG')}</div>
                     <div class="font-medium text-primary">
                       {formatCurrency(order.total_amount, order.currency)}
                     </div>
@@ -115,7 +115,7 @@ const statusLabels: Record<string, string> = {
                 {/* Desktop Layout */}
                 <div class="hidden md:grid md:grid-cols-4 gap-4 items-center">
                   <div class="font-medium text-primary">#{order.id}</div>
-                  <div class="text-secondary">{formatDate(order.created_at, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                  <div class="text-secondary">{formatDate(order.created_at, 'DATE_LONG')}</div>
                   <div>
                     <span class={`text-sm px-2 py-0.5 rounded-full ${
                       order.status === 'completed' || order.status === 'paid'

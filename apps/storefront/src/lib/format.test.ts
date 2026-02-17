@@ -54,6 +54,18 @@ describe('formatDate', () => {
 		expect(result).not.toBe('-');
 	});
 
+	it('accepts a DateFormatKey string', () => {
+		const result = formatDate('2026-01-15', 'DATE_LONG');
+		expect(result).toBeTruthy();
+		expect(result).not.toBe('-');
+	});
+
+	it('accepts DATETIME key', () => {
+		const result = formatDate('2026-01-15T10:30:00Z', 'DATETIME');
+		expect(result).toBeTruthy();
+		expect(result).not.toBe('-');
+	});
+
 	it('formats datetime strings', () => {
 		const result = formatDate('2026-01-15T10:30:00Z');
 		expect(result).toBeTruthy();
