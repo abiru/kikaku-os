@@ -134,8 +134,11 @@ type ShippingFetchState = 'idle' | 'loading' | 'success' | 'error';
 
 function useShippingConfig() {
 	const [state, setState] = useState<ShippingFetchState>('idle');
+	const fetchingRef = useRef(false);
 
 	const fetchConfig = useCallback(async () => {
+		if (fetchingRef.current) return;
+		fetchingRef.current = true;
 		setState('loading');
 		try {
 			const data = await fetchJson<{
@@ -149,6 +152,8 @@ function useShippingConfig() {
 			setState('success');
 		} catch {
 			setState('error');
+		} finally {
+			fetchingRef.current = false;
 		}
 	}, []);
 
@@ -230,12 +235,13 @@ function CartContent() {
 
 			<div className="lg:col-span-5">
 				{shippingState === 'error' && (
-					<div className="mb-4 rounded-md bg-yellow-50 border border-yellow-200 p-4 text-center">
-						<p className="text-sm text-yellow-800">{t('cart.shippingConfigError')}</p>
+					<div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4 text-center">
+						<p className="text-sm text-red-800">{t('cart.shippingConfigError')}</p>
+						<p className="mt-1 text-xs text-red-600">{t('cart.checkoutBlockedByShipping')}</p>
 						<button
 							type="button"
 							onClick={retryShipping}
-							className="mt-2 text-sm font-medium text-yellow-700 underline hover:text-yellow-900"
+							className="mt-2 text-sm font-medium text-red-700 underline hover:text-red-900"
 						>
 							{t('cart.retry')}
 						</button>
@@ -250,6 +256,7 @@ function CartContent() {
 					grandTotal={grandTotal}
 					currency={currency}
 					onCheckout={handleCheckout}
+					checkoutDisabled={shippingState === 'error'}
 				/>
 			</div>
 		</div>
