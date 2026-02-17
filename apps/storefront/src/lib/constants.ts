@@ -39,3 +39,16 @@ export const DATE_FORMATS = {
 } as const satisfies Record<string, Intl.DateTimeFormatOptions>
 
 export type DateFormatKey = keyof typeof DATE_FORMATS
+
+/**
+ * 配送業者の追跡 URL テンプレート
+ * `{{trackingNumber}}` がエンコード済みの追跡番号に置換される
+ */
+export const CARRIER_TRACKING_URLS: Record<string, string> = {
+  'ヤマト運輸':
+    'https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number={{trackingNumber}}',
+  '佐川急便':
+    'https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo={{trackingNumber}}',
+  '日本郵便':
+    'https://trackings.post.japanpost.jp/services/srv/search/?requestNo1={{trackingNumber}}',
+}
