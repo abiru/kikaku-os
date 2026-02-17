@@ -7,6 +7,15 @@ on:
     branches: [main]
   workflow_dispatch:  # Allow manual deployment
 
+permissions:
+  contents: write
+  actions: read
+  pull-requests: write
+
+env:
+  API_WORKER_NAME: kikaku-os-api
+  STOREFRONT_PROJECT_NAME: kikaku-storefront
+
 jobs:
   validate-config:
     name: Validate deployment config
@@ -241,12 +250,154 @@ jobs:
           bash scripts/smoke-test-prod.sh
 
           # Auth protection (should return 401)
-          echo "✓ Testing auth protection"
+          echo "Testing auth protection"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/admin/products")
           if [ "$STATUS" != "401" ]; then
             echo "Error: Expected 401, got $STATUS"
             exit 1
           fi
 
-          echo "✅ All smoke tests passed!"
+          echo "All smoke tests passed!"
+
+  rollback:
+    name: Auto-Rollback on Smoke Test Failure
+    runs-on: ubuntu-latest
+    needs: [smoke-test]
+    if: ${{ always() && needs.smoke-test.result == 'failure' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Rollback API (Cloudflare Workers)
+        id: rollback-api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "Fetching deployment history..."
+          DEPLOYMENTS=$(pnpm -C apps/api exec wrangler deployments list --name "$API_WORKER_NAME" 2>&1) || true
+          echo "$DEPLOYMENTS"
+
+          echo "Attempting rollback to previous version..."
+          # wrangler rollback rolls back to the previous deployment
+          pnpm -C apps/api exec wrangler rollback --name "$API_WORKER_NAME" --message "Auto-rollback: smoke tests failed in run ${{ github.run_id }}" 2>&1 || {
+            echo "::warning::API rollback via wrangler rollback failed. Manual intervention may be required."
+            echo "api_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          }
+          echo "api_status=success" >> $GITHUB_OUTPUT
+
+      - name: Verify API rollback
+        env:
+          PROD_API_BASE_URL: ${{ vars.PROD_API_BASE_URL || 'https://kikaku-os-api.workers.dev' }}
+        run: |
+          sleep 10
+          echo "Verifying API health after rollback..."
+          curl -sf "${PROD_API_BASE_URL}/health" | jq -e '.database == "ok"' || {
+            echo "::error::API health check failed after rollback"
+            exit 1
+          }
+          echo "API rollback verified successfully."
+
+      - name: Rollback Storefront (Cloudflare Pages)
+        id: rollback-storefront
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "Fetching Pages deployment history..."
+          DEPLOYMENTS=$(pnpm -C apps/storefront exec wrangler pages deployment list --project-name="$STOREFRONT_PROJECT_NAME" 2>&1) || true
+          echo "$DEPLOYMENTS"
+
+          # Pages does not have a direct rollback command.
+          # The recommended approach is to re-deploy the previous production commit.
+          echo "::warning::Cloudflare Pages does not support direct rollback via CLI."
+          echo "::warning::To rollback storefront, use Cloudflare Dashboard -> Pages -> $STOREFRONT_PROJECT_NAME -> Deployments -> Rollback."
+          echo "storefront_status=manual_required" >> $GITHUB_OUTPUT
+
+      - name: Notify via Slack
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          API_STATUS: ${{ steps.rollback-api.outputs.api_status || 'unknown' }}
+          STOREFRONT_STATUS: ${{ steps.rollback-storefront.outputs.storefront_status || 'unknown' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL not configured, skipping Slack notification."
+            exit 0
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{
+              \"text\": \"DEPLOY ROLLBACK TRIGGERED\",
+              \"blocks\": [
+                {
+                  \"type\": \"header\",
+                  \"text\": {
+                    \"type\": \"plain_text\",
+                    \"text\": \"Deploy Rollback Triggered\"
+                  }
+                },
+                {
+                  \"type\": \"section\",
+                  \"fields\": [
+                    {\"type\": \"mrkdwn\", \"text\": \"*Reason:*\nSmoke tests failed\"},
+                    {\"type\": \"mrkdwn\", \"text\": \"*Commit:*\n\`${GITHUB_SHA:0:7}\`\"},
+                    {\"type\": \"mrkdwn\", \"text\": \"*API Rollback:*\n${API_STATUS}\"},
+                    {\"type\": \"mrkdwn\", \"text\": \"*Storefront:*\n${STOREFRONT_STATUS}\"}
+                  ]
+                },
+                {
+                  \"type\": \"actions\",
+                  \"elements\": [
+                    {
+                      \"type\": \"button\",
+                      \"text\": {\"type\": \"plain_text\", \"text\": \"View Run\"},
+                      \"url\": \"${RUN_URL}\"
+                    }
+                  ]
+                }
+              ]
+            }" "$SLACK_WEBHOOK_URL"
+
+      - name: Notify via GitHub (fallback)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_STATUS: ${{ steps.rollback-api.outputs.api_status || 'unknown' }}
+          STOREFRONT_STATUS: ${{ steps.rollback-storefront.outputs.storefront_status || 'unknown' }}
+        run: |
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          gh api repos/${{ github.repository }}/commits/${COMMIT_SHA}/comments \
+            --method POST \
+            -f "body=## Auto-Rollback Triggered
+
+          Smoke tests failed after deployment. Automatic rollback was initiated.
+
+          | Component | Status |
+          |-----------|--------|
+          | API (Workers) | \`${API_STATUS}\` |
+          | Storefront (Pages) | \`${STOREFRONT_STATUS}\` |
+
+          **Action Required**: Investigate the failure and fix before re-deploying.
+
+          [View workflow run](${RUN_URL})"
 
