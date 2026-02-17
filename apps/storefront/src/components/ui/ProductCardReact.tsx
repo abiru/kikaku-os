@@ -16,8 +16,8 @@ type Props = {
 
 const badgeColorMap: Record<string, string> = {
   brand: 'bg-brand/10 text-brand',
-  success: 'bg-success-light text-green-800',
-  warning: 'bg-warning-light text-amber-800',
+  success: 'bg-success-light text-success',
+  warning: 'bg-warning-light text-warning',
   neutral: 'bg-neutral-100 text-neutral-700',
 };
 

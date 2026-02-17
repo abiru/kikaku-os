@@ -295,10 +295,10 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 					<div className="rounded-md bg-yellow-50 border border-yellow-200 p-4" role="status" aria-live="polite">
 						{timeoutState.confirmed ? (
 							<div className="flex items-center gap-3">
-								<svg className="h-5 w-5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<svg className="h-5 w-5 text-success shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 								</svg>
-								<p className="text-sm text-green-800 font-medium">{t('checkout.paymentTimeoutConfirmed')}</p>
+								<p className="text-sm text-success font-medium">{t('checkout.paymentTimeoutConfirmed')}</p>
 							</div>
 						) : (
 							<div className="space-y-2">

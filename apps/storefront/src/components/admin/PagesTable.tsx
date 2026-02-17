@@ -137,7 +137,7 @@ export default function PagesTable({ pages: initialPages, coreSlugs }: Props) {
               type="button"
               onClick={() => handleBulkDelete(selectedIds, clearSelection)}
               disabled={bulkLoading || selectedDeletable.length === 0}
-              className="px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm font-medium text-danger bg-danger-light rounded-lg hover:bg-danger/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               一括削除
             </button>
