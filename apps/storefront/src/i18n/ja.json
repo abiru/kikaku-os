@@ -196,6 +196,7 @@
     "paymentProcessing": "お支払い処理中",
     "paymentProcessingDescription": "お支払いを処理しています。確認メールが間もなく届きます。",
     "orderNotFoundGuidance": "注文情報を取得できませんでした。確認メールをご確認ください。問題が解決しない場合は、サポートにお問い合わせください。",
+    "itemsUnavailable": "注文商品の詳細を取得できませんでした。確認メールに注文内容が記載されています。",
     "contactSupport": "サポートに連絡",
     "pollingChecking": "注文情報を確認しています...",
     "pollingError": "注文状況の確認に失敗しました",
