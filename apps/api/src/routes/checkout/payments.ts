@@ -119,6 +119,40 @@ const cleanupFailedOrder = async (
   }
 };
 
+/**
+ * Look up a cached idempotent response from D1.
+ * Returns null when no cache hit, or the parsed response object on hit.
+ */
+const lookupIdempotencyCache = async (
+  db: D1Database,
+  key: string,
+  endpoint: string
+): Promise<{ statusCode: number; body: string } | null> => {
+  const row = await db.prepare(
+    `SELECT status_code, response_body FROM idempotency_keys
+     WHERE idempotency_key = ? AND endpoint = ? AND expires_at > datetime('now')`
+  ).bind(key, endpoint).first<{ status_code: number; response_body: string }>();
+
+  if (!row) return null;
+  return { statusCode: row.status_code, body: row.response_body };
+};
+
+/**
+ * Store a response in the idempotency cache.
+ */
+const storeIdempotencyCache = async (
+  db: D1Database,
+  key: string,
+  endpoint: string,
+  statusCode: number,
+  responseBody: string
+): Promise<void> => {
+  await db.prepare(
+    `INSERT OR IGNORE INTO idempotency_keys (idempotency_key, endpoint, status_code, response_body, created_at, expires_at)
+     VALUES (?, ?, ?, ?, datetime('now'), datetime('now', '+24 hours'))`
+  ).bind(key, endpoint, statusCode, responseBody).run();
+};
+
 const payments = new Hono<Env>();
 
 payments.post('/payments/intent', async (c) => {
@@ -128,6 +162,23 @@ payments.post('/payments/intent', async (c) => {
     return jsonError(c, 'Stripe secret key invalid', 500);
   }
   const publishableKey = c.env.STRIPE_PUBLISHABLE_KEY || '';
+
+  // Extract idempotency key from header
+  const idempotencyKey = c.req.header('Idempotency-Key') || null;
+  const endpointPath = '/payments/intent';
+
+  // Check idempotency cache for duplicate request
+  if (idempotencyKey) {
+    try {
+      const cached = await lookupIdempotencyCache(c.env.DB, idempotencyKey, endpointPath);
+      if (cached) {
+        return c.json(JSON.parse(cached.body), cached.statusCode as 200);
+      }
+    } catch (cacheErr) {
+      logger.error('Idempotency cache lookup failed', { error: String(cacheErr) });
+      // Continue processing on cache lookup failure
+    }
+  }
 
   if (c.env.DEV_MODE === 'true' && publishableKey) {
     const [secretAccountId, publishableAccountHint] = await Promise.all([
@@ -377,12 +428,17 @@ payments.post('/payments/intent', async (c) => {
     params.set('metadata[discountAmount]', String(quote.discount));
   }
 
+  const stripeHeaders: Record<string, string> = {
+    authorization: `Bearer ${stripeKey}`,
+    'content-type': 'application/x-www-form-urlencoded'
+  };
+  if (idempotencyKey) {
+    stripeHeaders['Idempotency-Key'] = idempotencyKey;
+  }
+
   const stripeRes = await fetch('https://api.stripe.com/v1/payment_intents', {
     method: 'POST',
-    headers: {
-      authorization: `Bearer ${stripeKey}`,
-      'content-type': 'application/x-www-form-urlencoded'
-    },
+    headers: stripeHeaders,
     body: params.toString()
   });
 
@@ -412,13 +468,32 @@ payments.post('/payments/intent', async (c) => {
     `DELETE FROM checkout_quotes WHERE id = ?`
   ).bind(quoteId).run();
 
-  // Get publishable key from environment
-  return jsonOk(c, {
+  // Build the success response
+  const responseBody = {
+    ok: true,
     clientSecret: paymentIntent.client_secret,
     orderId,
     orderPublicToken,
     publishableKey
-  });
+  };
+
+  // Cache the response for idempotent replay
+  if (idempotencyKey) {
+    try {
+      await storeIdempotencyCache(
+        c.env.DB,
+        idempotencyKey,
+        endpointPath,
+        200,
+        JSON.stringify(responseBody)
+      );
+    } catch (cacheErr) {
+      logger.error('Idempotency cache store failed', { error: String(cacheErr) });
+      // Non-fatal: continue returning the response
+    }
+  }
+
+  return c.json(responseBody);
 });
 
 export default payments;
