@@ -88,6 +88,15 @@ export function CartOrderSummary({
 					</dd>
 				</div>
 
+				{/* Free Shipping Threshold Message */}
+				{remainingForFreeShipping > 0 && (
+					<div className="border-t border-gray-200 pt-4 text-sm text-blue-600 text-center font-medium">
+						{t('cart.addForFreeShipping', {
+							amount: formatPrice(remainingForFreeShipping, currency),
+						})}
+					</div>
+				)}
+
 				{/* Order Total */}
 				<div className="flex items-center justify-between border-t border-gray-200 pt-4">
 					<dt className="text-base font-medium text-gray-900">
@@ -98,14 +107,6 @@ export function CartOrderSummary({
 					</dd>
 				</div>
 			</dl>
-
-			{remainingForFreeShipping > 0 && (
-				<div className="mt-4 text-sm text-gray-500 text-center">
-					{t('cart.addForFreeShipping', {
-						amount: formatPrice(remainingForFreeShipping, currency),
-					})}
-				</div>
-			)}
 
 			<div className="mt-6 space-y-3">
 				<button
