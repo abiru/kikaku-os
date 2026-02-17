@@ -9,6 +9,40 @@ interface Logger {
   error: (msg: string, data?: Record<string, unknown>) => void
 }
 
+// Keys whose values should be masked in log output
+const SENSITIVE_KEYS = new Set([
+  'email', 'customer_email', 'receipt_email',
+  'password', 'secret', 'token', 'api_key', 'apiKey',
+  'authorization', 'cookie',
+  'stripe_customer_id', 'stripeCustomerId',
+  'card_number', 'cvv', 'cvc',
+  'phone',
+])
+
+function maskValue(key: string, value: unknown): unknown {
+  if (typeof value !== 'string' || value.length === 0) return value
+  const lowerKey = key.toLowerCase()
+  if (!SENSITIVE_KEYS.has(lowerKey) && !SENSITIVE_KEYS.has(key)) return value
+  if (lowerKey.includes('email') && value.includes('@')) {
+    const atIndex = value.indexOf('@')
+    return `${value[0]}***@${value.slice(atIndex + 1)}`
+  }
+  if (value.length <= 4) return '***'
+  return `${value.slice(0, 4)}***`
+}
+
+function maskData(data: Record<string, unknown>): Record<string, unknown> {
+  const masked: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      masked[key] = maskData(value as Record<string, unknown>)
+    } else {
+      masked[key] = maskValue(key, value)
+    }
+  }
+  return masked
+}
+
 function log(
   level: LogLevel,
   msg: string,
@@ -21,7 +55,7 @@ function log(
     level,
     msg,
     ...(context && { context }),
-    ...(data && { data }),
+    ...(data && { data: maskData(data) }),
     ts: new Date().toISOString(),
   }
   const method = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
