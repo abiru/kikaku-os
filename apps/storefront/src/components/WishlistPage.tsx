@@ -9,11 +9,11 @@ function EmptyWishlist() {
 	const { t } = useTranslation();
 	return (
 		<div className="text-center py-16">
-			<svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+			<svg className="mx-auto h-12 w-12 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
 				<path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
 			</svg>
-			<h2 className="mt-4 text-lg font-medium text-gray-900">{t('wishlist.empty')}</h2>
-			<p className="mt-2 text-sm text-gray-500">{t('wishlist.emptyDescription')}</p>
+			<h2 className="mt-4 text-lg font-medium text-neutral-900">{t('wishlist.empty')}</h2>
+			<p className="mt-2 text-sm text-neutral-500">{t('wishlist.emptyDescription')}</p>
 			<div className="mt-6">
 				<a href="/products" className="inline-flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
 					{t('wishlist.browseProducts')}
@@ -55,8 +55,8 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 							className="size-24 rounded-md object-cover sm:size-48 hover:opacity-80 transition-opacity"
 						/>
 					) : (
-						<div className="size-24 rounded-md bg-gray-100 flex items-center justify-center sm:size-48" aria-hidden="true">
-							<svg className="size-8 text-gray-300 sm:size-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<div className="size-24 rounded-md bg-neutral-100 flex items-center justify-center sm:size-48" aria-hidden="true">
+							<svg className="size-8 text-neutral-300 sm:size-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
 							</svg>
@@ -69,14 +69,14 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 				<div className="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
 					<div>
 						<h3 className="text-sm">
-							<a href={`/products/${item.productId}`} className="font-medium text-gray-700 hover:text-gray-800">
+							<a href={`/products/${item.productId}`} className="font-medium text-neutral-700 hover:text-neutral-800">
 								{item.title}
 							</a>
 						</h3>
 						{item.variantTitle && item.variantTitle !== 'Default' && (
-							<p className="mt-1 text-sm text-gray-500">{item.variantTitle}</p>
+							<p className="mt-1 text-sm text-neutral-500">{item.variantTitle}</p>
 						)}
-						<p className="mt-1 text-sm font-medium text-gray-900">
+						<p className="mt-1 text-sm font-medium text-neutral-900">
 							{formatPrice(item.price, item.currency)}
 						</p>
 					</div>
@@ -86,7 +86,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 							<button
 								type="button"
 								onClick={() => removeFromWishlist(item.productId)}
-								className="-m-2 inline-flex p-2 text-gray-400 hover:text-gray-500"
+								className="-m-2 inline-flex p-2 text-neutral-400 hover:text-neutral-500"
 							>
 								<span className="sr-only">{t('common.remove')}</span>
 								<svg className="size-5" viewBox="0 0 20 20" fill="currentColor">
@@ -131,10 +131,10 @@ export default function WishlistPage() {
 
 	return (
 		<div>
-			<h2 className="text-lg font-medium text-gray-900 mb-2">
+			<h2 className="text-lg font-medium text-neutral-900 mb-2">
 				{t('wishlist.itemCount', { count: String(items.length) })}
 			</h2>
-			<ul role="list" className="divide-y divide-gray-200 border-t border-b border-gray-200">
+			<ul role="list" className="divide-y divide-neutral-200 border-t border-b border-neutral-200">
 				{items.map((item) => (
 					<WishlistItem key={item.productId} item={item} />
 				))}

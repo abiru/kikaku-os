@@ -13,19 +13,19 @@ const { variantId, addedToCartLabel } = Astro.props;
 <form id="product-form">
 	{/* Quantity picker */}
 	<div>
-		<h2 class="text-sm font-medium text-gray-900">{t('cart.quantity')}</h2>
+		<h2 class="text-sm font-medium text-neutral-900">{t('cart.quantity')}</h2>
 
 		<div class="mt-2 grid w-full max-w-[120px] grid-cols-1">
 			<select
 				name="quantity"
 				id="quantity-select"
-				class="col-start-1 row-start-1 appearance-none rounded-md bg-white py-2.5 pr-8 pl-4 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-[#0071e3] sm:text-sm"
+				class="col-start-1 row-start-1 appearance-none rounded-md bg-white py-2.5 pr-8 pl-4 text-base text-neutral-900 outline outline-1 -outline-offset-1 outline-neutral-300 focus:outline-2 focus:-outline-offset-2 focus:outline-brand sm:text-sm"
 			>
 				{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((qty) => (
 					<option value={qty} selected={qty === 1}>{qty}</option>
 				))}
 			</select>
-			<svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor">
+			<svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-neutral-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor">
 				<path fill-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
 			</svg>
 		</div>
@@ -36,7 +36,7 @@ const { variantId, addedToCartLabel } = Astro.props;
 		id="buy-button"
 		data-added-label={addedToCartLabel}
 		disabled={!variantId}
-		class="mt-8 flex w-full items-center justify-center rounded-lg bg-brand px-6 py-3 h-12 text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+		class="mt-8 flex w-full items-center justify-center rounded-lg bg-brand px-6 py-3 min-h-[48px] text-base font-semibold text-white hover:bg-brand-active active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 	>
 		<span id="buy-label">{t('product.addToCart')}</span>
 		<span id="buy-spinner" class="hidden ml-2 animate-spin">
@@ -47,7 +47,7 @@ const { variantId, addedToCartLabel } = Astro.props;
 		</span>
 	</button>
 	{!variantId && (
-		<p class="mt-2 text-sm text-gray-500">{t('product.selectVariant')}</p>
+		<p class="mt-2 text-sm text-neutral-500">{t('product.selectVariant')}</p>
 	)}
 </form>
 

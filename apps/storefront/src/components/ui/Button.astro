@@ -1,0 +1,70 @@
+---
+import { FOCUS_RING } from '../../lib/focusRing';
+
+interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  loading?: boolean;
+  class?: string;
+  id?: string;
+  [key: string]: unknown;
+}
+
+const {
+  variant = 'primary',
+  size = 'md',
+  href,
+  type = 'button',
+  disabled = false,
+  loading = false,
+  class: className = '',
+  id,
+  ...rest
+} = Astro.props;
+
+const isDisabled = disabled || loading;
+
+const baseClasses = `inline-flex items-center justify-center font-semibold rounded-full transition-colors active:scale-[0.98] ${FOCUS_RING}`;
+
+const variantClasses: Record<string, string> = {
+  primary: 'bg-brand text-white hover:bg-brand-active disabled:opacity-50 disabled:cursor-not-allowed',
+  secondary: 'border border-brand text-brand hover:bg-brand hover:text-white disabled:opacity-50 disabled:cursor-not-allowed',
+  ghost: 'text-primary hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed',
+  destructive: 'bg-danger text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed',
+};
+
+const sizeClasses: Record<string, string> = {
+  sm: 'min-h-[36px] px-4 py-1.5 text-sm',
+  md: 'min-h-[44px] px-6 py-2.5 text-sm',
+  lg: 'min-h-[48px] px-8 py-3 text-base',
+};
+
+const classes = [baseClasses, variantClasses[variant], sizeClasses[size], className].join(' ');
+---
+
+{href ? (
+  <a href={href} class={classes} id={id} {...rest}>
+    <slot />
+  </a>
+) : (
+  <button
+    type={type}
+    class={classes}
+    disabled={isDisabled}
+    aria-busy={loading}
+    aria-disabled={isDisabled}
+    id={id}
+    {...rest}
+  >
+    {loading && (
+      <svg class="animate-spin -ml-1 mr-2 size-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+    )}
+    <slot />
+  </button>
+)}

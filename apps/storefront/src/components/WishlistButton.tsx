@@ -49,7 +49,7 @@ export default function WishlistButton({ product, size = 'md', className = '' }:
 				</svg>
 			) : (
 				<svg
-					className={`${sizeClasses[size]} text-gray-400 transition-colors group-hover/heart:text-red-400`}
+					className={`${sizeClasses[size]} text-neutral-400 transition-colors group-hover/heart:text-red-400`}
 					viewBox="0 0 24 24"
 					fill="none"
 					stroke="currentColor"

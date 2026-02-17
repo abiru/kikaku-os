@@ -9,18 +9,18 @@ import ryukoku from "../assets/logos/ryukoku.png";
 import { t } from '../i18n';
 
 ---
-    <div class="bg-white">
-      <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="text-center mb-8">
-          <h2 class="typo-h2 text-primary">
-            {t('logoGrid.title')}
-          </h2>
-          <p class="mt-2 text-secondary text-sm">
-            {t('logoGrid.subtitle')}
-          </p>
-        </div>
-        <div class="-mx-6 grid grid-cols-2 gap-0.5 overflow-hidden sm:mx-0 sm:rounded-2xl md:grid-cols-3">
-
+<section class="bg-white" data-reveal>
+  <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <div class="text-center mb-8">
+      <h2 class="typo-h2 text-primary">
+        {t('logoGrid.title')}
+      </h2>
+      <p class="mt-2 text-secondary text-sm">
+        {t('logoGrid.subtitle')}
+      </p>
+    </div>
+    <div class="rounded-2xl ring-1 ring-black/5 overflow-hidden">
+      <div class="grid grid-cols-2 gap-px bg-neutral-200 md:grid-cols-3">
         {
           [
             { src: naro, alt: "NARO" },
@@ -31,18 +31,19 @@ import { t } from '../i18n';
             { src: ryukoku, alt: "Ryukoku" },
           ].map((v) => {
             return (
-          <div class="bg-gray-200/5 p-8 sm:p-10">
-              <Image
-              class="max-h-12 w-full object-contain"
-                src={v.src}
-                alt={v.alt}
-                width="158"
-                height="48"
-              />
-          </div>
+              <div class="bg-white py-10 px-12 flex items-center justify-center">
+                <Image
+                  class="max-h-12 w-full object-contain filter grayscale opacity-60 hover:opacity-100 hover:grayscale-0 transition-all"
+                  src={v.src}
+                  alt={v.alt}
+                  width="158"
+                  height="48"
+                />
+              </div>
             );
           })
         }
-        </div>
       </div>
     </div>
+  </div>
+</section>

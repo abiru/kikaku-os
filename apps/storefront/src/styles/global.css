@@ -3,17 +3,45 @@
 
 @theme {
   --font-sans: "Inter", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+  /* --- Colors: Brand --- */
   --color-brand: #0071e3;
   --color-brand-hover: #0077ed;
   --color-brand-active: #005bb5;
+
+  /* Backward-compat aliases */
+  --color-brand-primary: #0071e3;
+  --color-brand-accent: #0077ed;
+
+  /* --- Colors: Neutral --- */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f7;
+  --color-neutral-200: #e8e8ed;
+  --color-neutral-300: #d2d2d7;
+  --color-neutral-400: #aeaeb2;
+  --color-neutral-500: #86868b;
+  --color-neutral-600: #6e6e73;
+  --color-neutral-700: #48484a;
+  --color-neutral-800: #2c2c2e;
+  --color-neutral-900: #1d1d1f;
+  --color-neutral-950: #0a0a0a;
+
+  /* --- Colors: Semantic --- */
   --color-primary: #1d1d1f;
   --color-secondary: #6e6e73;
   --color-muted: #86868b;
   --color-subtle: #f5f5f7;
+
+  --color-danger: #ff3b30;
+  --color-danger-light: #fff5f5;
+  --color-success: #34c759;
+  --color-success-light: #f0fdf4;
+  --color-warning: #ff9500;
+  --color-warning-light: #fffbeb;
   --color-error: #ff3b30;
   --color-border: #d2d2d7;
 
-  /* Typography scale tokens */
+  /* --- Typography scale tokens --- */
   --text-h1: 2.25rem;
   --text-h1-weight: 700;
   --text-h1-lh: 1.2;
@@ -48,18 +76,39 @@
   --text-price-weight: 700;
   --text-price-lh: 1.2;
   --text-price-ls: -0.01em;
+
+  /* --- Border Radius --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* --- Shadows --- */
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-overlay: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* --- Motion --- */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --ease-default: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
   body {
     @apply bg-subtle text-primary antialiased selection:bg-brand selection:text-white;
     font-feature-settings: "kern", "palt";
-    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    line-height: 1.8;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
+    line-height: 1.5;
   }
 
   /* Japanese-optimised line-height for prose/body text only */
@@ -67,10 +116,10 @@
     line-height: 1.8;
   }
 
-  /* Keyboard focus indicator */
+  /* Keyboard focus indicator (fallback for unstyled elements) */
   :focus-visible {
-    outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-subtle), 0 0 0 4px var(--color-brand);
   }
 }
 
@@ -131,6 +180,18 @@
   }
 }
 
+/* Shimmer keyframe for skeletons */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--color-neutral-100) 25%, var(--color-neutral-200) 50%, var(--color-neutral-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
 /* Responsive typography overrides */
 @media (max-width: 1023px) {
   :root {
@@ -142,11 +203,11 @@
 
 /* View Transition Animations */
 ::view-transition-old(root) {
-  animation: fade-out 0.15s ease-out;
+  animation: fade-out var(--duration-fast) var(--ease-default);
 }
 
 ::view-transition-new(root) {
-  animation: fade-in 0.2s ease-in;
+  animation: fade-in var(--duration-normal) var(--ease-default);
 }
 
 @keyframes fade-out {
@@ -172,7 +233,33 @@
 }
 
 .animate-scale-in {
-  animation: scale-in 0.5s ease-out forwards;
+  animation: scale-in 0.5s var(--ease-spring) forwards;
+}
+
+/* Scroll Reveal */
+[data-reveal],
+[data-reveal-child] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--duration-slow) var(--ease-default),
+    transform var(--duration-slow) var(--ease-spring);
+  will-change: opacity, transform;
+}
+
+[data-reveal].is-revealed,
+[data-reveal-child].is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Card lift hover helper */
+.card-lift {
+  transition: transform var(--duration-normal) var(--ease-spring), box-shadow var(--duration-normal) var(--ease-default);
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-elevated);
 }
 
 /* Reduced Motion Accessibility */
@@ -184,5 +271,12 @@
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
+  }
+  [data-reveal],
+  [data-reveal-child] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
   }
 }

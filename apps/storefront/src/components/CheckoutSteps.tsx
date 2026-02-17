@@ -21,7 +21,7 @@ function DesktopSteps({ currentStep }: CheckoutStepsProps) {
         return (
           <li key={step} className="flex items-center" {...(isCurrent ? { 'aria-current': 'step' as const } : {})}>
             {index > 0 && (
-              <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-brand' : 'bg-[#d2d2d7]'}`} />
+              <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-brand' : 'bg-neutral-300'}`} />
             )}
             <div className="flex items-center gap-2">
               <span
@@ -30,7 +30,7 @@ function DesktopSteps({ currentStep }: CheckoutStepsProps) {
                     ? 'bg-brand text-white'
                     : isCurrent
                       ? 'border-2 border-brand text-brand'
-                      : 'border-2 border-[#d2d2d7] text-muted'
+                      : 'border-2 border-neutral-300 text-muted'
                 }`}
               >
                 {isCompleted ? (
@@ -70,7 +70,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
       </span>
 
       {/* Dot indicators */}
-      <div className="flex items-center gap-2">
+      <ol className="flex items-center gap-2">
         {steps.map((step, index) => {
           const isCompleted = index < currentIndex;
           const isCurrent = index === currentIndex;
@@ -78,7 +78,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
           return (
             <li key={step} className="flex items-center" {...(isCurrent ? { 'aria-current': 'step' as const } : {})}>
               {index > 0 && (
-                <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-brand' : 'bg-[#d2d2d7]'}`} />
+                <div className={`h-px w-8 sm:w-12 mx-2 ${isCompleted ? 'bg-brand' : 'bg-neutral-300'}`} />
               )}
               <div className="flex items-center gap-2">
                 <span
@@ -87,7 +87,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
                       ? 'bg-brand text-white'
                       : isCurrent
                         ? 'border-2 border-brand text-brand'
-                        : 'border-2 border-[#d2d2d7] text-secondary'
+                        : 'border-2 border-neutral-300 text-secondary'
                   }`}
                 >
                   {isCompleted ? (
@@ -109,7 +109,7 @@ function MobileSteps({ currentStep }: CheckoutStepsProps) {
             </li>
           );
         })}
-      </div>
+      </ol>
     </div>
   );
 }

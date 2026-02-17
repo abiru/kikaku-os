@@ -4,9 +4,9 @@ import { Image } from "astro:assets";
 import { t } from '../i18n';
 import lab from "../assets/lab.webp";
 ---
-<div class="mx-auto bg-gray-900 sm:px-6 lg:px-8">
+<div class="mx-auto bg-neutral-900 sm:px-6 lg:px-8">
 
-<div class="relative mx-auto max-w-7xl bg-gray-900">
+<div class="relative mx-auto max-w-7xl bg-neutral-900">
   <div
     class="relative h-80 overflow-hidden md:absolute md:left-0 md:h-full md:w-1/3 lg:w-1/2"
   >
@@ -19,20 +19,21 @@ import lab from "../assets/lab.webp";
   <div class="relative mx-auto max-w-7xl py-24 sm:py-32 lg:px-8 lg:py-40">
     <div
       class="pl-6 pr-6 md:ml-auto md:w-2/3 md:pl-16 lg:w-1/2 lg:pl-24 lg:pr-0 xl:pl-32"
+      data-reveal
     >
-      <h2 class="text-base font-semibold leading-7 text-green-300">
+      <h2 class="text-base font-semibold leading-7 text-success">
         {t('home.researchLabel')}
       </h2>
       <p class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
         {t('home.researchTitle')}
       </p>
-      <p class="mt-6 text-base leading-7 text-gray-300">
+      <p class="mt-6 text-base leading-7 text-neutral-300">
         {t('home.researchDescription')}
       </p>
       <div class="mt-8">
         <a
           href="/contact"
-          class="inline-flex rounded-md bg-white/10 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          class="inline-flex rounded-full bg-white/15 backdrop-blur-sm px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           {t('home.researchCta')}
         </a>

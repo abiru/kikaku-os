@@ -1,0 +1,37 @@
+---
+interface Props {
+  variant?: 'line' | 'rectangle' | 'circle';
+  lines?: number;
+  width?: string;
+  height?: string;
+  class?: string;
+}
+
+const {
+  variant = 'line',
+  lines = 3,
+  width,
+  height,
+  class: className = '',
+} = Astro.props;
+
+const widths = ['w-full', 'w-11/12', 'w-10/12', 'w-9/12', 'w-8/12'];
+---
+
+{variant === 'line' ? (
+  <div class={`space-y-2 ${className}`}>
+    {Array.from({ length: Math.max(1, Number(lines) || 1) }).map((_, index) => (
+      <div class={`h-3 rounded-md animate-shimmer ${widths[index % widths.length]}`}></div>
+    ))}
+  </div>
+) : variant === 'circle' ? (
+  <div
+    class={`rounded-full animate-shimmer ${className}`}
+    style={`width: ${width || '48px'}; height: ${height || '48px'};`}
+  ></div>
+) : (
+  <div
+    class={`rounded-[var(--radius-md)] animate-shimmer ${className}`}
+    style={`width: ${width || '100%'}; height: ${height || '120px'};`}
+  ></div>
+)}

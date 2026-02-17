@@ -136,11 +136,11 @@ if (mainImage && thumbnails.length > 0) {
 				mainImage.src = imageUrl;
 
 				thumbnails.forEach(t => {
-					t.classList.remove('ring-[#0071e3]');
+					t.classList.remove('ring-brand');
 					t.classList.add('ring-transparent');
 				});
 				target.classList.remove('ring-transparent');
-				target.classList.add('ring-[#0071e3]');
+				target.classList.add('ring-brand');
 			}
 		});
 	});

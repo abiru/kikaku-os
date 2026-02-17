@@ -1,0 +1,32 @@
+---
+interface Props {
+  color?: 'brand' | 'success' | 'warning' | 'danger' | 'neutral';
+  size?: 'sm' | 'md';
+  class?: string;
+}
+
+const {
+  color = 'brand',
+  size = 'sm',
+  class: className = '',
+} = Astro.props;
+
+const colorClasses: Record<string, string> = {
+  brand: 'bg-brand/10 text-brand',
+  success: 'bg-success-light text-green-800',
+  warning: 'bg-warning-light text-amber-800',
+  danger: 'bg-danger-light text-red-800',
+  neutral: 'bg-neutral-100 text-neutral-700',
+};
+
+const sizeClasses: Record<string, string> = {
+  sm: 'px-2 py-0.5 text-xs',
+  md: 'px-2.5 py-1 text-sm',
+};
+
+const classes = ['inline-flex items-center rounded-full font-medium', colorClasses[color], sizeClasses[size], className].join(' ');
+---
+
+<span class={classes}>
+  <slot />
+</span>

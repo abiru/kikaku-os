@@ -1,5 +1,6 @@
 ---
 import { t } from '../i18n';
+import { FOCUS_RING } from '../lib/focusRing';
 
 interface Props {
   title: string;
@@ -29,17 +30,18 @@ const bgSmall = imageSmall || image || bgLarge;
 ---
 
 <section
-  class="hero fade-in bg-subtle h-[500px] md:h-[692px] bg-cover bg-center bg-no-repeat"
+  class="hero relative min-h-[60vh] md:min-h-[70vh] bg-cover bg-center bg-no-repeat flex items-end"
   style={`--bg-large: url(${bgLarge}); --bg-small: url(${bgSmall});`}
+  data-reveal
 >
-  <div class="hero-scrim pt-8 md:pt-24 text-center">
+  <div class="hero-scrim w-full px-4 pb-12 pt-40 md:pt-48 text-center">
     <h2
-      class="typo-h1 text-neutral-900"
+      class="text-2xl font-extrabold tracking-tighter sm:text-5xl text-white"
     >
       {title}
     </h2>
     {subtitle && (
-      <p class="mt-4 text-sm sm:text-xl font-semibold text-neutral-500">
+      <p class="mt-4 text-sm sm:text-xl font-semibold text-neutral-200">
         {subtitle}
       </p>
     )}
@@ -47,7 +49,7 @@ const bgSmall = imageSmall || image || bgLarge;
       {ctaPrimaryText && ctaPrimaryUrl && (
         <a
           href={ctaPrimaryUrl}
-          class="w-full sm:w-auto h-12 px-6 py-3 rounded-lg bg-brand inline-flex items-center justify-center text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
+          class={`w-full sm:w-auto h-12 px-6 py-3 rounded-lg bg-brand inline-flex items-center justify-center text-base font-semibold text-white hover:bg-brand-active active:scale-[0.98] ${FOCUS_RING} transition-colors`}
         >
           {ctaPrimaryText}
         </a>
@@ -55,7 +57,7 @@ const bgSmall = imageSmall || image || bgLarge;
       {ctaSecondaryText && ctaSecondaryUrl && (
         <a
           href={ctaSecondaryUrl}
-          class="w-full sm:w-auto h-12 px-6 py-3 rounded-lg border border-border inline-flex items-center justify-center text-base font-semibold text-primary hover:bg-subtle active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
+          class={`w-full sm:w-auto h-12 px-6 py-3 rounded-lg bg-white/15 backdrop-blur-sm border border-white/25 inline-flex items-center justify-center text-base font-semibold text-white hover:bg-white/25 active:scale-[0.98] ${FOCUS_RING} transition-colors`}
         >
           {ctaSecondaryText}
         </a>
@@ -75,57 +77,8 @@ const bgSmall = imageSmall || image || bgLarge;
     }
   }
 
-  /* テキスト視認性のためのスクリム */
+  /* ボトムウェイトのダークスクリム */
   .hero-scrim {
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.6) 100%);
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-bottom: 2rem;
-  }
-
-  /* フェードイン初期状態 */
-  .fade-in {
-    opacity: 0;
-    transform: translateY(24px);
-    transition:
-      opacity 0.8s ease,
-      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: opacity, transform;
-  }
-
-  /* 表示状態 */
-  .fade-in.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* モーション低減設定時はアニメーション無効化 */
-  @media (prefers-reduced-motion: reduce) {
-    .fade-in {
-      opacity: 1;
-      transform: none;
-      transition: none;
-      will-change: auto;
-    }
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, transparent 60%);
   }
 </style>
-
-<script>
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    {
-      threshold: 0.2,
-    }
-  );
-
-  document.querySelectorAll(".fade-in").forEach((el) => {
-    observer.observe(el);
-  });
-</script>

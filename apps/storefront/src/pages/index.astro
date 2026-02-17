@@ -5,6 +5,7 @@ import HomeCategoryGrid from "../components/HomeCategoryGrid.astro";
 import LogoGrid from "../components/LogoGrid.astro";
 import Copy from "../components/Copy.astro";
 import Research from "../components/Research.astro";
+import Button from "../components/ui/Button.astro";
 import { getApiBase } from '../lib/api';
 import { t } from '../i18n';
 import { logError } from '../lib/logger';
@@ -49,58 +50,74 @@ const jsonLdOrganization = {
 
 <Layout title="Led Kikaku - Pro Growth" description={t('seo.homeDescription')}>
 	<script type="application/ld+json" set:html={JSON.stringify(jsonLdOrganization)} />
-	<div class="bg-subtle">
-		{/* Hero Section - Apple Style Jumbotron */}
 
-  <div class="relative left-1/2 right-1/2 w-screen -mx-[50vw] bg-white">
-    <div class="mx-auto w-full max-w-[2560px] bg-white space-y-4 px-0 py-8 sm:py-0">
-      <Copy />
+	{/* Copy (Hero Headline) */}
+	<Copy />
 
-    <LogoGrid />
-    {heroes.length > 0 ? (
-      heroes.map((hero) => (
-        <HomeHero
-          title={hero.title}
-          subtitle={hero.subtitle}
-          image={hero.image}
-          imageSmall={hero.imageSmall}
-          ctaPrimaryText={hero.cta_primary_text}
-          ctaPrimaryUrl={hero.cta_primary_url}
-          ctaSecondaryText={hero.cta_secondary_text}
-          ctaSecondaryUrl={hero.cta_secondary_url}
-        />
-      ))
-    ) : (
-      <section class="py-16 text-center">
-        <div class="mx-auto max-w-2xl px-6">
-          <h2 class="text-3xl font-bold tracking-tight text-primary">{t('home.heroTagline')}</h2>
-          <p class="mt-4 text-lg text-secondary">{t('home.heroSubtagline')}</p>
-          <div class="mt-8">
-            <a href="/products" class="rounded-lg bg-brand px-6 py-3 h-12 inline-flex items-center text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors">
-              {t('home.viewProducts')}
-            </a>
-          </div>
-        </div>
-      </section>
-    )}
+	{/* Logo Trust Bar */}
+	<LogoGrid />
 
-      {featuredProducts.length > 0 ? (
-        <HomeCategoryGrid products={featuredProducts} />
-      ) : (
-        <section class="py-16 text-center bg-white">
-          <div class="mx-auto max-w-2xl px-6">
-            <h2 class="text-2xl font-bold tracking-tight text-primary">{t('home.viewProducts')}</h2>
-            <p class="mt-4 text-secondary">{t('home.heroSubtagline')}</p>
-            <div class="mt-6">
-              <a href="/products" class="rounded-lg bg-brand px-6 py-3 h-12 inline-flex items-center text-base font-semibold text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors">
-                {t('home.viewProducts')}
-              </a>
-            </div>
-          </div>
-        </section>
-      )}
-      <Research />
-    </div>
-  </div>
-	</div>
+	{/* Dynamic Heroes */}
+	{heroes.length > 0 ? (
+		heroes.map((hero) => (
+			<HomeHero
+				title={hero.title}
+				subtitle={hero.subtitle}
+				image={hero.image}
+				imageSmall={hero.imageSmall}
+				ctaPrimaryText={hero.cta_primary_text}
+				ctaPrimaryUrl={hero.cta_primary_url}
+				ctaSecondaryText={hero.cta_secondary_text}
+				ctaSecondaryUrl={hero.cta_secondary_url}
+			/>
+		))
+	) : (
+		<section class="py-16 text-center bg-white">
+			<div class="mx-auto max-w-2xl px-6">
+				<h2 class="text-3xl font-bold tracking-tight text-primary">{t('home.heroTagline')}</h2>
+				<p class="mt-4 text-lg text-secondary">{t('home.heroSubtagline')}</p>
+				<div class="mt-8">
+					<Button href="/products">{t('home.viewProducts')}</Button>
+				</div>
+			</div>
+		</section>
+	)}
+
+	{/* Featured Products */}
+	{featuredProducts.length > 0 ? (
+		<HomeCategoryGrid products={featuredProducts} />
+	) : (
+		<section class="py-16 text-center bg-white">
+			<div class="mx-auto max-w-2xl px-6">
+				<h2 class="text-2xl font-bold tracking-tight text-primary">{t('home.viewProducts')}</h2>
+				<p class="mt-4 text-secondary">{t('home.heroSubtagline')}</p>
+				<div class="mt-6">
+					<Button href="/products">{t('home.viewProducts')}</Button>
+				</div>
+			</div>
+		</section>
+	)}
+
+	{/* Research */}
+	<Research />
+
+	{/* CTA Section */}
+	<section class="bg-white py-24 text-center" data-reveal>
+		<div class="mx-auto max-w-2xl px-6">
+			<h2 class="text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+				{t('home.heroTagline')}
+			</h2>
+			<p class="mt-4 text-lg text-secondary">
+				{t('home.heroSubtagline')}
+			</p>
+			<div class="mt-10 flex items-center justify-center gap-4">
+				<Button href="/products" size="lg">
+					{t('home.viewProducts')}
+				</Button>
+				<Button href="/contact" variant="secondary" size="lg">
+					{t('home.researchCta')}
+				</Button>
+			</div>
+		</div>
+	</section>
 </Layout>

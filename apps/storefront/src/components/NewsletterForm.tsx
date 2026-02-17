@@ -51,7 +51,7 @@ export default function NewsletterForm() {
 
   if (status === 'success') {
     return (
-      <p className="text-xs text-green-600 font-medium">
+      <p className="text-xs text-success font-medium">
         {t('newsletter.success')}
       </p>
     );
@@ -73,19 +73,19 @@ export default function NewsletterForm() {
           placeholder={t('newsletter.placeholder')}
           maxLength={254}
           aria-label={t('newsletter.placeholder')}
-          className="flex-1 min-w-0 px-3 py-1.5 text-xs bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
+          className="flex-1 min-w-0 px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
           disabled={status === 'submitting'}
         />
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="rounded-lg bg-brand px-4 py-2 h-8 text-sm font-medium text-white hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </button>
       </div>
       {errorMessage && (
-        <p className="text-xs text-red-500">{errorMessage}</p>
+        <p className="text-xs text-danger">{errorMessage}</p>
       )}
     </form>
   );

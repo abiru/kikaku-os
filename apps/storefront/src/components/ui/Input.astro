@@ -1,0 +1,50 @@
+---
+import { FOCUS_RING } from '../../lib/focusRing';
+
+interface Props {
+  type?: 'text' | 'email' | 'number' | 'password' | 'search' | 'tel' | 'url';
+  id?: string;
+  name?: string;
+  placeholder?: string;
+  value?: string | number;
+  disabled?: boolean;
+  required?: boolean;
+  maxLength?: number;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const {
+  type = 'text',
+  id,
+  name,
+  placeholder,
+  value,
+  disabled = false,
+  required = false,
+  maxLength,
+  class: className = '',
+  ...rest
+} = Astro.props;
+
+const classes = [
+  'w-full rounded-[var(--radius-md)] border border-neutral-300 bg-white px-4 py-2.5 text-sm text-primary placeholder:text-muted',
+  `focus:border-brand ${FOCUS_RING}`,
+  'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-neutral-50',
+  'transition-colors duration-[var(--duration-fast)]',
+  className,
+].join(' ');
+---
+
+<input
+  type={type}
+  id={id}
+  name={name}
+  placeholder={placeholder}
+  value={value}
+  disabled={disabled}
+  required={required}
+  maxLength={maxLength}
+  class={classes}
+  {...rest}
+/>
