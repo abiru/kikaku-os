@@ -1,6 +1,7 @@
 ---
 import Container from './Container.astro';
 import NewsletterForm from './NewsletterForm';
+import { ErrorBoundary } from './ErrorBoundary';
 import { t } from '../i18n';
 ---
 
@@ -16,7 +17,9 @@ import { t } from '../i18n';
           {t('newsletter.description')}
         </p>
         <div class="mt-6 w-full max-w-md">
-          <NewsletterForm client:idle />
+          <ErrorBoundary client:idle>
+            <NewsletterForm />
+          </ErrorBoundary>
         </div>
       </div>
     </Container>

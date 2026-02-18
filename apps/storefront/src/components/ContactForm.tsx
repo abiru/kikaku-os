@@ -6,6 +6,7 @@ import { Field, Label } from './catalyst/fieldset';
 import { getApiBase, buildStoreUrl } from '../lib/api';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useTranslation } from '../i18n';
+import { showToast } from '../lib/toast';
 
 type FormData = {
   name: string;
@@ -125,10 +126,11 @@ function ContactFormContent() {
       }
 
       setSubmitted(true);
+      showToast(t('toast.contactSuccess'), 'success');
     } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : t('contact.submitError')
-      );
+      const message = err instanceof Error ? err.message : t('contact.submitError');
+      setSubmitError(message);
+      showToast(t('toast.contactError'), 'error', { description: message });
     } finally {
       setSubmitting(false);
     }
@@ -157,17 +159,19 @@ function ContactFormContent() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {csrfError && (
-        <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
-          {t('contact.csrfError')}
-        </div>
-      )}
+      <div aria-live="assertive">
+        {csrfError && (
+          <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+            {t('contact.csrfError')}
+          </div>
+        )}
 
-      {submitError && (
-        <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
-          {submitError}
-        </div>
-      )}
+        {submitError && (
+          <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200 mt-4">
+            {submitError}
+          </div>
+        )}
+      </div>
 
       <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
         <label htmlFor="website">Website</label>

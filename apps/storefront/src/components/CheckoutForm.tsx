@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Elements, PaymentElement, AddressElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe, type Stripe } from '@stripe/stripe-js';
+import { Button } from './catalyst/button';
+import { Input } from './catalyst/input';
 import { useTranslation } from '../i18n';
 import OrderConfirmationModal, { type AddressData } from './OrderConfirmationModal';
 import type { CartItem } from '../lib/cart';
@@ -244,7 +246,7 @@ function CheckoutFormInner({ orderId, orderToken, items, breakdown }: CheckoutFo
 					<label htmlFor="checkout-email" className="block text-sm font-medium text-gray-700 mb-2">
 						{t('checkout.email')}
 					</label>
-					<input
+					<Input
 						id="checkout-email"
 						type="email"
 						autoComplete="email"
@@ -257,7 +259,7 @@ function CheckoutFormInner({ orderId, orderToken, items, breakdown }: CheckoutFo
 						}}
 						onBlur={(e) => validateEmail(e.target.value)}
 						placeholder="your@email.com"
-						className={`block w-full rounded-md border px-3 py-3 text-base shadow-sm focus:outline-none focus:ring-2 ${emailError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-brand focus:ring-brand'}`}
+						invalid={!!emailError}
 						aria-invalid={!!emailError}
 						aria-describedby={emailError ? 'checkout-email-error' : undefined}
 					/>
@@ -366,12 +368,13 @@ function CheckoutFormInner({ orderId, orderToken, items, breakdown }: CheckoutFo
 				</div>
 
 				{/* Submit button */}
-				<button
+				<Button
 					type="submit"
 					disabled={!stripe || isProcessing || !paymentElementReady || timeoutState.active}
 					aria-busy={isProcessing}
 					aria-label={isProcessing ? t('checkout.processing') : t('checkout.payNow')}
-					className="w-full rounded-lg bg-brand px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+					color="dark/zinc"
+					className="w-full min-h-[44px] touch-manipulation"
 				>
 					{isProcessing ? (
 						<span className="inline-flex items-center gap-2">
@@ -382,7 +385,7 @@ function CheckoutFormInner({ orderId, orderToken, items, breakdown }: CheckoutFo
 							{t('checkout.processing')}
 						</span>
 					) : t('checkout.payNow')}
-				</button>
+				</Button>
 			</form>
 		</>
 	);
@@ -422,16 +425,16 @@ export default function CheckoutForm({
 				</div>
 				<p className="text-lg font-medium text-gray-900 mb-2">{t('checkout.stripeLoadFailed')}</p>
 				<p className="text-sm text-gray-600 mb-4">{t('checkout.stripeLoadFailedDescription')}</p>
-				<button
+				<Button
 					type="button"
+					outline
 					onClick={() => {
 					stripePromiseCache.delete(publishableKey);
 					setStripeLoadError(false);
 				}}
-					className="rounded-lg bg-transparent px-5 py-2.5 h-10 inline-flex items-center justify-center text-sm font-semibold text-brand hover:bg-subtle active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 transition-colors"
 				>
 					{t('errors.reload')}
-				</button>
+				</Button>
 			</div>
 		);
 	}

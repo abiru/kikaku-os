@@ -3,6 +3,7 @@ import Container from '../components/Container.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
 import Layout from '../layouts/Layout.astro';
 import WishlistPage from '../components/WishlistPage';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { t } from '../i18n';
 ---
 
@@ -22,7 +23,9 @@ import { t } from '../i18n';
 
 		<section class="py-12">
 			<Container>
-				<WishlistPage client:only="react" />
+				<ErrorBoundary client:only="react">
+					<WishlistPage />
+				</ErrorBoundary>
 			</Container>
 		</section>
 	</div>

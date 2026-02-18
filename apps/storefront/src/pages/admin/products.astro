@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Alert } from '../../components/catalyst/alert-banner';
 import ProductsTable from '../../components/admin/ProductsTable';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { Button } from '../../components/catalyst/button';
 import { Input } from '../../components/catalyst/input';
@@ -136,14 +137,15 @@ const error = fetchError ? t('errors.failedToLoadProducts') : null;
 			</Alert>
 		)}
 
-		<ProductsTable
-			client:visible
-			products={products}
-			currentPage={page}
-			totalPages={meta.totalPages}
-			searchQuery={q}
-			statusFilter={status}
-		/>
+		<ErrorBoundary client:visible>
+			<ProductsTable
+				products={products}
+				currentPage={page}
+				totalPages={meta.totalPages}
+				searchQuery={q}
+				statusFilter={status}
+			/>
+		</ErrorBoundary>
 	</div>
 	<ConfirmDialog />
 </AdminLayout>

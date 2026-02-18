@@ -1,5 +1,6 @@
 ---
 import AdminLayoutComponent from '../components/admin/AdminLayout';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { getApiBase } from '../lib/api';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -68,8 +69,10 @@ if (apiKey) {
 		<meta name="robots" content="noindex, nofollow" />
 	</head>
 	<body class="h-full font-sans antialiased bg-white text-zinc-950">
-		<AdminLayoutComponent client:load currentPath={currentPath} lowStockCount={lowStockCount} rbacUser={rbacUser}>
-			<slot />
-		</AdminLayoutComponent>
+		<ErrorBoundary client:load>
+			<AdminLayoutComponent currentPath={currentPath} lowStockCount={lowStockCount} rbacUser={rbacUser}>
+				<slot />
+			</AdminLayoutComponent>
+		</ErrorBoundary>
 	</body>
 </html>

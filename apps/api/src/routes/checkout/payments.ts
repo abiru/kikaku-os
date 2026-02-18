@@ -248,6 +248,16 @@ payments.post('/payments/intent', async (c) => {
     return jsonError(c, 'Quote not found', 400);
   }
 
+  // Validate currency: only JPY is allowed
+  if (quote.currency.toUpperCase() !== 'JPY') {
+    return jsonError(c, 'Only JPY currency is supported', 400);
+  }
+
+  // Validate amount: must be a positive integer
+  if (quote.grand_total <= 0) {
+    return jsonError(c, 'Payment amount must be greater than zero', 400);
+  }
+
   const quoteItems: Array<{ variantId: number; quantity: number }> = JSON.parse(quote.items_json);
 
   // Verify stock availability before proceeding

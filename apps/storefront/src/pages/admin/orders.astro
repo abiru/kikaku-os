@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from'../../layouts/AdminLayout.astro';
 import { Alert } from'../../components/catalyst/alert-banner';
 import OrdersTable from'../../components/admin/OrdersTable';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { Heading } from'../../components/catalyst/heading';
 import { adminFetchList } from '../../lib/admin/fetchAdmin';
@@ -174,13 +175,14 @@ const hasFilters = paymentStatus || fulfillmentStatus || dateFrom || dateTo;
 			</Alert>
 		)}
 
-		<OrdersTable
-			client:visible
-			orders={orders}
-			currentPage={page}
-			totalPages={meta.totalPages}
-			searchQuery={q}
-		/>
+		<ErrorBoundary client:visible>
+			<OrdersTable
+				orders={orders}
+				currentPage={page}
+				totalPages={meta.totalPages}
+				searchQuery={q}
+			/>
+		</ErrorBoundary>
 	</div>
 
 	<script>

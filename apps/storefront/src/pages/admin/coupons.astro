@@ -9,6 +9,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import CouponsTable from '../../components/admin/CouponsTable';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { t } from '../../i18n';
 
 const q = Astro.url.searchParams.get('q') || '';
@@ -112,7 +113,9 @@ const hasPrev = page > 1;
 		)}
 
 		{/* Coupon Table */}
-		<CouponsTable client:only="react" coupons={coupons} />
+		<ErrorBoundary client:only="react">
+			<CouponsTable coupons={coupons} />
+		</ErrorBoundary>
 
 		{/* Pagination */}
 		<div class="flex items-center justify-between">

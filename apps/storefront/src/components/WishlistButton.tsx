@@ -1,6 +1,7 @@
 import { useStore } from '@nanostores/react';
-import { $wishlistItems, toggleWishlist, type WishlistItem } from '../lib/wishlist';
+import { $wishlistItems, toggleWishlist, isInWishlist, type WishlistItem } from '../lib/wishlist';
 import { useTranslation } from '../i18n';
+import { showToast } from '../lib/toast';
 
 type Props = {
 	product: Omit<WishlistItem, 'addedAt'>;
@@ -28,7 +29,12 @@ export default function WishlistButton({ product, size = 'md', className = '' }:
 	const handleToggle = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
+		const wasInWishlist = isInWishlist(product.productId);
 		toggleWishlist(product);
+		showToast(
+			wasInWishlist ? t('toast.wishlistRemoved') : t('toast.wishlistAdded'),
+			wasInWishlist ? 'info' : 'success'
+		);
 	};
 
 	return (

@@ -6,6 +6,7 @@ import { Alert } from '../../components/catalyst/alert-banner';
 import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { Heading } from '../../components/catalyst/heading';
 import UsersTable from '../../components/admin/UsersTable';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { t } from '../../i18n';
 
 const q = Astro.url.searchParams.get('q') || '';
@@ -134,14 +135,15 @@ const error: string | null = fetchError ? t('errors.failedToLoadUsers') : null;
 			</Alert>
 		)}
 
-		<UsersTable
-			users={users}
-			currentPage={page}
-			totalPages={meta.totalPages}
-			searchQuery={q}
-			roleFilter={roleFilter}
-			activeFilter={activeFilter}
-			client:visible
-		/>
+		<ErrorBoundary client:visible>
+			<UsersTable
+				users={users}
+				currentPage={page}
+				totalPages={meta.totalPages}
+				searchQuery={q}
+				roleFilter={roleFilter}
+				activeFilter={activeFilter}
+			/>
+		</ErrorBoundary>
 	</div>
 </AdminLayout>
