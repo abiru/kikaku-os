@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Button } from './catalyst/button';
+import { Input } from './catalyst/input';
+import { Textarea } from './catalyst/textarea';
 import { StarRatingDisplay, StarRatingInput } from './StarRating';
 import { getApiBase, fetchJson } from '../lib/api';
 import { formatDate } from '../lib/format';
@@ -83,13 +86,12 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
           <label htmlFor="review-name" className="block text-sm font-medium text-neutral-700 mb-1">
             {t('reviews.yourName')}
           </label>
-          <input
+          <Input
             id="review-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('reviews.yourNamePlaceholder')}
-            className="w-full rounded-md border-neutral-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
             required
             maxLength={100}
           />
@@ -98,13 +100,12 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
           <label htmlFor="review-email" className="block text-sm font-medium text-neutral-700 mb-1">
             {t('reviews.yourEmail')}
           </label>
-          <input
+          <Input
             id="review-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t('reviews.yourEmailPlaceholder')}
-            className="w-full rounded-md border-neutral-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
             required
             maxLength={255}
           />
@@ -115,13 +116,12 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
         <label htmlFor="review-title" className="block text-sm font-medium text-neutral-700 mb-1">
           {t('reviews.reviewTitle')}
         </label>
-        <input
+        <Input
           id="review-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t('reviews.reviewTitlePlaceholder')}
-          className="w-full rounded-md border-neutral-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
           required
           maxLength={200}
         />
@@ -131,13 +131,12 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
         <label htmlFor="review-body" className="block text-sm font-medium text-neutral-700 mb-1">
           {t('reviews.reviewBody')}
         </label>
-        <textarea
+        <Textarea
           id="review-body"
           rows={4}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={t('reviews.reviewBodyPlaceholder')}
-          className="w-full rounded-md border-neutral-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
           required
           maxLength={5000}
         />
@@ -145,13 +144,13 @@ function ReviewForm({ productId, onSubmitted }: { productId: number; onSubmitted
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <button
+      <Button
         type="submit"
         disabled={submitting || rating === 0}
-        className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        color="dark/zinc"
       >
         {submitting ? t('reviews.submitting') : t('reviews.submit')}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -217,13 +216,13 @@ export default function ReviewSection({ productId }: Props) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium text-neutral-900">{t('reviews.title')}</h2>
         {!showForm && (
-          <button
+          <Button
             type="button"
             onClick={() => setShowForm(true)}
-            className="text-sm font-medium text-brand hover:text-brand-active"
+            plain
           >
             {t('reviews.writeReview')}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -262,13 +261,13 @@ export default function ReviewSection({ productId }: Props) {
           >
             {!showForm && (
               <div className="mt-4">
-                <button
+                <Button
                   type="button"
                   onClick={() => setShowForm(true)}
-                  className="text-sm font-medium text-brand hover:text-brand-active"
+                  plain
                 >
                   {t('reviews.beFirstToReview')}
-                </button>
+                </Button>
               </div>
             )}
           </EmptyStateReact>

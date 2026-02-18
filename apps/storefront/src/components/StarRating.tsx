@@ -99,6 +99,11 @@ export function StarRatingInput({ value, onChange, size = 'lg' }: InputProps) {
   }, [value]);
 
   const handleKeyDown = (e: React.KeyboardEvent, star: number) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      onChange(star);
+      return;
+    }
     let next = star;
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       e.preventDefault();

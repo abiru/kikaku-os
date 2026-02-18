@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Button } from './catalyst/button';
+import { Input } from './catalyst/input';
 import { getApiBase, buildStoreUrl } from '../lib/api';
 import { useTranslation } from '../i18n';
 
@@ -47,9 +49,9 @@ export default function RestockNotification({ productId }: Props) {
 
   if (status === 'success') {
     return (
-      <div className="mt-4 rounded-md bg-success-light p-4">
+      <div className="mt-4 rounded-md bg-success-light p-4" role="status">
         <div className="flex">
-          <svg className="size-5 text-success" viewBox="0 0 20 20" fill="currentColor">
+          <svg className="size-5 text-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
           </svg>
           <p className="ml-3 text-sm font-medium text-success">
@@ -70,7 +72,7 @@ export default function RestockNotification({ productId }: Props) {
       </p>
       <form onSubmit={handleSubmit} className="mt-3">
         <div className="flex gap-2">
-          <input
+          <Input
             type="email"
             value={email}
             onChange={(e) => {
@@ -81,21 +83,25 @@ export default function RestockNotification({ productId }: Props) {
               if (status === 'error') setStatus('idle');
             }}
             placeholder={t('restock.emailPlaceholder')}
+            aria-label={t('restock.emailPlaceholder')}
             maxLength={254}
-            className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+            className="flex-1 min-w-0"
             disabled={status === 'submitting'}
           />
-          <button
+          <Button
             type="submit"
             disabled={status === 'submitting'}
-            className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-md hover:bg-brand-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            color="dark/zinc"
+            className="whitespace-nowrap"
           >
             {status === 'submitting' ? t('restock.submitting') : t('restock.subscribe')}
-          </button>
+          </Button>
         </div>
-        {errorMessage && (
-          <p className="mt-2 text-xs text-danger">{errorMessage}</p>
-        )}
+        <div aria-live="assertive">
+          {errorMessage && (
+            <p className="mt-2 text-xs text-danger" role="alert">{errorMessage}</p>
+          )}
+        </div>
       </form>
     </div>
   );
