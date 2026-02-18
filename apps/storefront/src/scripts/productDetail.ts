@@ -1,5 +1,7 @@
 import { addToCart } from '../lib/cart';
 import { addToRecentlyViewed } from '../lib/recentlyViewed';
+import { showToast } from '../lib/toast';
+import { t } from '../i18n';
 
 declare global {
 	interface Window {
@@ -121,8 +123,11 @@ if (page) {
 				});
 
 				showSuccess();
+				showToast(t('toast.cartAdded'), 'success');
 			} catch (error) {
-				showError(error instanceof Error ? error.message : 'Failed to add to cart.');
+				const message = error instanceof Error ? error.message : 'Failed to add to cart.';
+				showError(message);
+				showToast(t('toast.cartError'), 'error', { description: message });
 			}
 		});
 	}

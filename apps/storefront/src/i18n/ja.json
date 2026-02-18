@@ -1166,5 +1166,20 @@
   "logoGrid": {
     "title": "導入実績",
     "subtitle": "大学・研究機関・企業への豊富な納品実績があります。"
+  },
+  "toast": {
+    "cartAdded": "カートに追加しました",
+    "cartRemoved": "カートから削除しました",
+    "cartError": "カートの操作に失敗しました",
+    "wishlistAdded": "お気に入りに追加しました",
+    "wishlistRemoved": "お気に入りから削除しました",
+    "contactSuccess": "お問い合わせを送信しました",
+    "contactError": "送信に失敗しました",
+    "newsletterSuccess": "ニュースレターに登録しました",
+    "newsletterError": "登録に失敗しました",
+    "couponApplied": "クーポンを適用しました",
+    "couponRemoved": "クーポンを解除しました",
+    "couponError": "クーポンの適用に失敗しました",
+    "networkError": "通信エラーが発生しました。しばらくしてからもう一度お試しください。"
   }
 }

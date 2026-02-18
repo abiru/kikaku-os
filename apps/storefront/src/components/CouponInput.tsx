@@ -10,6 +10,7 @@ import {
 import { getApiBase, fetchJson } from '../lib/api';
 import { useTranslation } from '../i18n';
 import { formatPrice } from '../lib/format';
+import { showToast } from '../lib/toast';
 
 export function CouponInput() {
 	const { t } = useTranslation();
@@ -39,13 +40,16 @@ export function CouponInput() {
 			if (data.valid && data.coupon) {
 				applyCoupon(data.coupon);
 				setCode('');
+				showToast(t('toast.couponApplied'), 'success');
 			} else {
-				setError(data.message || t('cart.invalidCoupon'));
+				const message = data.message || t('cart.invalidCoupon');
+				setError(message);
+				showToast(t('toast.couponError'), 'error', { description: message });
 			}
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : t('cart.failedToApplyCoupon')
-			);
+			const message = err instanceof Error ? err.message : t('cart.failedToApplyCoupon');
+			setError(message);
+			showToast(t('toast.couponError'), 'error', { description: message });
 		} finally {
 			setIsApplying(false);
 		}
@@ -63,7 +67,10 @@ export function CouponInput() {
 					</span>
 				</div>
 				<button
-					onClick={removeCoupon}
+					onClick={() => {
+						removeCoupon();
+						showToast(t('toast.couponRemoved'), 'info');
+					}}
 					className="rounded-lg px-2 py-1 text-sm font-medium text-success hover:opacity-80 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 transition-colors"
 				>
 					{t('cart.removeCoupon')}
