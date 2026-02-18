@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Button } from './catalyst/button';
+import { Input } from './catalyst/input';
 import { getApiBase, buildStoreUrl } from '../lib/api';
 import { useTranslation } from '../i18n';
 import { showToast } from '../lib/toast';
@@ -63,7 +65,7 @@ export default function NewsletterForm() {
     <form onSubmit={handleSubmit} className="space-y-2">
       <div className="flex gap-2">
         <label htmlFor="newsletter-email" className="sr-only">{t('newsletter.placeholder')}</label>
-        <input
+        <Input
           id="newsletter-email"
           type="email"
           value={email}
@@ -75,16 +77,17 @@ export default function NewsletterForm() {
           placeholder={t('newsletter.placeholder')}
           maxLength={254}
           aria-label={t('newsletter.placeholder')}
-          className="flex-1 min-w-0 px-3 py-1.5 text-xs bg-white border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand text-primary placeholder-muted"
+          className="flex-1 min-w-0"
           disabled={status === 'submitting'}
         />
-        <button
+        <Button
           type="submit"
           disabled={status === 'submitting'}
-          className="px-4 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+          color="dark/zinc"
+          className="whitespace-nowrap"
         >
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
-        </button>
+        </Button>
       </div>
       <div aria-live="assertive">
         {errorMessage && (

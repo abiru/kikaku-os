@@ -10,6 +10,18 @@ vi.mock('../lib/api', () => ({
   buildStoreUrl: (path: string, base: string) => `${base}/store${path}`,
 }))
 
+vi.mock('./catalyst/button', () => ({
+  Button: ({ children, href, outline, plain, color, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { href?: string; outline?: boolean; plain?: boolean; color?: string }) => {
+    if (href) return <a href={href}>{children}</a>
+    return <button {...props}>{children}</button>
+  },
+}))
+
+vi.mock('./catalyst/input', () => ({
+  Input: ({ invalid, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) =>
+    <input data-invalid={invalid || undefined} {...props} />,
+}))
+
 const mockFetch = vi.fn()
 globalThis.fetch = mockFetch
 
