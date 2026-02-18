@@ -62,6 +62,7 @@ function CheckoutPageContent() {
 		cartItems,
 		breakdown,
 		clientSecret,
+		orderId,
 		orderToken,
 		publishableKey,
 		loading,
@@ -133,6 +134,7 @@ function CheckoutPageContent() {
 				<div className="lg:col-span-7">
 					<CheckoutForm
 						clientSecret={clientSecret}
+						orderId={orderId}
 						orderToken={orderToken}
 						publishableKey={publishableKey}
 						items={cartItems}

@@ -47,6 +47,56 @@ import { t } from '../i18n';
 					</div>
 
 					<div class="space-y-3 pt-2 border-t border-gray-100">
+						<h2 class="typo-h3 text-primary">{t('pages.orderStatus.guestLookup')}</h2>
+						<p class="text-secondary">
+							{t('pages.orderStatus.guestLookupDescription')}
+						</p>
+						<form
+							id="guest-order-search-form"
+							class="space-y-4"
+							data-api-base={import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787'}
+							data-error-text={t('pages.orderStatus.guestSearchError')}
+							data-searching-text={t('pages.orderStatus.guestSearching')}
+							data-button-text={t('pages.orderStatus.guestSearchButton')}
+						>
+							<div>
+								<label for="guest-email" class="block text-sm font-medium text-primary mb-1">
+									{t('pages.orderStatus.guestEmailLabel')}
+								</label>
+								<input
+									type="email"
+									id="guest-email"
+									name="email"
+									required
+									placeholder={t('pages.orderStatus.guestEmailPlaceholder')}
+									class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-primary placeholder:text-gray-400 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+								/>
+							</div>
+							<div>
+								<label for="guest-token" class="block text-sm font-medium text-primary mb-1">
+									{t('pages.orderStatus.guestTokenLabel')}
+								</label>
+								<input
+									type="text"
+									id="guest-token"
+									name="token"
+									required
+									placeholder={t('pages.orderStatus.guestTokenPlaceholder')}
+									class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-primary placeholder:text-gray-400 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+								/>
+							</div>
+							<div id="guest-search-error" class="hidden text-sm text-red-600"></div>
+							<button
+								type="submit"
+								id="guest-search-button"
+								class="inline-flex items-center rounded-lg bg-brand px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-hover transition-colors disabled:opacity-50"
+							>
+								{t('pages.orderStatus.guestSearchButton')}
+							</button>
+						</form>
+					</div>
+
+					<div class="space-y-3 pt-2 border-t border-gray-100">
 						<h2 class="typo-h3 text-primary">{t('pages.orderStatus.checkViaAccount')}</h2>
 						<p class="text-secondary">
 							{t('pages.orderStatus.checkViaAccountDescription')}
@@ -82,6 +132,61 @@ import { t } from '../i18n';
 		const token = input?.value.trim();
 		if (token) {
 			window.location.href = `/orders/${encodeURIComponent(token)}`;
+		}
+	});
+
+	const guestForm = document.getElementById('guest-order-search-form') as HTMLFormElement | null;
+	guestForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const emailInput = document.getElementById('guest-email') as HTMLInputElement;
+		const tokenInput = document.getElementById('guest-token') as HTMLInputElement;
+		const errorDiv = document.getElementById('guest-search-error');
+		const submitButton = document.getElementById('guest-search-button') as HTMLButtonElement;
+
+		const email = emailInput?.value.trim();
+		const orderToken = tokenInput?.value.trim();
+
+		if (!email || !orderToken) return;
+
+		const apiBase = guestForm.dataset.apiBase || '';
+		const errorText = guestForm.dataset.errorText || 'Order not found';
+		const searchingText = guestForm.dataset.searchingText || 'Searching...';
+		const buttonText = guestForm.dataset.buttonText || 'Search';
+
+		if (errorDiv) {
+			errorDiv.classList.add('hidden');
+			errorDiv.textContent = '';
+		}
+		if (submitButton) {
+			submitButton.disabled = true;
+			submitButton.textContent = searchingText;
+		}
+
+		try {
+			const res = await fetch(`${apiBase}/store/orders/guest-lookup`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ email, orderToken }),
+			});
+
+			if (res.ok) {
+				window.location.href = `/orders/${encodeURIComponent(orderToken)}`;
+			} else {
+				if (errorDiv) {
+					errorDiv.textContent = errorText;
+					errorDiv.classList.remove('hidden');
+				}
+			}
+		} catch {
+			if (errorDiv) {
+				errorDiv.textContent = errorText;
+				errorDiv.classList.remove('hidden');
+			}
+		} finally {
+			if (submitButton) {
+				submitButton.disabled = false;
+				submitButton.textContent = buttonText;
+			}
 		}
 	});
 </script>

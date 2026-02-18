@@ -8,6 +8,7 @@ import { getShippingSettings } from '../../services/settings';
 import { checkStockAvailability } from '../../services/inventoryCheck';
 import { validateItem, type CheckoutItem, type VariantPriceRow } from '../../lib/schemas/checkout';
 import { validateCoupon } from '../../services/coupon';
+import { ensureStripeCustomer } from '../../services/stripeCustomer';
 
 const logger = createLogger('checkout');
 
@@ -231,6 +232,75 @@ checkout.post('/checkout/quote', async (c) => {
     },
     expiresAt
   });
+});
+
+const guestEmailSchema = z.object({
+  orderId: z.number().int().positive(),
+  email: z.string().email('Valid email is required'),
+});
+
+checkout.post('/checkout/guest-email', async (c) => {
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return jsonError(c, 'Invalid JSON', 400);
+  }
+
+  const parsed = guestEmailSchema.safeParse(body);
+  if (!parsed.success) {
+    return jsonError(c, parsed.error.issues[0]?.message || 'Invalid request', 400);
+  }
+
+  const { orderId, email } = parsed.data;
+
+  try {
+    // Verify the order exists and is still pending
+    const order = await c.env.DB.prepare(
+      `SELECT id, customer_id, status FROM orders WHERE id = ?`
+    ).bind(orderId).first<{ id: number; customer_id: number | null; status: string }>();
+
+    if (!order) {
+      return jsonError(c, 'Order not found', 404);
+    }
+
+    if (order.status !== 'pending') {
+      return jsonError(c, 'Order is no longer pending', 400);
+    }
+
+    // Find or create customer by email
+    const existingCustomer = await c.env.DB.prepare(
+      `SELECT id, stripe_customer_id FROM customers WHERE email = ?`
+    ).bind(email).first<{ id: number; stripe_customer_id: string | null }>();
+
+    let customerId: number;
+
+    if (existingCustomer) {
+      customerId = existingCustomer.id;
+    } else {
+      const res = await c.env.DB.prepare(
+        `INSERT INTO customers (name, email, created_at, updated_at)
+         VALUES (?, ?, datetime('now'), datetime('now'))`
+      ).bind('Guest Customer', email).run();
+      customerId = Number(res.meta.last_row_id);
+    }
+
+    // Create Stripe customer if configured
+    const stripeKey = c.env.STRIPE_SECRET_KEY;
+    if (stripeKey) {
+      await ensureStripeCustomer(c.env.DB, stripeKey, customerId, email);
+    }
+
+    // Update the order with the customer
+    await c.env.DB.prepare(
+      `UPDATE orders SET customer_id = ?, updated_at = datetime('now') WHERE id = ?`
+    ).bind(customerId, orderId).run();
+
+    return jsonOk(c, { customerId });
+  } catch (err) {
+    logger.error('Guest email association failed', { orderId, error: String(err) });
+    return jsonError(c, 'Failed to associate email', 500);
+  }
 });
 
 export default checkout;

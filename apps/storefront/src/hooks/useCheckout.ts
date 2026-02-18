@@ -24,6 +24,7 @@ type QuoteResponse = {
 type PaymentIntentResponse = {
 	ok: boolean;
 	clientSecret: string;
+	orderId: number;
 	orderPublicToken: string;
 	publishableKey: string;
 };
@@ -32,6 +33,7 @@ export type UseCheckoutReturn = {
 	cartItems: ReturnType<typeof $cartArray.get>;
 	breakdown: QuoteBreakdown | null;
 	clientSecret: string | null;
+	orderId: number | null;
 	orderToken: string | null;
 	publishableKey: string;
 	loading: boolean;
@@ -47,6 +49,7 @@ export function useCheckout(): UseCheckoutReturn {
 
 	const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
 	const [clientSecret, setClientSecret] = useState<string | null>(null);
+	const [orderId, setOrderId] = useState<number | null>(null);
 	const [orderToken, setOrderToken] = useState<string | null>(null);
 	const [publishableKey, setPublishableKey] = useState<string>('');
 	const [loading, setLoading] = useState(true);
@@ -119,7 +122,6 @@ export function useCheckout(): UseCheckoutReturn {
 					headers: { 'content-type': 'application/json' },
 					body: JSON.stringify({
 						quoteId: quoteData.quoteId,
-						email: 'customer@checkout.pending',
 						paymentMethod: 'auto'
 					}),
 					signal: controller.signal
@@ -140,6 +142,7 @@ export function useCheckout(): UseCheckoutReturn {
 			}
 
 			setClientSecret(intentData.clientSecret);
+			setOrderId(intentData.orderId);
 			setOrderToken(intentData.orderPublicToken);
 
 			const pubKey = intentData.publishableKey || import.meta.env.PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -169,6 +172,7 @@ export function useCheckout(): UseCheckoutReturn {
 	useEffect(() => {
 		// Reset payment state when cart changes
 		setClientSecret(null);
+		setOrderId(null);
 		setOrderToken(null);
 		createQuoteAndIntent();
 
@@ -191,6 +195,7 @@ export function useCheckout(): UseCheckoutReturn {
 		cartItems,
 		breakdown,
 		clientSecret,
+		orderId,
 		orderToken,
 		publishableKey,
 		loading,

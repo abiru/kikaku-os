@@ -213,6 +213,7 @@
     "paymentTimeoutChecking": "決済状況を確認しています...",
     "paymentTimeoutConfirmed": "決済が確認されました。リダイレクトしています...",
     "serviceUnavailable": "一時的に決済サービスが利用できません。しばらく後にお試しください。",
+    "guestEmailFailed": "メールアドレスの登録に失敗しました。もう一度お試しください。",
     "stripeErrors": {
       "card_declined": "カードが拒否されました。別のカードをお試しください。",
       "insufficient_funds": "残高不足です。別のカードをお試しください。",
@@ -986,7 +987,16 @@
       "searchByTokenDescription": "ご注文時に発行された注文番号を入力して、注文状況をご確認ください。",
       "orderTokenLabel": "注文番号",
       "orderTokenPlaceholder": "注文番号を入力してください",
-      "searchButton": "注文状況を確認"
+      "searchButton": "注文状況を確認",
+      "guestLookup": "メールアドレスで確認",
+      "guestLookupDescription": "ゲスト購入時のメールアドレスと注文番号で、注文状況をご確認いただけます。",
+      "guestEmailLabel": "メールアドレス",
+      "guestEmailPlaceholder": "ご注文時のメールアドレス",
+      "guestTokenLabel": "注文番号",
+      "guestTokenPlaceholder": "注文番号を入力してください",
+      "guestSearchButton": "注文を検索",
+      "guestSearchError": "注文が見つかりませんでした。メールアドレスと注文番号をご確認ください。",
+      "guestSearching": "検索中..."
     },
     "social": {
       "pageTitle": "SNS - Led Kikaku",
