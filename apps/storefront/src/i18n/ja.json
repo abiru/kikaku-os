@@ -846,7 +846,8 @@
     "toNavigate": "で移動",
     "toSelect": "で選択",
     "toClose": "で閉じる",
-    "resultCount": "{count}件の検索結果"
+    "resultCount": "{count}件の検索結果",
+    "results": "検索結果"
   },
   "breadcrumb": {
     "home": "ホーム",
