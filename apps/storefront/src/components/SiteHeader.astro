@@ -42,7 +42,7 @@ const {
 		</a>
 
 		{/* Desktop Nav - Centered & Subtle */}
-		<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-primary/80 overflow-x-auto whitespace-nowrap nav-overflow-hint">
+		<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-primary overflow-x-auto whitespace-nowrap nav-overflow-hint">
 			<a href="/" class={`transition-colors hover:text-primary ${currentPath === '/' ? 'text-primary font-medium' : ''}`}>{t('nav.store')}</a>
 			<a href="/products" class={`transition-colors hover:text-primary ${currentPath.startsWith('/products') ? 'text-primary font-medium' : ''}`}>{t('nav.products')}</a>
 			<a href="/categories" class={`transition-colors hover:text-primary ${currentPath.startsWith('/categories') ? 'text-primary font-medium' : ''}`}>{t('nav.categories')}</a>
@@ -203,19 +203,56 @@ const {
 		const mobileMenuClose = document.getElementById('mobile-menu-close');
 
 		if (mobileMenuBtn && mobileMenu) {
+			let menuOpen = false;
+
+			const getFocusableElements = (): HTMLElement[] => {
+				const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+				return Array.from(mobileMenu.querySelectorAll<HTMLElement>(selector));
+			};
+
+			const handleMenuKeydown = (e: KeyboardEvent) => {
+				if (e.key === 'Escape') {
+					closeMobileMenu();
+					return;
+				}
+				if (e.key !== 'Tab') return;
+				const focusable = getFocusableElements();
+				if (focusable.length === 0) {
+					e.preventDefault();
+					return;
+				}
+				const first = focusable[0]!;
+				const last = focusable[focusable.length - 1]!;
+				if (e.shiftKey) {
+					if (document.activeElement === first) {
+						e.preventDefault();
+						last.focus();
+					}
+				} else {
+					if (document.activeElement === last) {
+						e.preventDefault();
+						first.focus();
+					}
+				}
+			};
+
 			const openMobileMenu = () => {
+				menuOpen = true;
 				mobileMenu.classList.remove('translate-x-full');
 				mobileMenuOverlay?.classList.remove('hidden');
 				mobileMenuBtn.setAttribute('aria-expanded', 'true');
 				document.body.style.overflow = 'hidden';
+				document.addEventListener('keydown', handleMenuKeydown);
 				mobileMenuClose?.focus();
 			};
 
 			const closeMobileMenu = () => {
+				menuOpen = false;
 				mobileMenu.classList.add('translate-x-full');
 				mobileMenuOverlay?.classList.add('hidden');
 				mobileMenuBtn.setAttribute('aria-expanded', 'false');
 				document.body.style.overflow = '';
+				document.removeEventListener('keydown', handleMenuKeydown);
 				mobileMenuBtn.focus();
 			};
 
@@ -233,6 +270,10 @@ const {
 
 			// Reset menu state after View Transitions page swap
 			document.addEventListener('astro:after-swap', () => {
+				if (menuOpen) {
+					document.removeEventListener('keydown', handleMenuKeydown);
+				}
+				menuOpen = false;
 				mobileMenu.classList.add('translate-x-full');
 				mobileMenuOverlay?.classList.add('hidden');
 				mobileMenuBtn.setAttribute('aria-expanded', 'false');

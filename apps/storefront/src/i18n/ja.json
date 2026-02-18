@@ -96,7 +96,8 @@
     "sortNewest": "新着順",
     "sortPriceAsc": "価格が安い順",
     "sortPriceDesc": "価格が高い順",
-    "announceCount": "{count}件の商品が見つかりました"
+    "announceCount": "{count}件の商品が見つかりました",
+    "skipToProducts": "商品一覧へスキップ"
   },
   "cart": {
     "title": "ショッピングカート",
