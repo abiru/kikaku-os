@@ -88,11 +88,11 @@ function CheckoutPageContent() {
 							<button
 								type="button"
 								onClick={retry}
-								className="text-brand hover:text-brand-active font-medium min-h-[44px] flex items-center justify-center"
+								className="text-brand hover:text-brand-active font-medium min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-md"
 							>
 								{t('errors.retry')}
 						</button>
-						<a href="/cart" className="text-sm text-gray-600 hover:text-gray-800 min-h-[44px] flex items-center justify-center">
+						<a href="/cart" className="text-sm text-gray-600 hover:text-gray-800 min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-md">
 							{t('checkout.returnToCart')}
 						</a>
 					</div>
@@ -106,7 +106,7 @@ function CheckoutPageContent() {
 			<div className="flex items-center justify-center min-h-[60vh]">
 				<div className="text-center">
 					<p className="text-lg text-gray-900">{t('cart.empty')}</p>
-					<a href="/products" className="mt-4 inline-block text-brand hover:text-brand-active min-h-[44px] flex items-center justify-center">
+					<a href="/products" className="mt-4 inline-block text-brand hover:text-brand-active min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 rounded-md">
 						{t('cart.continueShopping')}
 					</a>
 				</div>

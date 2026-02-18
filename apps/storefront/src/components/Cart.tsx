@@ -220,7 +220,12 @@ function CartContent() {
 					if (targetItem) {
 						const el = itemRefs.current.get(targetItem.variantId);
 						const focusable = el?.querySelector<HTMLElement>('a, button, select, input');
-						focusable?.focus();
+						if (focusable) {
+							focusable.focus();
+						} else if (el) {
+							el.tabIndex = -1;
+							el.focus();
+						}
 					}
 				}
 			}

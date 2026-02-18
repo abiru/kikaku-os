@@ -51,7 +51,7 @@ export default function NewsletterForm() {
 
   if (status === 'success') {
     return (
-      <p className="text-xs text-success font-medium">
+      <p className="text-xs text-success font-medium" role="status">
         {t('newsletter.success')}
       </p>
     );
@@ -84,9 +84,11 @@ export default function NewsletterForm() {
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </button>
       </div>
-      {errorMessage && (
-        <p className="text-xs text-danger">{errorMessage}</p>
-      )}
+      <div aria-live="assertive">
+        {errorMessage && (
+          <p className="text-xs text-danger" role="alert">{errorMessage}</p>
+        )}
+      </div>
     </form>
   );
 }

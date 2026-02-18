@@ -157,17 +157,19 @@ function ContactFormContent() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {csrfError && (
-        <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
-          {t('contact.csrfError')}
-        </div>
-      )}
+      <div aria-live="assertive">
+        {csrfError && (
+          <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+            {t('contact.csrfError')}
+          </div>
+        )}
 
-      {submitError && (
-        <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
-          {submitError}
-        </div>
-      )}
+        {submitError && (
+          <div role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200 mt-4">
+            {submitError}
+          </div>
+        )}
+      </div>
 
       <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
         <label htmlFor="website">Website</label>
