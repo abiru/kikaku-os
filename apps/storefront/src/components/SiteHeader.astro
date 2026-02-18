@@ -1,5 +1,6 @@
 ---
 import Container from './Container.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
 import { SignedIn, SignedOut, UserButton } from '@clerk/astro/components';
 import { t } from '../i18n';
 
@@ -8,6 +9,7 @@ interface Props {
 	showWishlist?: boolean;
 	showMobileMenu?: boolean;
 	showAuthToggle?: boolean;
+	showLanguageSwitcher?: boolean;
 }
 
 const {
@@ -15,6 +17,7 @@ const {
 	showWishlist = true,
 	showMobileMenu = true,
 	showAuthToggle = true,
+	showLanguageSwitcher = true,
 } = Astro.props;
 ---
 
@@ -52,8 +55,9 @@ const {
 			<a href="/about" class={`transition-colors hover:text-primary ${currentPath === '/about' ? 'text-primary font-medium' : ''}`}>{t('nav.about')}</a>
 		</nav>
 
-		{/* Utilities: Search, Wishlist, Cart & Account */}
+		{/* Utilities: Language, Search, Wishlist, Cart & Account */}
 		<div class="flex items-center gap-2">
+			{showLanguageSwitcher && <LanguageSwitcher />}
 			<button id="search-btn" type="button" class="min-h-[44px] min-w-[44px] flex items-center justify-center text-primary/80 hover:text-primary transition-colors">
 				<span class="sr-only">{t('common.search')}</span>
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>

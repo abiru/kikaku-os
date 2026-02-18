@@ -1,0 +1,132 @@
+---
+// Language switcher component for the site header.
+// Toggles between Japanese (JA) and English (EN).
+// Persists the user's choice in localStorage and reloads the page.
+---
+
+<div class="relative" id="lang-switcher">
+	<button
+		id="lang-switcher-btn"
+		type="button"
+		class="min-h-[44px] min-w-[44px] flex items-center justify-center gap-0.5 text-[11px] font-medium text-primary/70 hover:text-primary transition-colors"
+		aria-label="Switch language"
+		aria-haspopup="true"
+		aria-expanded="false"
+	>
+		<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+		<span id="lang-switcher-label" class="hidden sm:inline">JA</span>
+	</button>
+	<div
+		id="lang-switcher-menu"
+		class="hidden absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-neutral-200 py-1 min-w-[100px] z-50"
+		role="menu"
+		aria-label="Select language"
+	>
+		<button
+			type="button"
+			class="lang-option w-full text-left px-3 py-2 text-[12px] hover:bg-neutral-50 transition-colors flex items-center justify-between"
+			data-locale="ja"
+			role="menuitem"
+		>
+			<span>日本語</span>
+			<span id="lang-check-ja" class="text-brand hidden">&#10003;</span>
+		</button>
+		<button
+			type="button"
+			class="lang-option w-full text-left px-3 py-2 text-[12px] hover:bg-neutral-50 transition-colors flex items-center justify-between"
+			data-locale="en"
+			role="menuitem"
+		>
+			<span>English</span>
+			<span id="lang-check-en" class="text-brand hidden">&#10003;</span>
+		</button>
+	</div>
+</div>
+
+<script>
+	function initLanguageSwitcher() {
+		const STORAGE_KEY = 'kikaku-locale';
+		const btn = document.getElementById('lang-switcher-btn');
+		const menu = document.getElementById('lang-switcher-menu');
+		const label = document.getElementById('lang-switcher-label');
+		const checkJa = document.getElementById('lang-check-ja');
+		const checkEn = document.getElementById('lang-check-en');
+
+		if (!btn || !menu) return;
+
+		function getCurrentLocale(): 'ja' | 'en' {
+			const saved = localStorage.getItem(STORAGE_KEY);
+			if (saved === 'en' || saved === 'ja') return saved;
+			const browserLang = navigator.language.toLowerCase();
+			if (browserLang.startsWith('en')) return 'en';
+			return 'ja';
+		}
+
+		function updateDisplay() {
+			const locale = getCurrentLocale();
+			if (label) label.textContent = locale.toUpperCase();
+			if (checkJa) checkJa.classList.toggle('hidden', locale !== 'ja');
+			if (checkEn) checkEn.classList.toggle('hidden', locale !== 'en');
+		}
+
+		function closeMenu() {
+			menu.classList.add('hidden');
+			btn.setAttribute('aria-expanded', 'false');
+		}
+
+		function openMenu() {
+			menu.classList.remove('hidden');
+			btn.setAttribute('aria-expanded', 'true');
+		}
+
+		function toggleMenu() {
+			const isOpen = !menu.classList.contains('hidden');
+			if (isOpen) {
+				closeMenu();
+			} else {
+				openMenu();
+			}
+		}
+
+		btn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			toggleMenu();
+		});
+
+		// Close on outside click
+		document.addEventListener('click', (e) => {
+			const switcher = document.getElementById('lang-switcher');
+			if (switcher && !switcher.contains(e.target as Node)) {
+				closeMenu();
+			}
+		});
+
+		// Close on Escape
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') closeMenu();
+		});
+
+		// Handle language option clicks
+		const options = menu.querySelectorAll('.lang-option');
+		options.forEach((option) => {
+			option.addEventListener('click', () => {
+				const locale = (option as HTMLElement).dataset.locale;
+				if (locale === 'ja' || locale === 'en') {
+					const currentLocale = getCurrentLocale();
+					if (locale !== currentLocale) {
+						localStorage.setItem(STORAGE_KEY, locale);
+						// Reload the page to apply the new locale
+						window.location.reload();
+					} else {
+						closeMenu();
+					}
+				}
+			});
+		});
+
+		updateDisplay();
+	}
+
+	// Initialize on page load and SPA navigations
+	document.addEventListener('astro:page-load', initLanguageSwitcher);
+</script>
