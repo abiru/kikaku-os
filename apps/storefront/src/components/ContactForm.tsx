@@ -6,6 +6,7 @@ import { Field, Label } from './catalyst/fieldset';
 import { getApiBase, buildStoreUrl } from '../lib/api';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useTranslation } from '../i18n';
+import { showToast } from '../lib/toast';
 
 type FormData = {
   name: string;
@@ -125,10 +126,11 @@ function ContactFormContent() {
       }
 
       setSubmitted(true);
+      showToast(t('toast.contactSuccess'), 'success');
     } catch (err) {
-      setSubmitError(
-        err instanceof Error ? err.message : t('contact.submitError')
-      );
+      const message = err instanceof Error ? err.message : t('contact.submitError');
+      setSubmitError(message);
+      showToast(t('toast.contactError'), 'error', { description: message });
     } finally {
       setSubmitting(false);
     }

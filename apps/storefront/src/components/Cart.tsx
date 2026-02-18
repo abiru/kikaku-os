@@ -16,6 +16,7 @@ import {
 import { getApiBase, fetchJson } from '../lib/api';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '../i18n';
+import { showToast } from '../lib/toast';
 import { ErrorBoundary } from './ErrorBoundary';
 import { CartOrderSummary } from './CartOrderSummary';
 import { EmptyStateReact } from './EmptyStateReact';
@@ -147,7 +148,10 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 						<div className="absolute top-0 right-0">
 							<button
 								type="button"
-								onClick={() => removeFromCart(item.variantId)}
+								onClick={() => {
+									removeFromCart(item.variantId);
+									showToast(t('toast.cartRemoved'), 'info');
+								}}
 								className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center -m-2 p-2 text-sm font-medium text-brand hover:text-brand-active transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
 							>
 								{t('common.remove')}
