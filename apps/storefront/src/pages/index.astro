@@ -1,42 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import HomeHero from "../components/HomeHero.astro";
-import HomeCategoryGrid from "../components/HomeCategoryGrid.astro";
-import LogoGrid from "../components/LogoGrid.astro";
-import Copy from "../components/Copy.astro";
-import Research from "../components/Research.astro";
-import Button from "../components/ui/Button.astro";
-import { getApiBase } from '../lib/api';
+import { Image } from 'astro:assets';
 import { t } from '../i18n';
-import { logError } from '../lib/logger';
-import type { HeroSection, Product } from '../lib/types';
+import naro from '../assets/logos/naro.png';
+import tsum from '../assets/logos/logo_tsumura.png';
+import kirishima from '../assets/logos/kirishima.svg';
+import fukuyama from '../assets/logos/fukuyama.png';
+import hokkai from '../assets/logos/hokkaido.png';
+import ryukoku from '../assets/logos/ryukoku.png';
+import lab from '../assets/lab.webp';
 
-const apiBase = getApiBase();
-
-// SSR: Fetch hero sections from API
-let heroes: HeroSection[] = [];
-try {
-  const res = await fetch(`${apiBase}/store/home/heroes`);
-  if (res.ok) {
-    const data = await res.json();
-    heroes = data.heroes || [];
-  }
-} catch (e) {
-  logError('Failed to fetch heroes', e, { page: 'index', action: 'fetchHeroes' });
-}
-
-// SSR: Fetch featured products for category grid
-let featuredProducts: Product[] = [];
-try {
-  const res = await fetch(`${apiBase}/store/home/featured-categories`);
-  if (res.ok) {
-    const data = await res.json();
-    featuredProducts = data.products || [];
-  }
-} catch (e) {
-  logError('Failed to fetch featured products', e, { page: 'index', action: 'fetchFeaturedProducts' });
-}
-// Organization JSON-LD for SEO
 const siteUrl = 'https://led-kikaku.com';
 const jsonLdOrganization = {
 	'@context': 'https://schema.org',
@@ -46,78 +19,441 @@ const jsonLdOrganization = {
 	description: t('seo.orgDescription'),
 	logo: `${siteUrl}/favicon.svg`,
 };
+
+const logos = [
+	{ src: naro, alt: 'NARO' },
+	{ src: tsum, alt: 'Tsumura' },
+	{ src: kirishima, alt: 'Kirishima' },
+	{ src: fukuyama, alt: 'Fukuyama' },
+	{ src: hokkai, alt: 'Hokkaido' },
+	{ src: ryukoku, alt: 'Ryukoku' },
+];
+
+const features = [
+	{
+		icon: 'checkout',
+		title: '最適化されたチェックアウト',
+		description: 'ワンクリックで購入完了。直感的なUIで、カート離脱率を大幅に削減します。',
+		link: '/products',
+		linkText: '商品を見る',
+	},
+	{
+		icon: 'payment',
+		title: '柔軟な決済手段',
+		description: 'クレジットカード、銀行振込、請求書払いなど、多様な決済方法に対応。',
+		link: '/faq',
+		linkText: '詳しく見る',
+	},
+	{
+		icon: 'quotation',
+		title: '見積書の即時発行',
+		description: 'オンラインで見積書を即座に作成・ダウンロード。法人のお客様の購買プロセスをサポート。',
+		link: '/quotations/new',
+		linkText: '見積を作成',
+	},
+	{
+		icon: 'research',
+		title: '研究機関への専門対応',
+		description: '大学・研究機関への豊富な納品実績。専門スタッフが最適な製品をご提案します。',
+		link: '/contact',
+		linkText: 'お問い合わせ',
+	},
+];
+
+const stats = [
+	{ value: '200+', label: '導入実績' },
+	{ value: '50+', label: '研究機関との取引' },
+	{ value: '99.9%', label: 'お客様満足度' },
+	{ value: '24h', label: '以内の出荷対応' },
+];
 ---
 
-<Layout title="Led Kikaku - Pro Growth" description={t('seo.homeDescription')}>
+<Layout title="Led Kikaku - プロ仕様の植物育成ライト" description={t('seo.homeDescription')}>
 	<script type="application/ld+json" set:html={JSON.stringify(jsonLdOrganization)} />
 
-	{/* Copy (Hero Headline) */}
-	<Copy />
+	{/* ===== HERO SECTION ===== */}
+	<section class="stripe-hero relative overflow-hidden">
+		{/* Background gradient mesh */}
+		<div class="hero-bg absolute inset-0"></div>
+		<div class="hero-glow"></div>
 
-	{/* Logo Trust Bar */}
-	<LogoGrid />
+		<div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-48px)] py-20 lg:py-0">
+				{/* Left: Copy */}
+				<div class="max-w-xl" data-reveal>
+					<p class="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 px-4 py-1.5 text-sm font-medium text-blue-200 mb-6">
+						<span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+						プロ仕様の植物育成ライト
+					</p>
+					<h1 class="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-white leading-[1.1]">
+						栽培パフォーマンスを<br />
+						<span class="hero-gradient-text">最大化する</span>テクノロジー
+					</h1>
+					<p class="mt-6 text-lg text-slate-300 leading-relaxed max-w-lg">
+						大学・研究機関が採用する高品質なLED照明。最新技術と豊富な実績で、あなたの研究・ビジネスを強力にサポートします。
+					</p>
+					<div class="mt-10 flex flex-col sm:flex-row gap-4">
+						<a
+							href="/products"
+							class="hero-cta-primary inline-flex items-center justify-center rounded-full px-8 py-3.5 text-base font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]"
+						>
+							商品を見る
+							<svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+						</a>
+						<a
+							href="/contact"
+							class="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 backdrop-blur-sm px-8 py-3.5 text-base font-semibold text-white transition-all hover:bg-white/10 active:scale-[0.98]"
+						>
+							お問い合わせ
+						</a>
+					</div>
+				</div>
 
-	{/* Dynamic Heroes */}
-	{heroes.length > 0 ? (
-		heroes.map((hero) => (
-			<HomeHero
-				title={hero.title}
-				subtitle={hero.subtitle}
-				image={hero.image}
-				imageSmall={hero.imageSmall}
-				ctaPrimaryText={hero.cta_primary_text}
-				ctaPrimaryUrl={hero.cta_primary_url}
-				ctaSecondaryText={hero.cta_secondary_text}
-				ctaSecondaryUrl={hero.cta_secondary_url}
-			/>
-		))
-	) : (
-		<section class="py-16 text-center bg-white">
-			<div class="mx-auto max-w-2xl px-6">
-				<h2 class="typo-h1 text-primary">{t('home.heroTagline')}</h2>
-				<p class="mt-4 text-lg text-secondary">{t('home.heroSubtagline')}</p>
-				<div class="mt-8">
-					<Button href="/products">{t('home.viewProducts')}</Button>
+				{/* Right: Floating UI Mockup */}
+				<div class="relative hidden lg:block" data-reveal>
+					<div class="mockup-container">
+						{/* Main Product Card */}
+						<div class="mockup-card main-card">
+							<div class="flex items-start gap-4 mb-4">
+								<div class="h-16 w-16 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0">
+									<svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" /></svg>
+								</div>
+								<div>
+									<p class="text-sm font-semibold text-white">SF-1000 Pro</p>
+									<p class="text-xs text-slate-400">植物育成LEDライト</p>
+								</div>
+							</div>
+							<div class="space-y-3">
+								<div class="flex justify-between text-sm">
+									<span class="text-slate-400">小計</span>
+									<span class="text-white font-medium">¥45,800</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span class="text-slate-400">消費税（10%）</span>
+									<span class="text-white font-medium">¥4,580</span>
+								</div>
+								<div class="border-t border-white/10 pt-3 flex justify-between text-sm">
+									<span class="text-white font-semibold">合計</span>
+									<span class="text-white font-bold text-lg">¥50,380</span>
+								</div>
+							</div>
+							<button class="mt-4 w-full rounded-lg bg-brand py-3 text-sm font-semibold text-white hover:bg-brand-hover transition-colors">
+								購入する
+							</button>
+						</div>
+
+						{/* Floating notification card */}
+						<div class="mockup-card floating-card notification-card">
+							<div class="flex items-center gap-3">
+								<div class="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+									<svg class="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+								</div>
+								<div>
+									<p class="text-xs font-semibold text-white">注文確定</p>
+									<p class="text-[10px] text-slate-400">配送準備中 · 2-3営業日</p>
+								</div>
+							</div>
+						</div>
+
+						{/* Payment methods card */}
+						<div class="mockup-card floating-card payment-card">
+							<p class="text-[10px] font-medium text-slate-400 mb-2">決済方法</p>
+							<div class="flex gap-2">
+								<div class="h-7 w-11 rounded bg-white/10 flex items-center justify-center">
+									<span class="text-[9px] font-bold text-blue-400">VISA</span>
+								</div>
+								<div class="h-7 w-11 rounded bg-white/10 flex items-center justify-center">
+									<span class="text-[9px] font-bold text-red-400">MC</span>
+								</div>
+								<div class="h-7 w-11 rounded bg-white/10 flex items-center justify-center">
+									<span class="text-[9px] font-bold text-slate-300">JCB</span>
+								</div>
+								<div class="h-7 w-11 rounded bg-white/10 flex items-center justify-center">
+									<span class="text-[8px] font-bold text-orange-400">振込</span>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
-		</section>
-	)}
+		</div>
+	</section>
 
-	{/* Featured Products */}
-	{featuredProducts.length > 0 ? (
-		<HomeCategoryGrid products={featuredProducts} />
-	) : (
-		<section class="py-16 text-center bg-white">
-			<div class="mx-auto max-w-2xl px-6">
-				<h2 class="typo-h2 text-primary">{t('home.viewProducts')}</h2>
-				<p class="mt-4 text-secondary">{t('home.heroSubtagline')}</p>
-				<div class="mt-6">
-					<Button href="/products">{t('home.viewProducts')}</Button>
-				</div>
-			</div>
-		</section>
-	)}
-
-	{/* Research */}
-	<Research />
-
-	{/* CTA Section */}
-	<section class="bg-white py-24 text-center" data-reveal>
-		<div class="mx-auto max-w-2xl px-6">
-			<h2 class="typo-h1 text-primary sm:text-4xl">
-				{t('home.heroTagline')}
-			</h2>
-			<p class="mt-4 text-lg text-secondary">
-				{t('home.heroSubtagline')}
+	{/* ===== LOGO TRUST BAR ===== */}
+	<section class="bg-white border-b border-neutral-100 py-12 lg:py-16" data-reveal>
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<p class="text-center text-sm font-medium text-secondary mb-8">
+				{t('logoGrid.subtitle')}
 			</p>
-			<div class="mt-10 flex items-center justify-center gap-4">
-				<Button href="/products" size="lg">
-					{t('home.viewProducts')}
-				</Button>
-				<Button href="/contact" variant="secondary" size="lg">
-					{t('home.researchCta')}
-				</Button>
+			<div class="flex flex-wrap items-center justify-center gap-x-12 gap-y-8">
+				{logos.map((v) => (
+					<Image
+						class="h-8 w-auto object-contain filter grayscale opacity-50 hover:opacity-100 hover:grayscale-0 transition-all duration-300"
+						src={v.src}
+						alt={v.alt}
+						width="120"
+						height="32"
+					/>
+				))}
+			</div>
+		</div>
+	</section>
+
+	{/* ===== FEATURES GRID ===== */}
+	<section class="bg-white py-24 lg:py-32" data-reveal>
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="max-w-2xl mb-16">
+				<p class="text-sm font-semibold text-brand mb-3">特長</p>
+				<h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-primary">
+					購入体験を、もっとシンプルに
+				</h2>
+				<p class="mt-4 text-lg text-secondary leading-relaxed">
+					プロ仕様の製品を、最適な購入方法で。個人のお客様から法人・研究機関まで、あらゆるニーズに対応します。
+				</p>
+			</div>
+
+			<div class="grid gap-6 sm:grid-cols-2">
+				{features.map((feature) => (
+					<article class="group relative rounded-2xl border border-neutral-200 bg-neutral-50/50 p-8 transition-all hover:border-neutral-300 hover:shadow-[var(--shadow-elevated)]">
+						<div class="mb-4">
+							{feature.icon === 'checkout' && (
+								<div class="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+									<svg class="h-5 w-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
+								</div>
+							)}
+							{feature.icon === 'payment' && (
+								<div class="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center">
+									<svg class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+								</div>
+							)}
+							{feature.icon === 'quotation' && (
+								<div class="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+									<svg class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+								</div>
+							)}
+							{feature.icon === 'research' && (
+								<div class="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center">
+									<svg class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" /></svg>
+								</div>
+							)}
+						</div>
+						<h3 class="text-lg font-semibold text-primary mb-2">{feature.title}</h3>
+						<p class="text-sm text-secondary leading-relaxed mb-4">{feature.description}</p>
+						<a
+							href={feature.link}
+							class="inline-flex items-center text-sm font-semibold text-brand hover:underline group-hover:gap-2 transition-all"
+						>
+							{feature.linkText}
+							<svg class="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+						</a>
+					</article>
+				))}
+			</div>
+		</div>
+	</section>
+
+	{/* ===== STATS BAR ===== */}
+	<section class="stripe-stats border-y border-neutral-200" data-reveal>
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div class="grid grid-cols-2 lg:grid-cols-4 divide-x divide-neutral-200">
+				{stats.map((stat) => (
+					<div class="py-12 lg:py-16 px-6 text-center">
+						<p class="text-3xl sm:text-4xl font-bold tracking-tight text-primary">{stat.value}</p>
+						<p class="mt-2 text-sm text-secondary">{stat.label}</p>
+					</div>
+				))}
+			</div>
+		</div>
+	</section>
+
+	{/* ===== RESEARCH / SPLIT SECTION ===== */}
+	<section class="bg-neutral-950 overflow-hidden" data-reveal>
+		<div class="relative mx-auto max-w-7xl">
+			<div class="relative h-80 overflow-hidden md:absolute md:left-0 md:h-full md:w-1/3 lg:w-1/2">
+				<Image
+					class="h-full w-full object-cover"
+					src={lab}
+					alt={t('home.researchImageAlt')}
+				/>
+				<div class="absolute inset-0 bg-gradient-to-r from-transparent to-neutral-950/60 hidden md:block"></div>
+			</div>
+			<div class="relative mx-auto max-w-7xl py-24 sm:py-32 lg:px-8 lg:py-40">
+				<div class="pl-6 pr-6 md:ml-auto md:w-2/3 md:pl-16 lg:w-1/2 lg:pl-24 lg:pr-0 xl:pl-32">
+					<p class="text-sm font-semibold text-emerald-400 mb-3">
+						{t('home.researchLabel')}
+					</p>
+					<h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+						{t('home.researchTitle')}
+					</h2>
+					<p class="mt-6 text-base leading-7 text-neutral-300">
+						{t('home.researchDescription')}
+					</p>
+					<div class="mt-8">
+						<a
+							href="/contact"
+							class="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-neutral-900 shadow-sm hover:bg-neutral-100 transition-colors active:scale-[0.98]"
+						>
+							{t('home.researchCta')}
+							<svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	{/* ===== BOTTOM CTA ===== */}
+	<section class="stripe-cta relative overflow-hidden py-24 lg:py-32" data-reveal>
+		<div class="cta-bg absolute inset-0"></div>
+		<div class="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
+			<h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+				今すぐ始めましょう
+			</h2>
+			<p class="mt-6 text-lg text-slate-300 leading-relaxed max-w-xl mx-auto">
+				アカウント作成から商品選定、ご購入まで。研究・業務に必要な照明機器をすぐにお届けします。
+			</p>
+			<div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+				<a
+					href="/products"
+					class="hero-cta-primary inline-flex items-center justify-center rounded-full px-8 py-3.5 text-base font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]"
+				>
+					商品を見る
+					<svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+				</a>
+				<a
+					href="/contact"
+					class="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 backdrop-blur-sm px-8 py-3.5 text-base font-semibold text-white transition-all hover:bg-white/10 active:scale-[0.98]"
+				>
+					お問い合わせ
+				</a>
 			</div>
 		</div>
 	</section>
 </Layout>
+
+<style>
+	/* ===== Hero Background ===== */
+	.stripe-hero {
+		background: #0a2540;
+		min-height: calc(100vh - 48px);
+	}
+
+	.hero-bg {
+		background:
+			radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.3) 0%, transparent 60%),
+			radial-gradient(ellipse 60% 40% at 80% 60%, rgba(0, 113, 227, 0.15) 0%, transparent 50%),
+			radial-gradient(ellipse 50% 30% at 20% 80%, rgba(52, 199, 89, 0.1) 0%, transparent 50%);
+	}
+
+	.hero-glow {
+		position: absolute;
+		top: -40%;
+		right: -10%;
+		width: 60%;
+		height: 120%;
+		background: radial-gradient(
+			ellipse at center,
+			rgba(99, 102, 241, 0.08) 0%,
+			transparent 70%
+		);
+		pointer-events: none;
+	}
+
+	.hero-gradient-text {
+		background: linear-gradient(135deg, #80e9ff 0%, #7c3aed 50%, #f472b6 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+
+	.hero-cta-primary {
+		background: linear-gradient(135deg, #635bff 0%, #7c3aed 100%);
+		box-shadow: 0 4px 14px rgba(99, 91, 255, 0.4);
+	}
+
+	/* ===== Mockup Cards ===== */
+	.mockup-container {
+		position: relative;
+		height: 480px;
+	}
+
+	.mockup-card {
+		background: rgba(15, 23, 42, 0.8);
+		backdrop-filter: blur(20px);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 16px;
+		padding: 24px;
+		box-shadow:
+			0 20px 60px rgba(0, 0, 0, 0.3),
+			0 0 1px rgba(255, 255, 255, 0.1) inset;
+	}
+
+	.main-card {
+		position: absolute;
+		top: 40px;
+		left: 20px;
+		width: 320px;
+		animation: float-main 6s ease-in-out infinite;
+	}
+
+	.notification-card {
+		position: absolute;
+		top: 20px;
+		right: 0;
+		width: 240px;
+		padding: 16px;
+		animation: float-notification 5s ease-in-out infinite;
+		animation-delay: 1s;
+	}
+
+	.payment-card {
+		position: absolute;
+		bottom: 40px;
+		right: 20px;
+		width: 220px;
+		padding: 16px;
+		animation: float-payment 7s ease-in-out infinite;
+		animation-delay: 2s;
+	}
+
+	@keyframes float-main {
+		0%, 100% { transform: translateY(0); }
+		50% { transform: translateY(-10px); }
+	}
+
+	@keyframes float-notification {
+		0%, 100% { transform: translateY(0) rotate(0deg); }
+		50% { transform: translateY(-8px) rotate(1deg); }
+	}
+
+	@keyframes float-payment {
+		0%, 100% { transform: translateY(0) rotate(0deg); }
+		50% { transform: translateY(-12px) rotate(-1deg); }
+	}
+
+	/* ===== Stats Section ===== */
+	.stripe-stats {
+		background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+	}
+
+	/* ===== Bottom CTA ===== */
+	.stripe-cta {
+		background: #0a2540;
+	}
+
+	.cta-bg {
+		background:
+			radial-gradient(ellipse 60% 50% at 50% 50%, rgba(99, 91, 255, 0.15) 0%, transparent 60%),
+			radial-gradient(ellipse 40% 40% at 30% 70%, rgba(52, 199, 89, 0.08) 0%, transparent 50%),
+			radial-gradient(ellipse 40% 40% at 70% 30%, rgba(120, 119, 198, 0.1) 0%, transparent 50%);
+	}
+
+	/* ===== Reduced Motion ===== */
+	@media (prefers-reduced-motion: reduce) {
+		.main-card,
+		.notification-card,
+		.payment-card {
+			animation: none;
+		}
+	}
+</style>
