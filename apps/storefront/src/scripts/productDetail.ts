@@ -3,6 +3,12 @@ import { addToRecentlyViewed } from '../lib/recentlyViewed';
 import { showToast } from '../lib/toast';
 import { t } from '../i18n';
 
+declare global {
+	interface Window {
+		dataLayer: Record<string, unknown>[];
+	}
+}
+
 const page = document.getElementById('product-page');
 if (page) {
 	const variantId = page.dataset.variantId ? Number(page.dataset.variantId) : null;
