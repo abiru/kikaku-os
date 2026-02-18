@@ -822,7 +822,13 @@
     "internationalShippingDescription": "10日程度でお届け",
     "priceIncludesTax": "（税込）",
     "lowStock": "残り {stock} 個 - お早めに！",
-    "selectVariant": "バリアントを選択してください"
+    "selectVariant": "バリアントを選択してください",
+    "zoomHint": "クリックで拡大表示",
+    "lightboxClose": "閉じる",
+    "lightboxPrev": "前の画像",
+    "lightboxNext": "次の画像",
+    "lightboxCounter": "{current} / {total}",
+    "lightboxOpen": "画像を拡大表示"
   },
   "recentlyViewed": {
     "title": "最近チェックした商品"
