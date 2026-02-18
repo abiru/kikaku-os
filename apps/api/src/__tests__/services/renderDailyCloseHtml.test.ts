@@ -132,4 +132,103 @@ describe('renderDailyCloseHtml', () => {
     );
     expect(html).toContain('count 0');
   });
+
+  describe('idempotency (#868)', () => {
+    it('produces identical HTML for the same input on repeated calls', () => {
+      const report = createMockReport();
+      const evidence = createMockEvidence();
+
+      const first = renderDailyCloseHtml(report, evidence);
+      const second = renderDailyCloseHtml(report, evidence);
+      const third = renderDailyCloseHtml(report, evidence);
+
+      expect(first).toBe(second);
+      expect(second).toBe(third);
+    });
+
+    it('does not mutate the input report or evidence', () => {
+      const report = createMockReport();
+      const evidence = createMockEvidence();
+
+      const reportSnapshot = JSON.stringify(report);
+      const evidenceSnapshot = JSON.stringify(evidence);
+
+      renderDailyCloseHtml(report, evidence);
+
+      expect(JSON.stringify(report)).toBe(reportSnapshot);
+      expect(JSON.stringify(evidence)).toBe(evidenceSnapshot);
+    });
+
+    it('concurrent renders produce identical output', async () => {
+      const report = createMockReport();
+      const evidence = createMockEvidence();
+
+      const results = await Promise.all(
+        Array.from({ length: 5 }, () =>
+          Promise.resolve(renderDailyCloseHtml(report, evidence))
+        )
+      );
+
+      const [first, ...rest] = results;
+      for (const result of rest) {
+        expect(result).toBe(first);
+      }
+    });
+
+    it('different dates produce different HTML (no stale cache)', () => {
+      const jan15 = renderDailyCloseHtml(
+        createMockReport({ date: '2026-01-15' }),
+        createMockEvidence()
+      );
+      const jan16 = renderDailyCloseHtml(
+        createMockReport({ date: '2026-01-16' }),
+        createMockEvidence()
+      );
+
+      expect(jan15).not.toBe(jan16);
+      expect(jan15).toContain('2026-01-15');
+      expect(jan16).toContain('2026-01-16');
+    });
+  });
+
+  describe('timezone boundary (#868)', () => {
+    it('renders JST 23:59 date correctly (still same JST day)', () => {
+      // 2026-01-15 23:59 JST = 2026-01-15 14:59 UTC → date is still 2026-01-15
+      const html = renderDailyCloseHtml(
+        createMockReport({ date: '2026-01-15' }),
+        createMockEvidence()
+      );
+      expect(html).toContain('Daily Close 2026-01-15');
+      expect(html).not.toContain('2026-01-16');
+    });
+
+    it('renders JST 00:00 date correctly (next JST day)', () => {
+      // 2026-01-16 00:00 JST = 2026-01-15 15:00 UTC → date is 2026-01-16
+      const evidenceForJan16 = createMockEvidence({
+        payments: [
+          { id: 201, amount: 10000, fee: 300, created_at: '2026-01-16T00:00:00+09:00', method: 'card', provider: 'stripe' },
+        ],
+        refunds: [],
+      });
+      const html = renderDailyCloseHtml(
+        createMockReport({ date: '2026-01-16' }),
+        evidenceForJan16
+      );
+      expect(html).toContain('Daily Close 2026-01-16');
+      expect(html).not.toContain('Daily Close 2026-01-15');
+    });
+
+    it('adjacent JST dates produce distinct reports', () => {
+      const report15 = createMockReport({ date: '2026-01-15' });
+      const report16 = createMockReport({ date: '2026-01-16' });
+      const evidence = createMockEvidence();
+
+      const html15 = renderDailyCloseHtml(report15, evidence);
+      const html16 = renderDailyCloseHtml(report16, evidence);
+
+      expect(html15).toContain('2026-01-15');
+      expect(html16).toContain('2026-01-16');
+      expect(html15).not.toBe(html16);
+    });
+  });
 });
