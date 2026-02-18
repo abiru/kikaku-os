@@ -43,6 +43,27 @@ function buildQuantityOptions(currentQuantity: number, stock?: number): number[]
 	return Array.from({ length: count }, (_, i) => i + 1);
 }
 
+function CartImage({ src, alt }: { src: string; alt: string }) {
+	const [loaded, setLoaded] = useState(false);
+
+	return (
+		<div className="relative size-24 sm:size-48">
+			{!loaded && (
+				<div className="absolute inset-0 rounded-xl bg-neutral-200 animate-pulse" aria-hidden="true" />
+			)}
+			<img
+				src={src}
+				alt={alt}
+				width={192}
+				height={192}
+				loading="lazy"
+				onLoad={() => setLoaded(true)}
+				className={`size-24 rounded-xl object-cover sm:size-48 transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+			/>
+		</div>
+	);
+}
+
 function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HTMLLIElement> }) {
 	const { t } = useTranslation();
 	const [stockError, setStockError] = useState<string | null>(null);
@@ -53,14 +74,7 @@ function CartItemRow({ item, itemRef }: { item: CartItem; itemRef?: React.Ref<HT
 		<li ref={itemRef} className="flex py-6 sm:py-10">
 			<div className="shrink-0">
 				{item.imageUrl ? (
-					<img
-						src={item.imageUrl}
-						alt={item.title}
-						width={192}
-						height={192}
-						loading="lazy"
-						className="size-24 rounded-xl object-cover sm:size-48"
-					/>
+					<CartImage src={item.imageUrl} alt={item.title} />
 				) : (
 					<div className="size-24 rounded-xl bg-neutral-100 flex items-center justify-center sm:size-48" aria-hidden="true">
 						<svg className="size-8 text-neutral-300 sm:size-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
