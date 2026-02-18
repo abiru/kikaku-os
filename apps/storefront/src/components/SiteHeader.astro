@@ -42,7 +42,7 @@ const {
 		</a>
 
 		{/* Desktop Nav - Centered & Subtle */}
-		<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-primary overflow-x-auto whitespace-nowrap">
+		<nav class="hidden lg:flex items-center gap-4 text-[12px] font-normal text-primary overflow-x-auto whitespace-nowrap nav-overflow-hint">
 			<a href="/" class={`transition-colors hover:text-primary ${currentPath === '/' ? 'text-primary font-medium' : ''}`}>{t('nav.store')}</a>
 			<a href="/products" class={`transition-colors hover:text-primary ${currentPath.startsWith('/products') ? 'text-primary font-medium' : ''}`}>{t('nav.products')}</a>
 			<a href="/categories" class={`transition-colors hover:text-primary ${currentPath.startsWith('/categories') ? 'text-primary font-medium' : ''}`}>{t('nav.categories')}</a>
@@ -305,3 +305,10 @@ const {
 	// Run on initial load and on every SPA navigation
 	document.addEventListener('astro:page-load', initSiteHeader);
 </script>
+
+<style>
+	.nav-overflow-hint {
+		mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 8px), transparent);
+		-webkit-mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 8px), transparent);
+	}
+</style>
