@@ -781,7 +781,8 @@
     "ordersPageTitle": "注文履歴 - Led Kikaku Store",
     "orderDetailPageTitle": "注文 #{id} - Led Kikaku Store",
     "basicInfo": "基本情報",
-    "emailManagedByClerk": "メールアドレスはClerkアカウントで管理されています"
+    "emailManagedByClerk": "メールアドレスはClerkアカウントで管理されています",
+    "printOrder": "この注文を印刷"
   },
   "category": {
     "home": "ホーム",
