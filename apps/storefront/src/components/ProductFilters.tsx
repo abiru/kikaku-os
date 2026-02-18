@@ -122,6 +122,7 @@ export default function ProductFilters() {
 			? `${window.location.pathname}?${params.toString()}`
 			: window.location.pathname;
 
+		// TODO(#840): Use navigate() from astro:transitions/client when ViewTransitions is enabled
 		window.location.href = newUrl;
 	};
 
@@ -135,6 +136,7 @@ export default function ProductFilters() {
 			? `${window.location.pathname}?q=${encodeURIComponent(q)}`
 			: window.location.pathname;
 
+		// TODO(#840): Use navigate() from astro:transitions/client when ViewTransitions is enabled
 		window.location.href = newUrl;
 	};
 
