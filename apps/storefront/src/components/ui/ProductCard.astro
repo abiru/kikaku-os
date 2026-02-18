@@ -1,5 +1,6 @@
 ---
 import { cardClasses } from '../../lib/cardClasses';
+import { buildSrcSet } from '../../lib/responsiveImage';
 
 interface Props {
   id: number;
@@ -43,6 +44,8 @@ const formattedPrice = price !== undefined
       minimumFractionDigits: 0,
     }).format(price)
   : null;
+
+const srcset = image ? buildSrcSet(image, 'thumbnail') : '';
 ---
 
 <a
@@ -53,8 +56,11 @@ const formattedPrice = price !== undefined
     {image ? (
       <img
         src={image}
+        srcset={srcset}
+        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         alt={title}
         loading="lazy"
+        decoding="async"
         class={cardClasses.image}
         style={`view-transition-name: product-image-${id}`}
       />

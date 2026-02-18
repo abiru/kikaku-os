@@ -1,6 +1,7 @@
 ---
 import { t } from '../i18n';
 import { FOCUS_RING } from '../lib/focusRing';
+import { buildSrcSet } from '../lib/responsiveImage';
 
 interface FeaturedProduct {
   id: number;
@@ -26,6 +27,7 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
       const bgImage = product.image || placeholderBg;
       const categoryName = product.category || t('nav.products');
       const description = product.description || t('home.exploreProducts');
+      const srcset = buildSrcSet(bgImage, 'card');
 
       return (
         <article
@@ -34,8 +36,11 @@ const placeholderBg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSI
         >
           <img
             src={bgImage}
+            srcset={srcset}
+            sizes="(max-width: 640px) 100vw, 50vw"
             alt={categoryName}
             loading="lazy"
+            decoding="async"
             class="absolute inset-0 w-full h-full object-cover"
           />
           <div class="category-scrim relative z-10 px-6 pb-8 pt-20">

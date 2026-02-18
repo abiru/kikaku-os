@@ -1,5 +1,6 @@
 import { cardClasses } from '../../lib/cardClasses';
 import { formatPrice } from '../../lib/format';
+import { buildSrcSet } from '../../lib/responsiveImage';
 
 type Props = {
   id: number;
@@ -36,6 +37,7 @@ export function ProductCardReact({
   const isCompact = variant === 'compact';
   const outerClass = isCompact ? cardClasses.outerCompact : cardClasses.outer;
   const titleClass = isCompact ? cardClasses.titleCompact : cardClasses.title;
+  const srcset = image ? buildSrcSet(image, 'thumbnail') : '';
 
   return (
     <div className={`group relative flex flex-col overflow-hidden ${outerClass} ${className}`}>
@@ -49,8 +51,11 @@ export function ProductCardReact({
           {image ? (
             <img
               src={image}
+              srcSet={srcset}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               alt={title}
               loading="lazy"
+              decoding="async"
               className={cardClasses.image}
               style={{ viewTransitionName: `product-image-${id}` }}
             />

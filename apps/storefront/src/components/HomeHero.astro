@@ -1,6 +1,7 @@
 ---
 import { t } from '../i18n';
 import { FOCUS_RING } from '../lib/focusRing';
+import { buildSrcSet } from '../lib/responsiveImage';
 
 interface Props {
   title: string;
@@ -25,16 +26,58 @@ const {
 } = Astro.props;
 
 // Use provided images or fallback to transparent placeholder
-const bgLarge = image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmNWY1ZjciLz48L3N2Zz4=';
-const bgSmall = imageSmall || image || bgLarge;
+const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmNWY1ZjciLz48L3N2Zz4=';
+const bgLarge = image || placeholderSvg;
+const bgSmall = imageSmall || image || placeholderSvg;
+const hasRealImage = !!image && !image.startsWith('data:');
+const srcsetLarge = buildSrcSet(bgLarge, 'hero');
+const srcsetSmall = buildSrcSet(bgSmall, 'hero');
 ---
 
 <section
-  class="hero relative min-h-[60vh] md:min-h-[70vh] bg-cover bg-center bg-no-repeat flex items-end"
-  style={`--bg-large: url(${bgLarge}); --bg-small: url(${bgSmall});`}
+  class="hero relative min-h-[60vh] md:min-h-[70vh] flex items-end overflow-hidden"
   data-reveal
 >
-  <div class="hero-scrim w-full px-4 pb-12 pt-40 md:pt-48 text-center">
+  {/* Hero background image with responsive srcset */}
+  {hasRealImage ? (
+    <picture>
+      {srcsetSmall && (
+        <source
+          media="(max-width: 768px)"
+          srcset={srcsetSmall}
+          sizes="100vw"
+          type="image/webp"
+        />
+      )}
+      {srcsetLarge && (
+        <source
+          media="(min-width: 769px)"
+          srcset={srcsetLarge}
+          sizes="100vw"
+          type="image/webp"
+        />
+      )}
+      <img
+        src={bgLarge}
+        srcset={srcsetLarge}
+        sizes="100vw"
+        alt=""
+        role="presentation"
+        loading="eager"
+        decoding="sync"
+        fetchpriority="high"
+        class="absolute inset-0 w-full h-full object-cover"
+      />
+    </picture>
+  ) : (
+    <div
+      class="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+      style={`background-image: url(${bgLarge});`}
+      role="presentation"
+    />
+  )}
+
+  <div class="hero-scrim relative z-10 w-full px-4 pb-12 pt-40 md:pt-48 text-center">
     <h2
       class="text-2xl font-extrabold tracking-tighter sm:text-5xl text-white"
     >
@@ -67,16 +110,6 @@ const bgSmall = imageSmall || image || bgLarge;
 </section>
 
 <style>
-  /* 背景切り替え */
-  .hero {
-    background-image: var(--bg-large);
-  }
-  @media (max-width: 768px) {
-    .hero {
-      background-image: var(--bg-small);
-    }
-  }
-
   /* ボトムウェイトのダークスクリム */
   .hero-scrim {
     background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 0%, transparent 60%);
