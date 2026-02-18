@@ -3,11 +3,14 @@ export const prerender = false;
 
 import AdminLayout from '../../layouts/AdminLayout.astro';
 import ReviewsTable from '../../components/admin/ReviewsTable';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { getApiBase } from '../../lib/api';
 
 const apiBase = getApiBase();
 ---
 
 <AdminLayout title="Reviews - Admin">
-	<ReviewsTable apiBase={apiBase} client:visible />
+	<ErrorBoundary client:visible>
+		<ReviewsTable apiBase={apiBase} />
+	</ErrorBoundary>
 </AdminLayout>

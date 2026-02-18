@@ -5,6 +5,11 @@ vi.mock('../i18n', () => ({
   t: (key: string) => key,
 }))
 
+const mockLogError = vi.fn()
+vi.mock('../lib/logger', () => ({
+  logError: (...args: unknown[]) => mockLogError(...args),
+}))
+
 import { ErrorBoundary } from './ErrorBoundary'
 
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
@@ -57,23 +62,21 @@ describe('ErrorBoundary', () => {
     expect(reloadButton.tagName).toBe('BUTTON')
   })
 
-  it('logs error details to console when child throws', () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('logs error via logError when child throws', () => {
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
     );
-    expect(errorSpy).toHaveBeenCalledWith(
-      '[ErrorBoundary] Component error:',
+    expect(mockLogError).toHaveBeenCalledWith(
+      'Component error caught by ErrorBoundary',
       expect.any(Error),
-      expect.any(String)
+      expect.objectContaining({ page: 'ErrorBoundary' })
     );
-    errorSpy.mockRestore();
   })
 
   it('resets error state on retry button click', () => {
-    const { rerender } = render(
+    render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>

@@ -8,6 +8,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import ConfirmDialog from '../../components/admin/ConfirmDialog.astro';
 import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import PagesTable from '../../components/admin/PagesTable';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { t } from '../../i18n';
 
 const q = Astro.url.searchParams.get('q') || '';
@@ -108,7 +109,9 @@ const CORE_SLUGS = ['terms', 'privacy', 'shipping', 'refund', 'legal'];
 		)}
 
 		{/* Pages Table */}
-		<PagesTable client:only="react" pages={pages} coreSlugs={CORE_SLUGS} />
+		<ErrorBoundary client:only="react">
+			<PagesTable pages={pages} coreSlugs={CORE_SLUGS} />
+		</ErrorBoundary>
 
 		{/* Pagination */}
 		<div class="flex items-center justify-between">

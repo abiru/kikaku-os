@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
 import InquiryDetail from '../../../components/admin/InquiryDetail';
+import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { getApiBase } from '../../../lib/api';
 import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
 
@@ -37,7 +38,9 @@ error = fetchError;
 		)}
 
 		{inquiry ? (
-			<InquiryDetail client:load inquiry={inquiry} apiBase={apiBase} />
+			<ErrorBoundary client:load>
+				<InquiryDetail inquiry={inquiry} apiBase={apiBase} />
+			</ErrorBoundary>
 		) : !error ? (
 			<Alert color="amber" client:load>
 				お問い合わせが見つかりません。

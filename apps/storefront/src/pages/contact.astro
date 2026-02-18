@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Container from '../components/Container.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
 import ContactForm from '../components/ContactForm';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { t } from '../i18n';
 ---
 
@@ -22,7 +23,9 @@ import { t } from '../i18n';
 				</div>
 
 				<div class="rounded-2xl bg-white p-8 shadow-sm border border-gray-200">
-					<ContactForm client:load />
+					<ErrorBoundary client:load>
+						<ContactForm />
+					</ErrorBoundary>
 				</div>
 			</div>
 		</Container>

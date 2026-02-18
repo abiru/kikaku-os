@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
 import InquiriesTable from '../../../components/admin/InquiriesTable';
+import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { Heading } from '../../../components/catalyst/heading';
 import { adminFetchList } from '../../../lib/admin/fetchAdmin';
 import type { ContactInquiry } from '../../../lib/types';
@@ -33,13 +34,14 @@ const error = fetchError ? 'お問い合わせの読み込みに失敗しまし�
 			</Alert>
 		)}
 
-		<InquiriesTable
-			client:visible
-			inquiries={inquiries}
-			currentStatus={status}
-			total={meta.total}
-			limit={limit}
-			offset={offset}
-		/>
+		<ErrorBoundary client:visible>
+			<InquiriesTable
+				inquiries={inquiries}
+				currentStatus={status}
+				total={meta.total}
+				limit={limit}
+				offset={offset}
+			/>
+		</ErrorBoundary>
 	</div>
 </AdminLayout>
