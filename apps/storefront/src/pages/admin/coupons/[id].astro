@@ -393,7 +393,7 @@ if (csrfCookieHeader) {
 
 	if (deleteTrigger && deleteForm) {
 		deleteTrigger.addEventListener('click', async () => {
-			const confirmDialog = (window as any).__confirmDialog;
+			const confirmDialog = window.__confirmDialog;
 			const confirmed = confirmDialog
 				? await confirmDialog({
 						title: 'Delete Coupon',

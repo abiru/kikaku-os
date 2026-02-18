@@ -25,9 +25,7 @@ type Props = {
   statusFilter: string
 }
 
-const confirmDialog = (window as any).__confirmDialog as
-  | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
-  | undefined
+const confirmDialog = window.__confirmDialog
 
 const sortFieldTypes = {
   title: 'string' as const,

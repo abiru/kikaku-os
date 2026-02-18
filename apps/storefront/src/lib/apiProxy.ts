@@ -1,9 +1,10 @@
 import type { APIRoute } from 'astro'
+import { getApiBase } from './api'
 
 export function createProxyHandler(basePath: string): APIRoute {
   return async ({ request, params }) => {
     const apiKey = import.meta.env.ADMIN_API_KEY || ''
-    const apiBase = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787'
+    const apiBase = getApiBase()
     const path = params.path || ''
     const url = new URL(request.url)
     const queryString = url.search

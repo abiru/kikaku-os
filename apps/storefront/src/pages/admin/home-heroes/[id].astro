@@ -350,7 +350,7 @@ if (Astro.request.method === 'POST' && hero) {
 			const form = btn.closest<HTMLFormElement>('.delete-hero-image-form');
 			if (!form) return;
 			const label = form.dataset.imageLabel || 'this';
-			const confirmed = await (window as any).__confirmDialog({
+			const confirmed = await window.__confirmDialog?.({
 				title: 'Delete Image',
 				message: `Are you sure you want to delete the ${label} image? This action cannot be undone.`,
 				confirmLabel: 'Delete',

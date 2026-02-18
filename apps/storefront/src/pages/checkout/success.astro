@@ -6,8 +6,9 @@ import { t } from '../../i18n';
 import { buildStoreOrderUrl, resolveCheckoutOrderToken } from '../../lib/checkoutSuccess';
 import { formatPrice } from '../../lib/format';
 import { logError } from '../../lib/logger';
+import { getApiBase } from '../../lib/api';
 
-const apiBase = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
+const apiBase = getApiBase();
 const orderToken = resolveCheckoutOrderToken(Astro.url.searchParams.get('order_id'));
 let order = null;
 
@@ -200,22 +201,6 @@ if (orderToken) {
 
 <script>
 	import DOMPurify from 'isomorphic-dompurify';
-
-	declare global {
-		interface Window {
-			__CHECKOUT_SUCCESS_API_BASE__?: string;
-			__CHECKOUT_ORDER__?: { id: number; total_amount: number; currency: string; items?: Array<{ title?: string; quantity?: number; unit_price?: number; product_id?: number; variant_title?: string }> } | null;
-			__I18N_PAYMENT_PROCESSING__?: string;
-			__I18N_PAYMENT_PROCESSING_DESC__?: string;
-			__I18N_CONFIRMED__?: string;
-			__I18N_POLLING_MAX_RETRIES__?: string;
-			__I18N_CONTACT_SUPPORT__?: string;
-			__I18N_POLLING_CHECKING__?: string;
-			__I18N_POLLING_ERROR__?: string;
-			__I18N_POLLING_RETRY__?: string;
-			dataLayer: Record<string, unknown>[];
-		}
-	}
 
 	// GTM: purchase event
 	const orderData = window.__CHECKOUT_ORDER__;

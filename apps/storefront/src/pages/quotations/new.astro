@@ -2,8 +2,9 @@
 import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
 import { t } from '../../i18n';
+import { getApiBase } from '../../lib/api';
 
-const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
+const apiUrl = getApiBase();
 ---
 
 <Layout title={t('quotation.createTitle')} disableViewTransitions>
@@ -81,23 +82,8 @@ const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
   import { createQuotation } from '../../lib/quotationApi';
   import { formatPrice } from '../../lib/format';
 
-  declare global {
-    interface Window {
-      __QUOTATION_API_URL__: string;
-      __QUOTATION_I18N__: {
-        emptyCart: string;
-        viewProducts: string;
-        quantity: string;
-        creating: string;
-        createButton: string;
-        createError: string;
-        tokenError: string;
-      };
-    }
-  }
-
-  const apiUrl = window.__QUOTATION_API_URL__;
-  const i18n = window.__QUOTATION_I18N__;
+  const apiUrl = window.__QUOTATION_API_URL__!;
+  const i18n = window.__QUOTATION_I18N__!;
 
   const escapeHtml = (str: string | null | undefined) => {
     if (!str) return '';
