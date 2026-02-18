@@ -360,4 +360,172 @@ describe('SearchModal', () => {
 
 		expect(screen.queryByText('errors.networkError')).not.toBeInTheDocument();
 	});
+
+	describe('ARIA combobox/listbox semantics', () => {
+		const mockProducts = [
+			{
+				id: 1,
+				title: 'LED Panel A',
+				description: 'High quality LED panel',
+				image: null,
+				variants: [{ id: 1, title: 'Default', price: { amount: 3000, currency: 'JPY' } }],
+			},
+			{
+				id: 2,
+				title: 'LED Strip B',
+				description: null,
+				image: null,
+				variants: [{ id: 2, title: 'Default', price: { amount: 1500, currency: 'JPY' } }],
+			},
+		];
+
+		function setupWithResults() {
+			(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({ products: mockProducts }),
+			});
+		}
+
+		it('sets combobox role and static ARIA attributes on the input', () => {
+			render(<SearchModal />);
+
+			act(() => {
+				window.dispatchEvent(new Event('open-search'));
+			});
+
+			const input = screen.getByRole('combobox');
+			expect(input).toHaveAttribute('aria-haspopup', 'listbox');
+			expect(input).toHaveAttribute('aria-controls', 'search-listbox');
+			expect(input).toHaveAttribute('aria-autocomplete', 'list');
+		});
+
+		it('sets aria-expanded="false" when no results are shown', () => {
+			render(<SearchModal />);
+
+			act(() => {
+				window.dispatchEvent(new Event('open-search'));
+			});
+
+			const input = screen.getByRole('combobox');
+			expect(input).toHaveAttribute('aria-expanded', 'false');
+		});
+
+		it('sets aria-expanded="true" when results are displayed', async () => {
+			setupWithResults();
+			render(<SearchModal />);
+
+			act(() => {
+				window.dispatchEvent(new Event('open-search'));
+			});
+
+			const input = screen.getByRole('combobox');
+			fireEvent.change(input, { target: { value: 'LED' } });
+
+			await act(async () => {
+				vi.advanceTimersByTime(350);
+			});
+
+			await waitFor(() => {
+				expect(input).toHaveAttribute('aria-expanded', 'true');
+			});
+		});
+
+		it('renders listbox with correct id and aria-label', async () => {
+			setupWithResults();
+			render(<SearchModal />);
+
+			act(() => {
+				window.dispatchEvent(new Event('open-search'));
+			});
+
+			fireEvent.change(screen.getByRole('combobox'), { target: { value: 'LED' } });
+
+			await act(async () => {
+				vi.advanceTimersByTime(350);
+			});
+
+			await waitFor(() => {
+				const listbox = screen.getByRole('listbox');
+				expect(listbox).toHaveAttribute('id', 'search-listbox');
+				expect(listbox).toHaveAttribute('aria-label', 'search.results');
+			});
+		});
+
+		it('renders each result as an option with correct id and aria-selected', async () => {
+			setupWithResults();
+			render(<SearchModal />);
+
+			act(() => {
+				window.dispatchEvent(new Event('open-search'));
+			});
+
+			fireEvent.change(screen.getByRole('combobox'), { target: { value: 'LED' } });
+
+			await act(async () => {
+				vi.advanceTimersByTime(350);
+			});
+
+			await waitFor(() => {
+				const options = screen.getAllByRole('option');
+				expect(options).toHaveLength(2);
+
+				expect(options[0]).toHaveAttribute('id', 'search-option-0');
+				expect(options[0]).toHaveAttribute('aria-selected', 'true');
+
+				expect(options[1]).toHaveAttribute('id', 'search-option-1');
+				expect(options[1]).toHaveAttribute('aria-selected', 'false');
+			});
+		});
+
+		it('updates aria-activedescendant and aria-selected on arrow key navigation', async () => {
+			setupWithResults();
+			render(<SearchModal />);
+
+			act(() => {
+				window.dispatchEvent(new Event('open-search'));
+			});
+
+			const input = screen.getByRole('combobox');
+			fireEvent.change(input, { target: { value: 'LED' } });
+
+			await act(async () => {
+				vi.advanceTimersByTime(350);
+			});
+
+			await waitFor(() => {
+				expect(input).toHaveAttribute('aria-activedescendant', 'search-option-0');
+			});
+
+			// Press ArrowDown to move to second option
+			act(() => {
+				window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+			});
+
+			expect(input).toHaveAttribute('aria-activedescendant', 'search-option-1');
+
+			const options = screen.getAllByRole('option');
+			expect(options[0]).toHaveAttribute('aria-selected', 'false');
+			expect(options[1]).toHaveAttribute('aria-selected', 'true');
+
+			// Press ArrowUp to move back to first option
+			act(() => {
+				window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+			});
+
+			expect(input).toHaveAttribute('aria-activedescendant', 'search-option-0');
+			expect(options[0]).toHaveAttribute('aria-selected', 'true');
+			expect(options[1]).toHaveAttribute('aria-selected', 'false');
+		});
+
+		it('does not set aria-activedescendant when no results are shown', () => {
+			render(<SearchModal />);
+
+			act(() => {
+				window.dispatchEvent(new Event('open-search'));
+			});
+
+			const input = screen.getByRole('combobox');
+			expect(input).not.toHaveAttribute('aria-activedescendant');
+		});
+	});
 });

@@ -31,7 +31,7 @@ export default function SearchModal() {
 	const modalRef = useRef<HTMLDivElement>(null);
 	const triggerRef = useRef<HTMLElement | null>(null);
 
-	const listboxId = 'search-results-listbox';
+	const listboxId = 'search-listbox';
 	const hasResults = results.length > 0;
 	const showResults = query.length >= 2;
 	const activeOptionId = hasResults ? `search-option-${selectedIndex}` : undefined;
@@ -268,7 +268,7 @@ export default function SearchModal() {
 									</button>
 								</div>
 							) : results.length > 0 ? (
-								<div ref={resultsRef} id={listboxId} role="listbox" aria-label={t('common.searchProducts')} className="max-h-80 overflow-y-auto py-2">
+								<div ref={resultsRef} id={listboxId} role="listbox" aria-label={t('search.results')} className="max-h-80 overflow-y-auto py-2">
 									{results.map((product, index) => {
 										const price = product.variants[0]?.price;
 										return (
