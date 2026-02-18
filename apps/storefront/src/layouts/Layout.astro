@@ -1,6 +1,7 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
 import BackToTop from '../components/BackToTop.astro';
+import PageTransitionProgress from '../components/PageTransitionProgress.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SearchModal from '../components/SearchModal';
@@ -73,6 +74,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 		<slot name="head" />
 	</head>
 	<body class="font-sans text-primary antialiased bg-subtle">
+		{!disableViewTransitions && <PageTransitionProgress />}
 		{/* Google Tag Manager (noscript) */}
 		{gtmId && (
 			<noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`} height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
