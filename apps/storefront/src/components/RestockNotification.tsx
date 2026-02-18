@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Button } from './catalyst/button';
+import { Input } from './catalyst/input';
 import { getApiBase, buildStoreUrl } from '../lib/api';
 import { useTranslation } from '../i18n';
 
@@ -70,7 +72,7 @@ export default function RestockNotification({ productId }: Props) {
       </p>
       <form onSubmit={handleSubmit} className="mt-3">
         <div className="flex gap-2">
-          <input
+          <Input
             type="email"
             value={email}
             onChange={(e) => {
@@ -82,16 +84,17 @@ export default function RestockNotification({ productId }: Props) {
             }}
             placeholder={t('restock.emailPlaceholder')}
             maxLength={254}
-            className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+            className="flex-1 min-w-0"
             disabled={status === 'submitting'}
           />
-          <button
+          <Button
             type="submit"
             disabled={status === 'submitting'}
-            className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-md hover:bg-brand-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            color="dark/zinc"
+            className="whitespace-nowrap"
           >
             {status === 'submitting' ? t('restock.submitting') : t('restock.subscribe')}
-          </button>
+          </Button>
         </div>
         {errorMessage && (
           <p className="mt-2 text-xs text-danger">{errorMessage}</p>
