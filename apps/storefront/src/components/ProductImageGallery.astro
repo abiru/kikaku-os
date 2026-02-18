@@ -1,5 +1,6 @@
 ---
 import { t } from '../i18n';
+import { buildSrcSet } from '../lib/responsiveImage';
 
 interface Props {
 	productId: number | string;
@@ -28,7 +29,10 @@ const primaryImage = images.find((img) => img.primary) ?? images[0] ?? null;
 							id="main-image"
 							alt={image.alt}
 							src={image.src}
+							srcset={buildSrcSet(image.src, 'galleryMain')}
+							sizes="(max-width: 1024px) 100vw, 58vw"
 							loading="eager"
+							decoding="sync"
 							fetchpriority="high"
 							style={`view-transition-name: product-image-${productId}`}
 							class="rounded-lg object-cover w-full aspect-square"
@@ -51,7 +55,10 @@ const primaryImage = images.find((img) => img.primary) ?? images[0] ?? null;
 					<img
 						alt={image.alt}
 						src={image.src}
+						srcset={buildSrcSet(image.src, 'galleryMain')}
+						sizes="(max-width: 1024px) 100vw, 29vw"
 						loading="lazy"
+						decoding="async"
 						class="hidden lg:block aspect-square rounded-lg object-cover w-full"
 					/>
 				)
@@ -78,7 +85,17 @@ const primaryImage = images.find((img) => img.primary) ?? images[0] ?? null;
 						index === 0 ? 'ring-brand' : 'ring-transparent hover:ring-neutral-300',
 					]}
 				>
-					<img src={image.src} alt={image.alt} width="96" height="96" loading="lazy" class="w-full h-full object-cover" />
+					<img
+						src={image.src}
+						srcset={buildSrcSet(image.src, 'galleryThumb')}
+						sizes="96px"
+						alt={image.alt}
+						width="96"
+						height="96"
+						loading="lazy"
+						decoding="async"
+						class="w-full h-full object-cover"
+					/>
 				</button>
 			))}
 		</div>
