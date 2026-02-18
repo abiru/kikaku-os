@@ -381,8 +381,7 @@ function CheckoutFormInner({ orderId, orderToken, items, breakdown }: CheckoutFo
 					disabled={!stripe || isProcessing || !paymentElementReady || timeoutState.active}
 					aria-busy={isProcessing}
 					aria-label={isProcessing ? t('checkout.processing') : t('checkout.payNow')}
-					color="dark/zinc"
-					className="w-full min-h-[44px] touch-manipulation"
+					className="w-full rounded-lg bg-brand px-6 py-3 h-12 text-base font-semibold text-white hover:bg-brand-hover motion-safe:active:scale-[0.98] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 				>
 					{isProcessing ? (
 						<span className="inline-flex items-center gap-2">

@@ -16,7 +16,7 @@ function EmptyWishlist() {
 			<h2 className="mt-4 text-lg font-medium text-neutral-900">{t('wishlist.empty')}</h2>
 			<p className="mt-2 text-sm text-neutral-500">{t('wishlist.emptyDescription')}</p>
 			<div className="mt-6">
-				<a href="/products" className="inline-flex items-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active">
+				<a href="/products" className="inline-flex items-center rounded-lg bg-brand h-12 px-6 py-3 text-base font-semibold text-white hover:bg-brand-hover transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]">
 					{t('wishlist.browseProducts')}
 				</a>
 			</div>
@@ -107,7 +107,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 						<button
 							type="button"
 							onClick={handleAddToCart}
-							className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+							className="inline-flex items-center rounded-lg bg-brand h-10 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
 							disabled={addedToCart}
 						>
 							{addedToCart ? t('wishlist.addedToCart') : t('wishlist.addToCart')}
@@ -115,7 +115,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 					) : (
 						<a
 							href={`/products/${item.productId}`}
-							className="inline-flex items-center rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-active transition-colors"
+							className="inline-flex items-center rounded-lg bg-brand h-10 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98]"
 						>
 							{t('wishlist.viewProduct')}
 						</a>

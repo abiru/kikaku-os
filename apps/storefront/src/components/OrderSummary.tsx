@@ -97,7 +97,7 @@ export default function OrderSummary({ items, breakdown, onCouponApply }: OrderS
 								type="button"
 								onClick={handleApplyCoupon}
 								disabled={isApplyingCoupon}
-								className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-active focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+								className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-brand/30 motion-safe:active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
 							>
 								{isApplyingCoupon ? '...' : t('checkout.apply')}
 							</button>
