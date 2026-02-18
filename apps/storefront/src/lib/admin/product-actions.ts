@@ -3,7 +3,7 @@
  */
 
 async function showConfirm(options: { title: string; message: string; confirmLabel?: string; danger?: boolean }): Promise<boolean> {
-  const confirmDialog = (window as any).__confirmDialog;
+  const confirmDialog = window.__confirmDialog;
   if (confirmDialog) {
     return confirmDialog(options);
   }

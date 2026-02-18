@@ -52,9 +52,7 @@ const exportOrdersCSV = (orders: readonly Order[], selectedIds: ReadonlySet<numb
   URL.revokeObjectURL(url)
 }
 
-const confirmDialog = (window as any).__confirmDialog as
-  | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
-  | undefined
+const confirmDialog = window.__confirmDialog
 
 const sortFieldTypes = {
   id: 'number' as const,

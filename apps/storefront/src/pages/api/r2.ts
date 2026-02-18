@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
+import { getApiBase } from '../../lib/api';
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ request }) => {
   const apiKey = import.meta.env.ADMIN_API_KEY || '';
-  const apiBase = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
+  const apiBase = getApiBase();
   const url = new URL(request.url);
   const queryString = url.search;
   const targetUrl = `${apiBase}/r2${queryString}`;

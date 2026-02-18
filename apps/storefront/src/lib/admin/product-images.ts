@@ -58,7 +58,7 @@ export function initImageHandlers(productId: string) {
     const imageId = btn.dataset.imageId;
     const filename = btn.dataset.imageFilename;
 
-    const confirmDialog = (window as any).__confirmDialog;
+    const confirmDialog = window.__confirmDialog;
     const confirmed = confirmDialog
       ? await confirmDialog({
           title: 'Delete Image',

@@ -2,35 +2,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { acceptQuotation, fetchQuotationHtml } from '../lib/quotationApi';
 import { logError } from '../lib/logger';
 
-declare global {
-  interface Window {
-    __QUOTATION_PAGE__: {
-      apiUrl: string;
-      quotationToken: string;
-      quotationNumber: string;
-      i18n: {
-        pdf: string;
-        generatingPdf: string;
-        pdfLoadError: string;
-        pdfDownloadError: string;
-        orderFromQuotation: string;
-        processing: string;
-        checkoutUrlError: string;
-        acceptError: string;
-        confirmOrder: string;
-      };
-    };
-    html2pdf?: () => {
-      set: (options: unknown) => {
-        from: (element: Element) => {
-          save: () => Promise<void>;
-        };
-      };
-    };
-  }
-}
-
-const { apiUrl, quotationToken, quotationNumber, i18n } = window.__QUOTATION_PAGE__;
+const { apiUrl, quotationToken, quotationNumber, i18n } = window.__QUOTATION_PAGE__!;
 
 const handleDownloadPDF = async () => {
   const btn = document.getElementById('download-pdf-btn') as HTMLButtonElement | null;

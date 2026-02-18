@@ -5,8 +5,9 @@ import AccountLayout from '../../layouts/AccountLayout.astro';
 import Container from '../../components/Container.astro';
 import { t } from '../../i18n';
 import { formatDate } from '../../lib/format';
+import { getApiBase } from '../../lib/api';
 
-const API_BASE = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
+const API_BASE = getApiBase();
 
 // Get auth token from request
 const authHeader = Astro.request.headers.get('authorization');

@@ -22,9 +22,7 @@ type Props = {
   coreSlugs: string[]
 }
 
-const confirmDialog = (window as any).__confirmDialog as
-  | ((opts: { title: string; message: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean }) => Promise<boolean>)
-  | undefined
+const confirmDialog = window.__confirmDialog
 
 export default function PagesTable({ pages: initialPages, coreSlugs }: Props) {
   const [pages, setPages] = useState(initialPages)

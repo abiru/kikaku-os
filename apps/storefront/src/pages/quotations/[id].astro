@@ -7,6 +7,7 @@ import { fetchQuotation } from '../../lib/quotationApi';
 import { formatDate } from '../../lib/format';
 import { t } from '../../i18n';
 import { logError } from '../../lib/logger';
+import { getApiBase } from '../../lib/api';
 
 type QuotationRecord = {
   quotation_number: string;
@@ -40,7 +41,7 @@ type QuotationResponse = {
 
 const rawToken = Astro.params.id || null;
 const quotationToken = isPublicToken(rawToken) ? rawToken : null;
-const apiUrl = import.meta.env.PUBLIC_API_BASE || 'http://localhost:8787';
+const apiUrl = getApiBase();
 
 if (!quotationToken) {
   return Astro.redirect('/products');
