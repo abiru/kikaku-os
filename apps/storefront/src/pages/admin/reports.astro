@@ -7,6 +7,7 @@ import { Heading } from '../../components/catalyst/heading';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
 import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import ReportsTable from '../../components/admin/ReportsTable';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { t } from '../../i18n';
 
 type Report = {
@@ -79,7 +80,9 @@ const reportsWithUrls = reports.map(r => ({
 			</Alert>
 		)}
 
-		<ReportsTable client:only="react" reports={reportsWithUrls} />
+		<ErrorBoundary client:only="react">
+			<ReportsTable reports={reportsWithUrls} />
+		</ErrorBoundary>
 
 		{/* Pagination */}
 		<div class="flex items-center justify-between">

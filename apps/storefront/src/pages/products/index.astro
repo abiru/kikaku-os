@@ -4,6 +4,7 @@ import Container from '../../components/Container.astro';
 import Layout from '../../layouts/Layout.astro';
 import ProductFilters from '../../components/ProductFilters';
 import ProductGrid from '../../components/ProductGrid';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 import { formatPrice } from '../../lib/format';
 import { t } from '../../i18n';
@@ -133,7 +134,9 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 						</button>
 					</div>
 					<div class="overflow-y-auto p-6" style="max-height: calc(85vh - 65px);">
-						<ProductFilters client:visible />
+						<ErrorBoundary client:visible>
+							<ProductFilters />
+						</ErrorBoundary>
 					</div>
 				</div>
 
@@ -145,13 +148,17 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 						</a>
 						<div class="sticky top-24 bg-white rounded-2xl p-6 shadow-sm ring-1 ring-black/5">
 							<h2 class="typo-h3 text-primary mb-4">{t('products.filters')}</h2>
-							<ProductFilters client:idle />
+							<ErrorBoundary client:idle>
+								<ProductFilters />
+							</ErrorBoundary>
 						</div>
 					</aside>
 
 					{/* Product Grid */}
 					<div id="product-grid" class="flex-1">
-						<ProductGrid client:only="react" />
+						<ErrorBoundary client:only="react">
+							<ProductGrid />
+						</ErrorBoundary>
 					</div>
 				</div>
 			</Container>

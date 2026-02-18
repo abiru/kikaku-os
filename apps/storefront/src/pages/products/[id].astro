@@ -9,6 +9,7 @@ import WishlistButton from '../../components/WishlistButton';
 import RestockNotification from '../../components/RestockNotification';
 import ReviewSection from '../../components/ReviewSection';
 import RecentlyViewed from '../../components/RecentlyViewed';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import Layout from '../../layouts/Layout.astro';
 import { buildStoreUrl, fetchJson, getApiBase } from '../../lib/api';
 import { renderMarkdown } from '../../utils/markdown';
@@ -257,20 +258,21 @@ const jsonLdBreadcrumb = product ? {
 								<h1 class="text-xl font-medium text-neutral-900">{product.title}</h1>
 								<div class="flex items-center gap-2">
 									<p class="typo-price text-neutral-900">{priceLabel}</p>
-									<WishlistButton
-										client:only="react"
-										product={{
-											productId: product.id,
-											title: product.title,
-											price: variant?.price?.amount || 0,
-											currency: variant?.price?.currency || 'JPY',
-											taxRate: product.tax_rate || 0.10,
-											imageUrl: product.image || undefined,
-											variantId: variantId || undefined,
-											variantTitle: variant?.title || 'Default',
-										}}
-										size="lg"
-									/>
+									<ErrorBoundary client:only="react">
+										<WishlistButton
+											product={{
+												productId: product.id,
+												title: product.title,
+												price: variant?.price?.amount || 0,
+												currency: variant?.price?.currency || 'JPY',
+												taxRate: product.tax_rate || 0.10,
+												imageUrl: product.image || undefined,
+												variantId: variantId || undefined,
+												variantTitle: variant?.title || 'Default',
+											}}
+											size="lg"
+										/>
+									</ErrorBoundary>
 								</div>
 							</div>
 
@@ -296,7 +298,9 @@ const jsonLdBreadcrumb = product ? {
 										) : (
 											<>
 												<p class="text-sm text-neutral-500">{t('product.checkAvailability')}</p>
-												<RestockNotification client:only="react" productId={product.id} />
+												<ErrorBoundary client:only="react">
+													<RestockNotification productId={product.id} />
+												</ErrorBoundary>
 											</>
 										)}
 									</div>
@@ -343,7 +347,9 @@ const jsonLdBreadcrumb = product ? {
 							<ShippingPolicy policies={policies} />
 
 							{/* Reviews */}
-							<ReviewSection client:only="react" productId={product.id} />
+							<ErrorBoundary client:only="react">
+								<ReviewSection productId={product.id} />
+							</ErrorBoundary>
 						</div>
 					</div>
 				</div>
@@ -352,7 +358,9 @@ const jsonLdBreadcrumb = product ? {
 		{/* Related Products */}
 		<RelatedProducts products={relatedProducts} />
 		{/* Recently Viewed Products */}
-		<RecentlyViewed client:only="react" excludeId={product.id} />
+		<ErrorBoundary client:only="react">
+			<RecentlyViewed excludeId={product.id} />
+		</ErrorBoundary>
 		</>
 	) : loadState === 'unavailable' ? (
 		<div class="mt-8">

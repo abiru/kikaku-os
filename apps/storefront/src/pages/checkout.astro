@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
 import CheckoutPage from '../components/CheckoutPage';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { t } from '../i18n';
 ---
 
@@ -12,6 +13,8 @@ import { t } from '../i18n';
 			{ label: t('cart.title'), href: '/cart' },
 			{ label: t('checkout.title') },
 		]} />
-		<CheckoutPage client:idle />
+		<ErrorBoundary client:idle>
+			<CheckoutPage />
+		</ErrorBoundary>
 	</div>
 </Layout>

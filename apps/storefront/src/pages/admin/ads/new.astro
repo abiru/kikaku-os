@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { AiGenerationForm } from '../../../components/admin/ads/AiGenerationForm';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
+import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { getApiBase } from '../../../lib/api';
 
 const apiKey = import.meta.env.ADMIN_API_KEY || '';
@@ -24,7 +25,9 @@ const apiBase = getApiBase();
     </div>
 
     {/* AI Generation Section */}
-    <AiGenerationForm client:load />
+    <ErrorBoundary client:load>
+      <AiGenerationForm />
+    </ErrorBoundary>
 
     {/* Manual Form Section */}
     <div>
@@ -33,9 +36,9 @@ const apiBase = getApiBase();
         Fill in the ad details manually or use AI generation above to auto-populate.
       </p>
 
-      <AdDraftForm
-        client:load
-      />
+      <ErrorBoundary client:load>
+        <AdDraftForm />
+      </ErrorBoundary>
     </div>
   </div>
 </AdminLayout>

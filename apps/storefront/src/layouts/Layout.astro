@@ -6,6 +6,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SearchModal from '../components/SearchModal';
 import CookieConsent from '../components/CookieConsent';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import ToastProvider from '../components/ToastProvider';
 import { t } from '../i18n';
 import '@fontsource/inter/400.css';
@@ -111,10 +112,14 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 		<ToastProvider client:idle />
 
 		{/* Search Modal */}
-		<SearchModal client:idle />
+		<ErrorBoundary client:idle>
+			<SearchModal />
+		</ErrorBoundary>
 
 		{/* Cookie Consent Banner */}
-		<CookieConsent client:idle />
+		<ErrorBoundary client:idle>
+			<CookieConsent />
+		</ErrorBoundary>
 
 		{/* Back to Top Button */}
 		<BackToTop />

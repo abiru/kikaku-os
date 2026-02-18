@@ -6,6 +6,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 import { Heading } from '../../components/catalyst/heading';
 import { Pagination, PaginationPrevious, PaginationNext } from '../../components/catalyst/pagination';
 import LedgerTable from '../../components/admin/LedgerTable';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { adminFetchList } from '../../lib/admin/fetchAdmin';
 import { t } from '../../i18n';
 
@@ -52,7 +53,9 @@ const hasPrev = page > 1;
 			</Alert>
 		)}
 
-		<LedgerTable client:only="react" entries={entries} />
+		<ErrorBoundary client:only="react">
+			<LedgerTable entries={entries} />
+		</ErrorBoundary>
 
 		{/* Pagination */}
 		<div class="flex items-center justify-between font-sans">

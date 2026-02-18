@@ -5,6 +5,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 import { Alert } from '../../../components/catalyst/alert-banner';
 import { Button } from '../../../components/catalyst/button';
 import { AdDraftForm } from '../../../components/admin/ads/AdDraftForm';
+import { ErrorBoundary } from '../../../components/ErrorBoundary';
 import { getApiBase } from '../../../lib/api';
 import type { AdDraft } from '../../../types/ads';
 import { fetchAdminResource } from '../../../lib/admin/fetch-helpers';
@@ -69,11 +70,12 @@ error = fetchError;
         </Alert>
 
         {/* Edit Form */}
-        <AdDraftForm
-          client:load
-          initialDraft={draft}
-          draftId={parseInt(id || '0', 10)}
-        />
+        <ErrorBoundary client:load>
+          <AdDraftForm
+            initialDraft={draft}
+            draftId={parseInt(id || '0', 10)}
+          />
+        </ErrorBoundary>
 
         {/* Danger Zone - Delete */}
         <div class="bg-white rounded-xl border border-red-200 shadow-sm p-6">
