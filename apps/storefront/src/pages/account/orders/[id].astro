@@ -106,12 +106,22 @@ const statusLabels: Record<string, string> = {
             {formatDate(order.created_at, dateTimeLongOpts)}
           </p>
         </div>
-        <div class={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-          order.status === 'completed' || order.status === 'paid'
-            ? 'bg-green-100 text-green-700'
-            : 'bg-yellow-100 text-yellow-700'
-        }`}>
-          {statusLabels[order.status] || order.status}
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            id="print-order-btn"
+            class="print-hidden inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            {t('account.printOrder')}
+          </button>
+          <div class={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+            order.status === 'completed' || order.status === 'paid'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-yellow-100 text-yellow-700'
+          }`}>
+            {statusLabels[order.status] || order.status}
+          </div>
         </div>
       </div>
 
@@ -221,3 +231,172 @@ const statusLabels: Record<string, string> = {
     </div>
   </Container>
 </AccountLayout>
+
+<script>
+  const printBtn = document.getElementById('print-order-btn');
+  if (printBtn) {
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+  }
+</script>
+
+<style>
+  /* Print button: hidden when printing */
+  @media print {
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+
+    /* Force white background and black text globally */
+    :global(html),
+    :global(body) {
+      background: white !important;
+      color: black !important;
+      font-size: 12pt !important;
+      line-height: 1.4 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Hide navigation, footer, interactive elements, and non-essential UI */
+    :global(header[role="banner"]),
+    :global(footer),
+    :global(nav),
+    :global(#mobile-menu),
+    :global(#mobile-menu-overlay),
+    :global(.cookie-consent),
+    :global(#search-btn),
+    :global(#cart-link),
+    :global(#wishlist-link),
+    :global(#clerk-auth),
+    :global(#mobile-menu-btn),
+    :global([data-back-to-top]) {
+      display: none !important;
+    }
+
+    /* Hide the account tab navigation */
+    :global(.bg-white.border-b.border-gray-200) {
+      display: none !important;
+    }
+
+    /* Hide back link and print button */
+    .print-hidden,
+    :global(a[href="/account/orders"]) {
+      display: none !important;
+    }
+
+    /* Remove min-height constraint */
+    :global(.min-h-screen) {
+      min-height: auto !important;
+    }
+
+    /* Remove sticky positioning */
+    :global(.sticky) {
+      position: static !important;
+    }
+
+    /* Reset backgrounds and shadows */
+    :global(.bg-subtle) {
+      background: white !important;
+    }
+
+    :global(.bg-white) {
+      background: white !important;
+    }
+
+    :global(.shadow-sm),
+    :global(.shadow-\[var\(--shadow-subtle\)\]),
+    :global(.backdrop-blur-xl) {
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+    }
+
+    /* Ensure all text is black */
+    :global(.text-primary),
+    :global(.text-secondary),
+    :global(.text-brand),
+    :global(.font-semibold),
+    :global(.font-medium) {
+      color: black !important;
+    }
+
+    /* Keep green for paid/completed status */
+    :global(.text-green-600),
+    :global(.text-green-700) {
+      color: #15803d !important;
+    }
+
+    /* Ensure borders print */
+    :global(.border-gray-200) {
+      border-color: #e5e7eb !important;
+    }
+
+    :global(.divide-gray-200) > * + * {
+      border-color: #e5e7eb !important;
+    }
+
+    /* Status badge: ensure visibility */
+    :global(.rounded-full.bg-green-100) {
+      background: #dcfce7 !important;
+      color: #15803d !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    :global(.rounded-full.bg-yellow-100) {
+      background: #fef9c3 !important;
+      color: #a16207 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Ensure border on cards for print */
+    :global(.rounded-xl) {
+      border: 1px solid #d1d5db !important;
+      border-radius: 4px !important;
+      overflow: visible !important;
+    }
+
+    /* Force single column layout for print */
+    :global(.grid.grid-cols-1.lg\:grid-cols-3) {
+      display: block !important;
+    }
+
+    :global(.lg\:col-span-2),
+    :global(.lg\:col-span-1) {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-bottom: 16pt !important;
+    }
+
+    /* Container: full width for print */
+    :global(.max-w-4xl) {
+      max-width: 100% !important;
+    }
+
+    /* Avoid page breaks inside items */
+    :global(.divide-y > div) {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    :global(.rounded-xl) {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Remove unnecessary padding */
+    :global(.py-8) {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    /* Links: show as plain text */
+    :global(a) {
+      text-decoration: none !important;
+      color: black !important;
+    }
+  }
+</style>
