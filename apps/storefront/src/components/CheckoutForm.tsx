@@ -48,7 +48,7 @@ type QuoteBreakdown = {
 
 type CheckoutFormProps = {
 	clientSecret: string | null;
-	orderId: number | null;
+	orderId?: number | null;
 	orderToken: string | null;
 	publishableKey: string;
 	items: CartItem[];
@@ -56,7 +56,7 @@ type CheckoutFormProps = {
 };
 
 type CheckoutFormInnerProps = {
-	orderId: number | null;
+	orderId?: number | null;
 	orderToken: string | null;
 	items: CartItem[];
 	breakdown: QuoteBreakdown | null;
@@ -184,11 +184,19 @@ function CheckoutFormInner({ orderId, orderToken, items, breakdown }: CheckoutFo
 		try {
 			// Associate guest email with the order before payment
 			if (email && orderId) {
-				await fetch(`${getApiBase()}/checkout/guest-email`, {
+				const guestRes = await fetch(`${getApiBase()}/checkout/guest-email`, {
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
 					body: JSON.stringify({ orderId, email }),
 				});
+				if (!guestRes.ok) {
+					const errBody = await guestRes.json().catch(() => null);
+					const msg = (errBody as { message?: string })?.message || t('checkout.guestEmailFailed');
+					setErrorMessage(msg);
+					setIsProcessing(false);
+					setShowConfirmation(false);
+					return;
+				}
 			}
 
 			const confirmPromise = stripe.confirmPayment({
