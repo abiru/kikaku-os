@@ -388,23 +388,11 @@ if (csrfCookieHeader) {
 </AdminLayout>
 
 <script>
-	const deleteTrigger = document.getElementById('delete-trigger');
-	const deleteForm = document.getElementById('delete-form') as HTMLFormElement | null;
+	import { initCouponDetailPage } from '../../../lib/admin/coupon-detail';
 
-	if (deleteTrigger && deleteForm) {
-		deleteTrigger.addEventListener('click', async () => {
-			const confirmDialog = window.__confirmDialog;
-			const confirmed = confirmDialog
-				? await confirmDialog({
-						title: 'Delete Coupon',
-						message: 'Are you sure you want to delete this coupon? This action cannot be undone.',
-						confirmLabel: 'Delete',
-						danger: true,
-					})
-				: confirm('Are you sure you want to delete this coupon? This action cannot be undone.');
-			if (confirmed) {
-				deleteForm.submit();
-			}
-		});
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', () => initCouponDetailPage());
+	} else {
+		initCouponDetailPage();
 	}
 </script>
