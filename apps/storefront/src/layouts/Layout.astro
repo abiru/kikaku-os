@@ -127,5 +127,17 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID || '';
 		<script>
 			import '../scripts/scrollReveal';
 		</script>
+
+		{/* Update HTML lang attribute based on detected locale */}
+		<script>
+			import { getLocale } from '../i18n';
+
+			function updateHtmlLang() {
+				const locale = getLocale();
+				document.documentElement.lang = locale;
+			}
+
+			document.addEventListener('astro:page-load', updateHtmlLang);
+		</script>
 	</body>
 </html>

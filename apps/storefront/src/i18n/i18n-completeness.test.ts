@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import translations from './ja.json'
+import jaTranslations from './ja.json'
+import enTranslations from './en.json'
 
 /**
  * Flatten nested object keys to dot-notation.
@@ -51,12 +52,17 @@ function extractTKeys(dir: string): Set<string> {
 }
 
 describe('i18n completeness', () => {
-	const availableKeys = new Set(flattenKeys(translations as Record<string, unknown>))
+	const jaKeys = new Set(flattenKeys(jaTranslations as Record<string, unknown>))
+	const enKeys = new Set(flattenKeys(enTranslations as Record<string, unknown>))
 	const srcDir = path.resolve(__dirname, '..')
 	const usedKeys = extractTKeys(srcDir)
 
 	it('has translation keys defined in ja.json', () => {
-		expect(availableKeys.size).toBeGreaterThan(0)
+		expect(jaKeys.size).toBeGreaterThan(0)
+	})
+
+	it('has translation keys defined in en.json', () => {
+		expect(enKeys.size).toBeGreaterThan(0)
 	})
 
 	it('has t() calls in source code', () => {
@@ -66,7 +72,7 @@ describe('i18n completeness', () => {
 	it('all t() keys used in source exist in ja.json', () => {
 		const missingKeys: string[] = []
 		for (const key of usedKeys) {
-			if (!availableKeys.has(key)) {
+			if (!jaKeys.has(key)) {
 				missingKeys.push(key)
 			}
 		}
@@ -79,9 +85,41 @@ describe('i18n completeness', () => {
 		expect(missingKeys).toEqual([])
 	})
 
+	it('en.json has all the same keys as ja.json', () => {
+		const missingInEn: string[] = []
+		for (const key of jaKeys) {
+			if (!enKeys.has(key)) {
+				missingInEn.push(key)
+			}
+		}
+		if (missingInEn.length > 0) {
+			throw new Error(
+				`Missing ${missingInEn.length} key(s) in en.json (present in ja.json):\n` +
+				missingInEn.map((k) => `  - ${k}`).join('\n')
+			)
+		}
+		expect(missingInEn).toEqual([])
+	})
+
+	it('en.json has no extra keys missing from ja.json', () => {
+		const extraInEn: string[] = []
+		for (const key of enKeys) {
+			if (!jaKeys.has(key)) {
+				extraInEn.push(key)
+			}
+		}
+		if (extraInEn.length > 0) {
+			throw new Error(
+				`Found ${extraInEn.length} extra key(s) in en.json not present in ja.json:\n` +
+				extraInEn.map((k) => `  - ${k}`).join('\n')
+			)
+		}
+		expect(extraInEn).toEqual([])
+	})
+
 	it('no unused translation keys in ja.json (warning only)', () => {
 		const unusedKeys: string[] = []
-		for (const key of availableKeys) {
+		for (const key of jaKeys) {
 			if (!usedKeys.has(key)) {
 				unusedKeys.push(key)
 			}
