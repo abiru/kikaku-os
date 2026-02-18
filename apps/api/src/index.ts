@@ -12,7 +12,7 @@ import { csrfProtection } from './middleware/csrf';
 import { sendAlert } from './lib/alerts';
 import { captureException, getSentryConfig } from './lib/sentry';
 import { jstYesterdayStringFromMs } from './lib/date';
-import { AppError } from './lib/errors';
+import { AppError, generateErrorTrackingId } from './lib/errors';
 import { registerRoutes } from './routes';
 import { generateDailyReport } from './services/dailyReport';
 import { generateStripeEvidence } from './services/stripeEvidence';
@@ -49,26 +49,30 @@ app.onError((err, c) => {
     const isServerError = status >= 500;
 
     if (isServerError) {
-      logger.error('Application error', { error: String(err) });
+      const trackingId = generateErrorTrackingId();
+      logger.error('Application error', { trackingId, error: String(err), path: c.req.path });
       captureException(err, {
         path: c.req.path,
         method: c.req.method,
         env: c.env
       });
+
+      return c.json(
+        { ok: false, message: 'Internal Server Error', code: 'INTERNAL_ERROR', trackingId },
+        status as 500 | 501 | 502 | 503
+      );
     }
 
-    const message = isServerError ? 'Internal Server Error' : err.message;
-    const code = isServerError ? 'INTERNAL_ERROR' : err.code;
-
     return c.json(
-      { ok: false, message, code },
-      status as 400 | 401 | 403 | 404 | 409 | 500 | 501 | 502 | 503
+      { ok: false, message: err.message, code: err.code },
+      status as 400 | 401 | 403 | 404 | 409
     );
   }
 
   // D1/database errors → 503 Service Unavailable with Retry-After
   if (isD1Error(err)) {
-    logger.error('Database error - returning 503', { error: String(err), path: c.req.path });
+    const trackingId = generateErrorTrackingId();
+    logger.error('Database error - returning 503', { trackingId, error: String(err), path: c.req.path });
     captureException(err, {
       path: c.req.path,
       method: c.req.method,
@@ -77,24 +81,26 @@ app.onError((err, c) => {
     // Non-blocking alert for DB failures
     c.executionCtx.waitUntil(
       sendAlert(c.env, 'critical', `Database error on ${c.req.method} ${c.req.path}`, {
+        trackingId,
         error: err.message
       })
     );
     return c.json(
-      { ok: false, message: 'Service temporarily unavailable', code: 'DB_UNAVAILABLE' },
+      { ok: false, message: 'Service temporarily unavailable', code: 'DB_UNAVAILABLE', trackingId },
       { status: 503, headers: { 'Retry-After': '30' } }
     );
   }
 
   // Unknown errors - log and return generic message
-  logger.error('Unhandled error', { error: String(err) });
+  const trackingId = generateErrorTrackingId();
+  logger.error('Unhandled error', { trackingId, error: String(err), path: c.req.path });
   captureException(err, {
     path: c.req.path,
     method: c.req.method,
     env: c.env
   });
   return c.json(
-    { ok: false, message: 'Internal Server Error' },
+    { ok: false, message: 'Internal Server Error', trackingId },
     500
   );
 });
@@ -193,6 +199,7 @@ app.use('/store/*', rateLimit({ max: 60, windowSeconds: 60, prefix: 'store' }));
 app.use('/quotations', rateLimit({ max: 10, windowSeconds: 60, prefix: 'quot' }));
 app.use('/quotations/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'quot' }));
 app.use('/ai/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'ai' }));
+app.use('/errors/*', rateLimit({ max: 10, windowSeconds: 60, prefix: 'err' }));
 app.use('*', rateLimit({ max: 120, windowSeconds: 60, prefix: 'global' }));
 
 // CSRF token endpoint - returns the current session's CSRF token
@@ -232,6 +239,8 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'POST' && /^\/quotations\/[A-Za-z0-9]+\/accept$/.test(c.req.path)) return next();
   if (c.req.method === 'POST' && c.req.path === '/store/newsletter/subscribe') return next();
   if (c.req.method === 'GET' && c.req.path === '/dev/ping') return next();
+  // Public error reporting endpoint (client-side error tracking)
+  if (c.req.method === 'POST' && c.req.path === '/errors/report') return next();
   // Public R2 image endpoint for Stripe checkout
   if (c.req.method === 'GET' && c.req.path === '/r2') return next();
   if (

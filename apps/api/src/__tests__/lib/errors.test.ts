@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AppError } from '../../lib/errors';
+import { AppError, generateErrorTrackingId } from '../../lib/errors';
 
 describe('AppError', () => {
   it('creates error with default values', () => {
@@ -39,5 +39,23 @@ describe('AppError', () => {
     const err = AppError.conflict('conflict');
     expect(err.statusCode).toBe(409);
     expect(err.code).toBe('CONFLICT');
+  });
+});
+
+describe('generateErrorTrackingId', () => {
+  it('returns a string matching the ERR-{timestamp}-{random} format', () => {
+    const id = generateErrorTrackingId();
+    expect(id).toMatch(/^ERR-\d+-[a-z0-9]{4}$/);
+  });
+
+  it('generates unique IDs on successive calls', () => {
+    const id1 = generateErrorTrackingId();
+    const id2 = generateErrorTrackingId();
+    expect(id1).not.toBe(id2);
+  });
+
+  it('starts with ERR- prefix', () => {
+    const id = generateErrorTrackingId();
+    expect(id.startsWith('ERR-')).toBe(true);
   });
 });
