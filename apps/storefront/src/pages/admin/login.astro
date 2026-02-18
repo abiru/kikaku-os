@@ -30,11 +30,20 @@ import { t } from '../../i18n';
 
 			<div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
 				<div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+					<!-- Social login buttons appear automatically when OAuth providers
+					     are enabled in the Clerk Dashboard (see sign-in.astro for details) -->
 					<SignedOut>
 						<div class="flex justify-center">
 							<SignIn
 								routing="hash"
 								forceRedirectUrl="/admin/"
+								appearance={{
+									variables: { colorPrimary: '#4f46e5' },
+									elements: {
+										socialButtonsBlockButton: 'min-h-[44px]',
+										socialButtonsBlockButtonText: 'font-medium',
+									},
+								}}
 							/>
 						</div>
 					</SignedOut>

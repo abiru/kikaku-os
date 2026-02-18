@@ -1,4 +1,18 @@
 ---
+/**
+ * Sign-in page
+ *
+ * Social login (Google OAuth, Apple Sign-In) buttons are rendered automatically
+ * by Clerk's pre-built <SignIn /> component when the corresponding providers
+ * are enabled in the Clerk Dashboard:
+ *   Clerk Dashboard > Configure > SSO connections > Add connection
+ *
+ * Required dashboard configuration for Issue #769:
+ *   1. Enable "Google" as a social connection
+ *   2. (Optional) Enable "Apple" as a social connection
+ *   3. Under "Account linking", ensure "Link accounts with the same email" is enabled
+ *      so that existing email/password users are merged with social logins
+ */
 import Layout from '../layouts/Layout.astro';
 import Container from '../components/Container.astro';
 import { SignIn as ClerkSignIn } from '@clerk/astro/components';
@@ -8,7 +22,16 @@ import { t } from '../i18n';
 <Layout title={t('signIn.pageTitle')} disableViewTransitions>
   <Container class="py-16">
     <div class="flex justify-center">
-      <ClerkSignIn appearance={{ variables: { colorPrimary: '#0071e3' } }} />
+      <ClerkSignIn
+        signUpUrl="/sign-up"
+        appearance={{
+          variables: { colorPrimary: '#0071e3' },
+          elements: {
+            socialButtonsBlockButton: 'min-h-[44px]',
+            socialButtonsBlockButtonText: 'font-medium',
+          },
+        }}
+      />
     </div>
   </Container>
 </Layout>
