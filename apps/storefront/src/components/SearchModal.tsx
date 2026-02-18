@@ -31,6 +31,11 @@ export default function SearchModal() {
 	const modalRef = useRef<HTMLDivElement>(null);
 	const triggerRef = useRef<HTMLElement | null>(null);
 
+	const listboxId = 'search-results-listbox';
+	const hasResults = results.length > 0;
+	const showResults = query.length >= 2;
+	const activeOptionId = hasResults ? `search-option-${selectedIndex}` : undefined;
+
 	// Listen for open-search event
 	useEffect(() => {
 		const handleOpen = () => {
@@ -196,6 +201,12 @@ export default function SearchModal() {
 						<input
 							ref={inputRef}
 							type="text"
+							role="combobox"
+							aria-expanded={showResults && hasResults}
+							aria-controls={listboxId}
+							aria-haspopup="listbox"
+							aria-autocomplete="list"
+							aria-activedescendant={showResults ? activeOptionId : undefined}
 							className="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-neutral-900 placeholder:text-neutral-400 focus:ring-0 sm:text-sm"
 							placeholder={t('common.searchProducts')}
 							value={query}
@@ -257,12 +268,15 @@ export default function SearchModal() {
 									</button>
 								</div>
 							) : results.length > 0 ? (
-								<div ref={resultsRef} className="max-h-80 overflow-y-auto py-2">
+								<div ref={resultsRef} id={listboxId} role="listbox" aria-label={t('common.searchProducts')} className="max-h-80 overflow-y-auto py-2">
 									{results.map((product, index) => {
 										const price = product.variants[0]?.price;
 										return (
 											<a
 												key={product.id}
+												id={`search-option-${index}`}
+												role="option"
+												aria-selected={index === selectedIndex}
 												href={`/products/${product.id}`}
 												className={`flex items-center gap-4 px-4 py-3 ${
 													index === selectedIndex ? 'bg-neutral-100' : 'hover:bg-neutral-50'
