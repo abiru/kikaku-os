@@ -46,6 +46,7 @@ type QuoteBreakdown = {
 
 type CheckoutFormProps = {
 	clientSecret: string | null;
+	orderId: number | null;
 	orderToken: string | null;
 	publishableKey: string;
 	items: CartItem[];
@@ -53,6 +54,7 @@ type CheckoutFormProps = {
 };
 
 type CheckoutFormInnerProps = {
+	orderId: number | null;
 	orderToken: string | null;
 	items: CartItem[];
 	breakdown: QuoteBreakdown | null;
@@ -64,7 +66,7 @@ type TimeoutState = {
 	confirmed: boolean;
 };
 
-function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerProps) {
+function CheckoutFormInner({ orderId, orderToken, items, breakdown }: CheckoutFormInnerProps) {
 	const { t } = useTranslation();
 	const stripe = useStripe();
 	const elements = useElements();
@@ -178,6 +180,15 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 		setErrorMessage(null);
 
 		try {
+			// Associate guest email with the order before payment
+			if (email && orderId) {
+				await fetch(`${getApiBase()}/checkout/guest-email`, {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ orderId, email }),
+				});
+			}
+
 			const confirmPromise = stripe.confirmPayment({
 				elements,
 				confirmParams: {
@@ -379,6 +390,7 @@ function CheckoutFormInner({ orderToken, items, breakdown }: CheckoutFormInnerPr
 
 export default function CheckoutForm({
 	clientSecret,
+	orderId,
 	orderToken,
 	publishableKey,
 	items,
@@ -456,6 +468,7 @@ export default function CheckoutForm({
 				}}
 			>
 				<CheckoutFormInner
+					orderId={orderId}
 					orderToken={orderToken}
 					items={items}
 					breakdown={breakdown}

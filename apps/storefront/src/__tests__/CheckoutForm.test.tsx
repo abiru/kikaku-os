@@ -41,6 +41,7 @@ describe('CheckoutForm', () => {
 	it('renders loading skeleton when clientSecret is null', () => {
 		render(
 			<CheckoutForm
+				orderId={1}
 				clientSecret={null}
 				orderToken="tok_123"
 				publishableKey="pk_test_xxx"
@@ -148,6 +149,7 @@ describe('CheckoutForm edge cases', () => {
 	it('renders loading skeleton when both clientSecret and publishableKey are missing', () => {
 		render(
 			<CheckoutForm
+				orderId={1}
 				clientSecret={null}
 				orderToken="tok_123"
 				publishableKey=""
