@@ -916,6 +916,7 @@
     "contactUs": "お問い合わせ",
     "errorTrackingId": "エラー追跡ID: {id}",
     "contactSupport": "問題が解決しない場合は、上記のエラー追跡IDを添えてサポートまでお問い合わせください。",
+    "contactSupportLink": "サポートに問い合わせる",
     "componentError": "表示中にエラーが発生しました。ページを再読み込みしてください。",
     "error": "エラー",
     "failedToLoadNewsletter": "ニュースレター登録者の読み込みに失敗しました。",
