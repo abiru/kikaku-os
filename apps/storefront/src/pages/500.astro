@@ -3,7 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import Container from '../components/Container.astro';
 import { t } from '../i18n';
 
-const errorTrackingId = `ERR-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+// Use server-provided tracking ID from error response if available,
+// otherwise generate a client-side fallback
+const serverTrackingId = Astro.url.searchParams.get('tracking_id');
+const errorTrackingId = serverTrackingId || `ERR-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
 const popularCategories = [
 	{ slug: 'led-grow-lights', label: 'LED Grow Lights' },

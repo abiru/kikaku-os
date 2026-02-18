@@ -1,4 +1,13 @@
 /**
+ * Generate a unique error tracking ID for correlating client and server errors.
+ * Format: ERR-{timestamp}-{random4chars}
+ */
+export function generateErrorTrackingId(): string {
+  const random = Math.random().toString(36).slice(2, 6);
+  return `ERR-${Date.now()}-${random}`;
+}
+
+/**
  * Application error class for service-layer errors.
  *
  * Error handling guideline:

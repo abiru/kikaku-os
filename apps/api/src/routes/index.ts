@@ -58,6 +58,7 @@ import aiWorkflows from './ai/aiWorkflows';
 // System
 import inbox from './system/inbox';
 import dev from './system/dev';
+import errorReport from './system/errorReport';
 import health from './health';
 
 /**
@@ -126,6 +127,7 @@ export function registerRoutes(app: Hono<Env>) {
   // System
   app.route('/', inbox);
   app.route('/dev', dev);
+  app.route('/errors', errorReport);
 }
 
 // Re-export for backwards compatibility if needed
@@ -179,5 +181,6 @@ export {
   aiWorkflows,
   // System
   inbox,
-  dev
+  dev,
+  errorReport
 };
