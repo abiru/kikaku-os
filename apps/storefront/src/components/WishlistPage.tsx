@@ -4,6 +4,7 @@ import { addToCart } from '../lib/cart';
 import { useTranslation } from '../i18n';
 import { useState } from 'react';
 import { formatPrice } from '../lib/format';
+import { showToast } from '../lib/toast';
 
 function EmptyWishlist() {
 	const { t } = useTranslation();
@@ -41,6 +42,7 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 		});
 		setAddedToCart(true);
 		setTimeout(() => setAddedToCart(false), 2000);
+		showToast(t('toast.cartAdded'), 'success');
 	};
 
 	return (
@@ -85,7 +87,10 @@ function WishlistItem({ item }: { item: typeof $wishlistArray extends { get(): (
 						<div className="absolute top-0 right-0">
 							<button
 								type="button"
-								onClick={() => removeFromWishlist(item.productId)}
+								onClick={() => {
+									removeFromWishlist(item.productId);
+									showToast(t('toast.wishlistRemoved'), 'info');
+								}}
 								className="-m-2 inline-flex p-2 text-neutral-400 hover:text-neutral-500"
 							>
 								<span className="sr-only">{t('common.remove')}</span>

@@ -3,6 +3,7 @@ import { Button } from './catalyst/button';
 import { Input } from './catalyst/input';
 import { getApiBase, buildStoreUrl } from '../lib/api';
 import { useTranslation } from '../i18n';
+import { showToast } from '../lib/toast';
 
 export default function NewsletterForm() {
   const { t } = useTranslation();
@@ -43,17 +44,18 @@ export default function NewsletterForm() {
 
       setStatus('success');
       setEmail('');
+      showToast(t('toast.newsletterSuccess'), 'success');
     } catch (err) {
       setStatus('error');
-      setErrorMessage(
-        err instanceof Error ? err.message : t('newsletter.error')
-      );
+      const message = err instanceof Error ? err.message : t('newsletter.error');
+      setErrorMessage(message);
+      showToast(t('toast.newsletterError'), 'error', { description: message });
     }
   };
 
   if (status === 'success') {
     return (
-      <p className="text-xs text-success font-medium">
+      <p className="text-xs text-success font-medium" role="status">
         {t('newsletter.success')}
       </p>
     );
@@ -87,9 +89,11 @@ export default function NewsletterForm() {
           {status === 'submitting' ? t('newsletter.subscribing') : t('newsletter.subscribe')}
         </Button>
       </div>
-      {errorMessage && (
-        <p className="text-xs text-danger">{errorMessage}</p>
-      )}
+      <div aria-live="assertive">
+        {errorMessage && (
+          <p className="text-xs text-danger" role="alert">{errorMessage}</p>
+        )}
+      </div>
     </form>
   );
 }

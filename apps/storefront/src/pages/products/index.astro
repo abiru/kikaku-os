@@ -140,6 +140,9 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 				<div class="flex gap-8">
 					{/* Filter Sidebar - Desktop */}
 					<aside class="hidden lg:block w-64 flex-shrink-0" aria-label={t('products.filters')}>
+						<a href="#product-grid" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-brand focus:text-white focus:rounded-md">
+							{t('products.skipToProducts')}
+						</a>
 						<div class="sticky top-24 bg-white rounded-2xl p-6 shadow-sm ring-1 ring-black/5">
 							<h2 class="typo-h3 text-primary mb-4">{t('products.filters')}</h2>
 							<ProductFilters client:idle />
@@ -147,7 +150,7 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 					</aside>
 
 					{/* Product Grid */}
-					<div class="flex-1">
+					<div id="product-grid" class="flex-1">
 						<ProductGrid client:only="react" />
 					</div>
 				</div>
@@ -232,10 +235,28 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 				}
 			};
 
+			let savedScrollY = 0;
+
+			const lockBodyScroll = () => {
+				savedScrollY = window.scrollY;
+				document.body.style.position = 'fixed';
+				document.body.style.top = `-${savedScrollY}px`;
+				document.body.style.width = '100%';
+				document.body.style.overflow = 'hidden';
+			};
+
+			const unlockBodyScroll = () => {
+				document.body.style.position = '';
+				document.body.style.top = '';
+				document.body.style.width = '';
+				document.body.style.overflow = '';
+				window.scrollTo(0, savedScrollY);
+			};
+
 			const openFilters = () => {
 				mobileFilterSheet.classList.remove('translate-y-full');
 				mobileFilterOverlay.classList.remove('hidden');
-				document.body.style.overflow = 'hidden';
+				lockBodyScroll();
 				document.addEventListener('keydown', handleTrapKeydown);
 				mobileFilterClose?.focus();
 			};
@@ -243,7 +264,7 @@ const jsonLdItemList = ssrProducts.length > 0 ? {
 			const closeFilters = () => {
 				mobileFilterSheet.classList.add('translate-y-full');
 				mobileFilterOverlay.classList.add('hidden');
-				document.body.style.overflow = '';
+				unlockBodyScroll();
 				document.removeEventListener('keydown', handleTrapKeydown);
 				mobileFilterBtn.focus();
 			};

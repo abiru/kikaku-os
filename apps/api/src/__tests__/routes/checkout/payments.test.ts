@@ -1013,6 +1013,135 @@ describe('POST /payments/intent', () => {
       expect(res.status).toBe(400);
     });
 
+    it('returns 400 for negative amount', async () => {
+      const app = new Hono();
+      app.route('/', payments);
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+      const env = {
+        DB: createMockDb({
+          quoteRow: {
+            id: 'quote_neg',
+            items_json: JSON.stringify([{ variantId: 10, quantity: 1 }]),
+            coupon_code: null,
+            coupon_id: null,
+            subtotal: -1000,
+            tax_amount: -100,
+            cart_total: -1100,
+            discount: 0,
+            shipping_fee: 0,
+            grand_total: -1100,
+            currency: 'JPY',
+            expires_at: expiresAt
+          }
+        }),
+        STRIPE_SECRET_KEY: 'sk_test_123'
+      } as any;
+
+      const res = await app.request(
+        'http://localhost/payments/intent',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ quoteId: 'quote_neg', email: 'test@example.com' })
+        },
+        env
+      );
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.ok).toBe(false);
+      expect(json.message).toContain('greater than zero');
+    });
+
+    it('returns 400 for zero-yen order', async () => {
+      const app = new Hono();
+      app.route('/', payments);
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+      const env = {
+        DB: createMockDb({
+          quoteRow: {
+            id: 'quote_zero',
+            items_json: JSON.stringify([{ variantId: 10, quantity: 1 }]),
+            coupon_code: null,
+            coupon_id: null,
+            subtotal: 0,
+            tax_amount: 0,
+            cart_total: 0,
+            discount: 0,
+            shipping_fee: 0,
+            grand_total: 0,
+            currency: 'JPY',
+            expires_at: expiresAt
+          }
+        }),
+        STRIPE_SECRET_KEY: 'sk_test_123'
+      } as any;
+
+      const res = await app.request(
+        'http://localhost/payments/intent',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ quoteId: 'quote_zero', email: 'test@example.com' })
+        },
+        env
+      );
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.ok).toBe(false);
+      expect(json.message).toContain('greater than zero');
+    });
+
+    it('returns 400 for non-JPY currency', async () => {
+      const app = new Hono();
+      app.route('/', payments);
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+
+      const env = {
+        DB: createMockDb({
+          quoteRow: {
+            id: 'quote_usd',
+            items_json: JSON.stringify([{ variantId: 10, quantity: 1 }]),
+            coupon_code: null,
+            coupon_id: null,
+            subtotal: 5000,
+            tax_amount: 500,
+            cart_total: 5500,
+            discount: 0,
+            shipping_fee: 500,
+            grand_total: 6000,
+            currency: 'USD',
+            expires_at: expiresAt
+          }
+        }),
+        STRIPE_SECRET_KEY: 'sk_test_123'
+      } as any;
+
+      const res = await app.request(
+        'http://localhost/payments/intent',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ quoteId: 'quote_usd', email: 'test@example.com' })
+        },
+        env
+      );
+
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.ok).toBe(false);
+      expect(json.message).toContain('JPY');
+    });
+
     it('returns 400 for non-JSON body', async () => {
       const app = new Hono();
       app.route('/', payments);
